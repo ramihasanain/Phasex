@@ -95,14 +95,13 @@ const marketConfig = {
 };
 
 export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, onToggleCollapse }: MarketListProps) {
-  const { theme } = useTheme();
   const { language, t } = useLanguage();
   const [activeMarket, setActiveMarket] = useState<"FOREX" | "COMMODITY" | "INDEX" | "CRYPTO">("FOREX");
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const isRTL = language === "ar";
-  const isDark = theme === "dark";
+  const isDark = true; // Force dark mode
 
   const filteredAssets = assets.filter(
     (asset) =>
@@ -141,7 +140,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
     const isFavorite = favorites.has(asset.id);
     const config = marketConfig[activeMarket];
     const isPositive = asset.change >= 0;
-    
+
     return (
       <motion.button
         key={asset.id}
@@ -152,18 +151,17 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
         transition={{ duration: 0.15 }}
-        className={`relative w-full text-${isRTL ? 'right' : 'left'} p-2.5 rounded-xl transition-all overflow-hidden group ${
-          selectedAsset?.id === asset.id
-            ? `${isDark ? config.bgDark : config.bgLight} shadow-lg ring-2 ${isDark ? config.borderDark : config.borderLight}`
-            : isDark 
-              ? "bg-gray-800/60 hover:bg-gray-800 shadow-sm hover:shadow-md" 
-              : "bg-white hover:bg-gray-50 shadow-sm hover:shadow-md border border-gray-100 hover:border-gray-200"
-        }`}
+        className={`relative w-full text-${isRTL ? 'right' : 'left'} p-2.5 rounded-xl transition-all overflow-hidden group ${selectedAsset?.id === asset.id
+          ? `${isDark ? config.bgDark : config.bgLight} shadow-lg ring-2 ${isDark ? config.borderDark : config.borderLight}`
+          : isDark
+            ? "bg-gray-800/60 hover:bg-gray-800 shadow-sm hover:shadow-md"
+            : "bg-white hover:bg-gray-50 shadow-sm hover:shadow-md border border-gray-100 hover:border-gray-200"
+          }`}
         style={
           selectedAsset?.id === asset.id
             ? {
-                boxShadow: `0 0 20px -8px ${config.glowColor}`,
-              }
+              boxShadow: `0 0 20px -8px ${config.glowColor}`,
+            }
             : {}
         }
       >
@@ -182,7 +180,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
               transition={{ duration: 2, repeat: Infinity }}
               className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isPositive ? 'bg-green-500' : 'bg-red-500'}`}
             />
-            
+
             {/* Name & Symbol */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
@@ -197,8 +195,8 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                 <span className={`font-mono text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                   {asset.symbol}
                 </span>
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={`text-[9px] px-1.5 py-0 h-4 ${isDark ? config.textDark : config.textLight} ${isDark ? config.borderDark : config.borderLight}`}
                 >
                   <config.signalIcon className="w-2 h-2 mr-0.5" />
@@ -227,15 +225,14 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
           <div className="flex flex-col items-end gap-1 flex-shrink-0">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className={`px-2 py-1 rounded-lg font-bold text-xs flex items-center gap-1 ${
-                isPositive
-                  ? isDark
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-green-50 text-green-700'
-                  : isDark
+              className={`px-2 py-1 rounded-lg font-bold text-xs flex items-center gap-1 ${isPositive
+                ? isDark
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-green-50 text-green-700'
+                : isDark
                   ? 'bg-red-500/20 text-red-400'
                   : 'bg-red-50 text-red-700'
-              }`}
+                }`}
             >
               {isPositive ? (
                 <ArrowUpRight className="w-3 h-3" />
@@ -244,17 +241,16 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
               )}
               {isPositive ? '+' : ''}{asset.changePercent.toFixed(2)}%
             </motion.div>
-            
+
             {/* Mini Chart */}
             <div className="flex items-center gap-[2px]">
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className={`w-[2px] rounded-full ${
-                    isPositive 
-                      ? 'bg-green-500/30' 
-                      : 'bg-red-500/30'
-                  }`}
+                  className={`w-[2px] rounded-full ${isPositive
+                    ? 'bg-green-500/30'
+                    : 'bg-red-500/30'
+                    }`}
                   style={{
                     height: `${Math.random() * 8 + 3}px`,
                   }}
@@ -269,11 +265,10 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
             className={`absolute ${isRTL ? 'left-1' : 'right-1'} top-1 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-200 dark:hover:bg-gray-700/70 cursor-pointer`}
           >
             <Star
-              className={`w-3 h-3 ${
-                isFavorite 
-                  ? "fill-yellow-400 text-yellow-400" 
-                  : isDark ? "text-gray-500" : "text-gray-400"
-              }`}
+              className={`w-3 h-3 ${isFavorite
+                ? "fill-yellow-400 text-yellow-400"
+                : isDark ? "text-gray-500" : "text-gray-400"
+                }`}
             />
           </div>
         </div>
@@ -293,13 +288,13 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
       transition={{ type: "spring", damping: 25, stiffness: 200, duration: 0.4 }}
       className="h-full"
     >
-      <Card className={`h-full shadow-2xl overflow-hidden ${isDark ? "bg-gradient-to-b from-gray-900 to-gray-900/95 border-gray-800" : "bg-white border-gray-200"} transition-all`}>
+      <Card className={`h-full shadow-2xl overflow-hidden bg-[#0a0e18] border-[rgba(0,229,160,0.08)] transition-all`}>
         {!isCollapsed ? (
           <>
             <CardHeader className="pb-3 bg-gradient-to-br from-transparent to-transparent">
               <div className="flex items-center justify-between">
                 <CardTitle className={`flex items-center gap-3 text-xl ${isDark ? "text-white" : "text-gray-900"}`}>
-                  <motion.div 
+                  <motion.div
                     className={`bg-gradient-to-br ${marketConfig[activeMarket].gradient} p-2.5 rounded-xl shadow-lg`}
                     animate={{ rotate: [0, 5, 0, -5, 0] }}
                     transition={{ duration: 5, repeat: Infinity }}
@@ -325,7 +320,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                 )}
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-4 px-4">
               {/* Market Tabs - Horizontal Pills */}
               <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl bg-gray-100 dark:bg-gray-800/50">
@@ -340,13 +335,12 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                       onClick={() => setActiveMarket(market)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative overflow-hidden p-3 rounded-lg transition-all ${
-                        isActive
-                          ? `bg-gradient-to-br ${config.gradient} shadow-lg`
-                          : isDark 
-                            ? "hover:bg-gray-700/50" 
-                            : "hover:bg-white"
-                      }`}
+                      className={`relative overflow-hidden p-3 rounded-lg transition-all ${isActive
+                        ? `bg-gradient-to-br ${config.gradient} shadow-lg`
+                        : isDark
+                          ? "hover:bg-gray-700/50"
+                          : "hover:bg-white"
+                        }`}
                     >
                       <div className="flex flex-col items-center gap-1.5">
                         <Icon className={`w-5 h-5 ${isActive ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'}`} />
@@ -354,7 +348,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                           {isRTL ? config.labelAr.split(' ')[0] : config.labelEn}
                         </span>
                       </div>
-                      
+
                       {/* Active Indicator Dot */}
                       {isActive && (
                         <motion.div
@@ -382,7 +376,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                       {getMarketTrend(marketStats[activeMarket])}% {t("positive")}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 text-xs">
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 rounded-full bg-green-500" />
@@ -398,7 +392,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Progress Bar */}
                 <div className={`mt-2 h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
                   <motion.div
@@ -417,11 +411,10 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                   placeholder={t("searchAsset")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'} rounded-xl border-2 ${
-                    isDark 
-                      ? "bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600" 
-                      : "border-gray-200 focus:border-gray-300"
-                  }`}
+                  className={`${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'} rounded-xl border-2 ${isDark
+                    ? "bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600"
+                    : "border-gray-200 focus:border-gray-300"
+                    }`}
                   dir={isRTL ? "rtl" : "ltr"}
                 />
               </div>
@@ -460,27 +453,26 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                 <ChevronsRight className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-600"}`} />
               </Button>
             )}
-            
+
             {/* Vertical Market Tabs */}
             <div className="flex-1 flex flex-col gap-3 items-center">
               {(Object.keys(marketConfig) as Array<keyof typeof marketConfig>).map((market) => {
                 const config = marketConfig[market];
                 const Icon = config.icon;
                 const isActive = activeMarket === market;
-                
+
                 return (
                   <motion.button
                     key={market}
                     onClick={() => setActiveMarket(market)}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                      isActive
-                        ? `bg-gradient-to-br ${config.gradient} shadow-lg`
-                        : isDark
-                          ? "bg-gray-800 hover:bg-gray-700"
-                          : "bg-gray-100 hover:bg-gray-200"
-                    }`}
+                    className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all ${isActive
+                      ? `bg-gradient-to-br ${config.gradient} shadow-lg`
+                      : isDark
+                        ? "bg-gray-800 hover:bg-gray-700"
+                        : "bg-gray-100 hover:bg-gray-200"
+                      }`}
                     title={isRTL ? config.labelAr : config.labelEn}
                   >
                     <Icon className={`w-5 h-5 ${isActive ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'}`} />

@@ -144,395 +144,142 @@ const marketCategories: { name: MarketCategory; nameAr: string; icon: string; sy
 ];
 
 const symbolIcons: Record<string, { icon: string; label: string; labelAr: string; flag?: string }> = {
-    "ADAUSD.p": {
-        "icon": "🪙",
-        "label": "ADA",
-        "labelAr": "ADA"
-    },
-    "ATMUSD.p": {
-        "icon": "🪙",
-        "label": "ATM",
-        "labelAr": "ATM"
-    },
-    "AUDCAD": {
-        "icon": "🇦🇺",
-        "label": "AUD/CAD",
-        "labelAr": "AUD/CAD",
-        "flag": "🇨🇦"
-    },
-    "AUDCHF": {
-        "icon": "🇦🇺",
-        "label": "AUD/CHF",
-        "labelAr": "AUD/CHF",
-        "flag": "🇨🇭"
-    },
-    "AUDJPY": {
-        "icon": "🇦🇺",
-        "label": "AUD/JPY",
-        "labelAr": "AUD/JPY",
-        "flag": "🇯🇵"
-    },
-    "AUDNZD": {
-        "icon": "🇦🇺",
-        "label": "AUD/NZD",
-        "labelAr": "AUD/NZD",
-        "flag": "🇳🇿"
-    },
-    "AUDUSD": {
-        "icon": "🇦🇺",
-        "label": "AUD/USD",
-        "labelAr": "AUD/USD",
-        "flag": "🇺🇸"
-    },
-    "AUS200Roll": {
-        "icon": "📊",
-        "label": "AUS200Roll",
-        "labelAr": "AUS200Roll"
-    },
-    "AVAUSD.p": {
-        "icon": "🪙",
-        "label": "AVA",
-        "labelAr": "AVA"
-    },
-    "AXSUSD.p": {
-        "icon": "🪙",
-        "label": "AXS",
-        "labelAr": "AXS"
-    },
-    "BCHUSD.p": {
-        "icon": "🪙",
-        "label": "BCH",
-        "labelAr": "BCH"
-    },
-    "BNBUSD.p": {
-        "icon": "🪙",
-        "label": "BNB",
-        "labelAr": "BNB"
-    },
-    "BRENT": {
-        "icon": "🛢️",
-        "label": "Brent",
-        "labelAr": "برنت"
-    },
-    "GOLD": {
-        "icon": "🥇",
-        "label": "Gold",
-        "labelAr": "ذهب"
-    },
-    "SILVER": {
-        "icon": "🥈",
-        "label": "Silver",
-        "labelAr": "فضة"
-    },
-    "WTI": {
-        "icon": "🛢️",
-        "label": "WTI",
-        "labelAr": "نفط خام"
-    },
-    "BTCUSD.p": {
-        "icon": "₿",
-        "label": "BTC",
-        "labelAr": "BTC"
-    },
-    "CADCHF": {
-        "icon": "🇨🇦",
-        "label": "CAD/CHF",
-        "labelAr": "CAD/CHF",
-        "flag": "🇨🇭"
-    },
-    "CADJPY": {
-        "icon": "🇨🇦",
-        "label": "CAD/JPY",
-        "labelAr": "CAD/JPY",
-        "flag": "🇯🇵"
-    },
-    "CHFJPY": {
-        "icon": "🇨🇭",
-        "label": "CHF/JPY",
-        "labelAr": "CHF/JPY",
-        "flag": "🇯🇵"
-    },
-    "CHINA50Roll": {
-        "icon": "📊",
-        "label": "CHINA50Roll",
-        "labelAr": "CHINA50Roll"
-    },
-    "CHshares": {
-        "icon": "📊",
-        "label": "CHshares",
-        "labelAr": "CHshares"
-    },
-    "COMUSD.p": {
-        "icon": "🪙",
-        "label": "COM",
-        "labelAr": "COM"
-    },
-    "DOTUSD.p": {
-        "icon": "🪙",
-        "label": "DOT",
-        "labelAr": "DOT"
-    },
-    "DSHUSD.p": {
-        "icon": "🪙",
-        "label": "DSH",
-        "labelAr": "DSH"
-    },
-    "ESP35Roll": {
-        "icon": "📊",
-        "label": "ESP35Roll",
-        "labelAr": "ESP35Roll"
-    },
-    "ETCUSD.p": {
-        "icon": "🪙",
-        "label": "ETC",
-        "labelAr": "ETC"
-    },
-    "ETHUSD.p": {
-        "icon": "🪙",
-        "label": "ETH",
-        "labelAr": "ETH"
-    },
-    "EU50Roll": {
-        "icon": "📊",
-        "label": "EU50Roll",
-        "labelAr": "EU50Roll"
-    },
-    "EURAUD": {
-        "icon": "🇪🇺",
-        "label": "EUR/AUD",
-        "labelAr": "EUR/AUD",
-        "flag": "🇦🇺"
-    },
-    "EURCAD": {
-        "icon": "🇪🇺",
-        "label": "EUR/CAD",
-        "labelAr": "EUR/CAD",
-        "flag": "🇨🇦"
-    },
-    "EURCHF": {
-        "icon": "🇪🇺",
-        "label": "EUR/CHF",
-        "labelAr": "EUR/CHF",
-        "flag": "🇨🇭"
-    },
-    "EURGBP": {
-        "icon": "🇪🇺",
-        "label": "EUR/GBP",
-        "labelAr": "EUR/GBP",
-        "flag": "🇬🇧"
-    },
-    "EURJPY": {
-        "icon": "🇪🇺",
-        "label": "EUR/JPY",
-        "labelAr": "EUR/JPY",
-        "flag": "🇯🇵"
-    },
-    "EURNZD": {
-        "icon": "🇪🇺",
-        "label": "EUR/NZD",
-        "labelAr": "EUR/NZD",
-        "flag": "🇳🇿"
-    },
-    "EURUSD": {
-        "icon": "🇪🇺",
-        "label": "EUR/USD",
-        "labelAr": "يورو/دولار",
-        "flag": "🇺🇸"
-    },
-    "FRA40Roll": {
-        "icon": "📊",
-        "label": "FRA40Roll",
-        "labelAr": "FRA40Roll"
-    },
-    "GBPAUD": {
-        "icon": "🇬🇧",
-        "label": "GBP/AUD",
-        "labelAr": "GBP/AUD",
-        "flag": "🇦🇺"
-    },
-    "GBPCAD": {
-        "icon": "🇬🇧",
-        "label": "GBP/CAD",
-        "labelAr": "GBP/CAD",
-        "flag": "🇨🇦"
-    },
-    "GBPCHF": {
-        "icon": "🇬🇧",
-        "label": "GBP/CHF",
-        "labelAr": "GBP/CHF",
-        "flag": "🇨🇭"
-    },
-    "GBPJPY": {
-        "icon": "🇬🇧",
-        "label": "GBP/JPY",
-        "labelAr": "GBP/JPY",
-        "flag": "🇯🇵"
-    },
-    "GBPNZD": {
-        "icon": "🇬🇧",
-        "label": "GBP/NZD",
-        "labelAr": "GBP/NZD",
-        "flag": "🇳🇿"
-    },
-    "GBPUSD": {
-        "icon": "🇬🇧",
-        "label": "GBP/USD",
-        "labelAr": "جنيه/دولار",
-        "flag": "🇺🇸"
-    },
-    "GER30": {
-        "icon": "📊",
-        "label": "GER30",
-        "labelAr": "GER30"
-    },
-    "XAUUSD": {
-        "icon": "🥇",
-        "label": "Gold",
-        "labelAr": "ذهب"
-    },
-    "HK50Roll": {
-        "icon": "📊",
-        "label": "HK50Roll",
-        "labelAr": "HK50Roll"
-    },
-    "JAP225": {
-        "icon": "📊",
-        "label": "JAP225",
-        "labelAr": "JAP225"
-    },
-    "LNKUSD.p": {
-        "icon": "🪙",
-        "label": "LNK",
-        "labelAr": "LNK"
-    },
-    "LTCUSD.p": {
-        "icon": "🪙",
-        "label": "LTC",
-        "labelAr": "LTC"
-    },
-    "NL25Roll": {
-        "icon": "📊",
-        "label": "NL25Roll",
-        "labelAr": "NL25Roll"
-    },
-    "NORWAY25Roll": {
-        "icon": "📊",
-        "label": "NORWAY25Roll",
-        "labelAr": "NORWAY25Roll"
-    },
-    "NZDCAD": {
-        "icon": "🇳🇿",
-        "label": "NZD/CAD",
-        "labelAr": "NZD/CAD",
-        "flag": "🇨🇦"
-    },
-    "NZDCHF": {
-        "icon": "🇳🇿",
-        "label": "NZD/CHF",
-        "labelAr": "NZD/CHF",
-        "flag": "🇨🇭"
-    },
-    "NZDJPY": {
-        "icon": "🇳🇿",
-        "label": "NZD/JPY",
-        "labelAr": "NZD/JPY",
-        "flag": "🇯🇵"
-    },
-    "NZDUSD": {
-        "icon": "🇳🇿",
-        "label": "NZD/USD",
-        "labelAr": "NZD/USD",
-        "flag": "🇺🇸"
-    },
-    "RUSS2000": {
-        "icon": "📊",
-        "label": "RUSS2000",
-        "labelAr": "RUSS2000"
-    },
-    "XAGUSD": {
-        "icon": "🥈",
-        "label": "Silver",
-        "labelAr": "فضة"
-    },
-    "SOLUSD.p": {
-        "icon": "🪙",
-        "label": "SOL",
-        "labelAr": "SOL"
-    },
-    "SWISS20Roll": {
-        "icon": "📊",
-        "label": "SWISS20Roll",
-        "labelAr": "SWISS20Roll"
-    },
-    "TRUUSD.p": {
-        "icon": "🪙",
-        "label": "TRU",
-        "labelAr": "TRU"
-    },
-    "UK100": {
-        "icon": "📊",
-        "label": "UK100",
-        "labelAr": "UK100"
-    },
-    "UNIUSD.p": {
-        "icon": "🪙",
-        "label": "UNI",
-        "labelAr": "UNI"
-    },
-    "US100": {
-        "icon": "📊",
-        "label": "US100",
-        "labelAr": "US100"
-    },
-    "US30": {
-        "icon": "📊",
-        "label": "US30",
-        "labelAr": "US30"
-    },
-    "US500": {
-        "icon": "📊",
-        "label": "US500",
-        "labelAr": "US500"
-    },
-    "USDCAD": {
-        "icon": "🇺🇸",
-        "label": "USD/CAD",
-        "labelAr": "USD/CAD",
-        "flag": "🇨🇦"
-    },
-    "USDCHF": {
-        "icon": "🇺🇸",
-        "label": "USD/CHF",
-        "labelAr": "USD/CHF",
-        "flag": "🇨🇭"
-    },
-    "USDJPY": {
-        "icon": "🇺🇸",
-        "label": "USD/JPY",
-        "labelAr": "USD/JPY",
-        "flag": "🇯🇵"
-    },
-    "VIXRoll": {
-        "icon": "📊",
-        "label": "VIXRoll",
-        "labelAr": "VIXRoll"
-    },
-    "USOIL": {
-        "icon": "🛢️",
-        "label": "Crude Oil",
-        "labelAr": "نفط خام"
-    },
-    "XRPUSD.p": {
-        "icon": "🪙",
-        "label": "XRP",
-        "labelAr": "XRP"
-    },
-    "YFIUSD.p": {
-        "icon": "🪙",
-        "label": "YFI",
-        "labelAr": "YFI"
-    }
+    "ADAUSD.p": { "icon": "🔵", "label": "Cardano", "labelAr": "كاردانو" },
+    "ATMUSD.p": { "icon": "⚡", "label": "Cosmos", "labelAr": "كوزموس" },
+    "AUDCAD": { "icon": "A$", "label": "AUD/CAD", "labelAr": "AUD/CAD", "flag": "C$" },
+    "AUDCHF": { "icon": "A$", "label": "AUD/CHF", "labelAr": "AUD/CHF", "flag": "🏦" },
+    "AUDJPY": { "icon": "A$", "label": "AUD/JPY", "labelAr": "AUD/JPY", "flag": "¥" },
+    "AUDNZD": { "icon": "A$", "label": "AUD/NZD", "labelAr": "AUD/NZD", "flag": "🥝" },
+    "AUDUSD": { "icon": "A$", "label": "AUD/USD", "labelAr": "AUD/USD", "flag": "$" },
+    "AUS200Roll": { "icon": "🏛️", "label": "ASX 200", "labelAr": "أستراليا 200" },
+    "AVAUSD.p": { "icon": "🔺", "label": "Avalanche", "labelAr": "أفالانش" },
+    "AXSUSD.p": { "icon": "🎮", "label": "Axie", "labelAr": "أكسي" },
+    "BCHUSD.p": { "icon": "💚", "label": "Bitcoin Cash", "labelAr": "بتكوين كاش" },
+    "BNBUSD.p": { "icon": "💛", "label": "Binance", "labelAr": "بينانس" },
+    "BRENT": { "icon": "🛢️", "label": "Brent", "labelAr": "برنت" },
+    "GOLD": { "icon": "🥇", "label": "Gold", "labelAr": "ذهب" },
+    "SILVER": { "icon": "🥈", "label": "Silver", "labelAr": "فضة" },
+    "WTI": { "icon": "🛢️", "label": "WTI", "labelAr": "نفط خام" },
+    "BTCUSD.p": { "icon": "₿", "label": "Bitcoin", "labelAr": "بتكوين" },
+    "CADCHF": { "icon": "C$", "label": "CAD/CHF", "labelAr": "CAD/CHF", "flag": "🏦" },
+    "CADJPY": { "icon": "C$", "label": "CAD/JPY", "labelAr": "CAD/JPY", "flag": "¥" },
+    "CHFJPY": { "icon": "🏦", "label": "CHF/JPY", "labelAr": "CHF/JPY", "flag": "¥" },
+    "CHINA50Roll": { "icon": "🏮", "label": "China A50", "labelAr": "الصين 50" },
+    "CHshares": { "icon": "⛰️", "label": "Swiss Shares", "labelAr": "أسهم سويسرا" },
+    "COMUSD.p": { "icon": "🌐", "label": "Compound", "labelAr": "كومباوند" },
+    "DOTUSD.p": { "icon": "⚪", "label": "Polkadot", "labelAr": "بولكادوت" },
+    "DSHUSD.p": { "icon": "🔷", "label": "Dash", "labelAr": "داش" },
+    "ESP35Roll": { "icon": "🏟️", "label": "Spain 35", "labelAr": "إسبانيا 35" },
+    "ETCUSD.p": { "icon": "💎", "label": "ETH Classic", "labelAr": "إيثريوم كلاسيك" },
+    "ETHUSD.p": { "icon": "⟠", "label": "Ethereum", "labelAr": "إيثريوم" },
+    "EU50Roll": { "icon": "🏦", "label": "Euro Stoxx 50", "labelAr": "يورو ستوكس 50" },
+    "EURAUD": { "icon": "€", "label": "EUR/AUD", "labelAr": "EUR/AUD", "flag": "A$" },
+    "EURCAD": { "icon": "€", "label": "EUR/CAD", "labelAr": "EUR/CAD", "flag": "C$" },
+    "EURCHF": { "icon": "€", "label": "EUR/CHF", "labelAr": "EUR/CHF", "flag": "🏦" },
+    "EURGBP": { "icon": "€", "label": "EUR/GBP", "labelAr": "EUR/GBP", "flag": "£" },
+    "EURJPY": { "icon": "€", "label": "EUR/JPY", "labelAr": "EUR/JPY", "flag": "¥" },
+    "EURNZD": { "icon": "€", "label": "EUR/NZD", "labelAr": "EUR/NZD", "flag": "🥝" },
+    "EURUSD": { "icon": "€", "label": "EUR/USD", "labelAr": "يورو/دولار", "flag": "$" },
+    "FRA40Roll": { "icon": "🗼", "label": "France 40", "labelAr": "فرنسا 40" },
+    "GBPAUD": { "icon": "£", "label": "GBP/AUD", "labelAr": "GBP/AUD", "flag": "A$" },
+    "GBPCAD": { "icon": "£", "label": "GBP/CAD", "labelAr": "GBP/CAD", "flag": "C$" },
+    "GBPCHF": { "icon": "£", "label": "GBP/CHF", "labelAr": "GBP/CHF", "flag": "🏦" },
+    "GBPJPY": { "icon": "£", "label": "GBP/JPY", "labelAr": "GBP/JPY", "flag": "¥" },
+    "GBPNZD": { "icon": "£", "label": "GBP/NZD", "labelAr": "GBP/NZD", "flag": "🥝" },
+    "GBPUSD": { "icon": "£", "label": "GBP/USD", "labelAr": "جنيه/دولار", "flag": "$" },
+    "GER30": { "icon": "🏭", "label": "DAX 30", "labelAr": "داكس 30" },
+    "XAUUSD": { "icon": "🥇", "label": "Gold", "labelAr": "ذهب" },
+    "HK50Roll": { "icon": "🏙️", "label": "Hang Seng", "labelAr": "هانج سينج" },
+    "JAP225": { "icon": "⛩️", "label": "Nikkei 225", "labelAr": "نيكي 225" },
+    "LNKUSD.p": { "icon": "🔗", "label": "Chainlink", "labelAr": "تشين لينك" },
+    "LTCUSD.p": { "icon": "🪨", "label": "Litecoin", "labelAr": "لايتكوين" },
+    "NL25Roll": { "icon": "🌷", "label": "AEX 25", "labelAr": "هولندا 25" },
+    "NORWAY25Roll": { "icon": "⛷️", "label": "Norway 25", "labelAr": "النرويج 25" },
+    "NZDCAD": { "icon": "🥝", "label": "NZD/CAD", "labelAr": "NZD/CAD", "flag": "C$" },
+    "NZDCHF": { "icon": "🥝", "label": "NZD/CHF", "labelAr": "NZD/CHF", "flag": "🏦" },
+    "NZDJPY": { "icon": "🥝", "label": "NZD/JPY", "labelAr": "NZD/JPY", "flag": "¥" },
+    "NZDUSD": { "icon": "🥝", "label": "NZD/USD", "labelAr": "NZD/USD", "flag": "$" },
+    "RUSS2000": { "icon": "📈", "label": "Russell 2000", "labelAr": "راسل 2000" },
+    "XAGUSD": { "icon": "🥈", "label": "Silver", "labelAr": "فضة" },
+    "SOLUSD.p": { "icon": "◎", "label": "Solana", "labelAr": "سولانا" },
+    "SWISS20Roll": { "icon": "⛰️", "label": "SMI 20", "labelAr": "سويسرا 20" },
+    "TRUUSD.p": { "icon": "🟢", "label": "TrueUSD", "labelAr": "ترو يو إس دي" },
+    "UK100": { "icon": "🏰", "label": "FTSE 100", "labelAr": "فوتسي 100" },
+    "UNIUSD.p": { "icon": "🦄", "label": "Uniswap", "labelAr": "يونيسواب" },
+    "US100": { "icon": "💻", "label": "Nasdaq 100", "labelAr": "ناسداك 100" },
+    "US30": { "icon": "🏛️", "label": "Dow Jones", "labelAr": "داو جونز" },
+    "US500": { "icon": "📊", "label": "S&P 500", "labelAr": "إس آند بي 500" },
+    "USDCAD": { "icon": "$", "label": "USD/CAD", "labelAr": "USD/CAD", "flag": "C$" },
+    "USDCHF": { "icon": "$", "label": "USD/CHF", "labelAr": "USD/CHF", "flag": "🏦" },
+    "USDJPY": { "icon": "$", "label": "USD/JPY", "labelAr": "USD/JPY", "flag": "¥" },
+    "VIXRoll": { "icon": "📉", "label": "VIX", "labelAr": "مؤشر التقلب" },
+    "USOIL": { "icon": "🛢️", "label": "Crude Oil", "labelAr": "نفط خام" },
+    "XRPUSD.p": { "icon": "💧", "label": "XRP", "labelAr": "ريبل" },
+    "YFIUSD.p": { "icon": "💰", "label": "Yearn", "labelAr": "ييرن" }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const analysisTabs: AnalysisTab[] = ["Vector Core", "Delta Engine", "Pulse Matrix", "Boundary Shell", "Power Field", "Phase X Layer"];
 
@@ -1694,6 +1441,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const [selectedSymbol, setSelectedSymbol] = useState("XAUUSD");
 
     const [selectedTab, setSelectedTab] = useState<AnalysisTab>("Vector Core");
+    const [filterOpen, setFilterOpen] = useState(true);
 
 
 
@@ -1906,26 +1654,8 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                         </span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-5 px-5 py-2 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                            {[
-                                { l: t.score, v: (data.globalScore > 0 ? "+" : "") + (data.globalScore * 100).toFixed(0) + "%", c: accent },
-                                { l: t.confidence, v: data.confidence + "%", c: confColor },
-                            ].map((x, i) => (
-                                <div key={i} className="text-center">
-                                    <div className="text-[9px] text-gray-600 tracking-wide uppercase">{x.l}</div>
-                                    <div className="text-base font-bold" style={{ color: x.c }}>{x.v}</div>
-                                </div>
-                            ))}
-                            <div className="w-px h-7 bg-gray-800" />
-                            <div className="text-center">
-                                <div className="text-[9px] text-gray-600 tracking-wide uppercase">{t.timeframe}</div>
-                                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded" style={{ background: `${accent}12`, color: accent, border: `1px solid ${accent}25` }}>M15</span>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-[9px] text-gray-600 tracking-wide uppercase">{t.layer}</div>
-                                <span className="text-sm font-semibold text-amber-400">{data.dominantLayer}</span>
-                            </div>
-                        </div>
+
+
                         <div className="flex items-center gap-1">
                             {/* Data Status Indicator */}
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] mr-2">
@@ -2035,8 +1765,9 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                         background: `linear-gradient(135deg, rgba(8,12,20,0.75) 0%, rgba(10,16,26,0.7) 40%, rgba(8,12,20,0.6) 100%)`,
                         borderRadius: "16px",
                     }}>
+
                         <div className="flex-1 px-8 py-6">
-                            <div className="text-[11px] text-gray-600 tracking-[0.25em] uppercase mb-2 font-semibold flex items-center gap-2">
+                            <div className="text-[13px] text-gray-600 tracking-[0.25em] uppercase mb-3 font-semibold flex items-center gap-3">
                                 <motion.div className="w-2 h-2 rounded-full"
                                     style={{ backgroundColor: accent }}
                                     animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8], boxShadow: [`0 0 4px ${accent}`, `0 0 12px ${accent}`, `0 0 4px ${accent}`] }}
@@ -2048,7 +1779,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 </motion.span>
                             </div>
 
-                            <motion.h2 className="text-[36px] font-black tracking-tight mb-3 leading-none"
+                            <motion.h2 className="text-[48px] font-black tracking-tight mb-3 leading-none"
                                 style={{ color: accent, fontStyle: "italic" }}
                                 animate={{
                                     textShadow: [
@@ -2062,13 +1793,14 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 {isRTL ? (trendAr[data.marketState] || data.marketState) : data.marketState}
                             </motion.h2>
 
-                            <div className="flex items-center gap-3 text-[13px]">
+
+                            <div className="flex items-center gap-3 text-[15px] flex-wrap">
                                 {[
                                     { k: t.phase, va: tv(data.phase), c: data.phase === "Directional" ? "#00e676" : data.phase === "Developing" ? "#ffc400" : "#ff1744" },
                                     { k: t.volatility, va: tv(data.volatility), c: data.volatility === "Elevated" ? "#ff1744" : data.volatility === "Moderate" ? "#ffc400" : "#00e676" },
                                     { k: t.risk, va: tv(data.risk), c: data.risk === "Low" ? "#00e676" : data.risk === "Moderate" ? "#ffc400" : "#ff1744" },
                                 ].map((x, i) => (
-                                    <motion.div key={i} className="flex items-center gap-2 px-4 py-2 rounded-xl relative overflow-hidden"
+                                    <motion.div key={i} className="flex items-center gap-2.5 px-5 py-3 rounded-xl relative overflow-hidden"
                                         style={{
                                             background: `linear-gradient(135deg, ${x.c}15 0%, ${x.c}08 100%)`,
                                             border: `1px solid ${x.c}35`,
@@ -2076,35 +1808,39 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                         }}
                                         whileHover={{ scale: 1.06, boxShadow: `0 0 25px ${x.c}25, inset 0 0 15px ${x.c}12` }}
                                         initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-                                        <motion.div className="w-2 h-2 rounded-full flex-shrink-0"
+                                        <motion.div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                             style={{ backgroundColor: x.c, boxShadow: `0 0 8px ${x.c}` }}
                                             animate={{ opacity: [0.5, 1, 0.5], scale: [0.8, 1.2, 0.8] }}
                                             transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }} />
-                                        <span className="text-gray-500 font-medium text-[11px]">{x.k}:</span>
-                                        <span className="font-black tracking-wide text-[12px]" style={{ color: x.c }}>{x.va}</span>
+                                        <span className="text-gray-400 font-semibold text-[14px]">{x.k}:</span>
+                                        <span className="font-black tracking-wide text-[16px]" style={{ color: x.c }}>{x.va}</span>
                                     </motion.div>
                                 ))}
                             </div>
 
                             {/* Quick dynamics summary */}
-                            <div className="mt-4 flex items-center gap-5 text-[12px]">
+                            <div className="mt-3 grid grid-cols-4 gap-2">
                                 {[
                                     { l: t.trend, v: data.dynamics.primaryTrend },
                                     { l: t.momentum, v: data.dynamics.momentumState },
                                     { l: t.bias, v: data.dynamics.structuralBias },
                                     { l: t.reversal, v: data.dynamics.reversalRisk },
                                 ].map((x, i) => (
-                                    <motion.span key={i} className="flex items-center gap-2"
-                                        initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 * i, type: "spring" }}>
-                                        <span className="text-gray-600 font-medium">{x.l}:</span>
-                                        <span className="font-black px-2.5 py-0.5 rounded-md text-[11px]"
+                                    <motion.div key={i} className="flex flex-col items-center text-center gap-1 px-3 py-2 rounded-lg"
+                                        style={{
+                                            background: `${getTrendColor(x.v)}08`,
+                                            border: `1px solid ${getTrendColor(x.v)}20`,
+                                        }}
+                                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 * i, type: "spring" }}>
+                                        <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">{x.l}</span>
+                                        <span className="font-black px-2.5 py-1 rounded-md text-[12px]"
                                             style={{
                                                 background: `${getTrendColor(x.v)}18`,
                                                 color: getTrendColor(x.v),
                                                 border: `1px solid ${getTrendColor(x.v)}30`,
-                                                boxShadow: `0 0 8px ${getTrendColor(x.v)}15`
+                                                boxShadow: `0 0 8px ${getTrendColor(x.v)}12`
                                             }}>{tv(x.v)}</span>
-                                    </motion.span>
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
@@ -2113,16 +1849,26 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             <div className="flex items-center gap-4">
                                 {/* Score & Confidence Numbers */}
                                 <div className="flex flex-col gap-3 items-end">
-                                    <motion.div className="text-center px-4 py-2.5 rounded-xl"
-                                        style={{ background: `${accentG}0.08)`, border: `1px solid ${accentG}0.15)` }}
-                                        initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                                        <div className="text-[9px] text-gray-500 tracking-widest uppercase mb-1 font-semibold">{t.score}</div>
-                                        <motion.div className="text-[22px] font-black tabular-nums" style={{ color: accent }}
-                                            animate={{ textShadow: [`0 0 8px ${accentG}0.3)`, `0 0 20px ${accentG}0.6)`, `0 0 8px ${accentG}0.3)`] }}
-                                            transition={{ duration: 2, repeat: Infinity }}>
-                                            {data.globalScore > 0 ? "+" : ""}{data.globalScore.toFixed(2)}
-                                        </motion.div>
-                                    </motion.div>
+                                    {/* Currency Badge */}
+                                    {(() => {
+                                        const info = symbolIcons[selectedSymbol] || { icon: "📈", label: selectedSymbol, labelAr: selectedSymbol };
+                                        return (
+                                            <motion.div className="text-center px-4 py-2.5 rounded-xl"
+                                                style={{ background: `${accentG}0.08)`, border: `1px solid ${accentG}0.15)` }}
+                                                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
+                                                key={selectedSymbol}>
+                                                <motion.span className="text-2xl block mb-1"
+                                                    animate={{ scale: [1, 1.1, 1] }}
+                                                    transition={{ duration: 2, repeat: Infinity }}>
+                                                    {info.icon}
+                                                </motion.span>
+                                                <div className="text-[14px] font-black" style={{ color: accent }}>
+                                                    {isRTL ? info.labelAr : info.label}
+                                                </div>
+                                                <div className="text-[9px] font-mono text-gray-500">{selectedSymbol}</div>
+                                            </motion.div>
+                                        );
+                                    })()}
                                     <motion.div className="text-center px-4 py-2.5 rounded-xl relative overflow-hidden"
                                         style={{ background: `${confColorG}0.08)`, border: `1px solid ${confColorG}0.2)` }}
                                         initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
@@ -2159,138 +1905,155 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                 </motion.div>
                 {/* ═══ MARKET FILTER ═══ */}
                 <div className="mb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Activity className="w-3.5 h-3.5 text-gray-700" />
-                        <span className="text-[10px] text-gray-700 tracking-[0.25em] uppercase font-semibold">{t.marketFilter}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {marketCategories.map(cat => {
-
-                            const isActive = selectedCategory === cat.name;
-                            return (
-                                <motion.button key={cat.name} onClick={() => handleCategoryChange(cat.name)}
-                                    className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all overflow-hidden"
-                                    style={{
-                                        background: isActive
-                                            ? `linear-gradient(135deg, ${accentG}0.15) 0%, ${accentG}0.05) 100%)`
-                                            : "rgba(255,255,255,0.015)",
-                                        border: isActive ? `1px solid ${accentG}0.3)` : "1px solid rgba(255,255,255,0.04)",
-                                        boxShadow: isActive ? `0 4px 25px ${accentG}0.12), 0 0 40px ${accentG}0.05), inset 0 1px 0 rgba(255,255,255,0.08)` : "none",
-                                    }}
-                                    whileHover={{ scale: 1.06, y: -2, boxShadow: `0 6px 30px ${accentG}0.15)` }}
-                                    whileTap={{ scale: 0.95 }}
-                                    initial={{ opacity: 0, y: 15 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 25 }}>
-                                    {/* Racing glow pulse for active */}
-                                    {isActive && (
-                                        <>
-                                            <motion.div className="absolute inset-0 pointer-events-none"
-                                                style={{ background: `radial-gradient(circle at 50% 100%, ${accentG}0.15) 0%, transparent 60%)` }}
-                                                animate={{ opacity: [0.4, 1, 0.4] }}
-                                                transition={{ duration: 1.5, repeat: Infinity }} />
-                                            <motion.div className="absolute inset-0 pointer-events-none"
-                                                style={{ background: `linear-gradient(90deg, transparent, ${accentG}0.08), transparent)` }}
-                                                animate={{ x: ["-100%", "200%"] }}
-                                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
-                                        </>
-                                    )}
-                                    <motion.span className="text-lg relative z-10"
-                                        animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
-                                        transition={{ duration: 2, repeat: Infinity }}>{cat.icon}</motion.span>
-                                    <div className="relative z-10">
-                                        <div className="text-[12px] font-bold" style={{ color: isActive ? accent : "#6b7280" }}>{isRTL ? cat.nameAr : cat.name}</div>
-                                    </div>
-                                    {isActive && (
-                                        <motion.div className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full"
-                                            layoutId="marketFilter"
-                                            style={{ background: `linear-gradient(90deg, transparent, ${accent}, ${accent}, transparent)` }}
-                                            animate={{ opacity: [0.5, 1, 0.5] }}
-                                            transition={{ type: "spring", stiffness: 400, damping: 30 }} />
-                                    )}
-                                </motion.button>
-                            );
-                        })}
-                    </div>
+                    <motion.button onClick={() => setFilterOpen(!filterOpen)}
+                        className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-xl cursor-pointer transition-all"
+                        style={{
+                            background: filterOpen ? `${accentG}0.08)` : 'rgba(255,255,255,0.03)',
+                            border: filterOpen ? `1px solid ${accentG}0.2)` : '1px solid rgba(255,255,255,0.06)',
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}>
+                        <Activity className="w-4 h-4" style={{ color: filterOpen ? accent : '#6b7280' }} />
+                        <span className="text-[12px] tracking-[0.15em] uppercase font-bold" style={{ color: filterOpen ? accent : '#6b7280' }}>{t.marketFilter}</span>
+                        <motion.div animate={{ rotate: filterOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                            <ChevronDown className="w-4 h-4" style={{ color: filterOpen ? accent : '#6b7280' }} />
+                        </motion.div>
+                    </motion.button>
+                    <AnimatePresence>
+                        {filterOpen && (
+                            <motion.div className="flex items-center gap-2"
+                                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}>
+                                {marketCategories.map(cat => {
+                                    const isActive = selectedCategory === cat.name;
+                                    return (
+                                        <motion.button key={cat.name} onClick={() => handleCategoryChange(cat.name)}
+                                            className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all overflow-hidden"
+                                            style={{
+                                                background: isActive
+                                                    ? `linear-gradient(135deg, ${accentG}0.15) 0%, ${accentG}0.05) 100%)`
+                                                    : "rgba(255,255,255,0.015)",
+                                                border: isActive ? `1px solid ${accentG}0.3)` : "1px solid rgba(255,255,255,0.04)",
+                                                boxShadow: isActive ? `0 4px 25px ${accentG}0.12), 0 0 40px ${accentG}0.05), inset 0 1px 0 rgba(255,255,255,0.08)` : "none",
+                                            }}
+                                            whileHover={{ scale: 1.06, y: -2, boxShadow: `0 6px 30px ${accentG}0.15)` }}
+                                            whileTap={{ scale: 0.95 }}
+                                            initial={{ opacity: 0, y: 15 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ type: "spring", stiffness: 400, damping: 25 }}>
+                                            {/* Racing glow pulse for active */}
+                                            {isActive && (
+                                                <>
+                                                    <motion.div className="absolute inset-0 pointer-events-none"
+                                                        style={{ background: `radial-gradient(circle at 50% 100%, ${accentG}0.15) 0%, transparent 60%)` }}
+                                                        animate={{ opacity: [0.4, 1, 0.4] }}
+                                                        transition={{ duration: 1.5, repeat: Infinity }} />
+                                                    <motion.div className="absolute inset-0 pointer-events-none"
+                                                        style={{ background: `linear-gradient(90deg, transparent, ${accentG}0.08), transparent)` }}
+                                                        animate={{ x: ["-100%", "200%"] }}
+                                                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
+                                                </>
+                                            )}
+                                            <motion.span className="text-lg relative z-10"
+                                                animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
+                                                transition={{ duration: 2, repeat: Infinity }}>{cat.icon}</motion.span>
+                                            <div className="relative z-10">
+                                                <div className="text-[12px] font-bold" style={{ color: isActive ? accent : "#6b7280" }}>{isRTL ? cat.nameAr : cat.name}</div>
+                                            </div>
+                                            {isActive && (
+                                                <motion.div className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full"
+                                                    layoutId="marketFilter"
+                                                    style={{ background: `linear-gradient(90deg, transparent, ${accent}, ${accent}, transparent)` }}
+                                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                                    transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                                            )}
+                                        </motion.button>
+                                    );
+                                })}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* ═══ SYMBOL SELECTOR STRIP ═══ */}
                 <AnimatePresence mode="wait">
-                    <motion.div key={selectedCategory}
-                        className="mb-4 flex items-center gap-2 flex-wrap"
-                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.35 }}>
-                        {(() => {
-                            const cat = marketCategories.find(c => c.name === selectedCategory);
-                            if (!cat?.symbols.length) return null;
-                            return cat.symbols.map((sym, si) => {
-                                const info = symbolIcons[sym] || { icon: "📈", label: sym, labelAr: sym };
-                                const isActive = selectedSymbol === sym;
-                                const symData = symbolsData[sym];
-                                const symBullish = symData ? symData.globalScore >= 0 : true;
-                                const symColor = symBullish ? "#00e676" : "#ff1744";
-                                return (
-                                    <motion.button key={sym} onClick={() => setSelectedSymbol(sym)}
-                                        className="relative flex items-center gap-3 px-5 py-3 rounded-xl overflow-hidden"
-                                        style={{
-                                            background: isActive
-                                                ? `linear-gradient(135deg, ${symBullish ? 'rgba(0,230,118,' : 'rgba(255,23,68,'}0.12) 0%, rgba(10,16,26,0.9) 100%)`
-                                                : "rgba(255,255,255,0.02)",
-                                            border: isActive ? `1px solid ${symColor}40` : "1px solid rgba(255,255,255,0.05)",
-                                            boxShadow: isActive ? `0 4px 25px ${symColor}15, inset 0 1px 0 rgba(255,255,255,0.05)` : "none",
-                                        }}
-                                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                                        transition={{ delay: si * 0.08, type: "spring", stiffness: 300, damping: 25 }}
-                                        whileHover={{ scale: 1.06, y: -2 }}
-                                        whileTap={{ scale: 0.95 }}>
-                                        {/* Active shimmer */}
-                                        {isActive && (
-                                            <motion.div className="absolute inset-0 pointer-events-none"
-                                                style={{ background: `linear-gradient(90deg, transparent 20%, ${symColor}10 50%, transparent 80%)` }}
-                                                animate={{ x: ["-100%", "200%"] }}
-                                                transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} />
-                                        )}
-                                        {/* Icon */}
-                                        <motion.span className="text-2xl relative z-10"
-                                            animate={isActive ? { scale: [1, 1.15, 1] } : {}}
-                                            transition={{ duration: 1.5, repeat: Infinity }}>
-                                            {info.icon}
-                                        </motion.span>
-                                        {/* Label + Mini Score */}
-                                        <div className="relative z-10">
-                                            <div className="text-[12px] font-bold" style={{ color: isActive ? "#fff" : "#9ca3af" }}>
-                                                {isRTL ? info.labelAr : info.label}
+                    {filterOpen && (
+                        <motion.div key={selectedCategory}
+                            className="mb-4 flex items-center gap-2 flex-wrap"
+                            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.35 }}>
+                            {(() => {
+                                const cat = marketCategories.find(c => c.name === selectedCategory);
+                                if (!cat?.symbols.length) return null;
+                                return cat.symbols.map((sym, si) => {
+                                    const info = symbolIcons[sym] || { icon: "📈", label: sym, labelAr: sym };
+                                    const isActive = selectedSymbol === sym;
+                                    const symData = symbolsData[sym];
+                                    const symBullish = symData ? symData.globalScore >= 0 : true;
+                                    const symColor = symBullish ? "#00e676" : "#ff1744";
+                                    return (
+                                        <motion.button key={sym} onClick={() => { setSelectedSymbol(sym); setFilterOpen(false); }}
+                                            className="relative flex items-center gap-3 px-5 py-3 rounded-xl overflow-hidden"
+                                            style={{
+                                                background: isActive
+                                                    ? `linear-gradient(135deg, ${symBullish ? 'rgba(0,230,118,' : 'rgba(255,23,68,'}0.12) 0%, rgba(10,16,26,0.9) 100%)`
+                                                    : "rgba(255,255,255,0.02)",
+                                                border: isActive ? `1px solid ${symColor}40` : "1px solid rgba(255,255,255,0.05)",
+                                                boxShadow: isActive ? `0 4px 25px ${symColor}15, inset 0 1px 0 rgba(255,255,255,0.05)` : "none",
+                                            }}
+                                            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                                            transition={{ delay: si * 0.08, type: "spring", stiffness: 300, damping: 25 }}
+                                            whileHover={{ scale: 1.06, y: -2 }}
+                                            whileTap={{ scale: 0.95 }}>
+                                            {/* Active shimmer */}
+                                            {isActive && (
+                                                <motion.div className="absolute inset-0 pointer-events-none"
+                                                    style={{ background: `linear-gradient(90deg, transparent 20%, ${symColor}10 50%, transparent 80%)` }}
+                                                    animate={{ x: ["-100%", "200%"] }}
+                                                    transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} />
+                                            )}
+                                            {/* Icon */}
+                                            <motion.span className="text-2xl relative z-10"
+                                                animate={isActive ? { scale: [1, 1.15, 1] } : {}}
+                                                transition={{ duration: 1.5, repeat: Infinity }}>
+                                                {info.icon}
+                                            </motion.span>
+                                            {/* Label + Mini Score */}
+                                            <div className="relative z-10">
+                                                <div className="text-[12px] font-bold" style={{ color: isActive ? "#fff" : "#9ca3af" }}>
+                                                    {isRTL ? info.labelAr : info.label}
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-[10px] font-mono" style={{ color: "#6b7280" }}>{sym}</span>
+                                                    {symData && (
+                                                        <motion.span className="text-[10px] font-black" style={{ color: symColor }}
+                                                            animate={isActive ? { textShadow: [`0 0 4px ${symColor}40`, `0 0 10px ${symColor}60`, `0 0 4px ${symColor}40`] } : {}}
+                                                            transition={{ duration: 2, repeat: Infinity }}>
+                                                            {symData.globalScore > 0 ? "+" : ""}{symData.globalScore.toFixed(2)}
+                                                        </motion.span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-[10px] font-mono" style={{ color: "#6b7280" }}>{sym}</span>
-                                                {symData && (
-                                                    <motion.span className="text-[10px] font-black" style={{ color: symColor }}
-                                                        animate={isActive ? { textShadow: [`0 0 4px ${symColor}40`, `0 0 10px ${symColor}60`, `0 0 4px ${symColor}40`] } : {}}
-                                                        transition={{ duration: 2, repeat: Infinity }}>
-                                                        {symData.globalScore > 0 ? "+" : ""}{symData.globalScore.toFixed(2)}
-                                                    </motion.span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {/* Flag pair for forex */}
-                                        {info.flag && (
-                                            <span className="text-sm relative z-10 opacity-60">{info.flag}</span>
-                                        )}
-                                        {/* Active bottom LED */}
-                                        {isActive && (
-                                            <motion.div className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full z-20"
-                                                layoutId="symbolGlow"
-                                                style={{ background: `linear-gradient(90deg, transparent, ${symColor}, transparent)` }}
-                                                animate={{ opacity: [0.5, 1, 0.5] }}
-                                                transition={{ type: "spring", stiffness: 400, damping: 30 }} />
-                                        )}
-                                    </motion.button>
-                                );
-                            });
-                        })()}
-                    </motion.div>
+                                            {/* Flag pair for forex */}
+                                            {info.flag && (
+                                                <span className="text-sm relative z-10 opacity-60">{info.flag}</span>
+                                            )}
+                                            {/* Active bottom LED */}
+                                            {isActive && (
+                                                <motion.div className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full z-20"
+                                                    layoutId="symbolGlow"
+                                                    style={{ background: `linear-gradient(90deg, transparent, ${symColor}, transparent)` }}
+                                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                                    transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                                            )}
+                                        </motion.button>
+                                    );
+                                });
+                            })()}
+                        </motion.div>
+                    )}
                 </AnimatePresence>
                 {/* ═══ ANALYSIS TABS (separate layer) ═══ */}
                 <div className="mb-4">

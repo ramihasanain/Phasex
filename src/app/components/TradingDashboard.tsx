@@ -1,16 +1,12 @@
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { MarketList, Asset } from "./MarketList";
 import { IndicatorChart, Indicator } from "./IndicatorChart";
 import { SubscriptionPanel } from "./SubscriptionPanel";
 import { AdSpace } from "./AdSpace";
 import { Logo } from "./Logo";
-import { LogOut, TrendingUp, Moon, Sun, Gauge, Zap, Waves, TrendingUpDown, Signal, ChartCandlestick, Crown, Clock, Languages, ChevronsLeft, ChevronsRight, Move, Target, Activity, Navigation } from "lucide-react";
-import { useTheme } from "../contexts/ThemeContext";
+import { LogOut, Gauge, ChartCandlestick, Crown, Languages, ChevronsLeft, ChevronsRight, Move, Target, Activity, Navigation } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
-import { Badge } from "./ui/badge";
 
 interface TradingDashboardProps {
   onLogout: () => void;
@@ -229,7 +225,6 @@ const generateChartData = (asset: Asset, indicator: Indicator, timeframe: 5 | 15
 };
 
 export function TradingDashboard({ onLogout }: TradingDashboardProps) {
-  const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
@@ -271,115 +266,84 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
     }
   };
 
-  const isDark = theme === "dark";
   const isRTL = language === "ar";
+  const accent = "#00e5a0";
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-gray-950" : "bg-slate-50"} transition-colors duration-200`} dir={isRTL ? "rtl" : "ltr"}>
-      {/* شريط العلوي */}
-      <header className={`${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"} border-b sticky top-0 z-10 shadow-sm`}>
-        <div className="px-6 py-4 flex items-center justify-between">
-          {/* اللوقو - على اليمين */}
-          <motion.div
-            className="flex items-center gap-3"
-            initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
+    <div className="min-h-screen relative" dir={isRTL ? "rtl" : "ltr"}
+      style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}>
+
+      {/* Background effects */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <motion.div className="absolute w-[600px] h-[600px] rounded-full" style={{ top: "-15%", left: "-10%", background: `radial-gradient(circle, rgba(0,229,160,0.03) 0%, transparent 60%)`, filter: "blur(80px)" }}
+          animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 12, repeat: Infinity }} />
+        <motion.div className="absolute w-[400px] h-[400px] rounded-full" style={{ bottom: "-10%", right: "-5%", background: `radial-gradient(circle, rgba(168,85,247,0.025) 0%, transparent 60%)`, filter: "blur(60px)" }}
+          animate={{ scale: [1.1, 1, 1.1] }} transition={{ duration: 10, repeat: Infinity }} />
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl relative"
+        style={{ background: "rgba(6,10,16,0.9)", borderBottom: `1px solid rgba(0,229,160,0.08)` }}>
+        {/* LED strip */}
+        <motion.div className="absolute top-0 left-0 right-0 h-[2px] z-30"
+          style={{ background: `linear-gradient(90deg, transparent 5%, ${accent} 30%, ${accent} 70%, transparent 95%)` }}
+          animate={{ opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 2.5, repeat: Infinity }} />
+
+        <div className="px-5 py-3 flex items-center justify-between">
+          <motion.div className="flex items-center gap-3"
+            initial={{ opacity: 0, x: isRTL ? 20 : -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
             <Logo size="md" showText={true} animated={true} />
           </motion.div>
 
-          {/* الأزرار - ع��ى اليسار */}
-          <motion.div
-            className="flex items-center gap-2"
-            initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <Button
-              variant="outline"
-              onClick={onLogout}
-              className={`gap-2 ${isDark ? "border-gray-700 hover:bg-gray-800 text-gray-300" : ""}`}
-            >
+          <motion.div className="flex items-center gap-2"
+            initial={{ opacity: 0, x: isRTL ? -20 : 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+
+            {/* Logout */}
+            <motion.button onClick={onLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-colors cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <LogOut className="w-4 h-4" />
               {t("logout")}
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              className={`${isDark ? "border-gray-700 hover:bg-gray-800" : ""}`}
-            >
-              <motion.div
-                initial={false}
-                animate={{ rotate: isDark ? 180 : 0 }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-              >
-                {isDark ? (
-                  <Sun className="w-4 h-4 text-yellow-400" />
-                ) : (
-                  <Moon className="w-4 h-4 text-slate-700" />
-                )}
-              </motion.div>
-            </Button>
+            </motion.button>
 
-            {/* زر تبديل اللغة */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleLanguage}
-              className={`${isDark ? "border-gray-700 hover:bg-gray-800" : ""}`}
-            >
-              <motion.div
-                animate={{ rotate: isRTL ? 0 : 180 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Languages className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-slate-700"}`} />
-              </motion.div>
-            </Button>
+            {/* Language */}
+            <motion.button onClick={toggleLanguage} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-colors cursor-pointer"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <Languages className="w-4 h-4" />
+            </motion.button>
 
-            {/* زر الاشتراك */}
-            <Button
-              variant="outline"
-              onClick={() => setIsSubscriptionOpen(true)}
-              className={`gap-2 ${subscriptionInfo.daysRemaining <= 7
-                  ? "border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-                  : isDark
-                    ? "border-gray-700 hover:bg-gray-800"
-                    : ""
-                }`}
-            >
-              <motion.div
-                animate={subscriptionInfo.daysRemaining <= 7 ? {
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 10, -10, 0]
-                } : {}}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Crown className={`w-4 h-4 ${subscriptionInfo.daysRemaining <= 7 ? "text-amber-500" : ""}`} />
+            {/* Subscription */}
+            <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+              style={{
+                background: subscriptionInfo.daysRemaining <= 7 ? "rgba(255,196,0,0.08)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${subscriptionInfo.daysRemaining <= 7 ? "rgba(255,196,0,0.2)" : "rgba(255,255,255,0.06)"}`,
+                color: subscriptionInfo.daysRemaining <= 7 ? "#ffc400" : "#9ca3af",
+              }}>
+              <motion.div animate={subscriptionInfo.daysRemaining <= 7 ? { scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] } : {}}
+                transition={{ duration: 2, repeat: Infinity }}>
+                <Crown className="w-4 h-4" style={{ color: subscriptionInfo.daysRemaining <= 7 ? "#ffc400" : undefined }} />
               </motion.div>
               <span>{t("subscription")}</span>
               {subscriptionInfo.daysRemaining <= 7 && (
-                <Badge variant="destructive" className="text-xs px-1.5">
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,196,0,0.15)", color: "#ffc400" }}>
                   {subscriptionInfo.daysRemaining} {t("daysRemaining")}
-                </Badge>
+                </span>
               )}
-            </Button>
+            </motion.button>
           </motion.div>
         </div>
       </header>
 
-      <div className="p-6">
+      <div className="p-4 relative z-10">
         <div className="flex gap-4">
-          {/* القائمة الجانبية - الأسواق */}
-          <motion.div
-            initial={false}
-            animate={{
-              width: isMarketListCollapsed ? "70px" : "320px",
-            }}
+          {/* Market List Sidebar */}
+          <motion.div initial={false}
+            animate={{ width: isMarketListCollapsed ? "70px" : "320px" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="flex-shrink-0"
-          >
+            className="flex-shrink-0">
             <MarketList
               assets={mockAssets}
               selectedAsset={selectedAsset}
@@ -389,103 +353,83 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
             />
           </motion.div>
 
-          {/* المحتوى الرئيسي */}
-          <div className="flex-1 space-y-6 min-w-0">
-            {/* المؤشرات */}
-            <motion.div
-              initial={false}
-              animate={{
-                height: isIndicatorsCollapsed ? "80px" : "auto",
-              }}
+          {/* Main Content */}
+          <div className="flex-1 space-y-4 min-w-0">
+            {/* Indicators Panel */}
+            <motion.div initial={false}
+              animate={{ height: isIndicatorsCollapsed ? "60px" : "auto" }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <Card className={`${isDark ? "bg-gray-900 border-gray-700" : "bg-white"} shadow-lg border-2`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className={`flex items-center gap-2 ${isDark ? "text-white" : "text-gray-900"}`}>
-                      <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-lg shadow-lg">
-                        <ChartCandlestick className="w-5 h-5 text-white" />
+              className="overflow-hidden">
+              <div className="rounded-xl relative overflow-hidden"
+                style={{
+                  background: "linear-gradient(160deg, rgba(14,20,33,0.9) 0%, rgba(8,12,22,0.95) 100%)",
+                  border: `1px solid rgba(0,229,160,0.08)`,
+                  boxShadow: `0 10px 40px rgba(0,0,0,0.2)`,
+                }}>
+                {/* LED strip on indicators */}
+                <motion.div className="absolute top-0 left-0 right-0 h-[1px]"
+                  style={{ background: `linear-gradient(90deg, transparent 10%, ${accent}40 40%, ${accent}40 60%, transparent 90%)` }}
+                  animate={{ opacity: [0.2, 0.5, 0.2] }}
+                  transition={{ duration: 3, repeat: Infinity }} />
+
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: `linear-gradient(135deg, #a855f7, #6366f1)`, boxShadow: "0 4px 15px rgba(168,85,247,0.25)" }}>
+                        <ChartCandlestick className="w-4 h-4 text-white" />
                       </div>
-                      {!isIndicatorsCollapsed && t("technicalIndicators")}
-                    </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsIndicatorsCollapsed(!isIndicatorsCollapsed)}
-                      className={`${isDark ? "hover:bg-gray-800" : ""}`}
-                    >
-                      {isIndicatorsCollapsed ? (
-                        <ChevronsRight className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-600"} rotate-90`} />
-                      ) : (
-                        <ChevronsLeft className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-600"} rotate-90`} />
+                      {!isIndicatorsCollapsed && (
+                        <span className="text-sm font-bold text-white">{t("technicalIndicators")}</span>
                       )}
-                    </Button>
+                    </div>
+                    <motion.button onClick={() => setIsIndicatorsCollapsed(!isIndicatorsCollapsed)}
+                      whileHover={{ scale: 1.1 }} className="w-7 h-7 rounded-md flex items-center justify-center text-gray-500 hover:text-white cursor-pointer"
+                      style={{ background: "rgba(255,255,255,0.03)" }}>
+                      {isIndicatorsCollapsed
+                        ? <ChevronsRight className="w-3.5 h-3.5 rotate-90" />
+                        : <ChevronsLeft className="w-3.5 h-3.5 rotate-90" />}
+                    </motion.button>
                   </div>
-                </CardHeader>
-                {!isIndicatorsCollapsed && (
-                  <CardContent>
+
+                  {!isIndicatorsCollapsed && (
                     <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
                       {indicators.map((indicator) => {
                         const Icon = indicatorIcons[indicator.icon];
                         const isActive = selectedIndicator?.id === indicator.id;
-
                         return (
-                          <motion.button
-                            key={indicator.id}
+                          <motion.button key={indicator.id}
                             onClick={() => handleIndicatorSelect(indicator)}
                             whileHover={{ scale: 1.05, y: -2 }}
                             whileTap={{ scale: 0.95 }}
-                            className={`p-2 rounded-lg border transition-all text-center shadow-sm hover:shadow-md ${isActive
-                                ? isDark
-                                  ? "border-indigo-500 bg-indigo-950/30 shadow-lg shadow-indigo-500/20"
-                                  : "border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-500/20"
-                                : isDark
-                                  ? "border-gray-700 bg-gray-800/50 hover:border-gray-600"
-                                  : "border-gray-200 hover:border-indigo-300"
-                              }`}
-                          >
-                            <div
-                              className={`w-8 h-8 mx-auto mb-1.5 rounded-lg flex items-center justify-center transition-all ${isActive
-                                  ? "bg-gradient-to-br shadow-md"
-                                  : isDark
-                                    ? "bg-gray-700"
-                                    : "bg-gray-100"
-                                }`}
-                              style={
-                                isActive
-                                  ? {
-                                    backgroundImage: `linear-gradient(135deg, ${indicator.color}, ${indicator.color}dd)`,
-                                  }
-                                  : {}
-                              }
-                            >
-                              <Icon
-                                className={`w-4 h-4 ${isActive
-                                    ? "text-white"
-                                    : isDark
-                                      ? "text-gray-400"
-                                      : "text-gray-600"
-                                  }`}
-                              />
+                            className="p-3 rounded-xl text-center transition-all cursor-pointer"
+                            style={{
+                              background: isActive ? `${indicator.color}12` : "rgba(255,255,255,0.02)",
+                              border: `1px solid ${isActive ? `${indicator.color}35` : "rgba(255,255,255,0.04)"}`,
+                              boxShadow: isActive ? `0 0 20px ${indicator.color}15, inset 0 0 15px ${indicator.color}05` : "none",
+                            }}>
+                            <div className="w-9 h-9 mx-auto mb-2 rounded-lg flex items-center justify-center"
+                              style={{
+                                background: isActive ? `linear-gradient(135deg, ${indicator.color}, ${indicator.color}aa)` : "rgba(255,255,255,0.04)",
+                                boxShadow: isActive ? `0 4px 15px ${indicator.color}30` : "none",
+                              }}>
+                              <Icon className="w-4 h-4" style={{ color: isActive ? "#fff" : "#6b7280" }} />
                             </div>
-                            <div
-                              className={`w-2 h-2 rounded-full mx-auto mb-1 ${isActive ? "animate-pulse" : ""}`}
-                              style={{ backgroundColor: indicator.color }}
-                            />
-                            <div className={`font-semibold text-[10px] leading-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                            <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${isActive ? "animate-pulse" : ""}`}
+                              style={{ backgroundColor: indicator.color, opacity: isActive ? 1 : 0.3 }} />
+                            <div className="font-bold text-[10px] leading-tight" style={{ color: isActive ? indicator.color : "#9ca3af" }}>
                               {isRTL ? indicator.name : indicator.nameEn}
                             </div>
                           </motion.button>
                         );
                       })}
                     </div>
-                  </CardContent>
-                )}
-              </Card>
+                  )}
+                </div>
+              </div>
             </motion.div>
 
-            {/* الرسم البياني */}
+            {/* Chart Area */}
             <AnimatePresence mode="wait">
               <IndicatorChart
                 key={`${selectedAsset?.id}-${selectedIndicator?.id}-${timeframe}`}
@@ -504,19 +448,15 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
             </AnimatePresence>
           </div>
 
-          {/* مساحة الإعلانات */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="w-80 flex-shrink-0 hidden xl:block"
-          >
+          {/* Ad Space */}
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }} className="w-80 flex-shrink-0 hidden xl:block">
             <AdSpace />
           </motion.div>
         </div>
       </div>
 
-      {/* نافذة الاشتراك */}
+      {/* Subscription Panel */}
       <SubscriptionPanel isOpen={isSubscriptionOpen} onClose={() => setIsSubscriptionOpen(false)} />
     </div>
   );

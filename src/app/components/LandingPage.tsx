@@ -48,10 +48,26 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
     { icon: Navigation, name: "DIRECTION STATE", nameAr: "حالة الاتجاه", question: isRTL ? "هل الاتجاه يستمر أم ينكسر؟" : "Is direction holding or breaking?", description: isRTL ? "يجمع استمرارية الاتجاه في هياكل واضحة وقابلة للقراءة" : "Aggregates directional continuity into clear, readable structures.", color: stateColors[4] },
   ];
 
-  const particles = useMemo(() => Array.from({ length: 50 }).map((_, i) => ({
+  // Starfield - distant twinkling stars
+  const stars = useMemo(() => Array.from({ length: 120 }).map((_, i) => ({
     id: i, x: Math.random() * 100, y: Math.random() * 100,
-    size: Math.random() * 2.5 + 1, duration: 4 + Math.random() * 8, delay: Math.random() * 6,
-    driftX: (Math.random() - 0.5) * 80, driftY: -(20 + Math.random() * 60),
+    size: Math.random() * 2 + 0.5, opacity: Math.random() * 0.6 + 0.2,
+    twinkle: 2 + Math.random() * 5, delay: Math.random() * 4,
+  })), []);
+
+  // Warp speed streaks - horizontal light trails
+  const warpStreaks = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
+    id: i, y: Math.random() * 100, width: 100 + Math.random() * 300,
+    height: 0.5 + Math.random() * 1.5, duration: 1 + Math.random() * 2,
+    delay: Math.random() * 5, color: i % 3 === 0 ? accent : i % 3 === 1 ? "#448aff" : "#a855f7",
+  })), []);
+
+  // Comets - bright streaking objects with tails
+  const comets = useMemo(() => Array.from({ length: 6 }).map((_, i) => ({
+    id: i, startY: 10 + Math.random() * 80,
+    duration: 2 + Math.random() * 3, delay: i * 2.5 + Math.random() * 2,
+    size: 3 + Math.random() * 4, tailLen: 80 + Math.random() * 120,
+    color: [accent, "#448aff", "#a855f7", "#00e5ff", "#ffc400", "#ff6e40"][i],
   })), []);
 
   const scrollToSection = (href: string) => {
@@ -81,21 +97,66 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
   return (
     <div className="min-h-screen relative" dir={isRTL ? "rtl" : "ltr"} style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
-      {/* Global particles */}
+      {/* ═══ SPACE BACKGROUND ═══ */}
+      {/* Starfield */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {particles.map(p => (
-          <motion.div key={p.id} className="absolute rounded-full"
-            style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size, backgroundColor: accent, boxShadow: `0 0 ${4 + p.size * 3}px ${accent}` }}
-            animate={{ x: [0, p.driftX], y: [0, p.driftY], opacity: [0, 0.5, 0], scale: [0.5, 1.2, 0.2] }}
-            transition={{ duration: p.duration, repeat: Infinity, ease: "easeOut", delay: p.delay }} />
+        {stars.map(s => (
+          <motion.div key={s.id} className="absolute rounded-full bg-white"
+            style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size }}
+            animate={{ opacity: [s.opacity * 0.3, s.opacity, s.opacity * 0.3], scale: [0.8, 1.2, 0.8] }}
+            transition={{ duration: s.twinkle, repeat: Infinity, delay: s.delay, ease: "easeInOut" }} />
         ))}
       </div>
 
-      {/* Grid overlay */}
+      {/* Warp Speed Streaks */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {warpStreaks.map(s => (
+          <motion.div key={s.id} className="absolute rounded-full"
+            style={{
+              top: `${s.y}%`, width: s.width, height: s.height,
+              background: `linear-gradient(90deg, transparent, ${s.color}60, ${s.color}, ${s.color}60, transparent)`,
+              boxShadow: `0 0 8px ${s.color}40`,
+            }}
+            animate={{ left: ["-20%", "120%"] }}
+            transition={{ duration: s.duration, repeat: Infinity, ease: "linear", delay: s.delay }} />
+        ))}
+      </div>
+
+      {/* Comets with tails */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {comets.map(c => (
+          <motion.div key={c.id} className="absolute" style={{ top: `${c.startY}%` }}
+            animate={{ left: ["-10%", "115%"] }}
+            transition={{ duration: c.duration, repeat: Infinity, ease: "easeIn", delay: c.delay }}>
+            {/* Tail */}
+            <div className="absolute top-1/2 -translate-y-1/2" style={{
+              right: c.size / 2, width: c.tailLen, height: c.size * 0.6,
+              background: `linear-gradient(90deg, transparent 0%, ${c.color}10 30%, ${c.color}50 70%, ${c.color} 100%)`,
+              borderRadius: "50% 0 0 50%", filter: `blur(1px)`,
+            }} />
+            {/* Head */}
+            <div className="rounded-full relative" style={{
+              width: c.size, height: c.size, backgroundColor: "#fff",
+              boxShadow: `0 0 ${c.size * 3}px ${c.color}, 0 0 ${c.size * 6}px ${c.color}80, 0 0 ${c.size * 10}px ${c.color}30`,
+            }} />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Space depth vignette */}
       <div className="fixed inset-0 pointer-events-none z-0" style={{
-        backgroundImage: `linear-gradient(${accentG}0.015) 1px, transparent 1px), linear-gradient(90deg, ${accentG}0.015) 1px, transparent 1px)`,
-        backgroundSize: "80px 80px",
+        background: "radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(6,10,16,0.4) 70%, rgba(6,10,16,0.8) 100%)",
       }} />
+
+      {/* Subtle nebula glow */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <motion.div className="absolute w-[800px] h-[800px] rounded-full" style={{ top: "-20%", left: "-15%", background: `radial-gradient(circle, ${accentG}0.04) 0%, transparent 60%)`, filter: "blur(100px)" }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 15, repeat: Infinity }} />
+        <motion.div className="absolute w-[600px] h-[600px] rounded-full" style={{ bottom: "-10%", right: "-10%", background: "radial-gradient(circle, rgba(168,85,247,0.03) 0%, transparent 60%)", filter: "blur(80px)" }}
+          animate={{ scale: [1.1, 1, 1.1] }} transition={{ duration: 12, repeat: Infinity }} />
+        <motion.div className="absolute w-[400px] h-[400px] rounded-full" style={{ top: "50%", left: "60%", background: "radial-gradient(circle, rgba(68,138,255,0.025) 0%, transparent 60%)", filter: "blur(60px)" }}
+          animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 10, repeat: Infinity, delay: 3 }} />
+      </div>
 
       {/* ═══════════ HEADER ═══════════ */}
       <header className="sticky top-0 z-50 backdrop-blur-xl" style={{ background: "rgba(6,10,16,0.85)", borderBottom: `1px solid ${accentG}0.08)` }}>
@@ -159,6 +220,28 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
 
       {/* ═══════════ HERO ═══════════ */}
       <section id="home" className="relative overflow-hidden scroll-mt-16">
+        {/* Warp tunnel concentric rings */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          {[1, 2, 3, 4, 5].map(i => (
+            <motion.div key={i} className="absolute rounded-full" style={{
+              width: `${i * 250}px`, height: `${i * 250}px`,
+              border: `1px solid ${accentG}${0.06 / i})`,
+            }}
+              animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.1, 0.25 / i, 0.1] }}
+              transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.5 }} />
+          ))}
+        </div>
+
+        {/* Central energy glow */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <motion.div className="w-[400px] h-[400px] rounded-full" style={{
+            background: `radial-gradient(circle, ${accentG}0.08) 0%, ${accentG}0.02) 40%, transparent 70%)`,
+            filter: "blur(40px)",
+          }}
+            animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 5, repeat: Infinity }} />
+        </div>
+
         <div className="absolute inset-0 pointer-events-none">
           <motion.div className="absolute w-[700px] h-[700px] rounded-full" style={{ top: "-30%", left: "-15%", background: `radial-gradient(circle, ${accentG}0.07) 0%, transparent 70%)`, filter: "blur(80px)" }}
             animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 10, repeat: Infinity }} />

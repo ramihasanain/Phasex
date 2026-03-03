@@ -45,25 +45,24 @@ interface IndicatorChartProps {
 }
 
 export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange }: IndicatorChartProps) {
-  const { theme } = useTheme();
   const { language, t } = useLanguage();
-  const isDark = theme === "dark";
+  const isDark = true; // Force dark mode
   const isRTL = language === "ar";
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const [isMtfDialogOpen, setIsMtfDialogOpen] = useState(false); // Multi-Timeframe Dialog
-  
+
   // Chart navigation state
   const [viewWindow, setViewWindow] = useState(30); // عدد النقاط المعروضة في الشارت
   const [startIndex, setStartIndex] = useState(0); // البداية من أقدم نقطة
-  
+
   // Mouse drag state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragStartIndex, setDragStartIndex] = useState(0);
   const chartRef = useRef<HTMLDivElement>(null);
-  
+
   // Drawing tools state
   const [selectedTool, setSelectedTool] = useState<DrawingTool>("cursor");
   const [magnetEnabled, setMagnetEnabled] = useState(false);
@@ -71,7 +70,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [drawingsVisible, setDrawingsVisible] = useState(true);
   const [drawings, setDrawings] = useState<any[]>([]);
   const [showDrawingTools, setShowDrawingTools] = useState(false);
-  
+
   // Export chart with watermark
   const handleExportChart = async () => {
     if (!chartRef.current || !currency || !indicator) return;
@@ -119,15 +118,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       alert(isRTL ? "❌ خطأ" : "❌ Error");
     }
   };
-  
+
   // تحديث البداية عند تغيير البيانات
   useEffect(() => {
     setStartIndex(Math.max(0, data.length - viewWindow));
   }, [data.length]);
-  
+
   // البيانات المعروضة
   const displayedData = data.slice(startIndex, startIndex + viewWindow);
-  
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -145,11 +144,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         setStartIndex(Math.max(0, data.length - viewWindow));
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [data.length, viewWindow]);
-  
+
   // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -159,25 +158,25 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       chartRef.current.style.cursor = 'grabbing';
     }
   };
-  
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !chartRef.current) return;
-    
+
     const deltaX = e.clientX - dragStartX;
     const chartWidth = chartRef.current.offsetWidth;
     const dataPointsToMove = Math.round((deltaX / chartWidth) * viewWindow);
-    
+
     const newIndex = Math.max(0, Math.min(data.length - viewWindow, dragStartIndex - dataPointsToMove));
     setStartIndex(newIndex);
   };
-  
+
   const handleMouseUp = () => {
     setIsDragging(false);
     if (chartRef.current) {
       chartRef.current.style.cursor = 'grab';
     }
   };
-  
+
   const handleMouseLeave = () => {
     if (isDragging) {
       setIsDragging(false);
@@ -186,14 +185,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       }
     }
   };
-  
+
   // Wheel zoom handler
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 5 : -5;
     const newViewWindow = Math.max(10, Math.min(100, viewWindow + delta));
     setViewWindow(newViewWindow);
-    
+
     // تعديل startIndex للحفاظ على المركز
     const centerRatio = (startIndex + viewWindow / 2) / data.length;
     const newStartIndex = Math.max(0, Math.min(data.length - newViewWindow, Math.round(centerRatio * data.length - newViewWindow / 2)));
@@ -208,10 +207,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className={`h-full flex items-center justify-center min-h-[500px] ${isDark ? "bg-gray-900 border-gray-700" : "bg-white"} shadow-lg border-2`}>
+        <Card className={`h-full flex items-center justify-center min-h-[500px] bg-[#0a0e18] border-[rgba(0,229,160,0.08)] shadow-lg border-2`}>
           <CardContent className="text-center">
             <motion.div
-              animate={{ 
+              animate={{
                 y: [0, -10, 0],
                 opacity: [0.5, 1, 0.5]
               }}
@@ -241,11 +240,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     const gridColor = isDark ? "#374151" : "#e5e7eb";
     const textColor = isDark ? "#9ca3af" : "#6b7280";
     const dateColor = isDark ? "#60a5fa" : "#3b82f6";
-    
+
     // Custom Tick Component for intelligent date display
     const CustomXAxisTick = ({ x, y, payload }: any) => {
       const isNewDay = payload.value.includes('\n');
-      
+
       if (isNewDay) {
         const [date, time] = payload.value.split('\n');
         return (
@@ -276,7 +275,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </g>
         );
       }
-      
+
       return (
         <g transform={`translate(${x},${y})`}>
           <text
@@ -292,7 +291,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         </g>
       );
     };
-    
+
     // Custom ReferenceLine for day separators
     const renderDaySeparators = () => {
       const separators = [];
@@ -312,7 +311,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       }
       return separators;
     };
-    
+
     // Custom Tooltip
     const CustomTooltip = ({ active, payload }: any) => {
       if (active && payload && payload.length) {
@@ -342,8 +341,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             {renderDaySeparators()}
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               stroke={textColor}
               height={60}
               tick={<CustomXAxisTick />}
@@ -367,8 +366,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             {renderDaySeparators()}
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               stroke={textColor}
               height={60}
               tick={<CustomXAxisTick />}
@@ -382,9 +381,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         );
       case "tz":
         return (
-          <TZCandlestickChart 
-            data={displayedData} 
-            height={commonProps.height as number}
+          <TZCandlestickChart
+            data={displayedData}
+            height={400}
           />
         );
       default:
@@ -392,8 +391,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             {renderDaySeparators()}
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               stroke={textColor}
               height={60}
               tick={<CustomXAxisTick />}
@@ -459,7 +458,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             const change = row.value - prevValue;
             const changePercent = prevValue !== 0 ? (change / prevValue) * 100 : 0;
             const isRowPositive = change >= 0;
-            
+
             return (
               <motion.tr
                 key={index}
@@ -477,14 +476,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 <td className="p-3">
                   {index > 0 && (
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className={`text-sm font-semibold ${
-                        isRowPositive 
-                          ? isDark ? 'text-green-400' : 'text-green-600'
-                          : isDark ? 'text-red-400' : 'text-red-600'
-                      }`}>
+                      <span className={`text-sm font-semibold ${isRowPositive
+                        ? isDark ? 'text-green-400' : 'text-green-600'
+                        : isDark ? 'text-red-400' : 'text-red-600'
+                        }`}>
                         {isRowPositive ? '+' : ''}{change.toFixed(decimals)}
                       </span>
-                      <Badge 
+                      <Badge
                         variant={isRowPositive ? "default" : "destructive"}
                         className="text-xs"
                       >
@@ -502,7 +500,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   );
 
   const mainContent = (
-    <Card className={`h-full ${isDark ? "bg-gray-900 border-gray-700" : "bg-white"} shadow-lg border-2 overflow-hidden`}>
+    <Card className={`h-full bg-[#0a0e18] border-[rgba(0,229,160,0.08)] shadow-lg border-2 overflow-hidden`}>
       <CardHeader className="relative overflow-hidden">
         {/* Background gradient animation */}
         <motion.div
@@ -516,15 +514,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           }}
           transition={{ duration: 5, repeat: Infinity }}
         />
-        
+
         <CardTitle className={`flex items-center justify-between relative z-10 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <motion.div 
+          <motion.div
             className="flex items-center gap-3"
             initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div 
+            <div
               className="p-2 rounded-lg"
               style={{ backgroundColor: `${indicator.color}20` }}
             >
@@ -539,8 +537,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               </div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
             initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -591,7 +589,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 )}
               </Button>
             </div>
-            
+
             <div className={`text-${isRTL ? 'left' : 'right'} ml-2`}>
               <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                 {isRTL ? currency.name : currency.nameEn}
@@ -603,15 +601,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             <motion.div
               animate={isPositive ? { y: [0, -3, 0] } : { y: [0, 3, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className={`p-2 rounded-lg ${
-                isPositive
-                  ? isDark
-                    ? "bg-green-500/20"
-                    : "bg-green-50"
-                  : isDark
-                    ? "bg-red-500/20"
-                    : "bg-red-50"
-              }`}
+              className={`p-2 rounded-lg ${isPositive
+                ? isDark
+                  ? "bg-green-500/20"
+                  : "bg-green-50"
+                : isDark
+                  ? "bg-red-500/20"
+                  : "bg-red-50"
+                }`}
             >
               {isPositive ? (
                 <TrendingUp className={`w-5 h-5 ${isDark ? "text-green-400" : "text-green-600"}`} />
@@ -622,10 +619,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </motion.div>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent>
         {/* Timeframe Buttons */}
-        <motion.div 
+        <motion.div
           className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -651,15 +648,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     onTimeframeChange(tf as 5 | 15 | 30 | 60);
                   }
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  timeframe === tf
-                    ? isDark
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/50'
-                      : 'bg-indigo-600 text-white shadow-lg'
-                    : isDark
-                      ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${timeframe === tf
+                  ? isDark
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/50'
+                    : 'bg-indigo-600 text-white shadow-lg'
+                  : isDark
+                    ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 {tf}{isRTL ? ' دقيقة' : 'M'}
               </motion.button>
@@ -681,8 +677,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             </span>
             <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>•</span>
             <span className={`text-xs font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-              {isRTL ? `${startIndex + 1} - ${Math.min(startIndex + viewWindow, data.length)} / ${data.length}` 
-                     : `${startIndex + 1} - ${Math.min(startIndex + viewWindow, data.length)} / ${data.length}`}
+              {isRTL ? `${startIndex + 1} - ${Math.min(startIndex + viewWindow, data.length)} / ${data.length}`
+                : `${startIndex + 1} - ${Math.min(startIndex + viewWindow, data.length)} / ${data.length}`}
             </span>
           </div>
         </motion.div>
@@ -692,15 +688,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className={`mb-4 p-4 rounded-xl border-2 ${
-              mtfEnabled 
-                ? isDark 
-                  ? 'bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/50' 
-                  : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-300'
-                : isDark 
-                  ? 'bg-gray-800/50 border-gray-700' 
-                  : 'bg-gray-50 border-gray-200'
-            }`}
+            className={`mb-4 p-4 rounded-xl border-2 ${mtfEnabled
+              ? isDark
+                ? 'bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/50'
+                : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-300'
+              : isDark
+                ? 'bg-gray-800/50 border-gray-700'
+                : 'bg-gray-50 border-gray-200'
+              }`}
           >
             <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -712,20 +707,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   {mtfEnabled ? (isRTL ? 'مفعّل' : 'ACTIVE') : (isRTL ? 'معطّل' : 'OFF')}
                 </Badge>
               </div>
-              
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onMtfEnabledChange(!mtfEnabled)}
-                className={`px-6 py-2 rounded-lg font-semibold text-sm transition-all ${
-                  mtfEnabled
-                    ? isDark
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
-                      : 'bg-purple-600 text-white shadow-lg'
-                    : isDark
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border-2'
-                }`}
+                className={`px-6 py-2 rounded-lg font-semibold text-sm transition-all ${mtfEnabled
+                  ? isDark
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
+                    : 'bg-purple-600 text-white shadow-lg'
+                  : isDark
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border-2'
+                  }`}
               >
                 {mtfEnabled ? (isRTL ? '✓ مفعّل' : '✓ Enabled') : (isRTL ? 'تفعيل MTF' : 'Enable MTF')}
               </motion.button>
@@ -749,15 +743,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onMtfSmallTimeframeChange(tf as 5 | 15 | 30 | 60)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                          mtfSmallTimeframe === tf
-                            ? isDark
-                              ? 'bg-green-600 text-white shadow-lg shadow-green-500/50'
-                              : 'bg-green-600 text-white shadow-lg'
-                            : isDark
-                              ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                              : 'bg-white text-gray-600 hover:bg-gray-100 border'
-                        }`}
+                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${mtfSmallTimeframe === tf
+                          ? isDark
+                            ? 'bg-green-600 text-white shadow-lg shadow-green-500/50'
+                            : 'bg-green-600 text-white shadow-lg'
+                          : isDark
+                            ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                            : 'bg-white text-gray-600 hover:bg-gray-100 border'
+                          }`}
                       >
                         {tf}{isRTL ? 'د' : 'M'}
                       </motion.button>
@@ -781,15 +774,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onMtfLargeTimeframeChange(value as 240 | 720 | 1440)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                          mtfLargeTimeframe === value
-                            ? isDark
-                              ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/50'
-                              : 'bg-orange-600 text-white shadow-lg'
-                            : isDark
-                              ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                              : 'bg-white text-gray-600 hover:bg-gray-100 border'
-                        }`}
+                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${mtfLargeTimeframe === value
+                          ? isDark
+                            ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/50'
+                            : 'bg-orange-600 text-white shadow-lg'
+                          : isDark
+                            ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                            : 'bg-white text-gray-600 hover:bg-gray-100 border'
+                          }`}
                       >
                         {label}
                       </motion.button>
@@ -808,7 +800,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <span>ℹ️</span>
                   <span>
-                    {isRTL 
+                    {isRTL
                       ? `سيتم عرض ${mtfLargeTimeframe / mtfSmallTimeframe} شمعة من فريم ${mtfSmallTimeframe}د داخل كل شمعة من فريم ${mtfLargeTimeframe === 1440 ? '1 يوم' : mtfLargeTimeframe === 720 ? '12 ساعة' : '4 ساعات'}`
                       : `Will display ${mtfLargeTimeframe / mtfSmallTimeframe} candles of ${mtfSmallTimeframe}M inside each ${mtfLargeTimeframe === 1440 ? '1 Day' : mtfLargeTimeframe === 720 ? '12 Hour' : '4 Hour'} candle`
                     }
@@ -818,7 +810,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             )}
           </motion.div>
         )}
-        
+
         {/* Interactive Chart Container */}
         <div
           ref={chartRef}
@@ -833,7 +825,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           <AnimatePresence mode="wait">
             {showTable ? tableComponent(isExpanded ? '600px' : '400px') : chartComponent(isExpanded ? 600 : 400)}
           </AnimatePresence>
-          
+
           {/* Drawing Canvas Overlay - فقط عند التكبير */}
           {isExpanded && !showTable && (
             <DrawingCanvas
@@ -851,14 +843,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             />
           )}
         </div>
-        
-        <motion.div 
+
+        <motion.div
           className={`mt-6 grid grid-cols-3 gap-4`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05, y: -2 }}
             className={`p-4 rounded-xl ${isDark ? "bg-blue-950/30 border border-blue-800/50" : "bg-blue-50 border border-blue-100"} text-center relative overflow-hidden`}
           >
@@ -874,8 +866,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               {currency.price.toFixed(decimals)}
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             whileHover={{ scale: 1.05, y: -2 }}
             className={`p-4 rounded-xl ${isDark ? "bg-green-950/30 border border-green-800/50" : "bg-green-50 border border-green-100"} text-center relative overflow-hidden`}
           >
@@ -891,8 +883,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               {Math.max(...data.map(d => d.value)).toFixed(decimals)}
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             whileHover={{ scale: 1.05, y: -2 }}
             className={`p-4 rounded-xl ${isDark ? "bg-red-950/30 border border-red-800/50" : "bg-red-50 border border-red-100"} text-center relative overflow-hidden`}
           >
@@ -960,7 +952,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1002,7 +994,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 onVisibilityToggle={() => setDrawingsVisible(!drawingsVisible)}
               />
             )}
-            
+
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -1016,7 +1008,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               <div className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"} border-b p-4`}>
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div 
+                    <div
                       className="p-2 rounded-lg"
                       style={{ backgroundColor: `${indicator.color}20` }}
                     >
@@ -1030,10 +1022,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         {isRTL ? currency.name : currency.nameEn} • {currency.symbol}
                       </p>
                     </div>
-                    
+
                     {/* Drawing Tools Badge */}
                     {!showTable && (
-                      <Badge 
+                      <Badge
                         className={`${isDark ? "bg-indigo-950 text-indigo-300 border-indigo-700" : "bg-indigo-100 text-indigo-700 border-indigo-300"} border-2 animate-pulse`}
                       >
                         {isRTL ? "🎨 أدوات الرسم نشطة" : "🎨 Drawing Tools Active"}
@@ -1050,11 +1042,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
                         {currency.price.toFixed(decimals)}
                       </div>
-                      <div className={`text-sm ${
-                        isPositive
-                          ? isDark ? "text-green-400" : "text-green-600"
-                          : isDark ? "text-red-400" : "text-red-600"
-                      }`}>
+                      <div className={`text-sm ${isPositive
+                        ? isDark ? "text-green-400" : "text-green-600"
+                        : isDark ? "text-red-400" : "text-red-600"
+                        }`}>
                         {isPositive ? '+' : ''}{currency.change.toFixed(decimals)} ({isPositive ? '+' : ''}{currency.changePercent.toFixed(2)}%)
                       </div>
                     </div>
@@ -1112,15 +1103,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                             onTimeframeChange(tf as 5 | 15 | 30 | 60);
                           }
                         }}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          timeframe === tf
-                            ? isDark
-                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/50'
-                              : 'bg-indigo-600 text-white shadow-lg'
-                            : isDark
-                              ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${timeframe === tf
+                          ? isDark
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/50'
+                            : 'bg-indigo-600 text-white shadow-lg'
+                          : isDark
+                            ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
                       >
                         {tf}{isRTL ? ' دقيقة' : 'M'}
                       </motion.button>
@@ -1176,15 +1166,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className={`mt-4 p-3 rounded-xl border-2 ${
-                      mtfEnabled 
-                        ? isDark 
-                          ? 'bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/50' 
-                          : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-300'
-                        : isDark 
-                          ? 'bg-gray-700/50 border-gray-600' 
-                          : 'bg-gray-50 border-gray-200'
-                    }`}
+                    className={`mt-4 p-3 rounded-xl border-2 ${mtfEnabled
+                      ? isDark
+                        ? 'bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/50'
+                        : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-300'
+                      : isDark
+                        ? 'bg-gray-700/50 border-gray-600'
+                        : 'bg-gray-50 border-gray-200'
+                      }`}
                   >
                     <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -1196,7 +1185,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                           {mtfEnabled ? (isRTL ? 'مفعّل' : 'ON') : (isRTL ? 'معطّل' : 'OFF')}
                         </Badge>
                       </div>
-                      
+
                       <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         {mtfEnabled && (
                           <>
@@ -1211,15 +1200,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => onMtfSmallTimeframeChange(tf as 5 | 15 | 30 | 60)}
-                                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-                                    mtfSmallTimeframe === tf
-                                      ? isDark
-                                        ? 'bg-green-600 text-white shadow-lg'
-                                        : 'bg-green-600 text-white shadow-lg'
-                                      : isDark
-                                        ? 'bg-gray-600 text-gray-400 hover:bg-gray-500'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100'
-                                  }`}
+                                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${mtfSmallTimeframe === tf
+                                    ? isDark
+                                      ? 'bg-green-600 text-white shadow-lg'
+                                      : 'bg-green-600 text-white shadow-lg'
+                                    : isDark
+                                      ? 'bg-gray-600 text-gray-400 hover:bg-gray-500'
+                                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
                                 >
                                   {tf}{isRTL ? 'د' : 'M'}
                                 </motion.button>
@@ -1241,15 +1229,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => onMtfLargeTimeframeChange(value as 240 | 720 | 1440)}
-                                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-                                    mtfLargeTimeframe === value
-                                      ? isDark
-                                        ? 'bg-orange-600 text-white shadow-lg'
-                                        : 'bg-orange-600 text-white shadow-lg'
-                                      : isDark
-                                        ? 'bg-gray-600 text-gray-400 hover:bg-gray-500'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100'
-                                  }`}
+                                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${mtfLargeTimeframe === value
+                                    ? isDark
+                                      ? 'bg-orange-600 text-white shadow-lg'
+                                      : 'bg-orange-600 text-white shadow-lg'
+                                    : isDark
+                                      ? 'bg-gray-600 text-gray-400 hover:bg-gray-500'
+                                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
                                 >
                                   {label}
                                 </motion.button>
@@ -1262,15 +1249,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => onMtfEnabledChange(!mtfEnabled)}
-                          className={`px-4 py-1.5 rounded-lg font-semibold text-xs transition-all ${
-                            mtfEnabled
-                              ? isDark
-                                ? 'bg-purple-600 text-white shadow-lg'
-                                : 'bg-purple-600 text-white shadow-lg'
-                              : isDark
-                                ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                                : 'bg-white text-gray-700 hover:bg-gray-100 border'
-                          }`}
+                          className={`px-4 py-1.5 rounded-lg font-semibold text-xs transition-all ${mtfEnabled
+                            ? isDark
+                              ? 'bg-purple-600 text-white shadow-lg'
+                              : 'bg-purple-600 text-white shadow-lg'
+                            : isDark
+                              ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                              : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                            }`}
                         >
                           {mtfEnabled ? (isRTL ? '✓ مفعّل' : '✓ ON') : (isRTL ? 'تفعيل' : 'Enable')}
                         </motion.button>
@@ -1279,7 +1265,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
                     {mtfEnabled && mtfSmallTimeframe && mtfLargeTimeframe && (
                       <div className={`mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} ${isRTL ? 'text-right' : 'text-left'}`}>
-                        ℹ️ {isRTL 
+                        ℹ️ {isRTL
                           ? `عرض ${mtfLargeTimeframe / mtfSmallTimeframe} شمعة ${mtfSmallTimeframe}د داخل كل شمعة ${mtfLargeTimeframe === 1440 ? '1 يوم' : mtfLargeTimeframe === 720 ? '12س' : '4س'}`
                           : `Showing ${mtfLargeTimeframe / mtfSmallTimeframe} x ${mtfSmallTimeframe}M candles inside each ${mtfLargeTimeframe === 1440 ? '1D' : mtfLargeTimeframe === 720 ? '12H' : '4H'} candle`
                         }
@@ -1315,13 +1301,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 </div>
 
                 {/* Stats Grid */}
-                <motion.div 
+                <motion.div
                   className={`mt-6 grid grid-cols-6 gap-4`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.03, y: -2 }}
                     className={`p-4 rounded-xl ${isDark ? "bg-blue-950/30 border border-blue-800/50" : "bg-blue-50 border border-blue-100"} text-center relative overflow-hidden`}
                   >
@@ -1337,8 +1323,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       {currency.price.toFixed(decimals)}
                     </div>
                   </motion.div>
-                  
-                  <motion.div 
+
+                  <motion.div
                     whileHover={{ scale: 1.03, y: -2 }}
                     className={`p-4 rounded-xl ${isDark ? "bg-green-950/30 border border-green-800/50" : "bg-green-50 border border-green-100"} text-center relative overflow-hidden`}
                   >
@@ -1354,8 +1340,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       {Math.max(...data.map(d => d.value)).toFixed(decimals)}
                     </div>
                   </motion.div>
-                  
-                  <motion.div 
+
+                  <motion.div
                     whileHover={{ scale: 1.03, y: -2 }}
                     className={`p-4 rounded-xl ${isDark ? "bg-red-950/30 border border-red-800/50" : "bg-red-50 border border-red-100"} text-center relative overflow-hidden`}
                   >
@@ -1372,7 +1358,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.03, y: -2 }}
                     className={`p-4 rounded-xl ${isDark ? "bg-purple-950/30 border border-purple-800/50" : "bg-purple-50 border border-purple-100"} text-center relative overflow-hidden`}
                   >
@@ -1389,7 +1375,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.03, y: -2 }}
                     className={`p-4 rounded-xl ${isDark ? "bg-orange-950/30 border border-orange-800/50" : "bg-orange-50 border border-orange-100"} text-center relative overflow-hidden`}
                   >
@@ -1406,7 +1392,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.03, y: -2 }}
                     className={`p-4 rounded-xl ${isDark ? "bg-cyan-950/30 border border-cyan-800/50" : "bg-cyan-50 border border-cyan-100"} text-center relative overflow-hidden`}
                   >
@@ -1442,8 +1428,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               </span>
             </DialogTitle>
             <DialogDescription className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-base mt-2`}>
-              {isRTL 
-                ? 'اختر الإطار الزمني الكبير لعرض الشموع' 
+              {isRTL
+                ? 'اختر الإطار الزمني الكبير لعرض الشموع'
                 : 'Choose the large timeframe to display candles'}
             </DialogDescription>
           </DialogHeader>
@@ -1461,19 +1447,18 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   whileHover={{ scale: 1.05, y: -4 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
-                    onMtfLargeTimeframeChange(value as 240 | 720 | 1440);
-                    onMtfEnabledChange(true);
+                    onMtfLargeTimeframeChange?.(value as 240 | 720 | 1440);
+                    onMtfEnabledChange?.(true);
                     setIsMtfDialogOpen(false);
                   }}
-                  className={`p-6 rounded-2xl border-2 font-bold transition-all text-center ${
-                    mtfLargeTimeframe === value
-                      ? isDark
-                        ? 'bg-gradient-to-br from-orange-600 to-orange-500 border-orange-400 text-white shadow-2xl shadow-orange-500/40'
-                        : 'bg-gradient-to-br from-orange-600 to-orange-500 border-orange-400 text-white shadow-2xl shadow-orange-500/30'
-                      : isDark
-                        ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600 hover:shadow-lg'
-                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300 hover:shadow-lg'
-                  }`}
+                  className={`p-6 rounded-2xl border-2 font-bold transition-all text-center ${mtfLargeTimeframe === value
+                    ? isDark
+                      ? 'bg-gradient-to-br from-orange-600 to-orange-500 border-orange-400 text-white shadow-2xl shadow-orange-500/40'
+                      : 'bg-gradient-to-br from-orange-600 to-orange-500 border-orange-400 text-white shadow-2xl shadow-orange-500/30'
+                    : isDark
+                      ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600 hover:shadow-lg'
+                      : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300 hover:shadow-lg'
+                    }`}
                 >
                   <div className="text-3xl mb-2">{icon}</div>
                   <div className="text-lg">{label}</div>
