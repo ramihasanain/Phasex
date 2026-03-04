@@ -1,11 +1,6 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { ArrowUp, DollarSign, Gem, Landmark, Bitcoin, Search, TrendingUp, Star, Flame, Sparkles, Radio, Activity, ArrowUpRight, ArrowDownRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Search, DollarSign, Gem, Landmark, Bitcoin, ArrowUpRight, ArrowDownRight, ChevronsLeft, ChevronsRight, TrendingUp, Droplets } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 
 export interface Asset {
@@ -16,7 +11,7 @@ export interface Asset {
   price: number;
   change: number;
   changePercent: number;
-  market: "FOREX" | "COMMODITY" | "INDEX" | "CRYPTO";
+  market: "FOREX" | "COMMODITY" | "INDEX" | "CRYPTO" | "METALS";
 }
 
 interface MarketListProps {
@@ -27,485 +22,217 @@ interface MarketListProps {
   onToggleCollapse?: () => void;
 }
 
-const marketConfig = {
-  FOREX: {
-    labelAr: "العملات",
-    labelEn: "Forex",
-    icon: DollarSign,
-    signalIcon: Radio,
-    signalLabel: "مباشر",
-    signalLabelEn: "Live",
-    gradient: "from-blue-500 via-blue-600 to-cyan-600",
-    bgLight: "bg-blue-50",
-    bgDark: "bg-blue-950/30",
-    textLight: "text-blue-600",
-    textDark: "text-blue-400",
-    borderLight: "border-blue-200",
-    borderDark: "border-blue-800",
-    glowColor: "rgba(59, 130, 246, 0.5)",
-  },
-  COMMODITY: {
-    labelAr: "السلع",
-    labelEn: "Commodities",
-    icon: Gem,
-    signalIcon: Flame,
-    signalLabel: "ساخن",
-    signalLabelEn: "Hot",
-    gradient: "from-amber-500 via-orange-600 to-red-600",
-    bgLight: "bg-amber-50",
-    bgDark: "bg-amber-950/30",
-    textLight: "text-amber-600",
-    textDark: "text-amber-400",
-    borderLight: "border-amber-200",
-    borderDark: "border-amber-800",
-    glowColor: "rgba(245, 158, 11, 0.5)",
-  },
-  INDEX: {
-    labelAr: "المؤشرات",
-    labelEn: "Indices",
-    icon: Landmark,
-    signalIcon: TrendingUp,
-    signalLabel: "رائج",
-    signalLabelEn: "Trending",
-    gradient: "from-purple-500 via-pink-600 to-rose-600",
-    bgLight: "bg-purple-50",
-    bgDark: "bg-purple-950/30",
-    textLight: "text-purple-600",
-    textDark: "text-purple-400",
-    borderLight: "border-purple-200",
-    borderDark: "border-purple-800",
-    glowColor: "rgba(168, 85, 247, 0.5)",
-  },
-  CRYPTO: {
-    labelAr: "العملات الرقمية",
-    labelEn: "Crypto",
-    icon: Bitcoin,
-    signalIcon: Sparkles,
-    signalLabel: "نشط",
-    signalLabelEn: "Active",
-    gradient: "from-orange-500 via-yellow-500 to-amber-500",
-    bgLight: "bg-orange-50",
-    bgDark: "bg-orange-950/30",
-    textLight: "text-orange-600",
-    textDark: "text-orange-400",
-    borderLight: "border-orange-200",
-    borderDark: "border-orange-800",
-    glowColor: "rgba(249, 115, 22, 0.5)",
-  },
+/* ─── Symbol Icons from Structural Dynamics ─── */
+const symbolIcons: Record<string, string> = {
+  "ADAUSD.p": "🔵", "ATMUSD.p": "⚡", "AVAUSD.p": "🔺", "AXSUSD.p": "🎮",
+  "BCHUSD.p": "💚", "BNBUSD.p": "💛", "BTCUSD.p": "₿", "COMUSD.p": "🌐",
+  "DOTUSD.p": "⚪", "DSHUSD.p": "🔷", "ETCUSD.p": "💎", "ETHUSD.p": "⟠",
+  "LNKUSD.p": "🔗", "LTCUSD.p": "🪨", "SOLUSD.p": "◎", "TRUUSD.p": "🟢",
+  "UNIUSD.p": "🦄", "XRPUSD.p": "💧", "YFIUSD.p": "💰",
+  "AUDCAD": "🇦🇺", "AUDCHF": "🇦🇺", "AUDJPY": "🇦🇺", "AUDNZD": "🇦🇺", "AUDUSD": "🇦🇺",
+  "CADCHF": "🇨🇦", "CADJPY": "🇨🇦",
+  "CHFJPY": "🇨🇭",
+  "EURAUD": "🇪🇺", "EURCAD": "🇪🇺", "EURCHF": "🇪🇺", "EURGBP": "🇪🇺",
+  "EURJPY": "🇪🇺", "EURNZD": "🇪🇺", "EURUSD": "🇪🇺",
+  "GBPAUD": "🇬🇧", "GBPCAD": "🇬🇧", "GBPCHF": "🇬🇧",
+  "GBPJPY": "🇬🇧", "GBPNZD": "🇬🇧", "GBPUSD": "🇬🇧",
+  "NZDCAD": "🇳🇿", "NZDCHF": "🇳🇿", "NZDJPY": "🇳🇿", "NZDUSD": "🇳🇿",
+  "USDCAD": "🇺🇸", "USDCHF": "🇺🇸", "USDJPY": "🇺🇸",
+  "BRENT": "🛢️", "WTI": "🛢️", "USOIL": "🛢️",
+  "GOLD": "🥇", "SILVER": "🥈", "XAUUSD": "🥇", "XAGUSD": "🥈",
+  "GER30": "🏭", "JAP225": "⛩️", "UK100": "🏰",
+  "US100": "💻", "US30": "🏛️", "US500": "📊",
+  "VIXRoll": "📉", "NL25Roll": "🌷", "NORWAY25Roll": "⛷️",
+  "RUSS2000": "📈", "EU50Roll": "🏦", "FRA40Roll": "🗼",
+  "AUS200Roll": "🏛️", "CHshares": "⛰️", "SWISS20Roll": "⛰️",
+  "CHINA50Roll": "🏮", "ESP35Roll": "🏟️", "HK50Roll": "🏙️",
 };
+
+const markets = [
+  { key: "FOREX" as const, labelAr: "فوركس", labelEn: "Forex", icon: DollarSign, accent: "#3b82f6", emoji: "💱" },
+  { key: "METALS" as const, labelAr: "معادن", labelEn: "Metals", icon: Gem, accent: "#f59e0b", emoji: "🥇" },
+  { key: "COMMODITY" as const, labelAr: "سلع", labelEn: "Commodities", icon: Droplets, accent: "#f97316", emoji: "🛢️" },
+  { key: "INDEX" as const, labelAr: "مؤشرات", labelEn: "Indices", icon: Landmark, accent: "#a855f7", emoji: "📊" },
+  { key: "CRYPTO" as const, labelAr: "رقمية", labelEn: "Crypto", icon: Bitcoin, accent: "#10b981", emoji: "₿" },
+];
 
 export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, onToggleCollapse }: MarketListProps) {
   const { language, t } = useLanguage();
-  const [activeMarket, setActiveMarket] = useState<"FOREX" | "COMMODITY" | "INDEX" | "CRYPTO">("FOREX");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
-
   const isRTL = language === "ar";
-  const isDark = true; // Force dark mode
+  const [activeMarket, setActiveMarket] = useState<"FOREX" | "COMMODITY" | "INDEX" | "CRYPTO" | "METALS">("FOREX");
+  const [search, setSearch] = useState("");
 
-  const filteredAssets = assets.filter(
-    (asset) =>
-      asset.market === activeMarket &&
-      (asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        asset.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filtered = assets.filter(
+    (a) => a.market === activeMarket &&
+      (a.name.toLowerCase().includes(search.toLowerCase()) ||
+        a.nameEn.toLowerCase().includes(search.toLowerCase()) ||
+        a.symbol.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const marketStats = {
-    FOREX: assets.filter((a) => a.market === "FOREX"),
-    COMMODITY: assets.filter((a) => a.market === "COMMODITY"),
-    INDEX: assets.filter((a) => a.market === "INDEX"),
-    CRYPTO: assets.filter((a) => a.market === "CRYPTO"),
-  };
+  const allMarketAssets = assets.filter((a) => a.market === activeMarket);
+  const positiveCount = allMarketAssets.filter((a) => a.change >= 0).length;
+  const negativeCount = allMarketAssets.length - positiveCount;
+  const positivePct = allMarketAssets.length > 0 ? Math.round((positiveCount / allMarketAssets.length) * 100) : 0;
 
-  const getMarketTrend = (marketAssets: Asset[]) => {
-    const positive = marketAssets.filter((a) => a.change >= 0).length;
-    return ((positive / marketAssets.length) * 100).toFixed(0);
-  };
+  const currentAccent = markets.find(m => m.key === activeMarket)?.accent || "#3b82f6";
 
-  const toggleFavorite = (assetId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFavorites((prev) => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(assetId)) {
-        newFavorites.delete(assetId);
-      } else {
-        newFavorites.add(assetId);
-      }
-      return newFavorites;
-    });
-  };
-
-  const renderAssetItem = (asset: Asset) => {
-    const isFavorite = favorites.has(asset.id);
-    const config = marketConfig[activeMarket];
-    const isPositive = asset.change >= 0;
-
+  /* ── Collapsed State ── */
+  if (isCollapsed) {
     return (
-      <motion.button
-        key={asset.id}
-        onClick={() => onSelectAsset(asset)}
-        initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        transition={{ duration: 0.15 }}
-        className={`relative w-full text-${isRTL ? 'right' : 'left'} p-2.5 rounded-xl transition-all overflow-hidden group ${selectedAsset?.id === asset.id
-          ? `${isDark ? config.bgDark : config.bgLight} shadow-lg ring-2 ${isDark ? config.borderDark : config.borderLight}`
-          : isDark
-            ? "bg-gray-800/60 hover:bg-gray-800 shadow-sm hover:shadow-md"
-            : "bg-white hover:bg-gray-50 shadow-sm hover:shadow-md border border-gray-100 hover:border-gray-200"
-          }`}
-        style={
-          selectedAsset?.id === asset.id
-            ? {
-              boxShadow: `0 0 20px -8px ${config.glowColor}`,
-            }
-            : {}
-        }
-      >
-        {/* Background Pattern */}
-        <div className={`absolute inset-0 opacity-3 ${selectedAsset?.id === asset.id ? 'opacity-5' : ''}`}>
-          <div className={`absolute inset-0 bg-gradient-to-br ${config.gradient}`} />
-        </div>
-
-        {/* Compact Layout */}
-        <div className="relative flex items-center justify-between gap-2">
-          {/* Left Side: Name & Symbol */}
-          <div className={`flex items-center gap-2 flex-1 min-w-0`}>
-            {/* Pulse Indicator */}
-            <motion.div
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isPositive ? 'bg-green-500' : 'bg-red-500'}`}
-            />
-
-            {/* Name & Symbol */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h3 className={`font-bold text-xs truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {isRTL ? asset.name : asset.nameEn}
-                </h3>
-                {isFavorite && (
-                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={`font-mono text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                  {asset.symbol}
-                </span>
-                <Badge
-                  variant="outline"
-                  className={`text-[9px] px-1.5 py-0 h-4 ${isDark ? config.textDark : config.textLight} ${isDark ? config.borderDark : config.borderLight}`}
-                >
-                  <config.signalIcon className="w-2 h-2 mr-0.5" />
-                  {isRTL ? config.signalLabel : config.signalLabelEn}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {/* Center: Price */}
-          <div className={`flex flex-col items-end px-2 flex-shrink-0`}>
-            <div className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {asset.market === "CRYPTO" || asset.market === "INDEX"
-                ? asset.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                : asset.price.toFixed(4)}
-            </div>
-            <div className="flex items-center gap-1 mt-0.5">
-              <Activity className={`w-2.5 h-2.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-              <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                {isPositive ? '+' : ''}{asset.change.toFixed(asset.market === "CRYPTO" ? 2 : 4)}
-              </span>
-            </div>
-          </div>
-
-          {/* Right: Change Badge */}
-          <div className="flex flex-col items-end gap-1 flex-shrink-0">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className={`px-2 py-1 rounded-lg font-bold text-xs flex items-center gap-1 ${isPositive
-                ? isDark
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-green-50 text-green-700'
-                : isDark
-                  ? 'bg-red-500/20 text-red-400'
-                  : 'bg-red-50 text-red-700'
-                }`}
-            >
-              {isPositive ? (
-                <ArrowUpRight className="w-3 h-3" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3" />
-              )}
-              {isPositive ? '+' : ''}{asset.changePercent.toFixed(2)}%
-            </motion.div>
-
-            {/* Mini Chart */}
-            <div className="flex items-center gap-[2px]">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-[2px] rounded-full ${isPositive
-                    ? 'bg-green-500/30'
-                    : 'bg-red-500/30'
-                    }`}
-                  style={{
-                    height: `${Math.random() * 8 + 3}px`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Favorite Button - Hidden by default, shown on hover */}
-          <div
-            onClick={(e) => toggleFavorite(asset.id, e)}
-            className={`absolute ${isRTL ? 'left-1' : 'right-1'} top-1 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-200 dark:hover:bg-gray-700/70 cursor-pointer`}
-          >
-            <Star
-              className={`w-3 h-3 ${isFavorite
-                ? "fill-yellow-400 text-yellow-400"
-                : isDark ? "text-gray-500" : "text-gray-400"
-                }`}
-            />
-          </div>
-        </div>
-
-        {/* Hover Effect Overlay */}
-        <motion.div
-          className={`absolute inset-0 bg-gradient-to-br ${config.gradient} opacity-0 group-hover:opacity-3 transition-opacity pointer-events-none rounded-xl`}
-        />
-      </motion.button>
-    );
-  };
-
-  return (
-    <motion.div
-      initial={false}
-      animate={{ width: isCollapsed ? "80px" : "320px" }}
-      transition={{ type: "spring", damping: 25, stiffness: 200, duration: 0.4 }}
-      className="h-full"
-    >
-      <Card className={`h-full shadow-2xl overflow-hidden bg-[#0a0e18] border-[rgba(0,229,160,0.08)] transition-all`}>
-        {!isCollapsed ? (
-          <>
-            <CardHeader className="pb-3 bg-gradient-to-br from-transparent to-transparent">
-              <div className="flex items-center justify-between">
-                <CardTitle className={`flex items-center gap-3 text-xl ${isDark ? "text-white" : "text-gray-900"}`}>
-                  <motion.div
-                    className={`bg-gradient-to-br ${marketConfig[activeMarket].gradient} p-2.5 rounded-xl shadow-lg`}
-                    animate={{ rotate: [0, 5, 0, -5, 0] }}
-                    transition={{ duration: 5, repeat: Infinity }}
-                  >
-                    <Landmark className="w-5 h-5 text-white" />
-                  </motion.div>
-                  <div>
-                    <div>{t("markets")}</div>
-                    <div className={`text-xs font-normal ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                      {filteredAssets.length} {t("total")}
-                    </div>
-                  </div>
-                </CardTitle>
-                {onToggleCollapse && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onToggleCollapse}
-                    className={`${isDark ? "hover:bg-gray-800" : ""}`}
-                  >
-                    <ChevronsLeft className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-600"}`} />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4 px-4">
-              {/* Market Tabs - Horizontal Pills */}
-              <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl bg-gray-100 dark:bg-gray-800/50">
-                {(Object.keys(marketConfig) as Array<keyof typeof marketConfig>).map((market) => {
-                  const config = marketConfig[market];
-                  const Icon = config.icon;
-                  const isActive = activeMarket === market;
-
-                  return (
-                    <motion.button
-                      key={market}
-                      onClick={() => setActiveMarket(market)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`relative overflow-hidden p-3 rounded-lg transition-all ${isActive
-                        ? `bg-gradient-to-br ${config.gradient} shadow-lg`
-                        : isDark
-                          ? "hover:bg-gray-700/50"
-                          : "hover:bg-white"
-                        }`}
-                    >
-                      <div className="flex flex-col items-center gap-1.5">
-                        <Icon className={`w-5 h-5 ${isActive ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                        <span className={`text-[10px] font-semibold ${isActive ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-700'}`}>
-                          {isRTL ? config.labelAr.split(' ')[0] : config.labelEn}
-                        </span>
-                      </div>
-
-                      {/* Active Indicator Dot */}
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeDot"
-                          className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Market Stats Bar */}
-              <motion.div
-                layout
-                className={`p-3 rounded-xl ${isDark ? `${marketConfig[activeMarket].bgDark}` : `${marketConfig[activeMarket].bgLight}`} border ${isDark ? marketConfig[activeMarket].borderDark : marketConfig[activeMarket].borderLight}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {(() => {
-                      const SignalIcon = marketConfig[activeMarket].signalIcon;
-                      return <SignalIcon className={`w-4 h-4 ${isDark ? marketConfig[activeMarket].textDark : marketConfig[activeMarket].textLight}`} />;
-                    })()}
-                    <span className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {getMarketTrend(marketStats[activeMarket])}% {t("positive")}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                        {marketStats[activeMarket].filter((a) => a.change >= 0).length}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                        {marketStats[activeMarket].filter((a) => a.change < 0).length}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className={`mt-2 h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${getMarketTrend(marketStats[activeMarket])}%` }}
-                    className={`h-full bg-gradient-to-r ${marketConfig[activeMarket].gradient}`}
-                  />
-                </div>
-              </motion.div>
-
-              {/* Search */}
-              <div className="relative">
-                <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
-                <Input
-                  type="text"
-                  placeholder={t("searchAsset")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'} rounded-xl border-2 ${isDark
-                    ? "bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600"
-                    : "border-gray-200 focus:border-gray-300"
-                    }`}
-                  dir={isRTL ? "rtl" : "ltr"}
-                />
-              </div>
-
-              {/* Assets List */}
-              <div className="space-y-3 max-h-[calc(100vh-520px)] overflow-y-auto pr-1 custom-scrollbar">
-                <AnimatePresence mode="popLayout">
-                  {filteredAssets.length > 0 ? (
-                    filteredAssets.map(renderAssetItem)
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className={`text-center py-12 ${isDark ? "text-gray-500" : "text-gray-500"}`}
-                    >
-                      <Search className={`w-16 h-16 mx-auto mb-3 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
-                      <p className="font-semibold">{t("noResults")}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </CardContent>
-          </>
-        ) : (
-          /* Collapsed View */
-          <div className="h-full flex flex-col items-center p-3 space-y-3">
-            {/* Toggle Button */}
-            {onToggleCollapse && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onToggleCollapse}
-                className={`${isDark ? "hover:bg-gray-800" : ""}`}
-              >
-                <ChevronsRight className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-600"}`} />
-              </Button>
-            )}
-
-            {/* Vertical Market Tabs */}
-            <div className="flex-1 flex flex-col gap-3 items-center">
-              {(Object.keys(marketConfig) as Array<keyof typeof marketConfig>).map((market) => {
-                const config = marketConfig[market];
-                const Icon = config.icon;
-                const isActive = activeMarket === market;
-
-                return (
-                  <motion.button
-                    key={market}
-                    onClick={() => setActiveMarket(market)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all ${isActive
-                      ? `bg-gradient-to-br ${config.gradient} shadow-lg`
-                      : isDark
-                        ? "bg-gray-800 hover:bg-gray-700"
-                        : "bg-gray-100 hover:bg-gray-200"
-                      }`}
-                    title={isRTL ? config.labelAr : config.labelEn}
-                  >
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeMarketCollapsed"
-                        className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-full"
-                      />
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
+      <div className="h-full rounded-xl flex flex-col items-center py-3 gap-2"
+        style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>
+        {onToggleCollapse && (
+          <button onClick={onToggleCollapse} className="w-9 h-9 rounded-lg flex items-center justify-center mb-2 cursor-pointer"
+            style={{ color: "#64748b", background: "rgba(255,255,255,0.04)" }}>
+            <ChevronsRight className="w-4 h-4" />
+          </button>
         )}
+        {markets.map((m) => {
+          const active = activeMarket === m.key;
+          return (
+            <button key={m.key} onClick={() => setActiveMarket(m.key)}
+              className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all text-sm"
+              style={{
+                background: active ? `${m.accent}18` : "transparent",
+                border: active ? `1px solid ${m.accent}30` : "1px solid transparent",
+              }}>
+              {m.emoji}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
-        <style>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 5px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: ${isDark ? '#1f2937' : '#f3f4f6'};
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: ${isDark ? '#4b5563' : '#d1d5db'};
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: ${isDark ? '#6b7280' : '#9ca3af'};
-          }
-        `}</style>
-      </Card>
-    </motion.div>
+  /* ── Expanded State ── */
+  return (
+    <div className="h-full rounded-xl flex flex-col overflow-hidden"
+      style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>
+
+      {/* Header */}
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: `${currentAccent}15`, border: `1px solid ${currentAccent}25` }}>
+            <TrendingUp className="w-4 h-4" style={{ color: currentAccent }} />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>{t("markets")}</h2>
+            <span className="text-[10px]" style={{ color: "#64748b" }}>{allMarketAssets.length} {t("total")}</span>
+          </div>
+        </div>
+        {onToggleCollapse && (
+          <button onClick={onToggleCollapse} className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer"
+            style={{ color: "#64748b", background: "rgba(255,255,255,0.03)" }}>
+            <ChevronsLeft className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* Market Tabs — 5 categories */}
+      <div className="px-3 py-2">
+        <div className="flex gap-0.5 p-1 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+          {markets.map((m) => {
+            const active = activeMarket === m.key;
+            return (
+              <motion.button key={m.key} onClick={() => { setActiveMarket(m.key); setSearch(""); }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-1 flex flex-col items-center gap-1 py-2.5 rounded-md cursor-pointer transition-all"
+                style={{
+                  background: active ? `${m.accent}12` : "transparent",
+                  border: active ? `1px solid ${m.accent}25` : "1px solid transparent",
+                }}>
+                <span className="text-[22px] leading-none">{m.emoji}</span>
+                <span className="text-[10px] font-semibold" style={{ color: active ? m.accent : "#64748b" }}>
+                  {isRTL ? m.labelAr : m.labelEn}
+                </span>
+                {active && <div className="w-1.5 h-1.5 rounded-full" style={{ background: m.accent }} />}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Sentiment Bar */}
+      <div className="px-4 py-1.5">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] font-medium" style={{ color: "#94a3b8" }}>{positivePct}% {t("positive")}</span>
+          <div className="flex items-center gap-3 text-[10px]">
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span style={{ color: "#64748b" }}>{positiveCount}</span></span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /><span style={{ color: "#64748b" }}>{negativeCount}</span></span>
+          </div>
+        </div>
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+          <motion.div initial={{ width: 0 }} animate={{ width: `${positivePct}%` }}
+            className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${currentAccent}, ${currentAccent}88)` }} />
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="px-3 py-2">
+        <div className="relative">
+          <Search className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "#475569", [isRTL ? "right" : "left"]: 10 }} />
+          <input type="text" placeholder={t("searchAsset")} value={search} onChange={(e) => setSearch(e.target.value)}
+            dir={isRTL ? "rtl" : "ltr"}
+            className="w-full h-8 rounded-lg text-xs outline-none"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              color: "#e2e8f0",
+              paddingLeft: isRTL ? 10 : 32,
+              paddingRight: isRTL ? 32 : 10,
+            }} />
+        </div>
+      </div>
+
+      {/* Asset List */}
+      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#1e293b transparent" }}>
+        <AnimatePresence mode="popLayout">
+          {filtered.length > 0 ? filtered.map((asset) => {
+            const pos = asset.change >= 0;
+            const selected = selectedAsset?.id === asset.id;
+            const decimals = asset.market === "CRYPTO" || asset.market === "INDEX" ? 2 : 4;
+            const icon = symbolIcons[asset.symbol] || "📌";
+
+            return (
+              <motion.button key={asset.id} onClick={() => onSelectAsset(asset)}
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                whileHover={{ x: isRTL ? -2 : 2 }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all"
+                style={{
+                  background: selected ? `${currentAccent}0a` : "rgba(255,255,255,0.01)",
+                  border: selected ? `1px solid ${currentAccent}20` : "1px solid transparent",
+                }}>
+                {/* Left: icon + name */}
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="text-[14px] flex-shrink-0 w-5 text-center">{icon}</span>
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-bold truncate" style={{ color: "#e2e8f0" }}>
+                      {asset.symbol.replace(".p", "")}
+                    </div>
+                    <div className="text-[9px]" style={{ color: "#475569" }}>{isRTL ? asset.name : asset.nameEn}</div>
+                  </div>
+                </div>
+                {/* Center: price */}
+                <div className="text-[12px] font-bold tabular-nums px-2" style={{ color: "#cbd5e1" }}>
+                  {asset.price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
+                </div>
+                {/* Right: change */}
+                <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold"
+                  style={{ background: pos ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: pos ? "#4ade80" : "#f87171" }}>
+                  {pos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  {pos ? "+" : ""}{asset.changePercent.toFixed(2)}%
+                </div>
+              </motion.button>
+            );
+          }) : (
+            <div className="text-center py-12">
+              <Search className="w-10 h-10 mx-auto mb-2" style={{ color: "#1e293b" }} />
+              <p className="text-xs" style={{ color: "#475569" }}>{t("noResults")}</p>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }

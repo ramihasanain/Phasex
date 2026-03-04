@@ -979,13 +979,28 @@ function SupercarGauge({ score, confidence, isRTL }: { score: number; confidence
                 <motion.path d={arc(-225, -225 + confNorm * 270, 90)} fill="none" stroke={confColor} strokeWidth="3" strokeLinecap="round" opacity="0.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 1.2 }} />
                 {ticks.map((t, i) => <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={t.isMajor ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.08)"} strokeWidth={t.isMajor ? 1.5 : 0.7} />)}
                 <circle cx={cx} cy={cy} r="72" fill="url(#iDisc)" /><circle cx={cx} cy={cy} r="72" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                <motion.g initial={{ rotate: -135 }} animate={{ rotate: scoreAngle + 225 - 135 }} transition={{ delay: 0.3, duration: 1.5, type: "spring", stiffness: 40, damping: 15 }} style={{ transformOrigin: `${cx}px ${cy}px` }}>
-                    <polygon points={`${cx},${cy - 92} ${cx - 2.5},${cy + 3} ${cx + 2.5},${cy + 3}`} fill={primary} opacity="0.8" filter="url(#sGlow)" />
-                    <circle cx={cx} cy={cy} r="5" fill="#0a0e14" stroke={primary} strokeWidth="2" />
-                </motion.g>
+                {(() => {
+                    const nRad = (scoreAngle * Math.PI) / 180;
+                    const tipX = cx + 92 * Math.cos(nRad), tipY = cy + 92 * Math.sin(nRad);
+                    const baseX = cx - 3 * Math.cos(nRad), baseY = cy - 3 * Math.sin(nRad);
+                    const perpX = 2.5 * Math.sin(nRad), perpY = -2.5 * Math.cos(nRad);
+                    const b1x = baseX + perpX, b1y = baseY + perpY;
+                    const b2x = baseX - perpX, b2y = baseY - perpY;
+                    return (
+                        <>
+                            <motion.polygon
+                                points={`${tipX},${tipY} ${b1x},${b1y} ${b2x},${b2y}`}
+                                fill={primary} opacity="0.8" filter="url(#sGlow)"
+                                initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}
+                                transition={{ delay: 0.3, duration: 0.8 }}
+                            />
+                            <circle cx={cx} cy={cy} r="5" fill="#0a0e14" stroke={primary} strokeWidth="2" />
+                        </>
+                    );
+                })()}
                 <motion.circle cx={nx} cy={ny} r="3.5" fill={primary} filter="url(#hGlow)" initial={{ opacity: 0 }} animate={{ opacity: [0.6, 1, 0.6] }} transition={{ delay: 1.5, duration: 2, repeat: Infinity }} />
-                <motion.text x={cx} y={cy - 4} fill={primary} fontSize="30" fontWeight="900" textAnchor="middle" dominantBaseline="middle" fontFamily="'Inter', system-ui" letterSpacing="-1" filter="url(#tGlow)" initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.8, duration: 0.8, type: "spring" }}>{scoreText}</motion.text>
-                <text x={cx} y={cy + 18} fill="rgba(255,255,255,0.35)" fontSize="8" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" letterSpacing="2">{i18n[isRTL ? 'ar' : 'en'].globalScore}</text>
+                <motion.text x={cx} y={cy + 2} fill={primary} fontSize="30" fontWeight="900" textAnchor="middle" dominantBaseline="middle" fontFamily="'Inter', system-ui" letterSpacing="-1" filter="url(#tGlow)" initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.8, duration: 0.8, type: "spring" }}>{scoreText}</motion.text>
+                <text x={cx} y={cy + 22} fill="rgba(255,255,255,0.35)" fontSize="8" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" letterSpacing="2">{i18n[isRTL ? 'ar' : 'en'].globalScore}</text>
                 <circle cx={cx} cy={cy} r="115" fill="none" stroke={primary} strokeWidth="1" opacity="0.1" filter="url(#vGlow)" />
             </svg>
         </div>
@@ -1113,8 +1128,8 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                     </div>
                 </div>
                 {/* Scrollable Table */}
-                <div ref={tableRef} className="overflow-x-auto overflow-y-auto rounded-xl" style={{ maxHeight: "520px", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <table className="w-full border-collapse" style={{ minWidth: "900px" }}>
+                <div ref={tableRef} className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.04)" }}>
+                    <table className="w-full border-collapse">
                         <thead className="sticky top-0 z-10">
                             <tr style={{ background: "rgba(10,16,28,0.98)" }}>
                                 <th className="text-left text-[11px] font-bold text-gray-400 py-2 px-3 border-r border-b sticky left-0 z-20"
@@ -1691,9 +1706,9 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                 </div>
             </header>
             {/* ═══ BODY ═══ */}
-            <div className="relative z-10 max-w-[1700px] mx-auto px-5 pt-4">
+            <div className="relative z-10 max-w-[1700px] mx-auto px-5 -mt-2">
                 {/* BANNER with Gauge — F1 Racing Level */}
-                <motion.div className="rounded-2xl mb-4 relative overflow-hidden"
+                <motion.div className="rounded-2xl mb-2 relative overflow-hidden"
                     initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
 
                     {/* Racing Effects Stack */}
@@ -1766,8 +1781,8 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                         borderRadius: "16px",
                     }}>
 
-                        <div className="flex-1 px-8 py-6">
-                            <div className="text-[13px] text-gray-600 tracking-[0.25em] uppercase mb-3 font-semibold flex items-center gap-3">
+                        <div className="flex-1 px-8 py-1">
+                            <div className="text-[13px] text-gray-600 tracking-[0.25em] uppercase mt-3 mb-1 font-semibold flex items-center gap-3">
                                 <motion.div className="w-2 h-2 rounded-full"
                                     style={{ backgroundColor: accent }}
                                     animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8], boxShadow: [`0 0 4px ${accent}`, `0 0 12px ${accent}`, `0 0 4px ${accent}`] }}
@@ -1779,7 +1794,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 </motion.span>
                             </div>
 
-                            <motion.h2 className="text-[48px] font-black tracking-tight mb-3 leading-none"
+                            <motion.h2 className="text-[48px] font-black tracking-tight mb-0 leading-none"
                                 style={{ color: accent, fontStyle: "italic" }}
                                 animate={{
                                     textShadow: [
@@ -1793,8 +1808,31 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 {isRTL ? (trendAr[data.marketState] || data.marketState) : data.marketState}
                             </motion.h2>
 
+                            {/* ═══ Currency Badge (above pyramid, centered) ═══ */}
+                            <div className="-mt-6 flex justify-center mb-1" style={{ paddingLeft: '150px' }}>
+                                {(() => {
+                                    const info = symbolIcons[selectedSymbol] || { icon: "📈", label: selectedSymbol, labelAr: selectedSymbol };
+                                    return (
+                                        <motion.div className="text-center px-5 py-2.5 rounded-xl"
+                                            style={{ background: `${accentG}0.08)`, border: `1px solid ${accentG}0.15)` }}
+                                            initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                                            key={selectedSymbol}>
+                                            <motion.span className="text-2xl block mb-1"
+                                                animate={{ scale: [1, 1.1, 1] }}
+                                                transition={{ duration: 2, repeat: Infinity }}>
+                                                {info.icon}
+                                            </motion.span>
+                                            <div className="text-[14px] font-black" style={{ color: accent }}>
+                                                {isRTL ? info.labelAr : info.label}
+                                            </div>
+                                            <div className="text-[9px] font-mono text-gray-500">{selectedSymbol}</div>
+                                        </motion.div>
+                                    );
+                                })()}
+                            </div>
 
-                            <div className="flex items-center gap-3 text-[15px] flex-wrap">
+                            {/* ═══ Pyramid Row 1 — Phase, Volatility, Risk ═══ */}
+                            <div className="flex items-center justify-center gap-3 text-[15px] flex-wrap" style={{ paddingLeft: '150px' }}>
                                 {[
                                     { k: t.phase, va: tv(data.phase), c: data.phase === "Directional" ? "#00e676" : data.phase === "Developing" ? "#ffc400" : "#ff1744" },
                                     { k: t.volatility, va: tv(data.volatility), c: data.volatility === "Elevated" ? "#ff1744" : data.volatility === "Moderate" ? "#ffc400" : "#00e676" },
@@ -1818,30 +1856,33 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 ))}
                             </div>
 
-                            {/* Quick dynamics summary */}
-                            <div className="mt-3 grid grid-cols-4 gap-2">
+                            {/* ═══ Pyramid Layout: Row 2 — Trend, Momentum, Bias, Reversal ═══ */}
+                            <div className="mt-1 flex items-center justify-center gap-3 text-[15px] flex-wrap" style={{ paddingLeft: '150px' }}>
                                 {[
-                                    { l: t.trend, v: data.dynamics.primaryTrend },
-                                    { l: t.momentum, v: data.dynamics.momentumState },
-                                    { l: t.bias, v: data.dynamics.structuralBias },
-                                    { l: t.reversal, v: data.dynamics.reversalRisk },
-                                ].map((x, i) => (
-                                    <motion.div key={i} className="flex flex-col items-center text-center gap-1 px-3 py-2 rounded-lg"
-                                        style={{
-                                            background: `${getTrendColor(x.v)}08`,
-                                            border: `1px solid ${getTrendColor(x.v)}20`,
-                                        }}
-                                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 * i, type: "spring" }}>
-                                        <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">{x.l}</span>
-                                        <span className="font-black px-2.5 py-1 rounded-md text-[12px]"
+                                    { k: t.trend, v: data.dynamics.primaryTrend },
+                                    { k: t.momentum, v: data.dynamics.momentumState },
+                                    { k: t.bias, v: data.dynamics.structuralBias },
+                                    { k: t.reversal, v: data.dynamics.reversalRisk },
+                                ].map((x, i) => {
+                                    const c = getTrendColor(x.v);
+                                    return (
+                                        <motion.div key={i} className="flex items-center gap-2.5 px-5 py-3 rounded-xl relative overflow-hidden"
                                             style={{
-                                                background: `${getTrendColor(x.v)}18`,
-                                                color: getTrendColor(x.v),
-                                                border: `1px solid ${getTrendColor(x.v)}30`,
-                                                boxShadow: `0 0 8px ${getTrendColor(x.v)}12`
-                                            }}>{tv(x.v)}</span>
-                                    </motion.div>
-                                ))}
+                                                background: `linear-gradient(135deg, ${c}15 0%, ${c}08 100%)`,
+                                                border: `1px solid ${c}35`,
+                                                boxShadow: `0 0 15px ${c}12, inset 0 0 12px ${c}08`,
+                                            }}
+                                            whileHover={{ scale: 1.06, boxShadow: `0 0 25px ${c}25, inset 0 0 15px ${c}12` }}
+                                            initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.1 }}>
+                                            <motion.div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                style={{ backgroundColor: c, boxShadow: `0 0 8px ${c}` }}
+                                                animate={{ opacity: [0.5, 1, 0.5], scale: [0.8, 1.2, 0.8] }}
+                                                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }} />
+                                            <span className="text-gray-400 font-semibold text-[14px]">{x.k}:</span>
+                                            <span className="font-black tracking-wide text-[16px]" style={{ color: c }}>{tv(x.v)}</span>
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -1849,26 +1890,6 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             <div className="flex items-center gap-4">
                                 {/* Score & Confidence Numbers */}
                                 <div className="flex flex-col gap-3 items-end">
-                                    {/* Currency Badge */}
-                                    {(() => {
-                                        const info = symbolIcons[selectedSymbol] || { icon: "📈", label: selectedSymbol, labelAr: selectedSymbol };
-                                        return (
-                                            <motion.div className="text-center px-4 py-2.5 rounded-xl"
-                                                style={{ background: `${accentG}0.08)`, border: `1px solid ${accentG}0.15)` }}
-                                                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
-                                                key={selectedSymbol}>
-                                                <motion.span className="text-2xl block mb-1"
-                                                    animate={{ scale: [1, 1.1, 1] }}
-                                                    transition={{ duration: 2, repeat: Infinity }}>
-                                                    {info.icon}
-                                                </motion.span>
-                                                <div className="text-[14px] font-black" style={{ color: accent }}>
-                                                    {isRTL ? info.labelAr : info.label}
-                                                </div>
-                                                <div className="text-[9px] font-mono text-gray-500">{selectedSymbol}</div>
-                                            </motion.div>
-                                        );
-                                    })()}
                                     <motion.div className="text-center px-4 py-2.5 rounded-xl relative overflow-hidden"
                                         style={{ background: `${confColorG}0.08)`, border: `1px solid ${confColorG}0.2)` }}
                                         initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>

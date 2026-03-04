@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  TrendingUp, 
+import {
+  TrendingUp,
   Move,
   Circle,
   Square,
@@ -36,7 +36,7 @@ import {
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 
-export type DrawingTool = 
+export type DrawingTool =
   | "cursor"
   | "crosshair"
   | "trend-line"
@@ -81,11 +81,11 @@ interface DrawingToolbarProps {
   onClose?: () => void;
 }
 
-export function DrawingToolbar({ 
-  selectedTool, 
-  onToolChange, 
-  onZoomIn, 
-  onZoomOut, 
+export function DrawingToolbar({
+  selectedTool,
+  onToolChange,
+  onZoomIn,
+  onZoomOut,
   onClear,
   onExport,
   magnetEnabled = false,
@@ -96,9 +96,8 @@ export function DrawingToolbar({
   onVisibilityToggle,
   onClose
 }: DrawingToolbarProps) {
-  const { theme } = useTheme();
   const { language } = useLanguage();
-  const isDark = theme === "dark";
+  const isDark = true;
   const isRTL = language === "ar";
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([
@@ -106,8 +105,8 @@ export function DrawingToolbar({
   ]);
 
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => 
-      prev.includes(section) 
+    setExpandedSections(prev =>
+      prev.includes(section)
         ? prev.filter(s => s !== section)
         : [...prev, section]
     );
@@ -120,88 +119,88 @@ export function DrawingToolbar({
         onClose();
       }
     };
-    
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
   // Tool Categories
   const projectionTools = [
-    { 
-      id: "long-position", 
-      icon: TrendingUp, 
+    {
+      id: "long-position",
+      icon: TrendingUp,
       label: isRTL ? "مركز شراء" : "Long Position",
       description: isRTL ? "تحليل مركز شراء" : "Long position analysis"
     },
-    { 
-      id: "short-position", 
-      icon: TrendingDown, 
+    {
+      id: "short-position",
+      icon: TrendingDown,
       label: isRTL ? "مركز بيع" : "Short Position",
       description: isRTL ? "تحليل مركز بيع" : "Short position analysis"
     },
-    { 
-      id: "forecast", 
-      icon: Lightbulb, 
+    {
+      id: "forecast",
+      icon: Lightbulb,
       label: isRTL ? "توقع" : "Forecast",
       description: isRTL ? "توقع حركة السعر" : "Price movement forecast"
     },
-    { 
-      id: "bars-pattern", 
-      icon: BarChart3, 
+    {
+      id: "bars-pattern",
+      icon: BarChart3,
       label: isRTL ? "نمط الأعمدة" : "Bars Pattern",
       description: isRTL ? "تحليل نمط الأعمدة" : "Bar pattern analysis"
     },
-    { 
-      id: "ghost-feed", 
-      icon: Ghost, 
+    {
+      id: "ghost-feed",
+      icon: Ghost,
       label: isRTL ? "تغذية الظل" : "Ghost Feed",
       description: isRTL ? "عرض بيانات سابقة" : "Historical data overlay"
     },
-    { 
-      id: "projection", 
-      icon: Target, 
+    {
+      id: "projection",
+      icon: Target,
       label: isRTL ? "إسقاط" : "Projection",
       description: isRTL ? "إسقاط الأسعار" : "Price projection"
     },
   ];
 
   const volumeTools = [
-    { 
-      id: "anchored-vwap", 
-      icon: Waves, 
+    {
+      id: "anchored-vwap",
+      icon: Waves,
       label: isRTL ? "VWAP مثبت" : "Anchored VWAP",
       description: isRTL ? "متوسط السعر المرجح بالحجم" : "Volume weighted average price"
     },
-    { 
-      id: "fixed-range-volume", 
-      icon: BarChart2, 
+    {
+      id: "fixed-range-volume",
+      icon: BarChart2,
       label: isRTL ? "ملف حجم ثابت" : "Fixed Range Volume Profile",
       description: isRTL ? "ملف تعريف الحجم لنطاق ثابت" : "Volume profile for fixed range"
     },
-    { 
-      id: "anchored-volume", 
-      icon: AlignHorizontalJustifyCenter, 
+    {
+      id: "anchored-volume",
+      icon: AlignHorizontalJustifyCenter,
       label: isRTL ? "ملف حجم مثبت" : "Anchored Volume Profile",
       description: isRTL ? "ملف تعريف الحجم المثبت" : "Anchored volume profile"
     },
   ];
 
   const measurerTools = [
-    { 
-      id: "price-range", 
-      icon: Ruler, 
+    {
+      id: "price-range",
+      icon: Ruler,
       label: isRTL ? "نطاق السعر" : "Price Range",
       description: isRTL ? "قياس نطاق الأسعار" : "Measure price range"
     },
-    { 
-      id: "date-range", 
-      icon: Calendar, 
+    {
+      id: "date-range",
+      icon: Calendar,
       label: isRTL ? "نطاق التاريخ" : "Date Range",
       description: isRTL ? "قياس نطاق التواريخ" : "Measure date range"
     },
-    { 
-      id: "date-price-range", 
-      icon: Box, 
+    {
+      id: "date-price-range",
+      icon: Box,
       label: isRTL ? "نطاق التاريخ والسعر" : "Date and Price Range",
       description: isRTL ? "قياس نطاق التاريخ والسعر" : "Measure date and price range"
     },
@@ -230,7 +229,7 @@ export function DrawingToolbar({
 
     return (
       <motion.button
-        whileHover={{ 
+        whileHover={{
           x: isRTL ? -4 : 4
         }}
         whileTap={{ scale: 0.98 }}
@@ -238,9 +237,9 @@ export function DrawingToolbar({
         className={`
           w-full flex items-center gap-3 px-3 py-2 text-sm transition-all
           ${isRTL ? "flex-row-reverse text-right" : "text-left"}
-          ${isSelected 
-            ? isDark 
-              ? "bg-indigo-600 text-white" 
+          ${isSelected
+            ? isDark
+              ? "bg-indigo-600 text-white"
               : "bg-indigo-500 text-white"
             : isDark
               ? "text-gray-300 hover:text-white hover:bg-indigo-600/10"
@@ -304,35 +303,23 @@ export function DrawingToolbar({
 
   return (
     <>
-      {/* Backdrop للإغلاق */}
-      <AnimatePresence>
-        {!isCollapsed && onClose && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[99]"
-          />
-        )}
-      </AnimatePresence>
+      {/* No backdrop — toolbar should NOT block chart interaction */}
 
       <motion.div
         initial={{ x: isRTL ? 300 : -300 }}
-        animate={{ 
+        animate={{
           x: 0,
-          width: isCollapsed ? "60px" : "280px"
+          width: isCollapsed ? "48px" : "190px"
         }}
         exit={{ x: isRTL ? 300 : -300, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className={`
-          fixed ${isRTL ? "right-0" : "left-0"} top-0 h-screen z-[100]
-          ${isDark 
-            ? "bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 border-gray-700" 
-            : "bg-white border-gray-200"
+          absolute ${isRTL ? "right-0" : "left-0"} top-0 h-full z-[100]
+          ${isDark
+            ? "bg-gradient-to-b from-gray-900/98 via-gray-900/98 to-gray-800/98 border-gray-700"
+            : "bg-white/98 border-gray-200"
           }
-          border-${isRTL ? "l" : "r"} shadow-2xl
+          border-${isRTL ? "l" : "r"} shadow-2xl backdrop-blur-md
           flex flex-col
         `}
         dir={isRTL ? "rtl" : "ltr"}
@@ -383,8 +370,8 @@ export function DrawingToolbar({
                 onClick={onClose}
                 className={`
                   p-1.5 rounded-lg transition-colors
-                  ${isDark 
-                    ? "hover:bg-red-900/30 text-gray-400 hover:text-red-400" 
+                  ${isDark
+                    ? "hover:bg-red-900/30 text-gray-400 hover:text-red-400"
                     : "hover:bg-red-50 text-gray-600 hover:text-red-600"
                   }
                 `}
@@ -458,11 +445,11 @@ export function DrawingToolbar({
               {[...projectionTools, ...volumeTools, ...measurerTools, ...basicTools].map((tool) => {
                 const Icon = tool.icon;
                 const isSelected = selectedTool === tool.id;
-                
+
                 // Show only first 8 tools or selected tool
                 const allTools = [...projectionTools, ...volumeTools, ...measurerTools, ...basicTools];
                 const toolIndex = allTools.findIndex(t => t.id === tool.id);
-                
+
                 if (!isSelected && toolIndex > 7) return null;
 
                 return (
@@ -473,9 +460,9 @@ export function DrawingToolbar({
                     onClick={() => onToolChange(tool.id as DrawingTool)}
                     className={`
                       w-full p-2.5 rounded-lg transition-all relative group
-                      ${isSelected 
-                        ? isDark 
-                          ? "bg-indigo-600 text-white" 
+                      ${isSelected
+                        ? isDark
+                          ? "bg-indigo-600 text-white"
                           : "bg-indigo-500 text-white"
                         : isDark
                           ? "text-gray-400 hover:text-white hover:bg-gray-700"
@@ -484,7 +471,7 @@ export function DrawingToolbar({
                     `}
                   >
                     <Icon className="w-5 h-5 mx-auto" />
-                    
+
                     {/* Tooltip */}
                     <div className={`
                       absolute ${isRTL ? "right-full mr-2" : "left-full ml-2"} top-1/2 -translate-y-1/2
@@ -494,8 +481,8 @@ export function DrawingToolbar({
                       pointer-events-none z-[110] shadow-xl
                     `}>
                       {tool.label}
-                      {tool.description && (
-                        <div className="text-[10px] text-gray-400 mt-1">{tool.description}</div>
+                      {(tool as any).description && (
+                        <div className="text-[10px] text-gray-400 mt-1">{(tool as any).description}</div>
                       )}
                     </div>
                   </motion.button>
@@ -528,8 +515,8 @@ export function DrawingToolbar({
                 }}
                 className={`
                   w-full py-2 px-3 rounded-lg text-sm font-semibold
-                  ${isDark 
-                    ? "bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800" 
+                  ${isDark
+                    ? "bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800"
                     : "bg-red-50 hover:bg-red-100 text-red-600 border border-red-200"
                   }
                   flex items-center justify-center gap-2
@@ -583,8 +570,8 @@ export function DrawingToolbar({
                 }}
                 className={`
                   p-2 rounded-lg
-                  ${isDark 
-                    ? "bg-red-900/30 hover:bg-red-900/50 text-red-400" 
+                  ${isDark
+                    ? "bg-red-900/30 hover:bg-red-900/50 text-red-400"
                     : "bg-red-50 hover:bg-red-100 text-red-600"
                   }
                 `}
@@ -609,7 +596,8 @@ export function DrawingToolbar({
         </AnimatePresence>
 
         {/* Custom Scrollbar */}
-        <style dangerouslySetInnerHTML={{__html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
           }

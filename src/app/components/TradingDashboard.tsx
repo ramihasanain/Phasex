@@ -1,18 +1,31 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { MarketList, Asset } from "./MarketList";
 import { IndicatorChart, Indicator } from "./IndicatorChart";
 import { SubscriptionPanel } from "./SubscriptionPanel";
 import { AdSpace } from "./AdSpace";
-import { Logo } from "./Logo";
-import { LogOut, Gauge, ChartCandlestick, Crown, Languages, ChevronsLeft, ChevronsRight, Move, Target, Activity, Navigation } from "lucide-react";
+import { TradingSignalsTable } from "./TradingSignalsTable";
+import {
+  LogOut,
+  Gauge,
+  Crown,
+  Languages,
+  Move,
+  Target,
+  Activity,
+  Navigation,
+  Upload,
+  CheckCircle,
+  FileJson,
+} from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
 
+/* ─── Types ─── */
 interface TradingDashboardProps {
   onLogout: () => void;
 }
 
-// بيانات الأصول المالية
+/* ─── Mock Data ─── */
 const mockAssets: Asset[] = [
   // CRYPTO
   { id: "crypto1", name: "كاردانو", nameEn: "Cardano", symbol: "ADAUSD.p", price: 0.58, change: 0.012, changePercent: 2.1, market: "CRYPTO" },
@@ -34,7 +47,6 @@ const mockAssets: Asset[] = [
   { id: "crypto17", name: "يوني سواب", nameEn: "Uniswap", symbol: "UNIUSD.p", price: 12.15, change: -0.25, changePercent: -2.0, market: "CRYPTO" },
   { id: "crypto18", name: "ريبل", nameEn: "Ripple", symbol: "XRPUSD.p", price: 0.58, change: 0.01, changePercent: 1.7, market: "CRYPTO" },
   { id: "crypto19", name: "يرن فاينانس", nameEn: "Yearn Finance", symbol: "YFIUSD.p", price: 8450.00, change: -120.00, changePercent: -1.4, market: "CRYPTO" },
-
   // FOREX
   { id: "fx1", name: "أسترالي/كندي", nameEn: "AUD/CAD", symbol: "AUDCAD", price: 0.8945, change: 0.0023, changePercent: 0.26, market: "FOREX" },
   { id: "fx2", name: "أسترالي/فرنك", nameEn: "AUD/CHF", symbol: "AUDCHF", price: 0.5812, change: -0.0015, changePercent: -0.26, market: "FOREX" },
@@ -64,13 +76,15 @@ const mockAssets: Asset[] = [
   { id: "fx26", name: "دولار/كندي", nameEn: "USD/CAD", symbol: "USDCAD", price: 1.3425, change: 0.0012, changePercent: 0.09, market: "FOREX" },
   { id: "fx27", name: "دولار/فرنك", nameEn: "USD/CHF", symbol: "USDCHF", price: 0.8812, change: -0.0008, changePercent: -0.09, market: "FOREX" },
   { id: "fx28", name: "دولار/ين", nameEn: "USD/JPY", symbol: "USDJPY", price: 149.52, change: 0.45, changePercent: 0.30, market: "FOREX" },
-
   // COMMODITY
   { id: "cmd1", name: "نفط برنت", nameEn: "Brent", symbol: "BRENT", price: 82.45, change: 1.15, changePercent: 1.41, market: "COMMODITY" },
-  { id: "cmd2", name: "ذهب", nameEn: "Gold", symbol: "GOLD", price: 2045.60, change: 12.30, changePercent: 0.61, market: "COMMODITY" },
-  { id: "cmd3", name: "فضة", nameEn: "Silver", symbol: "SILVER", price: 22.85, change: -0.25, changePercent: -1.08, market: "COMMODITY" },
-  { id: "cmd4", name: "نفط خام", nameEn: "WTI", symbol: "WTI", price: 78.15, change: 0.85, changePercent: 1.10, market: "COMMODITY" },
-
+  { id: "cmd2", name: "نفط خام", nameEn: "WTI", symbol: "WTI", price: 78.15, change: 0.85, changePercent: 1.10, market: "COMMODITY" },
+  { id: "cmd3", name: "نفط أمريكي", nameEn: "US Oil", symbol: "USOIL", price: 77.82, change: 0.65, changePercent: 0.84, market: "COMMODITY" },
+  // METALS
+  { id: "mtl1", name: "ذهب", nameEn: "Gold", symbol: "GOLD", price: 2045.60, change: 12.30, changePercent: 0.61, market: "METALS" },
+  { id: "mtl2", name: "فضة", nameEn: "Silver", symbol: "SILVER", price: 22.85, change: -0.25, changePercent: -1.08, market: "METALS" },
+  { id: "mtl3", name: "ذهب/دولار", nameEn: "Gold/USD", symbol: "XAUUSD", price: 2048.25, change: 15.40, changePercent: 0.76, market: "METALS" },
+  { id: "mtl4", name: "فضة/دولار", nameEn: "Silver/USD", symbol: "XAGUSD", price: 23.15, change: 0.35, changePercent: 1.54, market: "METALS" },
   // INDEX
   { id: "idx1", name: "جير 30", nameEn: "GER30", symbol: "GER30", price: 17850.45, change: 85.30, changePercent: 0.48, market: "INDEX" },
   { id: "idx2", name: "اليابان 225", nameEn: "JAP225", symbol: "JAP225", price: 39500.00, change: 250.00, changePercent: 0.64, market: "INDEX" },
@@ -92,371 +106,352 @@ const mockAssets: Asset[] = [
   { id: "idx18", name: "هونج كونج 50", nameEn: "HK50Roll", symbol: "HK50Roll", price: 16450.25, change: -145.45, changePercent: -0.88, market: "INDEX" },
 ];
 
-
-// المؤشرات المتاحة
+/* ─── Indicators ─── */
 const indicators: Indicator[] = [
-  { id: "phase", name: "حالة المرحلة", nameEn: "PHASE STATE", type: "tz", color: "#8b5cf6", icon: "Gauge" },
-  { id: "displacement", name: "حالة الإزاحة", nameEn: "DISPLACEMENT STATE", type: "area", color: "#3b82f6", icon: "Move" },
-  { id: "reference", name: "حالة المرجع", nameEn: "REFERENCE STATE", type: "line", color: "#10b981", icon: "Target" },
-  { id: "oscillation", name: "حالة التذبذب", nameEn: "OSCILLATION STATE", type: "line", color: "#f59e0b", icon: "Activity" },
-  { id: "direction", name: "حالة الاتجاه", nameEn: "DIRECTION STATE", type: "bar", color: "#ef4444", icon: "Navigation" },
+  { id: "phase", name: "حالة المرحلة", nameEn: "PHASE STATE", type: "tz", color: "#a78bfa", icon: "Gauge" },
+  { id: "displacement", name: "حالة الإزاحة", nameEn: "DISPLACEMENT STATE", type: "tz", color: "#60a5fa", icon: "Move" },
+  { id: "reference", name: "حالة المرجع", nameEn: "REFERENCE STATE", type: "tz", color: "#34d399", icon: "Target" },
+  { id: "oscillation", name: "حالة التذبذب", nameEn: "OSCILLATION STATE", type: "tz", color: "#fbbf24", icon: "Activity" },
+  { id: "direction", name: "حالة الاتجاه", nameEn: "DIRECTION STATE", type: "tz", color: "#f87171", icon: "Navigation" },
 ];
+const indicatorIcons: Record<string, any> = { Gauge, Move, Target, Activity, Navigation };
 
-const indicatorIcons: Record<string, any> = {
-  Gauge,
-  Move,
-  Target,
-  Activity,
-  Navigation,
-};
-
-// دالة لتوليد بيانات وهمية للرسم البياني
-const generateChartData = (asset: Asset, indicator: Indicator, timeframe: 5 | 15 | 30 | 60) => {
+/* ─── Chart Data Generator ─── */
+function generateChartData(asset: Asset, indicator: Indicator, timeframe: 5 | 15 | 30 | 60) {
   const data = [];
-  const baseValue = asset.price;
-
-  // عدد النقاط بناءً على الفريم
-  const dataPoints = timeframe === 5 ? 120 : timeframe === 15 ? 96 : timeframe === 30 ? 48 : 48;
-
-  // توليد التاريخ والوقت
+  const base = asset.price;
+  const points = timeframe === 5 ? 120 : timeframe === 15 ? 96 : 48;
   const now = new Date();
-
-  for (let i = dataPoints - 1; i >= 0; i--) {
-    const timeInPast = new Date(now.getTime() - i * timeframe * 60 * 1000);
-    const hours = timeInPast.getHours().toString().padStart(2, '0');
-    const minutes = timeInPast.getMinutes().toString().padStart(2, '0');
-    const day = timeInPast.getDate().toString().padStart(2, '0');
-    const month = (timeInPast.getMonth() + 1).toString().padStart(2, '0');
-    const year = timeInPast.getFullYear();
-
-    // تنسيق العرض حسب الفريم - مثل MetaTrader
-    let displayTime = '';
-    let fullDate = '';
-
-    if (timeframe === 5 || timeframe === 15) {
-      // للفريمات الصغيرة: الوقت فقط، مع التاريخ عند بداية اليوم
-      if (hours === '00' && minutes === '00') {
-        displayTime = `${day}/${month}\n${hours}:${minutes}`;
-      } else if (i === dataPoints - 1 || i === 0 || minutes === '00') {
-        displayTime = `${hours}:${minutes}`;
-      } else {
-        displayTime = `${hours}:${minutes}`;
-      }
-      fullDate = `${day}/${month}/${year} ${hours}:${minutes}`;
-    } else if (timeframe === 30) {
-      // للفريم 30 دقيقة: التاريخ + الوقت
-      if (hours === '00' && (minutes === '00' || minutes === '30')) {
-        displayTime = `${day}/${month}\n${hours}:${minutes}`;
-      } else {
-        displayTime = `${hours}:${minutes}`;
-      }
-      fullDate = `${day}/${month}/${year} ${hours}:${minutes}`;
-    } else {
-      // للفريم 60 دقيقة: التاريخ عند بداية اليوم
-      if (hours === '00') {
-        displayTime = `${day}/${month}\n${hours}:00`;
-      } else {
-        displayTime = `${hours}:00`;
-      }
-      fullDate = `${day}/${month}/${year} ${hours}:00`;
+  for (let i = points - 1; i >= 0; i--) {
+    const t = new Date(now.getTime() - i * timeframe * 60000);
+    const hh = t.getHours().toString().padStart(2, "0");
+    const mm = t.getMinutes().toString().padStart(2, "0");
+    const dd = t.getDate().toString().padStart(2, "0");
+    const mo = (t.getMonth() + 1).toString().padStart(2, "0");
+    const yr = t.getFullYear();
+    const isNewDay = hh === "00" && mm === "00";
+    const displayTime = isNewDay ? `${dd}/${mo}\n${hh}:${mm}` : `${hh}:${mm}`;
+    const fullDate = `${dd}/${mo}/${yr} ${hh}:${mm}`;
+    let value: number;
+    switch (indicator.id) {
+      case "phase": value = Math.sin(i / 20) * 50 + (Math.random() - 0.5) * 30; break;
+      case "displacement": value = base + Math.cos(i / 15) * base * 0.01 + Math.sin(i / 25) * base * 0.005 + (Math.random() - 0.5) * base * 0.003; break;
+      case "reference": value = base + Math.sin(i / 30) * base * 0.008 + (Math.random() - 0.5) * base * 0.002; break;
+      case "oscillation": value = Math.max(-100, Math.min(100, Math.sin(i / 18) * 70 + (Math.random() - 0.5) * 20)); break;
+      case "direction": value = Math.cos(i / 12) * 50 + (Math.random() - 0.5) * 25; break;
+      default: { const v = timeframe === 5 ? 0.003 : timeframe === 15 ? 0.005 : 0.008; value = base + Math.sin(i / 15) * base * v * 2 + (Math.random() - 0.5) * base * v; }
     }
+    data.push({ time: displayTime, fullTime: fullDate, timestamp: t.getTime(), value: +value.toFixed(4) });
+  }
+  return data;
+}
 
-    let value;
+/* ══════════════════════════════════════════════════════════════ */
+/*  TRADING DASHBOARD                                            */
+/* ══════════════════════════════════════════════════════════════ */
 
-    if (indicator.id === "phase") {
-      // PHASE STATE - Candlestick data (TZ replacement)
-      const trendBase = Math.sin(i / 20) * 50;
-      const volatility = (Math.random() - 0.5) * 30;
-      value = trendBase + volatility;
-    } else if (indicator.id === "displacement") {
-      // DISPLACEMENT STATE - Area chart showing displacement
-      const displacement = Math.cos(i / 15) * (baseValue * 0.01);
-      const trend = Math.sin(i / 25) * (baseValue * 0.005);
-      value = baseValue + displacement + trend + (Math.random() - 0.5) * (baseValue * 0.003);
-    } else if (indicator.id === "reference") {
-      // REFERENCE STATE - Line chart showing reference levels
-      const refLevel = baseValue + Math.sin(i / 30) * (baseValue * 0.008);
-      value = refLevel + (Math.random() - 0.5) * (baseValue * 0.002);
-    } else if (indicator.id === "oscillation") {
-      // OSCILLATION STATE - Oscillator between -100 and +100
-      const oscillation = Math.sin(i / 18) * 70;
-      value = oscillation + (Math.random() - 0.5) * 20;
-      value = Math.max(-100, Math.min(100, value));
-    } else if (indicator.id === "direction") {
-      // DIRECTION STATE - Bar chart showing directional strength
-      const direction = Math.cos(i / 12) * 50;
-      value = direction + (Math.random() - 0.5) * 25;
-    } else if (indicator.id === "rsi") {
-      // RSI بين 30 و 70 ع ذبذب واقعي
-      const trend = Math.sin(i / 10) * 10;
-      value = 50 + trend + (Math.random() - 0.5) * 15;
-      value = Math.max(20, Math.min(80, value));
-    } else if (indicator.id === "macd") {
-      // MACD مع قيم موجبة وسالبة
-      const trend = Math.cos(i / 8) * 1.5;
-      value = trend + (Math.random() - 0.5) * 0.8;
-    } else if (indicator.id === "stoch") {
-      // Stochastic بين 0 و 100
-      const trend = Math.sin(i / 12) * 30;
-      value = 50 + trend + (Math.random() - 0.5) * 20;
-      value = Math.max(0, Math.min(100, value));
-    } else if (indicator.id === "tz") {
-      // TZ Indicator - Trend Zone with histogram
-      const trendBase = Math.sin(i / 20) * 50;
-      const volatility = (Math.random() - 0.5) * 30;
-      value = trendBase + volatility;
-    } else {
-      // للمؤشرات الأخرى (MA, EMA, BB)
-      const volatility = timeframe === 5 ? 0.003 : timeframe === 15 ? 0.005 : timeframe === 30 ? 0.008 : 0.012;
-      const trend = Math.sin(i / 15) * (baseValue * volatility * 2);
-      const randomChange = (Math.random() - 0.5) * (baseValue * volatility);
-      value = baseValue + trend + randomChange;
-    }
+/* ─── Phase State Data Types ─── */
+export interface PhaseCandle {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  bars: number;
+  tf_main: string;
+  tf_candle: string;
+}
 
-    data.push({
-      time: displayTime,
-      fullTime: fullDate,
-      timestamp: timeInPast.getTime(),
-      value: parseFloat(value.toFixed(4)),
+// Map: "mainTF_subTF" -> { "SYMBOL": PhaseCandle }
+export type PhaseStateDataMap = Record<string, Record<string, PhaseCandle>>;
+
+/* ─── Generate 30 candles from a real candle ─── */
+function generateCandlesFromReal(real: PhaseCandle, count: number = 90): any[] {
+  const range = real.high - real.low;
+  const volatility = range * 0.6;
+  const candles: any[] = [];
+
+  // Parse the real candle time
+  const timeParts = real.time.replace(".", "-").replace(".", "-");
+  const baseTime = new Date(timeParts.replace(" ", "T") + ":00");
+
+  // Determine interval in minutes from tf_candle
+  const tfMap: Record<string, number> = {
+    "M5": 5, "M10": 10, "M15": 15, "M20": 20, "M30": 30,
+    "H1": 60, "H2": 120, "H3": 180, "H4": 240, "H6": 360,
+  };
+  const intervalMin = tfMap[real.tf_candle] || 15;
+
+  // ── FIRST bar: the REAL candle from JSON ──
+  const rHH = baseTime.getHours().toString().padStart(2, "0");
+  const rMM = baseTime.getMinutes().toString().padStart(2, "0");
+  const rDD = baseTime.getDate().toString().padStart(2, "0");
+  const rMO = (baseTime.getMonth() + 1).toString().padStart(2, "0");
+  const rYR = baseTime.getFullYear();
+  candles.push({
+    time: `${rDD}/${rMO}\n${rHH}:${rMM}`,
+    fullTime: `${rDD}/${rMO}/${rYR} ${rHH}:${rMM}`,
+    timestamp: baseTime.getTime(),
+    open: real.open,
+    high: real.high,
+    low: real.low,
+    close: real.close,
+    value: real.close,
+    isReal: true,
+  });
+
+  // ── Remaining bars: random candles AFTER the real one ──
+  let prevClose = real.close;
+
+  for (let i = 1; i <= count; i++) {
+    const t = new Date(baseTime.getTime() + i * intervalMin * 60000);
+    const hh = t.getHours().toString().padStart(2, "0");
+    const mm = t.getMinutes().toString().padStart(2, "0");
+    const dd = t.getDate().toString().padStart(2, "0");
+    const mo = (t.getMonth() + 1).toString().padStart(2, "0");
+    const yr = t.getFullYear();
+    const isNewDay = hh === "00" && mm === "00";
+
+    const open = prevClose;
+    const bodySize = (Math.random() - 0.5) * volatility * 0.4;
+    const close = open + bodySize;
+    const wickUp = Math.random() * volatility * 0.2;
+    const wickDown = Math.random() * volatility * 0.2;
+    const high = Math.max(open, close) + wickUp;
+    const low = Math.min(open, close) - wickDown;
+
+    candles.push({
+      time: isNewDay ? `${dd}/${mo}\n${hh}:${mm}` : `${hh}:${mm}`,
+      fullTime: `${dd}/${mo}/${yr} ${hh}:${mm}`,
+      timestamp: t.getTime(),
+      open: +open.toFixed(6),
+      high: +high.toFixed(6),
+      low: +low.toFixed(6),
+      close: +close.toFixed(6),
+      value: +close.toFixed(6),
     });
+
+    prevClose = close + (Math.random() - 0.5) * volatility * 0.08;
   }
 
-  return data;
-};
+  return candles;
+}
 
 export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   const { language, toggleLanguage, t } = useLanguage();
+  const isRTL = language === "ar";
+
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(false);
-  const [isIndicatorsCollapsed, setIsIndicatorsCollapsed] = useState(false);
-  const [timeframe, setTimeframe] = useState<5 | 15 | 30 | 60>(15); // الفريم الزمني بالدقائق
+  const [timeframe, setTimeframe] = useState<5 | 15 | 30 | 60>(15);
+  const [mtfEnabled, setMtfEnabled] = useState(false);
+  const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<5 | 15 | 30 | 60>(5);
+  const [mtfLargeTimeframe, setMtfLargeTimeframe] = useState<240 | 720 | 1440>(240);
 
-  // Multi-Timeframe للمؤشر TZ
-  const [mtfEnabled, setMtfEnabled] = useState(false); // تفعيل Multi-Timeframe
-  const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<5 | 15 | 30 | 60>(5); // الفريم الصغير
-  const [mtfLargeTimeframe, setMtfLargeTimeframe] = useState<240 | 720 | 1440>(240); // الفريم الكبير (4H, 12H, 1D)
+  // Phase State uploaded data
+  const [phaseStateData, setPhaseStateData] = useState<PhaseStateDataMap>({});
+  const [uploadedFileCount, setUploadedFileCount] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // بيانات الاشتراك (يمكن استبدالها ببيانات من API)
-  const subscriptionInfo = {
-    isActive: true,
-    daysRemaining: 3,
-  };
+  const subInfo = { isActive: true, daysRemaining: 3 };
 
-  const handleAssetSelect = (asset: Asset) => {
-    setSelectedAsset(asset);
-    if (selectedIndicator) {
-      setChartData(generateChartData(asset, selectedIndicator, timeframe));
+  /* ─── File Upload Handler ─── */
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setIsUploading(true);
+
+    const newData: PhaseStateDataMap = { ...phaseStateData };
+    let count = 0;
+
+    for (const file of Array.from(files)) {
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+
+        // Extract mainTF and subTF from filename: phasestate_H1_M5_results.json
+        const match = file.name.match(/phasestate_([A-Z0-9]+)_([A-Z0-9]+)_results/);
+        if (!match) continue;
+        const [, mainTF, subTF] = match;
+        const key = `${mainTF}_${subTF}`;
+
+        if (!newData[key]) newData[key] = {};
+
+        // Parse each symbol in the JSON
+        for (const [symbolKey, phaseObj] of Object.entries(json)) {
+          if (symbolKey === "exported_at") continue;
+
+          // symbolKey = "AUDCAD - FOREX" -> symbol = "AUDCAD"
+          const symbol = symbolKey.split(" - ")[0].trim();
+          const phaseKey = Object.keys(phaseObj as object)[0];
+          const candle = (phaseObj as any)[phaseKey] as PhaseCandle;
+
+          if (candle && candle.open !== undefined) {
+            newData[key][symbol] = candle;
+            count++;
+          }
+        }
+      } catch (err) {
+        console.error(`Error parsing ${file.name}:`, err);
+      }
     }
-  };
 
-  const handleIndicatorSelect = (indicator: Indicator) => {
-    setSelectedIndicator(indicator);
-    if (selectedAsset) {
-      setChartData(generateChartData(selectedAsset, indicator, timeframe));
-    }
-  };
+    setPhaseStateData(newData);
+    setUploadedFileCount((prev) => prev + Array.from(files).length);
+    setIsUploading(false);
 
-  const handleTimeframeChange = (newTimeframe: 5 | 15 | 30 | 60) => {
-    setTimeframe(newTimeframe);
-    if (selectedAsset && selectedIndicator) {
-      setChartData(generateChartData(selectedAsset, selectedIndicator, newTimeframe));
-    }
-  };
+    // Reset input so same files can be re-uploaded
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [phaseStateData]);
 
-  const isRTL = language === "ar";
-  const accent = "#00e5a0";
+  /* ─── Data Generation ─── */
+  const pickAsset = (a: Asset) => { setSelectedAsset(a); if (selectedIndicator) setChartData(generateChartData(a, selectedIndicator, timeframe)); };
+  const pickIndicator = (ind: Indicator) => { setSelectedIndicator(ind); if (selectedAsset) setChartData(generateChartData(selectedAsset, ind, timeframe)); };
+  const pickTimeframe = (tf: 5 | 15 | 30 | 60) => { setTimeframe(tf); if (selectedAsset && selectedIndicator) setChartData(generateChartData(selectedAsset, selectedIndicator, tf)); };
 
   return (
-    <div className="min-h-screen relative" dir={isRTL ? "rtl" : "ltr"}
-      style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ background: "#0b0e14", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <motion.div className="absolute w-[600px] h-[600px] rounded-full" style={{ top: "-15%", left: "-10%", background: `radial-gradient(circle, rgba(0,229,160,0.03) 0%, transparent 60%)`, filter: "blur(80px)" }}
-          animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 12, repeat: Infinity }} />
-        <motion.div className="absolute w-[400px] h-[400px] rounded-full" style={{ bottom: "-10%", right: "-5%", background: `radial-gradient(circle, rgba(168,85,247,0.025) 0%, transparent 60%)`, filter: "blur(60px)" }}
-          animate={{ scale: [1.1, 1, 1.1] }} transition={{ duration: 10, repeat: Infinity }} />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl relative"
-        style={{ background: "rgba(6,10,16,0.9)", borderBottom: `1px solid rgba(0,229,160,0.08)` }}>
-        {/* LED strip */}
-        <motion.div className="absolute top-0 left-0 right-0 h-[2px] z-30"
-          style={{ background: `linear-gradient(90deg, transparent 5%, ${accent} 30%, ${accent} 70%, transparent 95%)` }}
-          animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 2.5, repeat: Infinity }} />
-
-        <div className="px-5 py-3 flex items-center justify-between">
-          <motion.div className="flex items-center gap-3"
-            initial={{ opacity: 0, x: isRTL ? 20 : -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-            <Logo size="md" showText={true} animated={true} />
+      {/* ═══════════════ HEADER ═══════════════ */}
+      <header style={{ background: "linear-gradient(180deg, #12161f 0%, #0d1017 100%)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <div className="flex items-center justify-between px-5 py-2.5">
+          {/* Logo */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
+            <div style={{ background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)", padding: "6px 18px", borderRadius: 10 }}>
+              <span style={{ color: "#fff", fontWeight: 800, fontSize: 16, letterSpacing: 2 }}>PHASE X</span>
+            </div>
           </motion.div>
 
-          <motion.div className="flex items-center gap-2"
-            initial={{ opacity: 0, x: isRTL ? -20 : 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-
-            {/* Logout */}
-            <motion.button onClick={onLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-colors cursor-pointer"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <LogOut className="w-4 h-4" />
-              {t("logout")}
-            </motion.button>
-
-            {/* Language */}
-            <motion.button onClick={toggleLanguage} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-colors cursor-pointer"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <Languages className="w-4 h-4" />
-            </motion.button>
-
-            {/* Subscription */}
-            <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {/* Upload Phase State Data */}
+            <input ref={fileInputRef} type="file" accept=".json" multiple onChange={handleFileUpload}
+              className="hidden" id="phase-upload" />
+            <motion.button
+              onClick={() => fileInputRef.current?.click()}
+              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
               style={{
-                background: subscriptionInfo.daysRemaining <= 7 ? "rgba(255,196,0,0.08)" : "rgba(255,255,255,0.03)",
-                border: `1px solid ${subscriptionInfo.daysRemaining <= 7 ? "rgba(255,196,0,0.2)" : "rgba(255,255,255,0.06)"}`,
-                color: subscriptionInfo.daysRemaining <= 7 ? "#ffc400" : "#9ca3af",
+                color: uploadedFileCount > 0 ? "#4ade80" : "#818cf8",
+                background: uploadedFileCount > 0 ? "rgba(74,222,128,0.08)" : "rgba(99,102,241,0.08)",
+                border: uploadedFileCount > 0 ? "1px solid rgba(74,222,128,0.15)" : "1px solid rgba(99,102,241,0.15)",
               }}>
-              <motion.div animate={subscriptionInfo.daysRemaining <= 7 ? { scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] } : {}}
-                transition={{ duration: 2, repeat: Infinity }}>
-                <Crown className="w-4 h-4" style={{ color: subscriptionInfo.daysRemaining <= 7 ? "#ffc400" : undefined }} />
-              </motion.div>
-              <span>{t("subscription")}</span>
-              {subscriptionInfo.daysRemaining <= 7 && (
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,196,0,0.15)", color: "#ffc400" }}>
-                  {subscriptionInfo.daysRemaining} {t("daysRemaining")}
-                </span>
+              {isUploading ? (
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                  <Upload className="w-3.5 h-3.5" />
+                </motion.div>
+              ) : uploadedFileCount > 0 ? (
+                <CheckCircle className="w-3.5 h-3.5" />
+              ) : (
+                <FileJson className="w-3.5 h-3.5" />
               )}
+              <span>
+                {isUploading
+                  ? (isRTL ? "جاري التحميل..." : "Uploading...")
+                  : uploadedFileCount > 0
+                    ? `${uploadedFileCount} ${isRTL ? "ملف" : "files"}`
+                    : (isRTL ? "رفع بيانات" : "Upload Data")}
+              </span>
             </motion.button>
-          </motion.div>
+
+            <motion.button onClick={onLogout} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
+              style={{ color: "#94a3b8", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <LogOut className="w-3.5 h-3.5" /> {t("logout")}
+            </motion.button>
+
+            <motion.button onClick={toggleLanguage} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
+              style={{ color: "#64748b", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <Languages className="w-3.5 h-3.5" />
+            </motion.button>
+
+            <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer"
+              style={{ color: "#fbbf24", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.15)" }}>
+              <Crown className="w-3.5 h-3.5" />
+              <span>{t("subscription")}</span>
+              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md" style={{ background: "rgba(251,191,36,0.15)" }}>
+                {subInfo.daysRemaining} {t("daysRemaining")}
+              </span>
+            </motion.button>
+          </div>
         </div>
       </header>
 
-      <div className="p-4 relative z-10">
-        <div className="flex gap-4">
-          {/* Market List Sidebar */}
-          <motion.div initial={false}
-            animate={{ width: isMarketListCollapsed ? "70px" : "320px" }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="flex-shrink-0">
-            <MarketList
-              assets={mockAssets}
-              selectedAsset={selectedAsset}
-              onSelectAsset={handleAssetSelect}
-              isCollapsed={isMarketListCollapsed}
-              onToggleCollapse={() => setIsMarketListCollapsed(!isMarketListCollapsed)}
-            />
-          </motion.div>
+      {/* ═══════════════ BODY ═══════════════ */}
+      <div className="flex gap-0 p-3" style={{ minHeight: "calc(100vh - 52px)" }}>
 
-          {/* Main Content */}
-          <div className="flex-1 space-y-4 min-w-0">
-            {/* Indicators Panel */}
-            <motion.div initial={false}
-              animate={{ height: isIndicatorsCollapsed ? "60px" : "auto" }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden">
-              <div className="rounded-xl relative overflow-hidden"
-                style={{
-                  background: "linear-gradient(160deg, rgba(14,20,33,0.9) 0%, rgba(8,12,22,0.95) 100%)",
-                  border: `1px solid rgba(0,229,160,0.08)`,
-                  boxShadow: `0 10px 40px rgba(0,0,0,0.2)`,
-                }}>
-                {/* LED strip on indicators */}
-                <motion.div className="absolute top-0 left-0 right-0 h-[1px]"
-                  style={{ background: `linear-gradient(90deg, transparent 10%, ${accent}40 40%, ${accent}40 60%, transparent 90%)` }}
-                  animate={{ opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ duration: 3, repeat: Infinity }} />
+        {/* ── LEFT: Market List ── */}
+        <motion.div initial={false} animate={{ width: isMarketListCollapsed ? 64 : 280 }}
+          transition={{ type: "spring", damping: 26, stiffness: 220 }} className="flex-shrink-0 sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
+          <MarketList assets={mockAssets} selectedAsset={selectedAsset} onSelectAsset={pickAsset}
+            isCollapsed={isMarketListCollapsed} onToggleCollapse={() => setIsMarketListCollapsed(!isMarketListCollapsed)} />
+        </motion.div>
 
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                        style={{ background: `linear-gradient(135deg, #a855f7, #6366f1)`, boxShadow: "0 4px 15px rgba(168,85,247,0.25)" }}>
-                        <ChartCandlestick className="w-4 h-4 text-white" />
-                      </div>
-                      {!isIndicatorsCollapsed && (
-                        <span className="text-sm font-bold text-white">{t("technicalIndicators")}</span>
-                      )}
+        {/* ── CENTER: Indicators + Chart + Signals ── */}
+        <div className="flex-1 flex flex-col gap-3 min-w-0 px-3">
+
+          {/* Indicator Ribbon */}
+          <div className="rounded-xl overflow-hidden" style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <div className="flex items-center gap-1 p-2">
+              {indicators.map((ind) => {
+                const Icon = indicatorIcons[ind.icon];
+                const active = selectedIndicator?.id === ind.id;
+                return (
+                  <motion.button key={ind.id} onClick={() => pickIndicator(ind)}
+                    whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
+                    className="flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg cursor-pointer transition-all"
+                    style={{
+                      background: active ? `${ind.color}10` : "transparent",
+                      border: active ? `1px solid ${ind.color}30` : "1px solid transparent",
+                    }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+                      background: active ? `linear-gradient(135deg, ${ind.color}, ${ind.color}88)` : "rgba(255,255,255,0.03)",
+                      boxShadow: active ? `0 4px 20px ${ind.color}25` : "none",
+                    }}>
+                      <Icon className="w-5 h-5" style={{ color: active ? "#fff" : "#555" }} />
                     </div>
-                    <motion.button onClick={() => setIsIndicatorsCollapsed(!isIndicatorsCollapsed)}
-                      whileHover={{ scale: 1.1 }} className="w-7 h-7 rounded-md flex items-center justify-center text-gray-500 hover:text-white cursor-pointer"
-                      style={{ background: "rgba(255,255,255,0.03)" }}>
-                      {isIndicatorsCollapsed
-                        ? <ChevronsRight className="w-3.5 h-3.5 rotate-90" />
-                        : <ChevronsLeft className="w-3.5 h-3.5 rotate-90" />}
-                    </motion.button>
-                  </div>
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: ind.color, opacity: active ? 1 : 0.25 }} />
+                    <span className="text-[10px] font-bold leading-tight text-center" style={{ color: active ? ind.color : "#6b7280" }}>
+                      {isRTL ? ind.name : ind.nameEn}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
-                  {!isIndicatorsCollapsed && (
-                    <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-                      {indicators.map((indicator) => {
-                        const Icon = indicatorIcons[indicator.icon];
-                        const isActive = selectedIndicator?.id === indicator.id;
-                        return (
-                          <motion.button key={indicator.id}
-                            onClick={() => handleIndicatorSelect(indicator)}
-                            whileHover={{ scale: 1.05, y: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="p-3 rounded-xl text-center transition-all cursor-pointer"
-                            style={{
-                              background: isActive ? `${indicator.color}12` : "rgba(255,255,255,0.02)",
-                              border: `1px solid ${isActive ? `${indicator.color}35` : "rgba(255,255,255,0.04)"}`,
-                              boxShadow: isActive ? `0 0 20px ${indicator.color}15, inset 0 0 15px ${indicator.color}05` : "none",
-                            }}>
-                            <div className="w-9 h-9 mx-auto mb-2 rounded-lg flex items-center justify-center"
-                              style={{
-                                background: isActive ? `linear-gradient(135deg, ${indicator.color}, ${indicator.color}aa)` : "rgba(255,255,255,0.04)",
-                                boxShadow: isActive ? `0 4px 15px ${indicator.color}30` : "none",
-                              }}>
-                              <Icon className="w-4 h-4" style={{ color: isActive ? "#fff" : "#6b7280" }} />
-                            </div>
-                            <div className={`w-2 h-2 rounded-full mx-auto mb-1 ${isActive ? "animate-pulse" : ""}`}
-                              style={{ backgroundColor: indicator.color, opacity: isActive ? 1 : 0.3 }} />
-                            <div className="font-bold text-[10px] leading-tight" style={{ color: isActive ? indicator.color : "#9ca3af" }}>
-                              {isRTL ? indicator.name : indicator.nameEn}
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Chart Area */}
+          {/* Chart */}
+          <div className="flex-shrink-0" style={{ minHeight: "420px", height: "calc(100vh - 280px)" }}>
             <AnimatePresence mode="wait">
               <IndicatorChart
                 key={`${selectedAsset?.id}-${selectedIndicator?.id}-${timeframe}`}
-                currency={selectedAsset}
-                indicator={selectedIndicator}
-                data={chartData}
-                timeframe={timeframe}
-                onTimeframeChange={handleTimeframeChange}
-                mtfEnabled={mtfEnabled}
-                mtfSmallTimeframe={mtfSmallTimeframe}
-                mtfLargeTimeframe={mtfLargeTimeframe}
-                onMtfEnabledChange={setMtfEnabled}
-                onMtfSmallTimeframeChange={setMtfSmallTimeframe}
-                onMtfLargeTimeframeChange={setMtfLargeTimeframe}
+                currency={selectedAsset} indicator={selectedIndicator} data={chartData}
+                timeframe={timeframe} onTimeframeChange={pickTimeframe}
+                mtfEnabled={mtfEnabled} mtfSmallTimeframe={mtfSmallTimeframe} mtfLargeTimeframe={mtfLargeTimeframe}
+                onMtfEnabledChange={setMtfEnabled} onMtfSmallTimeframeChange={setMtfSmallTimeframe} onMtfLargeTimeframeChange={setMtfLargeTimeframe}
+                phaseStateData={phaseStateData}
+                generateCandlesFromReal={generateCandlesFromReal}
               />
             </AnimatePresence>
           </div>
 
-          {/* Ad Space */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }} className="w-80 flex-shrink-0 hidden xl:block">
-            <AdSpace />
-          </motion.div>
+          {/* ═══ SIGNALS TABLE (same width as chart) ═══ */}
+          <TradingSignalsTable />
         </div>
+
+        {/* ── RIGHT: Ads ── */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
+          className="w-72 flex-shrink-0 hidden xl:block sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
+          <AdSpace />
+        </motion.div>
       </div>
 
-      {/* Subscription Panel */}
       <SubscriptionPanel isOpen={isSubscriptionOpen} onClose={() => setIsSubscriptionOpen(false)} />
     </div>
   );
