@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/phase-state/read";
-const POLL_INTERVAL = 30_000; // 30 seconds
+const POLL_INTERVAL = 330_000; // 5 minutes 30 seconds
 
 interface APICandle {
     time: string;
