@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -54,11 +54,24 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
   const [tooltip, setTooltip] = useState<{ x: number; y: number; data: any } | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
 
-  // Chart dimensions
-  const margin = { top: 15, right: 60, bottom: 45, left: 15 };
-  const chartWidth = 900;
+  // Chart dimensions — responsive
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(900);
+  const margin = { top: 15, right: 55, bottom: 45, left: 5 };
+  const chartWidth = containerWidth;
   const innerWidth = chartWidth - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setContainerWidth(el.clientWidth || 900);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Generate candlestick data — use real OHLC if available, else mock from value
   const candlestickData = useMemo(() => {
@@ -121,13 +134,14 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const scaleX = chartWidth / rect.width;
+    const scaleYFactor = height / rect.height;
     const mouseX = (e.clientX - rect.left) * scaleX - margin.left;
     const idx = Math.round(mouseX / gap - 0.5);
     if (idx >= 0 && idx < candlestickData.length) {
       setHoveredIndex(idx);
       setTooltip({
         x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * (height / rect.height),
+        y: (e.clientY - rect.top) * scaleYFactor,
         data: candlestickData[idx],
       });
     } else {
@@ -147,12 +161,13 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
   const crosshairColor = '#6366f1';
 
   return (
-    <div className="w-full relative" style={{ direction: 'ltr' }}>
+    <div ref={containerRef} className="w-full h-full relative" style={{ direction: 'ltr' }}>
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${chartWidth} ${height}`}
+        width={chartWidth}
+        height={height}
         className="w-full"
-        style={{ height: `${height}px`, background: bgColor, borderRadius: '8px' }}
+        style={{ height: `${height}px`, background: bgColor, display: 'block' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >

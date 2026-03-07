@@ -603,7 +603,7 @@ function getTabData(tab: AnalysisTab, symbol: string, currentSources: Record<Ana
     const colTotals = vcTfColumns.map((_, ci) => {
         const buyC = rows.filter(r => r.signals[ci] === "Buy").length;
         const sellC = rows.filter(r => r.signals[ci] === "Sell").length;
-        return (buyC + sellC) > 0 ? Math.round(((buyC - sellC) / (buyC + sellC)) * 100) : 0;
+        return rows.length > 0 ? Math.round(((buyC - sellC) / rows.length) * 100) : 0;
     });
 
     const colClassifications = colTotals.map(t => getClassification(t / 100));

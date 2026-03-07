@@ -384,7 +384,7 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
       </header>
 
       {/* ═══════════════ BODY ═══════════════ */}
-      <div className="flex gap-0 p-3" style={{ minHeight: "calc(100vh - 52px)" }}>
+      <div className="flex gap-0 py-3" style={{ minHeight: "calc(100vh - 52px)" }}>
 
         {/* ── LEFT: Market List ── */}
         <motion.div initial={false} animate={{ width: isMarketListCollapsed ? 64 : 280 }}
@@ -394,7 +394,7 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
         </motion.div>
 
         {/* ── CENTER: Indicators + Chart + Signals ── */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0 px-3">
+        <div className="flex-1 flex flex-col gap-3 min-w-0 px-0">
 
           {/* Indicator Ribbon */}
           <div className="rounded-xl overflow-hidden" style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>

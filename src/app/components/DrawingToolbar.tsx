@@ -309,12 +309,12 @@ export function DrawingToolbar({
         initial={{ x: isRTL ? 300 : -300 }}
         animate={{
           x: 0,
-          width: isCollapsed ? "48px" : "190px"
+          width: isCollapsed ? "48px" : "100%"
         }}
         exit={{ x: isRTL ? 300 : -300, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className={`
-          absolute ${isRTL ? "right-0" : "left-0"} top-0 h-full z-[100]
+          relative h-full z-[100]
           ${isDark
             ? "bg-gradient-to-b from-gray-900/98 via-gray-900/98 to-gray-800/98 border-gray-700"
             : "bg-white/98 border-gray-200"

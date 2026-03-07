@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { Lock, Mail, ArrowRight, Zap } from "lucide-react";
+import { Lock, Mail, ArrowRight, Zap, FileText } from "lucide-react";
 import { Logo } from "./Logo";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion } from "motion/react";
+import { TermsModal } from "./TermsAndConditions";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -14,6 +15,8 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [focused, setFocused] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,16 +254,51 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                 </div>
               </div>
 
+              {/* Terms Agreement Checkbox */}
+              <div className="flex items-start gap-3 py-1">
+                <motion.button
+                  type="button"
+                  onClick={() => setAgreedToTerms(!agreedToTerms)}
+                  className="flex-shrink-0 w-5 h-5 rounded-md mt-0.5 flex items-center justify-center cursor-pointer transition-all"
+                  style={{
+                    background: agreedToTerms ? accent : "rgba(255,255,255,0.03)",
+                    border: `1.5px solid ${agreedToTerms ? accent : "rgba(255,255,255,0.12)"}`,
+                    boxShadow: agreedToTerms ? `0 0 12px ${accentG}0.3)` : "none",
+                  }}
+                  whileTap={{ scale: 0.85 }}
+                >
+                  {agreedToTerms && (
+                    <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6L5 9L10 3" stroke="#060a10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </motion.svg>
+                  )}
+                </motion.button>
+                <p className="text-[12px] text-gray-400 leading-relaxed">
+                  {isRTL ? "أوافق على " : "I agree to the "}
+                  <button
+                    type="button"
+                    onClick={() => setTermsOpen(true)}
+                    className="font-bold underline cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ color: accent }}
+                  >
+                    {isRTL ? "الشروط والأحكام" : "Terms and Conditions"}
+                  </button>
+                  {isRTL ? " الخاصة بمنصة PHASEX" : " of PHASEX platform"}
+                </p>
+              </div>
+
               {/* Register Button */}
               <motion.button type="button" onClick={onRegister}
                 className="w-full py-4 rounded-xl text-[14px] font-bold tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all"
                 style={{
-                  background: "rgba(255,255,255,0.03)",
-                  color: accent,
-                  border: `1px solid ${accentG}0.15)`,
+                  background: agreedToTerms ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.01)",
+                  color: agreedToTerms ? accent : "rgba(255,255,255,0.2)",
+                  border: `1px solid ${agreedToTerms ? `${accentG}0.15)` : "rgba(255,255,255,0.04)"}`,
+                  pointerEvents: agreedToTerms ? "auto" : "none",
+                  opacity: agreedToTerms ? 1 : 0.4,
                 }}
-                whileHover={{ background: `${accentG}0.06)`, borderColor: `${accentG}0.3)`, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}>
+                whileHover={agreedToTerms ? { background: `${accentG}0.06)`, borderColor: `${accentG}0.3)`, scale: 1.02 } : {}}
+                whileTap={agreedToTerms ? { scale: 0.98 } : {}}>
                 {isRTL ? "إنشاء حساب جديد" : "Create New Account"}
               </motion.button>
             </form>
@@ -273,6 +311,8 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
             transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }} />
         </div>
       </motion.div>
+
+      <TermsModal isOpen={termsOpen} onClose={() => setTermsOpen(false)} />
 
       {/* Version badge */}
       <motion.div className="absolute bottom-6 text-center z-10"

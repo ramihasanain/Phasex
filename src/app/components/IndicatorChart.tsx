@@ -3,7 +3,8 @@ import { Asset } from "./MarketList";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
 import { TrendingUp, TrendingDown, Activity, Maximize2, Minimize2, Table, BarChart3, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Download } from "lucide-react";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { TZCandlestickChart } from "./TZCandlestickChart";
 import { DrawingToolbar, DrawingTool } from "./DrawingToolbar";
 import { DrawingCanvas } from "./DrawingCanvas";
@@ -129,6 +130,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   // Phase State hierarchical timeframes
   const [mainTF, setMainTF] = useState("H1");
   const [subTF, setSubTF] = useState("M5");
+
+  // Live API data for Phase State
+  const isPhaseIndicator = indicator?.id === "phase";
+  const { candles: apiCandles, loading: apiLoading, error: apiError } = usePhaseStateAPI(
+    currency?.symbol,
+    mainTF,
+    subTF,
+    !!isPhaseIndicator
+  );
 
   // Drawing tools — only for fullscreen
   const [selectedTool, setSelectedTool] = useState<DrawingTool>("cursor");
@@ -268,9 +278,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     }
   };
 
-  // Use real Phase State data when available
+  // Use live API data for Phase State, fall back to uploaded JSON, then mock
   const effectiveData = useMemo(() => {
-    if (indicator?.id === "phase" && phaseStateData && generateCandlesFromReal && currency) {
+    // Priority 1: Live API candles
+    if (isPhaseIndicator && apiCandles.length > 0) {
+      return apiCandles;
+    }
+    // Priority 2: Uploaded JSON data
+    if (isPhaseIndicator && phaseStateData && generateCandlesFromReal && currency) {
       const key = `${mainTF}_${subTF}`;
       const symbolData = phaseStateData[key];
       if (symbolData) {
@@ -280,8 +295,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         }
       }
     }
+    // Priority 3: Mock chart data
     return data;
-  }, [indicator?.id, mainTF, subTF, currency?.symbol, phaseStateData, data]);
+  }, [isPhaseIndicator, apiCandles, mainTF, subTF, currency?.symbol, phaseStateData, data]);
 
   useEffect(() => { setStartIndex(Math.max(0, effectiveData.length - viewWindow)); }, [effectiveData.length]);
 
@@ -374,7 +390,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   ));
 
   const renderChart = (height: number) => {
-    const common = { data: displayedData, margin: { top: 5, right: 20, left: 10, bottom: 5 } };
+    const common = { data: displayedData, margin: { top: 5, right: 5, left: 0, bottom: 5 } };
     switch (indicator.type) {
       case "area":
         return (
@@ -524,10 +540,20 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         </div>
 
         {/* ─── Chart Area (NO drawing tools in small view) ─── */}
-        <div ref={chartRef} className="flex-1 relative min-h-0 px-2 py-2"
+        <div ref={chartRef} className="flex-1 relative min-h-0"
           onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onWheel={onWheel}
           style={{ cursor: isDragging ? "grabbing" : "grab" }}>
 
+          {/* API Loading overlay */}
+          {isPhaseIndicator && apiLoading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(17,21,32,0.8)" }}>
+              <div className="flex flex-col items-center gap-3">
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-8 h-8 rounded-full border-2 border-t-transparent" style={{ borderColor: `${indicator?.color || '#6366f1'}40`, borderTopColor: 'transparent' }} />
+                <span className="text-xs font-medium" style={{ color: "#64748b" }}>{isRTL ? "جاري التحميل..." : "Loading live data..."}</span>
+              </div>
+            </div>
+          )}
           <AnimatePresence mode="wait">
             {showTable ? (
               <motion.div key="table" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full overflow-auto rounded-lg"
@@ -611,9 +637,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
             onClick={() => setIsExpanded(false)}>
-            <motion.div initial={{ scale: 0.92 }} animate={{ scale: 1 }} exit={{ scale: 0.92 }}
-              className="w-[95vw] h-[95vh] rounded-2xl overflow-hidden flex flex-col"
-              style={{ background: "#0f1218", border: "1px solid rgba(255,255,255,0.06)" }}
+            <motion.div initial={{ scale: 0.98 }} animate={{ scale: 1 }} exit={{ scale: 0.98 }}
+              className="w-screen h-screen overflow-hidden flex flex-col"
+              style={{ background: "#0f1218" }}
               onClick={(e) => e.stopPropagation()} dir={isRTL ? "rtl" : "ltr"}>
 
               {/* Fullscreen Header */}
@@ -700,83 +726,90 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 </div>
               </div>
 
-              {/* Fullscreen Chart + Drawing Tools */}
-              <div ref={fullscreenChartRef} className="flex-1 p-4 min-h-0 relative">
-                {showTable ? (
-                  <div className="h-full overflow-auto rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <table className="w-full">
-                      <thead className="sticky top-0 z-10" style={{ background: "#0b0e14" }}>
-                        <tr>
-                          <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>{isRTL ? "الوقت" : "Time"}</th>
-                          <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>Open</th>
-                          <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#4ade80" }}>High</th>
-                          <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#f87171" }}>Low</th>
-                          <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>Close</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {effectiveData.map((row: any, i: number) => {
-                          const hasOHLC = row.open !== undefined;
-                          const isGreen = hasOHLC ? row.close > row.open : false;
-                          const val = hasOHLC ? row.close : row.value;
-                          const dec = val < 1 ? 5 : val < 100 ? 4 : val < 1000 ? 2 : val < 10000 ? 1 : 0;
-                          return (
-                            <tr key={i} style={{
-                              borderBottom: "1px solid rgba(255,255,255,0.03)",
-                              background: row.isReal ? "rgba(99,102,241,0.06)" : "transparent",
-                            }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = row.isReal ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = row.isReal ? "rgba(99,102,241,0.06)" : "transparent")}>
-                              <td className="p-2.5 text-xs font-mono flex items-center gap-1.5" style={{ color: "#64748b" }}>
-                                {row.isReal && <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold">★</span>}
-                                {(row.fullTime || row.time || "").replace("\n", " ")}
-                              </td>
-                              {hasOHLC ? (
-                                <>
-                                  <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#e2e8f0" }}>{row.open.toFixed(dec)}</td>
-                                  <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#4ade80" }}>{row.high.toFixed(dec)}</td>
-                                  <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#f87171" }}>{row.low.toFixed(dec)}</td>
-                                  <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: isGreen ? "#4ade80" : "#f87171" }}>{row.close.toFixed(dec)}</td>
-                                </>
-                              ) : (
-                                <>
-                                  <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#e2e8f0" }}>{row.value.toFixed(decimals)}</td>
-                                  <td className="p-2.5 text-xs" style={{ color: "#475569" }}>—</td>
-                                  <td className="p-2.5 text-xs" style={{ color: "#475569" }}>—</td>
-                                  <td className="p-2.5 text-xs" style={{ color: "#475569" }}>—</td>
-                                </>
-                              )}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+              {/* Fullscreen Chart + Drawing Tools — flex layout */}
+              <div className="flex-1 min-h-0 flex">
+                {/* Drawing Toolbar — sidebar that pushes chart */}
+                {showDrawingTools && !showTable && (
+                  <div className="flex-shrink-0 h-full" style={{ width: "190px" }}>
+                    <DrawingToolbar selectedTool={selectedTool} onToolChange={setSelectedTool}
+                      onZoomIn={zoomIn} onZoomOut={zoomOut}
+                      onClear={() => { if (confirm(isRTL ? "مسح الرسومات؟" : "Clear drawings?")) setDrawings([]); }}
+                      onExport={handleExportChart} magnetEnabled={magnetEnabled} onMagnetToggle={() => setMagnetEnabled(!magnetEnabled)}
+                      locked={drawingsLocked} onLockToggle={() => setDrawingsLocked(!drawingsLocked)}
+                      visible={drawingsVisible} onVisibilityToggle={() => setDrawingsVisible(!drawingsVisible)}
+                      onClose={() => setShowDrawingTools(false)} />
                   </div>
-                ) : (
-                  renderChart(window.innerHeight * 0.95 - 220)
                 )}
 
-                {/* Drawing tools — only in fullscreen */}
-                {!showTable && showDrawingTools && (
-                  <DrawingCanvas selectedTool={selectedTool} magnetEnabled={magnetEnabled} locked={drawingsLocked} visible={drawingsVisible}
-                    data={displayedData}
-                    priceRange={{ min: Math.min(...displayedData.map((d: any) => d.value)), max: Math.max(...displayedData.map((d: any) => d.value)) }}
-                    onDrawingsChange={setDrawings} onClearAll={() => setDrawings([])} />
-                )}
-                {showDrawingTools && !showTable && (
-                  <DrawingToolbar selectedTool={selectedTool} onToolChange={setSelectedTool}
-                    onZoomIn={zoomIn} onZoomOut={zoomOut}
-                    onClear={() => { if (confirm(isRTL ? "مسح الرسومات؟" : "Clear drawings?")) setDrawings([]); }}
-                    onExport={handleExportChart} magnetEnabled={magnetEnabled} onMagnetToggle={() => setMagnetEnabled(!magnetEnabled)}
-                    locked={drawingsLocked} onLockToggle={() => setDrawingsLocked(!drawingsLocked)}
-                    visible={drawingsVisible} onVisibilityToggle={() => setDrawingsVisible(!drawingsVisible)}
-                    onClose={() => setShowDrawingTools(false)} />
-                )}
+                {/* Chart Area — fills remaining width */}
+                <div ref={fullscreenChartRef} className="flex-1 min-h-0 min-w-0 relative">
+                  {showTable ? (
+                    <div className="h-full overflow-auto rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
+                      <table className="w-full">
+                        <thead className="sticky top-0 z-10" style={{ background: "#0b0e14" }}>
+                          <tr>
+                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>{isRTL ? "الوقت" : "Time"}</th>
+                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>Open</th>
+                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#4ade80" }}>High</th>
+                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#f87171" }}>Low</th>
+                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>Close</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {effectiveData.map((row: any, i: number) => {
+                            const hasOHLC = row.open !== undefined;
+                            const isGreen = hasOHLC ? row.close > row.open : false;
+                            const val = hasOHLC ? row.close : row.value;
+                            const dec = val < 1 ? 5 : val < 100 ? 4 : val < 1000 ? 2 : val < 10000 ? 1 : 0;
+                            return (
+                              <tr key={i} style={{
+                                borderBottom: "1px solid rgba(255,255,255,0.03)",
+                                background: row.isReal ? "rgba(99,102,241,0.06)" : "transparent",
+                              }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = row.isReal ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = row.isReal ? "rgba(99,102,241,0.06)" : "transparent")}>
+                                <td className="p-2.5 text-xs font-mono flex items-center gap-1.5" style={{ color: "#64748b" }}>
+                                  {row.isReal && <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold">★</span>}
+                                  {(row.fullTime || row.time || "").replace("\n", " ")}
+                                </td>
+                                {hasOHLC ? (
+                                  <>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#e2e8f0" }}>{row.open.toFixed(dec)}</td>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#4ade80" }}>{row.high.toFixed(dec)}</td>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#f87171" }}>{row.low.toFixed(dec)}</td>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: isGreen ? "#4ade80" : "#f87171" }}>{row.close.toFixed(dec)}</td>
+                                  </>
+                                ) : (
+                                  <>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#e2e8f0" }}>{row.value.toFixed(decimals)}</td>
+                                    <td className="p-2.5 text-xs" style={{ color: "#475569" }}>—</td>
+                                    <td className="p-2.5 text-xs" style={{ color: "#475569" }}>—</td>
+                                    <td className="p-2.5 text-xs" style={{ color: "#475569" }}>—</td>
+                                  </>
+                                )}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    renderChart(window.innerHeight - 140)
+                  )}
+
+                  {/* Drawing Canvas overlay — only in fullscreen */}
+                  {!showTable && showDrawingTools && (
+                    <DrawingCanvas selectedTool={selectedTool} magnetEnabled={magnetEnabled} locked={drawingsLocked} visible={drawingsVisible}
+                      data={displayedData}
+                      priceRange={{ min: Math.min(...displayedData.map((d: any) => d.value)), max: Math.max(...displayedData.map((d: any) => d.value)) }}
+                      onDrawingsChange={setDrawings} onClearAll={() => setDrawings([])} />
+                  )}
+                </div>
               </div>
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence >
     </>
   );
 }

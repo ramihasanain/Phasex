@@ -8,6 +8,7 @@ import {
   Briefcase, TrendingUp, Brain, Eye, LineChart, Ban, BellOff, HeartOff
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { TermsModal, TermsButton, CookiePolicyModal, CookieButton, LegalDisclaimerModal, LegalDisclaimerButton, ManifestoModal, ManifestoButton, PrivacyPolicyModal, PrivacyPolicyButton, RiskDisclosureModal, RiskDisclosureButton } from "./TermsAndConditions";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -20,6 +21,12 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
   const isRTL = language === "ar";
   const [currentScreenshot, setCurrentScreenshot] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [cookieOpen, setCookieOpen] = useState(false);
+  const [disclaimerOpen, setDisclaimerOpen] = useState(false);
+  const [manifestoOpen, setManifestoOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [riskOpen, setRiskOpen] = useState(false);
 
   const accent = "#00e5a0";
   const accentG = "rgba(0,229,160,";
@@ -689,40 +696,62 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ FOOTER ═══════════ */}
       <footer className="py-12 relative z-10" style={{ borderTop: `1px solid ${accentG}0.06)` }}>
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <div className="text-center md:text-left">
-              <div className="flex items-center gap-3 mb-4 justify-center md:justify-start">
+          <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8 mb-8">
+            {/* Brand */}
+            <div className="text-center md:text-left flex-shrink-0">
+              <div className="flex items-center gap-3 mb-3 justify-center md:justify-start">
                 <Logo size="sm" animated={false} />
                 <span className="text-2xl font-black" style={{ color: accent }}>PHASE X</span>
               </div>
-              <p className="text-lg text-gray-400 font-light mb-2">The Market, Rewritten</p>
-              <p className="text-xs text-gray-600">Powered by quantitative research and structural market science</p>
+              <p className="text-sm text-gray-400 font-light">The Market, Rewritten</p>
             </div>
-            <div className="text-center md:text-right">
-              <h3 className="text-base font-bold text-white mb-4">{isRTL ? "تواصل معنا" : "Connect"}</h3>
-              <div className="flex items-center gap-3 justify-center md:justify-end">
-                {[
-                  { icon: Twitter, hc: "#1da1f2" },
-                  { icon: Linkedin, hc: "#0077b5" },
-                  { icon: Mail, hc: accent }
-                ].map((social, i) => {
-                  const Icon = social.icon;
-                  return (
-                    <motion.a key={i} href="#" whileHover={{ scale: 1.15, y: -3 }}
-                      className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-all cursor-pointer"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                      <Icon className="w-5 h-5" />
-                    </motion.a>
-                  );
-                })}
-              </div>
+
+            {/* All icons in one row */}
+            <div className="flex items-center gap-2 flex-wrap justify-center md:justify-end">
+              {/* Social */}
+              {[
+                { icon: Twitter, hc: "#1da1f2" },
+                { icon: Linkedin, hc: "#0077b5" },
+                { icon: Mail, hc: accent }
+              ].map((social, i) => {
+                const Icon = social.icon;
+                return (
+                  <motion.a key={`s-${i}`} href="#" whileHover={{ scale: 1.12, y: -2 }}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-all cursor-pointer"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <Icon className="w-4 h-4" />
+                  </motion.a>
+                );
+              })}
+
+              {/* Separator */}
+              <div className="w-[1px] h-6 mx-1" style={{ background: "rgba(255,255,255,0.08)" }} />
+
+              {/* Legal buttons */}
+              <TermsButton onClick={() => setTermsOpen(true)} />
+              <PrivacyPolicyButton onClick={() => setPrivacyOpen(true)} />
+              <CookieButton onClick={() => setCookieOpen(true)} />
+              <LegalDisclaimerButton onClick={() => setDisclaimerOpen(true)} />
+              <RiskDisclosureButton onClick={() => setRiskOpen(true)} />
+              <ManifestoButton onClick={() => setManifestoOpen(true)} />
             </div>
           </div>
-          <div className="pt-6 text-center" style={{ borderTop: `1px solid rgba(255,255,255,0.04)` }}>
-            <p className="text-xs text-gray-600">© 2024 PHASE X AI. {isRTL ? "جميع الحقوق محفوظة" : "All rights reserved"}</p>
+
+          {/* Bottom bar */}
+          <div className="pt-5 text-center" style={{ borderTop: `1px solid rgba(255,255,255,0.04)` }}>
+            <p className="text-[11px] text-gray-600">
+              © 2024 PHASE X AI. {isRTL ? "جميع الحقوق محفوظة" : "All rights reserved."} — Structural Market Intelligence Platform
+            </p>
           </div>
         </div>
       </footer>
+
+      <TermsModal isOpen={termsOpen} onClose={() => setTermsOpen(false)} />
+      <CookiePolicyModal isOpen={cookieOpen} onClose={() => setCookieOpen(false)} />
+      <LegalDisclaimerModal isOpen={disclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+      <ManifestoModal isOpen={manifestoOpen} onClose={() => setManifestoOpen(false)} />
+      <PrivacyPolicyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <RiskDisclosureModal isOpen={riskOpen} onClose={() => setRiskOpen(false)} />
     </div>
   );
 }
