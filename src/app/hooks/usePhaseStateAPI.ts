@@ -1,7 +1,43 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/phase-state/read";
-const POLL_INTERVAL = 330_000; // 5 minutes 30 seconds
+
+/**
+ * Calculate ms until next 5-minute clock mark + 30 seconds.
+ * e.g., if now is 12:32:15 → next is 12:35:30 → wait 3m15s = 195000ms
+ *       if now is 12:35:45 → next is 12:40:30 → wait 4m45s = 285000ms
+ */
+function msUntilNext5MinMark(): number {
+    const now = new Date();
+    const mins = now.getMinutes();
+    const secs = now.getSeconds();
+    const ms = now.getMilliseconds();
+
+    // Next 5-minute mark (0, 5, 10, 15, ...)
+    const next5Min = Math.ceil((mins + 1) / 5) * 5;
+    // If we're already past XX:X0:30 but before XX:X5:00, next mark is current 5-block
+    const current5Min = Math.floor(mins / 5) * 5;
+    const secsIntoBlock = (mins - current5Min) * 60 + secs;
+
+    let targetMins: number;
+    if (secsIntoBlock < 30 && mins % 5 === 0) {
+        // We're at XX:X0:00-XX:X0:29 → target is XX:X0:30 (this block)
+        targetMins = current5Min;
+    } else {
+        // Target is next 5-min block + 30s
+        targetMins = current5Min + 5;
+    }
+
+    const target = new Date(now);
+    target.setMinutes(targetMins, 30, 0); // XX:targetMins:30.000
+
+    // If target is in the past (edge case), add 5 minutes
+    if (target.getTime() <= now.getTime()) {
+        target.setMinutes(target.getMinutes() + 5);
+    }
+
+    return target.getTime() - now.getTime();
+}
 
 interface APICandle {
     time: string;
@@ -110,7 +146,7 @@ export function usePhaseStateAPI(
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<number | null>(null);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const abortRef = useRef<AbortController | null>(null);
 
     const fetchData = useCallback(async (sym: string, main: string, sub: string, isInitial: boolean) => {
@@ -149,10 +185,10 @@ export function usePhaseStateAPI(
     }, []);
 
     useEffect(() => {
-        // Clear interval on any change
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
+        // Clear timer on any change
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
         }
 
         if (!enabled || !symbol) {
@@ -162,16 +198,21 @@ export function usePhaseStateAPI(
             return;
         }
 
-        // Initial fetch
+        // Initial fetch immediately
         fetchData(symbol, mainTF, subTF, true);
 
-        // Poll for live updates
-        intervalRef.current = setInterval(() => {
-            fetchData(symbol, mainTF, subTF, false);
-        }, POLL_INTERVAL);
+        // Schedule next fetch at the next 5-minute clock mark + 30s
+        const scheduleNext = () => {
+            const delay = msUntilNext5MinMark();
+            timerRef.current = setTimeout(() => {
+                fetchData(symbol, mainTF, subTF, false);
+                scheduleNext(); // chain next
+            }, delay);
+        };
+        scheduleNext();
 
         return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
+            if (timerRef.current) clearTimeout(timerRef.current);
             if (abortRef.current) abortRef.current.abort();
         };
     }, [symbol, mainTF, subTF, enabled, fetchData]);
