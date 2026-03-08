@@ -175,7 +175,7 @@ export function usePhaseStateAPI(
             if (!res.ok) throw new Error(`API error: ${res.status}`);
 
             const json = await res.json();
-            if (!json.ok || !json.candles || json.candles.length === 0) {
+            if (!json.candles || !Array.isArray(json.candles) || json.candles.length === 0) {
                 throw new Error("No candle data available");
             }
 

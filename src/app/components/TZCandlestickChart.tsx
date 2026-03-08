@@ -91,6 +91,12 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
     });
   }, [data]);
 
+  // Reset hover state when data changes to prevent stale index references
+  useEffect(() => {
+    setHoveredIndex(-1);
+    setTooltip(null);
+  }, [data]);
+
   // Calculate Y scale
   const { minY, maxY } = useMemo(() => {
     if (candlestickData.length === 0) return { minY: 0, maxY: 1 };
@@ -212,7 +218,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
           )}
 
           {/* Crosshair */}
-          {hoveredIndex >= 0 && (
+          {hoveredIndex >= 0 && hoveredIndex < candlestickData.length && candlestickData[hoveredIndex] && (
             <>
               <line
                 x1={hoveredIndex * gap + gap / 2}
@@ -258,6 +264,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
 
           {/* Candlesticks */}
           {candlestickData.map((candle, i) => {
+            if (!candle) return null;
             const cx = i * gap + gap / 2;
             const isGreen = candle.isGreen;
             const isLast = i === candlestickData.length - 1;

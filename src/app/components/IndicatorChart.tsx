@@ -302,24 +302,28 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     }
   };
 
-  // Use live API data for Phase State, fall back to uploaded JSON, then mock
+  // Use live API data for Phase State, or uploaded JSON. For Phase: NO mock fallback.
   const effectiveData = useMemo(() => {
-    // Priority 1: Live API candles
-    if (isPhaseIndicator && apiCandles.length > 0) {
-      return apiCandles;
-    }
-    // Priority 2: Uploaded JSON data
-    if (isPhaseIndicator && phaseStateData && generateCandlesFromReal && currency) {
-      const key = `${mainTF}_${subTF}`;
-      const symbolData = phaseStateData[key];
-      if (symbolData) {
-        const candle = symbolData[currency.symbol];
-        if (candle) {
-          return generateCandlesFromReal(candle, 90);
+    if (isPhaseIndicator) {
+      // Priority 1: Live API candles — exact count from API
+      if (apiCandles.length > 0) {
+        return apiCandles;
+      }
+      // Priority 2: Uploaded JSON data
+      if (phaseStateData && generateCandlesFromReal && currency) {
+        const key = `${mainTF}_${subTF}`;
+        const symbolData = phaseStateData[key];
+        if (symbolData) {
+          const candle = symbolData[currency.symbol];
+          if (candle) {
+            return generateCandlesFromReal(candle, 90);
+          }
         }
       }
+      // Phase indicator with no data → empty (will show "no readings" message)
+      return [];
     }
-    // Priority 3: Mock chart data
+    // Non-phase indicators: use chart data
     return data;
   }, [isPhaseIndicator, apiCandles, mainTF, subTF, currency?.symbol, phaseStateData, data]);
 
@@ -432,6 +436,38 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   ));
 
   const renderChart = (height: number) => {
+    // Show loading / error / empty state for Phase State when no data
+    if (isPhaseIndicator && effectiveData.length === 0) {
+      return (
+        <div className="flex items-center justify-center rounded-lg" style={{ height, background: tk.surface, border: `1px solid ${tk.border}` }}>
+          <div className="text-center">
+            {apiLoading ? (
+              <>
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  className="w-10 h-10 mx-auto mb-3 rounded-full" style={{ border: `3px solid ${tk.border}`, borderTopColor: '#6366f1' }} />
+                <p className="text-sm font-medium" style={{ color: tk.textMuted }}>
+                  {isRTL ? "جاري تحميل القراءات..." : "Loading readings..."}
+                </p>
+              </>
+            ) : (
+              <>
+                <Activity className="w-12 h-12 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.5 }} />
+                <p className="text-sm font-medium" style={{ color: tk.textMuted }}>
+                  {isRTL ? "لا توجد قراءات حالية" : "No current readings"}
+                </p>
+                {apiError && (
+                  <p className="text-xs mt-1" style={{ color: tk.negative, opacity: 0.7 }}>{apiError}</p>
+                )}
+                <p className="text-[11px] mt-2" style={{ color: tk.textDim }}>
+                  {isRTL ? `${currency?.symbol} - ${mainTF} من ${subTF}` : `${currency?.symbol} - ${mainTF} from ${subTF}`}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     const common = { data: displayedData, margin: { top: 5, right: 5, left: 0, bottom: 5 } };
     switch (indicator.type) {
       case "area":
