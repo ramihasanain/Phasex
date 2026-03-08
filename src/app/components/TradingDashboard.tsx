@@ -24,92 +24,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { useLivePrices } from "../hooks/useLivePrices";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 import { useTheme } from "../contexts/ThemeContext";
+import { useMarketsAPI } from "../hooks/useMarketsAPI";
 
 /* ─── Types ─── */
 interface TradingDashboardProps {
   onLogout: () => void;
 }
 
-/* ─── Mock Data ─── */
-const mockAssets: Asset[] = [
-  // CRYPTO
-  { id: "crypto1", name: "كاردانو", nameEn: "Cardano", symbol: "ADAUSD.p", price: 0.58, change: 0.012, changePercent: 2.1, market: "CRYPTO" },
-  { id: "crypto2", name: "أتوم", nameEn: "Atmos", symbol: "ATMUSD.p", price: 12.45, change: -0.32, changePercent: -2.5, market: "CRYPTO" },
-  { id: "crypto3", name: "أفالانش", nameEn: "Avalanche", symbol: "AVAUSD.p", price: 38.20, change: 1.15, changePercent: 3.1, market: "CRYPTO" },
-  { id: "crypto4", name: "أكسي إنفينيتي", nameEn: "Axie", symbol: "AXSUSD.p", price: 7.85, change: -0.12, changePercent: -1.5, market: "CRYPTO" },
-  { id: "crypto5", name: "بتكوين كاش", nameEn: "Bitcoin Cash", symbol: "BCHUSD.p", price: 425.60, change: 15.30, changePercent: 3.7, market: "CRYPTO" },
-  { id: "crypto6", name: "بينانس كوين", nameEn: "Binance Coin", symbol: "BNBUSD.p", price: 595.40, change: 8.20, changePercent: 1.4, market: "CRYPTO" },
-  { id: "crypto7", name: "بتكوين", nameEn: "Bitcoin", symbol: "BTCUSD.p", price: 62450.00, change: 850.00, changePercent: 1.38, market: "CRYPTO" },
-  { id: "crypto8", name: "كومباوند", nameEn: "Compound", symbol: "COMUSD.p", price: 72.15, change: -1.25, changePercent: -1.7, market: "CRYPTO" },
-  { id: "crypto9", name: "بولكادوت", nameEn: "Polkadot", symbol: "DOTUSD.p", price: 8.95, change: 0.22, changePercent: 2.5, market: "CRYPTO" },
-  { id: "crypto10", name: "داش", nameEn: "Dash", symbol: "DSHUSD.p", price: 32.45, change: -0.45, changePercent: -1.4, market: "CRYPTO" },
-  { id: "crypto11", name: "إيثريوم كلاسيك", nameEn: "Ethereum Classic", symbol: "ETCUSD.p", price: 28.75, change: 0.85, changePercent: 3.1, market: "CRYPTO" },
-  { id: "crypto12", name: "إيثريوم", nameEn: "Ethereum", symbol: "ETHUSD.p", price: 3450.25, change: -45.30, changePercent: -1.3, market: "CRYPTO" },
-  { id: "crypto13", name: "تشينلينك", nameEn: "Chainlink", symbol: "LNKUSD.p", price: 18.45, change: 0.35, changePercent: 1.9, market: "CRYPTO" },
-  { id: "crypto14", name: "لايتكوين", nameEn: "Litecoin", symbol: "LTCUSD.p", price: 82.50, change: 1.45, changePercent: 1.8, market: "CRYPTO" },
-  { id: "crypto15", name: "سولانا", nameEn: "Solana", symbol: "SOLUSD.p", price: 145.20, change: 5.67, changePercent: 4.0, market: "CRYPTO" },
-  { id: "crypto16", name: "ترو يو إس دي", nameEn: "TrueUSD", symbol: "TRUUSD.p", price: 1.00, change: 0.00, changePercent: 0.0, market: "CRYPTO" },
-  { id: "crypto17", name: "يوني سواب", nameEn: "Uniswap", symbol: "UNIUSD.p", price: 12.15, change: -0.25, changePercent: -2.0, market: "CRYPTO" },
-  { id: "crypto18", name: "ريبل", nameEn: "Ripple", symbol: "XRPUSD.p", price: 0.58, change: 0.01, changePercent: 1.7, market: "CRYPTO" },
-  { id: "crypto19", name: "يرن فاينانس", nameEn: "Yearn Finance", symbol: "YFIUSD.p", price: 8450.00, change: -120.00, changePercent: -1.4, market: "CRYPTO" },
-  // FOREX
-  { id: "fx1", name: "أسترالي/كندي", nameEn: "AUD/CAD", symbol: "AUDCAD", price: 0.8945, change: 0.0023, changePercent: 0.26, market: "FOREX" },
-  { id: "fx2", name: "أسترالي/فرنك", nameEn: "AUD/CHF", symbol: "AUDCHF", price: 0.5812, change: -0.0015, changePercent: -0.26, market: "FOREX" },
-  { id: "fx3", name: "أسترالي/ين", nameEn: "AUD/JPY", symbol: "AUDJPY", price: 98.45, change: 0.45, changePercent: 0.46, market: "FOREX" },
-  { id: "fx4", name: "أسترالي/نيوزيلندي", nameEn: "AUD/NZD", symbol: "AUDNZD", price: 1.0785, change: -0.0012, changePercent: -0.11, market: "FOREX" },
-  { id: "fx5", name: "أسترالي/دولار", nameEn: "AUD/USD", symbol: "AUDUSD", price: 0.6520, change: -0.0023, changePercent: -0.35, market: "FOREX" },
-  { id: "fx6", name: "كندي/فرنك", nameEn: "CAD/CHF", symbol: "CADCHF", price: 0.6485, change: 0.0012, changePercent: 0.19, market: "FOREX" },
-  { id: "fx7", name: "كندي/ين", nameEn: "CAD/JPY", symbol: "CADJPY", price: 109.50, change: 0.35, changePercent: 0.32, market: "FOREX" },
-  { id: "fx8", name: "فرنك/ين", nameEn: "CHF/JPY", symbol: "CHFJPY", price: 168.25, change: 0.85, changePercent: 0.51, market: "FOREX" },
-  { id: "fx9", name: "يورو/أسترالي", nameEn: "EUR/AUD", symbol: "EURAUD", price: 1.6540, change: 0.0045, changePercent: 0.27, market: "FOREX" },
-  { id: "fx10", name: "يورو/كندي", nameEn: "EUR/CAD", symbol: "EURCAD", price: 1.4580, change: -0.0025, changePercent: -0.17, market: "FOREX" },
-  { id: "fx11", name: "يورو/فرنك", nameEn: "EUR/CHF", symbol: "EURCHF", price: 0.9415, change: 0.0015, changePercent: 0.16, market: "FOREX" },
-  { id: "fx12", name: "يورو/باوند", nameEn: "EUR/GBP", symbol: "EURGBP", price: 0.8540, change: -0.0008, changePercent: -0.09, market: "FOREX" },
-  { id: "fx13", name: "يورو/ين", nameEn: "EUR/JPY", symbol: "EURJPY", price: 162.45, change: 0.75, changePercent: 0.46, market: "FOREX" },
-  { id: "fx14", name: "يورو/نيوزيلندي", nameEn: "EUR/NZD", symbol: "EURNZD", price: 1.7820, change: 0.0055, changePercent: 0.31, market: "FOREX" },
-  { id: "fx15", name: "يورو/دولار", nameEn: "EUR/USD", symbol: "EURUSD", price: 1.0845, change: 0.0023, changePercent: 0.21, market: "FOREX" },
-  { id: "fx16", name: "باوند/أسترالي", nameEn: "GBP/AUD", symbol: "GBPAUD", price: 1.9340, change: 0.0065, changePercent: 0.34, market: "FOREX" },
-  { id: "fx17", name: "باوند/كندي", nameEn: "GBP/CAD", symbol: "GBPCAD", price: 1.7050, change: -0.0015, changePercent: -0.09, market: "FOREX" },
-  { id: "fx18", name: "باوند/فرنك", nameEn: "GBP/CHF", symbol: "GBPCHF", price: 1.1015, change: 0.0025, changePercent: 0.23, market: "FOREX" },
-  { id: "fx19", name: "باوند/ين", nameEn: "GBP/JPY", symbol: "GBPJPY", price: 189.75, change: 1.15, changePercent: 0.61, market: "FOREX" },
-  { id: "fx20", name: "باوند/نيوزيلندي", nameEn: "GBP/NZD", symbol: "GBPNZD", price: 2.0850, change: 0.0085, changePercent: 0.41, market: "FOREX" },
-  { id: "fx21", name: "باوند/دولار", nameEn: "GBP/USD", symbol: "GBPUSD", price: 1.2634, change: -0.0015, changePercent: -0.12, market: "FOREX" },
-  { id: "fx22", name: "نيوزيلندي/كندي", nameEn: "NZD/CAD", symbol: "NZDCAD", price: 0.8145, change: 0.0012, changePercent: 0.15, market: "FOREX" },
-  { id: "fx23", name: "نيوزيلندي/فرنك", nameEn: "NZD/CHF", symbol: "NZDCHF", price: 0.5412, change: -0.0008, changePercent: -0.15, market: "FOREX" },
-  { id: "fx24", name: "نيوزيلندي/ين", nameEn: "NZD/JPY", symbol: "NZDJPY", price: 92.45, change: 0.25, changePercent: 0.27, market: "FOREX" },
-  { id: "fx25", name: "نيوزيلندي/دولار", nameEn: "NZD/USD", symbol: "NZDUSD", price: 0.6050, change: -0.0015, changePercent: -0.25, market: "FOREX" },
-  { id: "fx26", name: "دولار/كندي", nameEn: "USD/CAD", symbol: "USDCAD", price: 1.3425, change: 0.0012, changePercent: 0.09, market: "FOREX" },
-  { id: "fx27", name: "دولار/فرنك", nameEn: "USD/CHF", symbol: "USDCHF", price: 0.8812, change: -0.0008, changePercent: -0.09, market: "FOREX" },
-  { id: "fx28", name: "دولار/ين", nameEn: "USD/JPY", symbol: "USDJPY", price: 149.52, change: 0.45, changePercent: 0.30, market: "FOREX" },
-  // COMMODITY
-  { id: "cmd1", name: "نفط برنت", nameEn: "Brent", symbol: "BRENT", price: 82.45, change: 1.15, changePercent: 1.41, market: "COMMODITY" },
-  { id: "cmd2", name: "نفط خام", nameEn: "WTI", symbol: "WTI", price: 78.15, change: 0.85, changePercent: 1.10, market: "COMMODITY" },
-  { id: "cmd3", name: "نفط أمريكي", nameEn: "US Oil", symbol: "USOIL", price: 77.82, change: 0.65, changePercent: 0.84, market: "COMMODITY" },
-  // METALS
-  { id: "mtl1", name: "ذهب", nameEn: "Gold", symbol: "GOLD", price: 2045.60, change: 12.30, changePercent: 0.61, market: "METALS" },
-  { id: "mtl2", name: "فضة", nameEn: "Silver", symbol: "SILVER", price: 22.85, change: -0.25, changePercent: -1.08, market: "METALS" },
-  { id: "mtl3", name: "ذهب/دولار", nameEn: "Gold/USD", symbol: "XAUUSD", price: 2048.25, change: 15.40, changePercent: 0.76, market: "METALS" },
-  { id: "mtl4", name: "فضة/دولار", nameEn: "Silver/USD", symbol: "XAGUSD", price: 23.15, change: 0.35, changePercent: 1.54, market: "METALS" },
-  // INDEX
-  { id: "idx1", name: "جير 30", nameEn: "GER30", symbol: "GER30", price: 17850.45, change: 85.30, changePercent: 0.48, market: "INDEX" },
-  { id: "idx2", name: "اليابان 225", nameEn: "JAP225", symbol: "JAP225", price: 39500.00, change: 250.00, changePercent: 0.64, market: "INDEX" },
-  { id: "idx3", name: "بريطانيا 100", nameEn: "UK100", symbol: "UK100", price: 7650.25, change: -12.45, changePercent: -0.16, market: "INDEX" },
-  { id: "idx4", name: "يو إس 100", nameEn: "US100", symbol: "US100", price: 18250.60, change: 145.20, changePercent: 0.80, market: "INDEX" },
-  { id: "idx5", name: "داو جونز", nameEn: "US30", symbol: "US30", price: 38950.00, change: 125.00, changePercent: 0.32, market: "INDEX" },
-  { id: "idx6", name: "يو إس 500", nameEn: "US500", symbol: "US500", price: 5120.45, change: 25.30, changePercent: 0.50, market: "INDEX" },
-  { id: "idx7", name: "فيكس", nameEn: "VIXRoll", symbol: "VIXRoll", price: 14.25, change: 0.15, changePercent: 1.06, market: "INDEX" },
-  { id: "idx8", name: "هولندا 25", nameEn: "NL25Roll", symbol: "NL25Roll", price: 850.45, change: 2.30, changePercent: 0.27, market: "INDEX" },
-  { id: "idx9", name: "النرويج 25", nameEn: "NORWAY25Roll", symbol: "NORWAY25Roll", price: 1250.60, change: -5.45, changePercent: -0.43, market: "INDEX" },
-  { id: "idx10", name: "روسل 2000", nameEn: "RUSS2000", symbol: "RUSS2000", price: 2050.25, change: 12.45, changePercent: 0.61, market: "INDEX" },
-  { id: "idx11", name: "أوروبا 50", nameEn: "EU50Roll", symbol: "EU50Roll", price: 4950.45, change: 15.30, changePercent: 0.31, market: "INDEX" },
-  { id: "idx12", name: "فرنسا 40", nameEn: "FRA40Roll", symbol: "FRA40Roll", price: 7950.25, change: -2.45, changePercent: -0.03, market: "INDEX" },
-  { id: "idx13", name: "أستراليا 200", nameEn: "AUS200Roll", symbol: "AUS200Roll", price: 7750.60, change: 18.20, changePercent: 0.24, market: "INDEX" },
-  { id: "idx14", name: "الأسهم الصينية", nameEn: "CHshares", symbol: "CHshares", price: 5850.45, change: 45.30, changePercent: 0.78, market: "INDEX" },
-  { id: "idx15", name: "سويسرا 20", nameEn: "SWISS20Roll", symbol: "SWISS20Roll", price: 11450.25, change: -12.45, changePercent: -0.11, market: "INDEX" },
-  { id: "idx16", name: "الصين 50", nameEn: "CHINA50Roll", symbol: "CHINA50Roll", price: 12450.60, change: 85.20, changePercent: 0.69, market: "INDEX" },
-  { id: "idx17", name: "إسبانيا 35", nameEn: "ESP35Roll", symbol: "ESP35Roll", price: 10150.45, change: 35.30, changePercent: 0.35, market: "INDEX" },
-  { id: "idx18", name: "هونج كونج 50", nameEn: "HK50Roll", symbol: "HK50Roll", price: 16450.25, change: -145.45, changePercent: -0.88, market: "INDEX" },
-];
+/* ─── Assets from API ─── */
 
 /* ─── Indicators ─── */
 const indicators: Indicator[] = [
@@ -248,6 +170,16 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   const tk = useThemeTokens();
   const { toggleTheme } = useTheme();
 
+  // Markets + Symbols API (two-step: markets on load, symbols on tab change)
+  const {
+    markets: apiMarkets,
+    marketsLoading,
+    selectedMarket,
+    setSelectedMarket,
+    filteredAssets,
+    symbolsLoading,
+  } = useMarketsAPI();
+
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -269,23 +201,44 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   // Live WebSocket prices
   const { prices: livePrices, initialPrices, connected: wsConnected } = useLivePrices();
 
-  // Merge live prices into asset list
+  // WebSocket symbol aliases: WS name → API symbol code
+  const WS_ALIASES: Record<string, string> = {
+    "GOLD": "XAUUSD",
+    "SILVER": "XAGUSD",
+  };
+  // Reverse map: API symbol → WS name
+  const API_TO_WS: Record<string, string> = Object.fromEntries(
+    Object.entries(WS_ALIASES).map(([ws, api]) => [api, ws])
+  );
+
+  // Merge live prices into filtered assets from API
   const liveAssets = useMemo(() => {
-    return mockAssets.map((asset) => {
-      const live = livePrices[asset.symbol];
+    return filteredAssets.map((asset) => {
+      // Try: exact symbol, then .p suffix (crypto), then WS alias (GOLD/SILVER)
+      const wsAlias = API_TO_WS[asset.symbol];
+      const live = livePrices[asset.symbol]
+        || livePrices[asset.symbol + ".p"]
+        || (wsAlias ? livePrices[wsAlias] : undefined);
+
       if (!live) return asset;
+
       const livePrice = (live.bid + live.ask) / 2;
-      const basePrice = initialPrices[asset.symbol] || livePrice;
+      // Find which WS key matched for initial price lookup
+      const wsKey = livePrices[asset.symbol] ? asset.symbol
+        : livePrices[asset.symbol + ".p"] ? asset.symbol + ".p"
+          : wsAlias || asset.symbol;
+      const basePrice = initialPrices[wsKey] || livePrice;
       const change = livePrice - basePrice;
       const changePercent = basePrice !== 0 ? (change / basePrice) * 100 : 0;
+      const priceDec = livePrice < 10 ? 4 : livePrice < 1000 ? 2 : 2;
       return {
         ...asset,
-        price: +livePrice.toFixed(asset.price < 10 ? 4 : asset.price < 1000 ? 2 : 2),
-        change: +change.toFixed(asset.price < 10 ? 4 : 2),
+        price: +livePrice.toFixed(priceDec),
+        change: +change.toFixed(livePrice < 10 ? 4 : 2),
         changePercent: +changePercent.toFixed(2),
       };
     });
-  }, [livePrices, initialPrices]);
+  }, [filteredAssets, livePrices, initialPrices]);
 
   /* ─── File Upload Handler ─── */
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -429,8 +382,18 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
         {/* ── LEFT: Market List ── */}
         <motion.div initial={false} animate={{ width: isMarketListCollapsed ? 64 : 280 }}
           transition={{ type: "spring", damping: 26, stiffness: 220 }} className="flex-shrink-0 sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
-          <MarketList assets={liveAssets} selectedAsset={selectedAsset} onSelectAsset={pickAsset}
-            isCollapsed={isMarketListCollapsed} onToggleCollapse={() => setIsMarketListCollapsed(!isMarketListCollapsed)} />
+          <MarketList
+            assets={liveAssets}
+            selectedAsset={selectedAsset}
+            onSelectAsset={pickAsset}
+            isCollapsed={isMarketListCollapsed}
+            onToggleCollapse={() => setIsMarketListCollapsed(!isMarketListCollapsed)}
+            markets={apiMarkets}
+            marketsLoading={marketsLoading}
+            selectedMarket={selectedMarket}
+            onMarketSelect={setSelectedMarket}
+            symbolsLoading={symbolsLoading}
+          />
         </motion.div>
 
         {/* ── CENTER: Indicators + Chart + Signals ── */}

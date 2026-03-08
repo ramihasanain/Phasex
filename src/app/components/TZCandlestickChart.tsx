@@ -78,6 +78,23 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
   // Generate candlestick data — use real OHLC if available, else mock from value
   const candlestickData = useMemo(() => {
     return data.map((item, index) => {
+      // Detect NaN/null candles
+      const hasNaN = isNaN(item.value) || item.value === null
+        || (item.open !== undefined && (isNaN(item.open) || item.open === null))
+        || (item.high !== undefined && (isNaN(item.high) || item.high === null))
+        || (item.low !== undefined && (isNaN(item.low) || item.low === null))
+        || (item.close !== undefined && (isNaN(item.close) || item.close === null));
+
+      if (hasNaN) {
+        return {
+          ...item,
+          open: 0, high: 0, low: 0, close: 0,
+          isGreen: false,
+          isReal: false,
+          isNaNCandle: true,
+        };
+      }
+
       const hasOHLC = item.open !== undefined && item.high !== undefined && item.low !== undefined && item.close !== undefined;
       const ohlc = hasOHLC
         ? { open: item.open!, high: item.high!, low: item.low!, close: item.close! }
@@ -87,6 +104,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
         ...ohlc,
         isGreen: ohlc.close > ohlc.open,
         isReal: item.isReal || false,
+        isNaNCandle: false,
       };
     });
   }, [data]);
@@ -102,9 +120,11 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
     if (candlestickData.length === 0) return { minY: 0, maxY: 1 };
     let min = Infinity, max = -Infinity;
     for (const d of candlestickData) {
+      if (d.isNaNCandle) continue; // skip NaN entries
       if (d.low < min) min = d.low;
       if (d.high > max) max = d.high;
     }
+    if (min === Infinity || max === -Infinity) return { minY: 0, maxY: 1 };
     const padding = (max - min) * 0.08 || 1;
     return { minY: min - padding, maxY: max + padding };
   }, [candlestickData]);
@@ -133,7 +153,10 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
     const total = candlestickData.length;
     const labelInterval = Math.max(Math.floor(total / 12), 1);
     return candlestickData
-      .map((d, i) => ({ label: d.time, index: i }))
+      .map((d, i) => ({
+        label: d.isNaNCandle || !d.time || d.time.includes("NaN") ? "—" : d.time,
+        index: i,
+      }))
       .filter((_, i) => i % labelInterval === 0);
   }, [candlestickData]);
 
@@ -280,6 +303,24 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
               effectiveHigh = Math.max(candle.high, livePrice!);
               effectiveLow = Math.min(candle.low, livePrice!);
               effectiveIsGreen = effectiveClose > candle.open;
+            }
+
+            // ── NaN candle → show "no data" placeholder ──
+            if (candle.isNaNCandle) {
+              const midY = height / 2;
+              return (
+                <g key={`candle-${i}`}>
+                  {/* Dashed line */}
+                  <line x1={cx} y1={margin.top + 10} x2={cx} y2={height - margin.bottom - 5}
+                    stroke="#475569" strokeWidth={1} strokeDasharray="4 3" opacity={0.5} />
+                  {/* No-data icon */}
+                  <text x={cx} y={midY} textAnchor="middle" dominantBaseline="middle"
+                    fill="#64748b" fontSize={16} fontWeight="bold">⊘</text>
+                  {/* Label */}
+                  <text x={cx} y={midY + 20} textAnchor="middle" dominantBaseline="middle"
+                    fill="#475569" fontSize={8}>—</text>
+                </g>
+              );
             }
 
             const color = (isLive ? effectiveIsGreen : isGreen) ? '#059669' : '#dc2626';

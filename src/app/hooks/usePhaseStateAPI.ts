@@ -90,9 +90,19 @@ function parseAPITime(timeStr: string): { date: Date; display: string; full: str
         // Already ISO format
         date = new Date(timeStr);
     } else {
-        // Dot format: "2026.03.07 21:25" → "2026-03-07T21:25:00"
-        const iso = timeStr.replace(/\./g, "-").replace(" ", "T") + ":00";
+        // Dot format: "2026.03.07 21:25" or "2026.03.07 21:25:00"
+        let iso = timeStr.replace(/\./g, "-").replace(" ", "T");
+        // Only append seconds if not already present (HH:MM vs HH:MM:SS)
+        const timePart = iso.split("T")[1] || "";
+        if ((timePart.match(/:/g) || []).length < 2) {
+            iso += ":00";
+        }
         date = new Date(iso);
+    }
+
+    // Guard against Invalid Date
+    if (isNaN(date.getTime())) {
+        return { date: new Date(0), display: "—", full: "—" };
     }
 
     const dd = date.getDate().toString().padStart(2, "0");

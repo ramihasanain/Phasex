@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, DollarSign, Gem, Landmark, Bitcoin, ArrowUpRight, ArrowDownRight, ChevronsLeft, ChevronsRight, TrendingUp, Droplets } from "lucide-react";
+import { Search, DollarSign, Landmark, Bitcoin, ArrowUpRight, ArrowDownRight, ChevronsLeft, ChevronsRight, TrendingUp, Droplets, BarChart3, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useThemeTokens } from "../hooks/useThemeTokens";
+import type { MarketInfo } from "../hooks/useMarketsAPI";
 
 export interface Asset {
   id: string;
@@ -12,7 +13,7 @@ export interface Asset {
   price: number;
   change: number;
   changePercent: number;
-  market: "FOREX" | "COMMODITY" | "INDEX" | "CRYPTO" | "METALS";
+  market: string;
 }
 
 interface MarketListProps {
@@ -21,6 +22,12 @@ interface MarketListProps {
   onSelectAsset: (asset: Asset) => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  // Dynamic markets from API
+  markets: MarketInfo[];
+  marketsLoading: boolean;
+  selectedMarket: MarketInfo | null;
+  onMarketSelect: (market: MarketInfo) => void;
+  symbolsLoading: boolean;
 }
 
 /* ─── Price flash CSS ─── */
@@ -37,45 +44,49 @@ const flashStyles = `
 .price-flash-down { animation: flashDown 1.2s ease-out; }
 `;
 
-/* ─── Symbol Icons from Structural Dynamics ─── */
+/* ─── Market Tab Config (visual only — keys come from API) ─── */
+const MARKET_VISUALS: Record<string, { labelAr: string; labelEn: string; accent: string; emoji: string }> = {
+  FOREX: { labelAr: "فوركس", labelEn: "Forex", accent: "#3b82f6", emoji: "💱" },
+  COMMODITY: { labelAr: "سلع", labelEn: "Commodities", accent: "#f97316", emoji: "🛢️" },
+  INDEX: { labelAr: "مؤشرات", labelEn: "Indices", accent: "#a855f7", emoji: "📊" },
+  CRYPTO: { labelAr: "رقمية", labelEn: "Crypto", accent: "#10b981", emoji: "₿" },
+};
+const DEFAULT_VISUAL = { labelAr: "سوق", labelEn: "Market", accent: "#6366f1", emoji: "📈" };
+
+function getMarketVisual(code: string) {
+  return MARKET_VISUALS[code] || DEFAULT_VISUAL;
+}
+
+/* ─── Symbol Icons ─── */
 const symbolIcons: Record<string, string> = {
-  "ADAUSD.p": "🔵", "ATMUSD.p": "⚡", "AVAUSD.p": "🔺", "AXSUSD.p": "🎮",
-  "BCHUSD.p": "💚", "BNBUSD.p": "💛", "BTCUSD.p": "₿", "COMUSD.p": "🌐",
-  "DOTUSD.p": "⚪", "DSHUSD.p": "🔷", "ETCUSD.p": "💎", "ETHUSD.p": "⟠",
-  "LNKUSD.p": "🔗", "LTCUSD.p": "🪨", "SOLUSD.p": "◎", "TRUUSD.p": "🟢",
-  "UNIUSD.p": "🦄", "XRPUSD.p": "💧", "YFIUSD.p": "💰",
+  "ADAUSD": "🔵", "AXSUSD": "🎮", "BCHUSD": "💚", "BNBUSD": "💛", "BTCUSD": "₿",
+  "DOTUSD": "⚪", "ETCUSD": "💎", "ETHUSD": "⟠", "LTCUSD": "🪨", "SOLUSD": "◎",
+  "UNIUSD": "🦄", "XRPUSD": "💧", "YFIUSD": "💰", "LINKUSD": "🔗", "COMPUSD": "🌐",
+  "DASHUSD": "🔷", "TRUMPUSD": "🟡", "ATOMUSD": "⚡", "AVAXUSD": "🔺",
   "AUDCAD": "🇦🇺", "AUDCHF": "🇦🇺", "AUDJPY": "🇦🇺", "AUDNZD": "🇦🇺", "AUDUSD": "🇦🇺",
-  "CADCHF": "🇨🇦", "CADJPY": "🇨🇦",
-  "CHFJPY": "🇨🇭",
+  "CADCHF": "🇨🇦", "CADJPY": "🇨🇦", "CHFJPY": "🇨🇭",
   "EURAUD": "🇪🇺", "EURCAD": "🇪🇺", "EURCHF": "🇪🇺", "EURGBP": "🇪🇺",
   "EURJPY": "🇪🇺", "EURNZD": "🇪🇺", "EURUSD": "🇪🇺",
   "GBPAUD": "🇬🇧", "GBPCAD": "🇬🇧", "GBPCHF": "🇬🇧",
   "GBPJPY": "🇬🇧", "GBPNZD": "🇬🇧", "GBPUSD": "🇬🇧",
   "NZDCAD": "🇳🇿", "NZDCHF": "🇳🇿", "NZDJPY": "🇳🇿", "NZDUSD": "🇳🇿",
   "USDCAD": "🇺🇸", "USDCHF": "🇺🇸", "USDJPY": "🇺🇸",
-  "BRENT": "🛢️", "WTI": "🛢️", "USOIL": "🛢️",
-  "GOLD": "🥇", "SILVER": "🥈", "XAUUSD": "🥇", "XAGUSD": "🥈",
-  "GER30": "🏭", "JAP225": "⛩️", "UK100": "🏰",
-  "US100": "💻", "US30": "🏛️", "US500": "📊",
+  "XAUUSD": "🥇", "XAGUSD": "🥈", "UKOILRoll": "🛢️", "USOILRoll": "🛢️",
   "VIXRoll": "📉", "NL25Roll": "🌷", "NORWAY25Roll": "⛷️",
   "RUSS2000": "📈", "EU50Roll": "🏦", "FRA40Roll": "🗼",
   "AUS200Roll": "🏛️", "CHshares": "⛰️", "SWISS20Roll": "⛰️",
   "CHINA50Roll": "🏮", "ESP35Roll": "🏟️", "HK50Roll": "🏙️",
+  "DE40Roll": "🏭", "JP225Roll": "⛩️", "UK100Roll": "🏰",
+  "US30Roll": "🏛️", "US500Roll": "📊", "UT100Roll": "💻",
 };
 
-const markets = [
-  { key: "FOREX" as const, labelAr: "فوركس", labelEn: "Forex", icon: DollarSign, accent: "#3b82f6", emoji: "💱" },
-  { key: "METALS" as const, labelAr: "معادن", labelEn: "Metals", icon: Gem, accent: "#f59e0b", emoji: "🥇" },
-  { key: "COMMODITY" as const, labelAr: "سلع", labelEn: "Commodities", icon: Droplets, accent: "#f97316", emoji: "🛢️" },
-  { key: "INDEX" as const, labelAr: "مؤشرات", labelEn: "Indices", icon: Landmark, accent: "#a855f7", emoji: "📊" },
-  { key: "CRYPTO" as const, labelAr: "رقمية", labelEn: "Crypto", icon: Bitcoin, accent: "#10b981", emoji: "₿" },
-];
-
-export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, onToggleCollapse }: MarketListProps) {
+export function MarketList({
+  assets, selectedAsset, onSelectAsset, isCollapsed, onToggleCollapse,
+  markets, marketsLoading, selectedMarket, onMarketSelect, symbolsLoading,
+}: MarketListProps) {
   const { language, t } = useLanguage();
   const isRTL = language === "ar";
   const tk = useThemeTokens();
-  const [activeMarket, setActiveMarket] = useState<"FOREX" | "COMMODITY" | "INDEX" | "CRYPTO" | "METALS">("FOREX");
   const [search, setSearch] = useState("");
 
   // Track previous prices for flash animation
@@ -93,82 +104,81 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
         const dir = asset.price > prev ? "up" : "down";
         newFlashes[asset.symbol] = dir;
         hasChange = true;
-
-        // Clear previous timer
-        if (flashTimers.current[asset.symbol]) {
-          clearTimeout(flashTimers.current[asset.symbol]);
-        }
-        // Auto-clear flash after animation
+        if (flashTimers.current[asset.symbol]) clearTimeout(flashTimers.current[asset.symbol]);
         flashTimers.current[asset.symbol] = setTimeout(() => {
           setFlashMap((prev) => ({ ...prev, [asset.symbol]: null }));
         }, 1200);
       }
       prevPrices.current[asset.symbol] = asset.price;
     }
-
-    if (hasChange) {
-      setFlashMap((prev) => ({ ...prev, ...newFlashes }));
-    }
+    if (hasChange) setFlashMap((prev) => ({ ...prev, ...newFlashes }));
   }, [assets]);
 
+  // Filter by search
   const filtered = assets.filter(
-    (a) => a.market === activeMarket &&
-      (a.name.toLowerCase().includes(search.toLowerCase()) ||
-        a.nameEn.toLowerCase().includes(search.toLowerCase()) ||
-        a.symbol.toLowerCase().includes(search.toLowerCase()))
+    (a) =>
+      a.name.toLowerCase().includes(search.toLowerCase()) ||
+      a.nameEn.toLowerCase().includes(search.toLowerCase()) ||
+      a.symbol.toLowerCase().includes(search.toLowerCase())
   );
 
-  const allMarketAssets = assets.filter((a) => a.market === activeMarket);
-  const positiveCount = allMarketAssets.filter((a) => a.change >= 0).length;
-  const negativeCount = allMarketAssets.length - positiveCount;
-  const positivePct = allMarketAssets.length > 0 ? Math.round((positiveCount / allMarketAssets.length) * 100) : 0;
+  const positiveCount = assets.filter((a) => a.change >= 0).length;
+  const negativeCount = assets.length - positiveCount;
+  const positivePct = assets.length > 0 ? Math.round((positiveCount / assets.length) * 100) : 0;
 
-  const currentAccent = markets.find(m => m.key === activeMarket)?.accent || "#3b82f6";
+  const currentVisual = selectedMarket ? getMarketVisual(selectedMarket.code) : DEFAULT_VISUAL;
 
   /* ── Collapsed State ── */
   if (isCollapsed) {
     return (
       <div className="h-full rounded-xl flex flex-col items-center py-3 gap-2"
-        style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
+        style={{ background: tk.surface, border: `1px solid ${tk.border}` }}>
         {onToggleCollapse && (
           <button onClick={onToggleCollapse} className="w-9 h-9 rounded-lg flex items-center justify-center mb-2 cursor-pointer"
             style={{ color: tk.textMuted, background: tk.surfaceHover }}>
             <ChevronsRight className="w-4 h-4" />
           </button>
         )}
-        {markets.map((m) => {
-          const active = activeMarket === m.key;
-          return (
-            <button key={m.key} onClick={() => setActiveMarket(m.key)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all text-sm"
-              style={{
-                background: active ? `${m.accent}18` : "transparent",
-                border: active ? `1px solid ${m.accent}30` : "1px solid transparent",
-              }}>
-              {m.emoji}
-            </button>
-          );
-        })}
+        {marketsLoading ? (
+          <Loader2 className="w-5 h-5 animate-spin" style={{ color: tk.textDim }} />
+        ) : (
+          markets.map((m) => {
+            const active = selectedMarket?.id === m.id;
+            const vis = getMarketVisual(m.code);
+            return (
+              <button key={m.id} onClick={() => onMarketSelect(m)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all text-sm"
+                style={{
+                  background: active ? `${vis.accent}18` : "transparent",
+                  border: active ? `1px solid ${vis.accent}30` : "1px solid transparent",
+                }}>
+                {vis.emoji}
+              </button>
+            );
+          })
+        )}
       </div>
     );
   }
 
   return (
     <div className="h-full rounded-xl flex flex-col overflow-hidden"
-      style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
+      style={{ background: tk.surface, border: `1px solid ${tk.border}` }}>
 
-      {/* Flash animation styles */}
       <style dangerouslySetInnerHTML={{ __html: flashStyles }} />
+
       {/* Header */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: `${currentAccent}15`, border: `1px solid ${currentAccent}25` }}>
-            <TrendingUp className="w-4 h-4" style={{ color: currentAccent }} />
+            style={{ background: `${currentVisual.accent}15`, border: `1px solid ${currentVisual.accent}25` }}>
+            <TrendingUp className="w-4 h-4" style={{ color: currentVisual.accent }} />
           </div>
           <div>
             <h2 className="text-sm font-bold" style={{ color: tk.textPrimary }}>{t("markets")}</h2>
-            <span className="text-[10px]" style={{ color: tk.textMuted }}>{allMarketAssets.length} {t("total")}</span>
+            <span className="text-[10px]" style={{ color: tk.textMuted }}>
+              {symbolsLoading ? (isRTL ? "جاري التحميل..." : "Loading...") : `${assets.length} ${t("total")}`}
+            </span>
           </div>
         </div>
         {onToggleCollapse && (
@@ -179,27 +189,34 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
         )}
       </div>
 
-      {/* Market Tabs — 5 categories */}
+      {/* Market Tabs — built dynamically from API */}
       <div className="px-3 py-2">
         <div className="flex gap-0.5 p-1 rounded-lg" style={{ background: tk.surfaceHover }}>
-          {markets.map((m) => {
-            const active = activeMarket === m.key;
-            return (
-              <motion.button key={m.key} onClick={() => { setActiveMarket(m.key); setSearch(""); }}
-                whileTap={{ scale: 0.95 }}
-                className="flex-1 flex flex-col items-center gap-1 py-2.5 rounded-md cursor-pointer transition-all"
-                style={{
-                  background: active ? `${m.accent}12` : "transparent",
-                  border: active ? `1px solid ${m.accent}25` : "1px solid transparent",
-                }}>
-                <span className="text-[22px] leading-none">{m.emoji}</span>
-                <span className="text-[10px] font-semibold" style={{ color: active ? m.accent : tk.textMuted }}>
-                  {isRTL ? m.labelAr : m.labelEn}
-                </span>
-                {active && <div className="w-1.5 h-1.5 rounded-full" style={{ background: m.accent }} />}
-              </motion.button>
-            );
-          })}
+          {marketsLoading ? (
+            <div className="flex-1 flex items-center justify-center py-3">
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: tk.textDim }} />
+            </div>
+          ) : (
+            markets.map((m) => {
+              const active = selectedMarket?.id === m.id;
+              const vis = getMarketVisual(m.code);
+              return (
+                <motion.button key={m.id} onClick={() => { onMarketSelect(m); setSearch(""); }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex-1 flex flex-col items-center gap-1 py-2.5 rounded-md cursor-pointer transition-all"
+                  style={{
+                    background: active ? `${vis.accent}12` : "transparent",
+                    border: active ? `1px solid ${vis.accent}25` : "1px solid transparent",
+                  }}>
+                  <span className="text-[22px] leading-none">{vis.emoji}</span>
+                  <span className="text-[10px] font-semibold" style={{ color: active ? vis.accent : tk.textMuted }}>
+                    {isRTL ? vis.labelAr : vis.labelEn}
+                  </span>
+                  {active && <div className="w-1.5 h-1.5 rounded-full" style={{ background: vis.accent }} />}
+                </motion.button>
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -214,7 +231,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
         </div>
         <div className="h-1 rounded-full overflow-hidden" style={{ background: tk.surfaceHover }}>
           <motion.div initial={{ width: 0 }} animate={{ width: `${positivePct}%` }}
-            className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${currentAccent}, ${currentAccent}88)` }} />
+            className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${currentVisual.accent}, ${currentVisual.accent}88)` }} />
         </div>
       </div>
 
@@ -237,57 +254,60 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
 
       {/* Asset List */}
       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: `${tk.scrollbar} transparent` }}>
-        <AnimatePresence mode="popLayout">
-          {filtered.length > 0 ? filtered.map((asset) => {
-            const pos = asset.change >= 0;
-            const selected = selectedAsset?.id === asset.id;
-            const decimals = asset.market === "CRYPTO" || asset.market === "INDEX" ? 2 : 4;
-            const icon = symbolIcons[asset.symbol] || "📌";
+        {symbolsLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: currentVisual.accent }} />
+            <p className="text-xs" style={{ color: tk.textMuted }}>{isRTL ? "جاري تحميل العملات..." : "Loading symbols..."}</p>
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {filtered.length > 0 ? filtered.map((asset) => {
+              const pos = asset.change >= 0;
+              const selected = selectedAsset?.id === asset.id;
+              const decimals = (selectedMarket?.code === "CRYPTO" || selectedMarket?.code === "INDEX") ? 2 : 4;
+              const icon = symbolIcons[asset.symbol] || "📌";
+              const flash = flashMap[asset.symbol];
+              const priceColor = pos ? "#22c55e" : "#ef4444";
 
-            const flash = flashMap[asset.symbol];
-            const priceColor = pos ? "#22c55e" : "#ef4444";
-
-            return (
-              <motion.button key={asset.id} onClick={() => onSelectAsset(asset)}
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                whileHover={{ x: isRTL ? -2 : 2 }}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all"
-                style={{
-                  background: selected ? `${currentAccent}0a` : "rgba(255,255,255,0.01)",
-                  border: selected ? `1px solid ${currentAccent}20` : "1px solid transparent",
-                }}>
-                {/* Left: icon + name */}
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="text-[14px] flex-shrink-0 w-5 text-center">{icon}</span>
-                  <div className="min-w-0">
-                    <div className="text-[12px] font-bold truncate" style={{ color: tk.textPrimary }}>
-                      {asset.symbol.replace(".p", "")}
+              return (
+                <motion.button key={asset.id} onClick={() => onSelectAsset(asset)}
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  whileHover={{ x: isRTL ? -2 : 2 }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all"
+                  style={{
+                    background: selected ? `${currentVisual.accent}0a` : "rgba(255,255,255,0.01)",
+                    border: selected ? `1px solid ${currentVisual.accent}20` : "1px solid transparent",
+                  }}>
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-[14px] flex-shrink-0 w-5 text-center">{icon}</span>
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-bold truncate" style={{ color: tk.textPrimary }}>
+                        {asset.symbol.replace(".p", "")}
+                      </div>
+                      <div className="text-[9px]" style={{ color: tk.textDim }}>{isRTL ? asset.name : asset.nameEn}</div>
                     </div>
-                    <div className="text-[9px]" style={{ color: tk.textDim }}>{isRTL ? asset.name : asset.nameEn}</div>
                   </div>
-                </div>
-                {/* Center: price with flash */}
-                <div
-                  key={`${asset.symbol}-${asset.price}`}
-                  className={`text-[12px] font-bold tabular-nums px-2 py-0.5 rounded ${flash === "up" ? "price-flash-up" : flash === "down" ? "price-flash-down" : ""}`}
-                  style={{ color: priceColor, transition: "color 0.3s" }}>
-                  {asset.price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
-                </div>
-                {/* Right: change */}
-                <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold"
-                  style={{ background: pos ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: pos ? "#22c55e" : "#ef4444" }}>
-                  {pos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {pos ? "+" : ""}{asset.changePercent.toFixed(2)}%
-                </div>
-              </motion.button>
-            );
-          }) : (
-            <div className="text-center py-12">
-              <Search className="w-10 h-10 mx-auto mb-2" style={{ color: tk.textDim }} />
-              <p className="text-xs" style={{ color: tk.textMuted }}>{t("noResults")}</p>
-            </div>
-          )}
-        </AnimatePresence>
+                  <div
+                    key={`${asset.symbol}-${asset.price}`}
+                    className={`text-[12px] font-bold tabular-nums px-2 py-0.5 rounded ${flash === "up" ? "price-flash-up" : flash === "down" ? "price-flash-down" : ""}`}
+                    style={{ color: priceColor }}>
+                    {asset.price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
+                  </div>
+                  <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold"
+                    style={{ background: pos ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: pos ? "#22c55e" : "#ef4444" }}>
+                    {pos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                    {pos ? "+" : ""}{asset.changePercent.toFixed(2)}%
+                  </div>
+                </motion.button>
+              );
+            }) : (
+              <div className="text-center py-12">
+                <Search className="w-10 h-10 mx-auto mb-2" style={{ color: tk.textDim }} />
+                <p className="text-xs" style={{ color: tk.textMuted }}>{t("noResults")}</p>
+              </div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );

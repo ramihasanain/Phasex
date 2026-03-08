@@ -311,7 +311,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   // Use live API data for Phase State, or uploaded JSON. For Phase: NO mock fallback.
   const effectiveData = useMemo(() => {
     if (isPhaseIndicator) {
-      // Priority 1: Live API candles — exact count from API
+      // Priority 1: Live API candles — keep all entries (NaN handled in chart)
       if (apiCandles.length > 0) {
         return apiCandles;
       }
