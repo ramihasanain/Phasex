@@ -179,7 +179,7 @@ export function usePhaseStateAPI(
         try {
             const cleanSym = cleanSymbol(sym);
             const stateKey = `${main}_from_${sub}`;
-            const url = `${API_BASE}?symbol=${cleanSym}&state_key=${stateKey}`;
+            const url = `${API_BASE}?symbol=${cleanSym}&state_key=${stateKey}&limit=1000`;
 
             const res = await fetch(url, { signal: controller.signal });
             if (!res.ok) throw new Error(`API error: ${res.status}`);
