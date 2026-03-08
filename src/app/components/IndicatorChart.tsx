@@ -174,8 +174,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   // Use frozen price when drawing, live price otherwise
   const chartLivePrice = showDrawingTools ? frozenPriceRef.current : currency?.price;
 
-  // Export chart as image with PHASE X watermark
-  const handleExportChart = async () => {
+  // Export chart — use ref for dynamic values so the callback is stable
+  const exportDataRef = useRef({ isExpanded: false, currency: null as any, indicator: null as any, isRTL: false, timeframe: 5 });
+  useEffect(() => {
+    exportDataRef.current = { isExpanded, currency, indicator, isRTL, timeframe };
+  });
+
+  const handleExportChart = useCallback(async () => {
+    const { isExpanded, currency, indicator, isRTL, timeframe } = exportDataRef.current;
     const ref = isExpanded ? fullscreenChartRef.current : chartRef.current;
     if (!ref || !currency || !indicator) return;
     setIsExporting(true);
@@ -300,7 +306,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     } finally {
       setIsExporting(false);
     }
-  };
+  }, []);
 
   // Use live API data for Phase State, or uploaded JSON. For Phase: NO mock fallback.
   const effectiveData = useMemo(() => {
