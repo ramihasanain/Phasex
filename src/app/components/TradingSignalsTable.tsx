@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useMemo } from "react";
 import { motion } from "motion/react";
 import { Upload, CheckCircle, FileJson, ChevronDown, ChevronUp, Rocket, Search, X, Maximize2, Minimize2 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useThemeTokens } from "../hooks/useThemeTokens";
 
 /* ═══════════ Symbol Icons ═══════════ */
 const symbolIcons: Record<string, string> = {
@@ -71,6 +72,7 @@ const normalizeSignal = (s: string): string => {
 export function TradingSignalsTable() {
     const { language } = useLanguage();
     const isRTL = language === "ar";
+    const tk = useThemeTokens();
 
     const [signalData, setSignalData] = useState<AssetSignals>({});
     const [uploadedCount, setUploadedCount] = useState(0);
@@ -189,7 +191,7 @@ export function TradingSignalsTable() {
     if (allAssetNames.length === 0) {
         return (
             <div className="flex-shrink-0 mt-3 rounded-2xl overflow-hidden relative" style={{
-                background: "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)",
+                background: tk.isDark ? "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)" : `linear-gradient(135deg, ${tk.surface} 0%, ${tk.surfaceElevated} 50%, ${tk.surface} 100%)`,
                 border: "1px solid rgba(99,102,241,0.12)", boxShadow: "0 0 40px rgba(99,102,241,0.04)",
             }}>
                 <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
@@ -202,10 +204,10 @@ export function TradingSignalsTable() {
                             border: "1px solid rgba(239,68,68,0.2)", boxShadow: "0 0 20px rgba(239,68,68,0.1)",
                         }}><Rocket className="w-5 h-5" style={{ color: "#ef4444" }} /></div>
                         <div>
-                            <h3 className="text-base font-black tracking-wide" style={{ color: "#e2e8f0" }}>
+                            <h3 className="text-base font-black tracking-wide" style={{ color: tk.textPrimary }}>
                                 PHASE <span style={{ color: "#ef4444", textShadow: "0 0 12px rgba(239,68,68,0.4)" }}>X</span> Trading Dashboard
                             </h3>
-                            <p className="text-xs mt-0.5" style={{ color: "#475569" }}>
+                            <p className="text-xs mt-0.5" style={{ color: tk.textDim }}>
                                 {isRTL ? "ارفع ملف JSON لعرض إشارات التداول" : "Upload JSON to launch trading signals"}
                             </p>
                         </div>
@@ -228,7 +230,7 @@ export function TradingSignalsTable() {
     /* ─── DATA STATE ─── */
     return (
         <div className="flex-shrink-0 mt-3 rounded-2xl overflow-hidden relative" style={{
-            background: "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)",
+            background: tk.isDark ? "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)" : `linear-gradient(135deg, ${tk.surface} 0%, ${tk.surfaceElevated} 50%, ${tk.surface} 100%)`,
             border: "1px solid rgba(99,102,241,0.1)", boxShadow: "0 0 40px rgba(99,102,241,0.04)",
         }}>
             <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
@@ -243,11 +245,11 @@ export function TradingSignalsTable() {
                         border: "1px solid rgba(239,68,68,0.2)", boxShadow: "0 0 15px rgba(239,68,68,0.08)",
                     }}><Rocket className="w-5 h-5" style={{ color: "#ef4444" }} /></div>
                     <div>
-                        <h3 className="text-base font-black tracking-wide" style={{ color: "#e2e8f0" }}>
+                        <h3 className="text-base font-black tracking-wide" style={{ color: tk.textPrimary }}>
                             PHASE <span style={{ color: "#ef4444", textShadow: "0 0 12px rgba(239,68,68,0.4)" }}>X</span> Trading Dashboard
                         </h3>
                         <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-[11px]" style={{ color: "#475569" }}>⚡ {allAssetNames.length} {isRTL ? "أصل" : "assets"}</span>
+                            <span className="text-[11px]" style={{ color: tk.textDim }}>⚡ {allAssetNames.length} {isRTL ? "أصل" : "assets"}</span>
                             <span className="text-[11px] font-bold" style={{ color: "#4ade80" }}>▲ {totalBuy}</span>
                             <span className="text-[11px] font-bold" style={{ color: "#f87171" }}>▼ {totalSell}</span>
                         </div>
@@ -297,7 +299,7 @@ export function TradingSignalsTable() {
                     <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={isRTL ? "بحث..." : "Search..."}
                         className="w-full rounded-lg text-xs font-medium py-2 pl-8 pr-7 outline-none"
-                        style={{ background: "rgba(255,255,255,0.03)", color: "#e2e8f0", border: "1px solid rgba(99,102,241,0.1)" }} />
+                        style={{ background: tk.inputBg, color: tk.inputText, border: "1px solid rgba(99,102,241,0.1)" }} />
                     {searchQuery && (
                         <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
                             <X className="w-3 h-3" style={{ color: "#475569" }} />
@@ -439,7 +441,7 @@ export function TradingSignalsTable() {
             {/* ═══ TABLE ═══ */}
             <div className="overflow-auto">
                 <table className="w-full" style={{ borderCollapse: "collapse" }}>
-                    <thead className="sticky top-0 z-10" style={{ background: "#080c15" }}>
+                    <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? "#080c15" : tk.surface }}>
                         <tr style={{ borderBottom: "1px solid rgba(99,102,241,0.08)" }}>
                             <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: "#64748b" }}>{isRTL ? "الأصل" : "ASSET"}</th>
                             <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: "#64748b" }}>{isRTL ? "الإجراء" : "ACTION"}</th>
@@ -481,7 +483,7 @@ export function TradingSignalsTable() {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-xl leading-none">{icon}</span>
-                                                    <span className="text-sm font-black tracking-wide" style={{ color: "#e2e8f0", letterSpacing: "0.05em" }}>{asset}</span>
+                                                    <span className="text-sm font-black tracking-wide" style={{ color: tk.textPrimary, letterSpacing: "0.05em" }}>{asset}</span>
                                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
                                                         background: "rgba(99,102,241,0.1)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.15)",
                                                     }}>{tfKeys.length} TF</span>

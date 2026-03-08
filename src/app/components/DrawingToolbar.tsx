@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   TrendingUp,
@@ -81,7 +81,7 @@ interface DrawingToolbarProps {
   onClose?: () => void;
 }
 
-export function DrawingToolbar({
+export const DrawingToolbar = React.memo(function DrawingToolbar({
   selectedTool,
   onToolChange,
   onZoomIn,
@@ -615,4 +615,4 @@ export function DrawingToolbar({
       </motion.div>
     </>
   );
-}
+});

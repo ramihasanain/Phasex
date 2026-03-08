@@ -9,23 +9,41 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function getInitialTheme(): Theme {
+  // 1. Check localStorage
+  const saved = localStorage.getItem("theme") as Theme | null;
+  if (saved === "light" || saved === "dark") return saved;
+
+  // 2. Check system preference
+  if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: light)").matches) {
+    return "light";
+  }
+
+  // 3. Default to dark (trading platforms are typically dark)
+  return "dark";
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark"); // SSR safe default
 
   useEffect(() => {
-    // Check for saved theme preference or default to light
-    const savedTheme = localStorage.getItem("theme") as Theme;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
-    }
+    const initial = getInitialTheme();
+    setTheme(initial);
+    applyTheme(initial);
   }, []);
+
+  function applyTheme(t: Theme) {
+    const root = document.documentElement;
+    root.classList.toggle("dark", t === "dark");
+    root.classList.toggle("light", t === "light");
+    root.style.colorScheme = t;
+  }
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    applyTheme(newTheme);
   };
 
   return (

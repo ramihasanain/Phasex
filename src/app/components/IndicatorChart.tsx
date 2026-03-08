@@ -9,6 +9,7 @@ import { TZCandlestickChart } from "./TZCandlestickChart";
 import { DrawingToolbar, DrawingTool } from "./DrawingToolbar";
 import { DrawingCanvas } from "./DrawingCanvas";
 import type { PhaseCandle, PhaseStateDataMap } from "./TradingDashboard";
+import { useThemeTokens } from "../hooks/useThemeTokens";
 
 
 export interface Indicator {
@@ -117,6 +118,7 @@ function PhaseTimeframeSelector({ mainTF, subTF, onMainTFChange, onSubTFChange, 
 export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange, phaseStateData, generateCandlesFromReal }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const isRTL = language === "ar";
+  const tk = useThemeTokens();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTable, setShowTable] = useState(false);
@@ -146,9 +148,31 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [drawingsLocked, setDrawingsLocked] = useState(false);
   const [drawingsVisible, setDrawingsVisible] = useState(true);
   const [drawings, setDrawings] = useState<any[]>([]);
+  const clearDrawingsCallback = useCallback(() => setDrawings([]), []);
+  // Memoized callbacks for DrawingToolbar (prevents re-render on every price tick)
+  const handleClearDrawings = useCallback(() => {
+    if (confirm('Clear drawings?')) setDrawings([]);
+  }, []);
+  const handleMagnetToggle = useCallback(() => setMagnetEnabled(prev => !prev), []);
+  const handleLockToggle = useCallback(() => setDrawingsLocked(prev => !prev), []);
+  const handleVisibilityToggle = useCallback(() => setDrawingsVisible(prev => !prev), []);
+  const handleCloseDrawingTools = useCallback(() => setShowDrawingTools(false), []);
   const [showDrawingTools, setShowDrawingTools] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const fullscreenChartRef = useRef<HTMLDivElement>(null);
+
+  // Freeze live price when drawing tools are active to prevent chart re-renders
+  const frozenPriceRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (showDrawingTools) {
+      // Capture current price when drawing tools open
+      frozenPriceRef.current = currency?.price;
+    } else {
+      frozenPriceRef.current = undefined;
+    }
+  }, [showDrawingTools]);
+  // Use frozen price when drawing, live price otherwise
+  const chartLivePrice = showDrawingTools ? frozenPriceRef.current : currency?.price;
 
   // Export chart as image with PHASE X watermark
   const handleExportChart = async () => {
@@ -301,7 +325,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
   useEffect(() => { setStartIndex(Math.max(0, effectiveData.length - viewWindow)); }, [effectiveData.length]);
 
-  const displayedData = effectiveData.slice(startIndex, startIndex + viewWindow);
+  const displayedData = useMemo(() => effectiveData.slice(startIndex, startIndex + viewWindow), [effectiveData, startIndex, viewWindow]);
+
+  // Memoize price range for DrawingCanvas to prevent re-renders from WebSocket updates
+  const drawingPriceRange = useMemo(() => {
+    if (displayedData.length === 0) return { min: 0, max: 0 };
+    const values = displayedData.map((d: any) => d.value);
+    return { min: Math.min(...values), max: Math.max(...values) };
+  }, [displayedData]);
 
   // Keyboard Nav
   useEffect(() => {
@@ -317,19 +348,30 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     return () => window.removeEventListener("keydown", fn);
   }, [effectiveData.length, viewWindow]);
 
-  // Zoom functions
-  const zoomIn = () => {
-    const nw = Math.max(10, viewWindow - 5);
+  // Zoom functions — use refs for stable callbacks (DrawingToolbar React.memo)
+  const viewWindowRef = useRef(viewWindow);
+  const startIndexRef = useRef(startIndex);
+  const dataLenRef = useRef(effectiveData.length);
+  useEffect(() => { viewWindowRef.current = viewWindow; }, [viewWindow]);
+  useEffect(() => { startIndexRef.current = startIndex; }, [startIndex]);
+  useEffect(() => { dataLenRef.current = effectiveData.length; }, [effectiveData.length]);
+
+  const zoomIn = useCallback(() => {
+    const vw = viewWindowRef.current;
+    const si = startIndexRef.current;
+    const nw = Math.max(10, vw - 5);
     setViewWindow(nw);
-    const center = startIndex + viewWindow / 2;
-    setStartIndex(Math.max(0, Math.min(effectiveData.length - nw, Math.round(center - nw / 2))));
-  };
-  const zoomOut = () => {
-    const nw = Math.min(effectiveData.length, viewWindow + 10);
+    const center = si + vw / 2;
+    setStartIndex(Math.max(0, Math.min(dataLenRef.current - nw, Math.round(center - nw / 2))));
+  }, []);
+  const zoomOut = useCallback(() => {
+    const vw = viewWindowRef.current;
+    const si = startIndexRef.current;
+    const nw = Math.min(dataLenRef.current, vw + 10);
     setViewWindow(nw);
-    const center = startIndex + viewWindow / 2;
-    setStartIndex(Math.max(0, Math.min(effectiveData.length - nw, Math.round(center - nw / 2))));
-  };
+    const center = si + vw / 2;
+    setStartIndex(Math.max(0, Math.min(dataLenRef.current - nw, Math.round(center - nw / 2))));
+  }, []);
   const panLeft = () => setStartIndex((p) => Math.max(0, p - Math.max(3, Math.round(viewWindow / 5))));
   const panRight = () => setStartIndex((p) => Math.min(effectiveData.length - viewWindow, p + Math.max(3, Math.round(viewWindow / 5))));
   const goStart = () => setStartIndex(0);
@@ -348,12 +390,12 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="h-full flex items-center justify-center rounded-xl"
-        style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)", minHeight: 400 }}>
+        style={{ background: tk.surface, border: `1px solid ${tk.border}`, minHeight: 400 }}>
         <div className="text-center">
           <motion.div animate={{ y: [0, -8, 0], opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 2.5, repeat: Infinity }}>
-            <Activity className="w-14 h-14 mx-auto mb-4" style={{ color: "#1e293b" }} />
+            <Activity className="w-14 h-14 mx-auto mb-4" style={{ color: tk.textDim }} />
           </motion.div>
-          <p className="text-sm font-medium" style={{ color: "#64748b" }}>{t("selectAssetAndIndicator")}</p>
+          <p className="text-sm font-medium" style={{ color: tk.textMuted }}>{t("selectAssetAndIndicator")}</p>
           <p className="text-[11px] mt-1" style={{ color: "#334155" }}>
             {isRTL ? "اختر سوق ومؤشر فني لبدء التحليل" : "Choose a market and technical indicator to start analysis"}
           </p>
@@ -363,8 +405,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   }
 
   /* ────── CHART ────── */
-  const gridColor = "#1e293b";
-  const textColor = "#475569";
+  const gridColor = tk.chartGrid;
+  const textColor = tk.chartText;
 
   const CustomTick = ({ x, y, payload }: any) => {
     if (payload.value.includes("\n")) {
@@ -378,9 +420,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     if (!active || !payload?.length) return null;
     const dec = currency.market === "CRYPTO" || currency.market === "INDEX" ? 2 : 4;
     return (
-      <div className="px-3 py-2 rounded-lg" style={{ background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)" }}>
-        <p className="text-[10px] mb-0.5" style={{ color: "#64748b" }}>{payload[0].payload.fullTime}</p>
-        <p className="text-[12px] font-bold" style={{ color: "#e2e8f0" }}>{payload[0].value.toFixed(dec)}</p>
+      <div className="px-3 py-2 rounded-lg" style={{ background: tk.tooltipBg, border: `1px solid ${tk.tooltipBorder}` }}>
+        <p className="text-[10px] mb-0.5" style={{ color: tk.textMuted }}>{payload[0].payload.fullTime}</p>
+        <p className="text-[12px] font-bold" style={{ color: tk.textPrimary }}>{payload[0].value.toFixed(dec)}</p>
       </div>
     );
   };
@@ -416,7 +458,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             </BarChart>
           </ResponsiveContainer>);
       case "tz":
-        return <TZCandlestickChart data={displayedData} height={height} />;
+        return <TZCandlestickChart data={displayedData} height={height} livePrice={chartLivePrice} />;
       default:
         return (
           <ResponsiveContainer width="100%" height={height}>
@@ -452,27 +494,27 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     <>
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
         className="h-full rounded-xl overflow-hidden flex flex-col"
-        style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>
+        style={{ background: tk.surface, border: `1px solid ${tk.border}` }}>
 
         {/* ─── Header ─── */}
-        <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: `${indicator.color}15`, border: `1px solid ${indicator.color}20` }}>
               <Activity className="w-4 h-4" style={{ color: indicator.color }} />
             </div>
             <div>
-              <span className="text-[13px] font-bold" style={{ color: "#e2e8f0" }}>{isRTL ? indicator.name : indicator.nameEn}</span>
-              <span className="text-[11px] mx-2" style={{ color: "#334155" }}>•</span>
-              <span className="text-[11px]" style={{ color: "#64748b" }}>{currency.symbol}</span>
+              <span className="text-[13px] font-bold" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
+              <span className="text-[11px] mx-2" style={{ color: tk.textMuted }}>•</span>
+              <span className="text-[11px]" style={{ color: tk.textMuted }}>{currency.symbol}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Price */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <span className="text-[13px] font-bold tabular-nums" style={{ color: "#e2e8f0" }}>{currency.price.toFixed(decimals)}</span>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg" style={{ background: tk.surfaceHover }}>
+              <span className="text-[13px] font-bold tabular-nums" style={{ color: tk.textPrimary }}>{currency.price.toFixed(decimals)}</span>
               <span className="text-[11px] font-bold flex items-center gap-0.5"
-                style={{ color: isPositive ? "#4ade80" : "#f87171" }}>
+                style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
                 {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {isPositive ? "+" : ""}{currency.changePercent.toFixed(2)}%
               </span>
@@ -495,7 +537,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         </div>
 
         {/* ─── Timeframe + Navigation Bar ─── */}
-        <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+        <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
           {/* Timeframes */}
           {indicator.id === "phase" ? (
             <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} compact />
@@ -563,8 +605,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     <tr>
                       <th className="p-2 text-[11px] font-semibold text-left" style={{ color: "#64748b" }}>{isRTL ? "الوقت" : "Time"}</th>
                       <th className="p-2 text-[11px] font-semibold text-left" style={{ color: "#64748b" }}>Open</th>
-                      <th className="p-2 text-[11px] font-semibold text-left" style={{ color: "#4ade80" }}>High</th>
-                      <th className="p-2 text-[11px] font-semibold text-left" style={{ color: "#f87171" }}>Low</th>
+                      <th className="p-2 text-[11px] font-semibold text-left" style={{ color: "#22c55e" }}>High</th>
+                      <th className="p-2 text-[11px] font-semibold text-left" style={{ color: "#ef4444" }}>Low</th>
                       <th className="p-2 text-[11px] font-semibold text-left" style={{ color: "#64748b" }}>Close</th>
                     </tr>
                   </thead>
@@ -588,9 +630,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                           {hasOHLC ? (
                             <>
                               <td className="p-2 text-[11px] font-bold font-mono tabular-nums" style={{ color: "#e2e8f0" }}>{row.open.toFixed(dec)}</td>
-                              <td className="p-2 text-[11px] font-bold font-mono tabular-nums" style={{ color: "#4ade80" }}>{row.high.toFixed(dec)}</td>
-                              <td className="p-2 text-[11px] font-bold font-mono tabular-nums" style={{ color: "#f87171" }}>{row.low.toFixed(dec)}</td>
-                              <td className="p-2 text-[11px] font-bold font-mono tabular-nums" style={{ color: isGreen ? "#4ade80" : "#f87171" }}>{row.close.toFixed(dec)}</td>
+                              <td className="p-2 text-[11px] font-bold font-mono tabular-nums" style={{ color: "#22c55e" }}>{row.high.toFixed(dec)}</td>
+                              <td className="p-2 text-[11px] font-bold font-mono tabular-nums" style={{ color: "#ef4444" }}>{row.low.toFixed(dec)}</td>
+                              <td className="p-2 text-[11px] font-bold font-mono tabular-nums" style={{ color: isGreen ? "#22c55e" : "#ef4444" }}>{row.close.toFixed(dec)}</td>
                             </>
                           ) : (
                             <>
@@ -618,8 +660,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         <div className="px-4 py-2 flex items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           {[
             { label: t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
-            { label: t("highPrice"), value: effectiveData.length ? Math.max(...effectiveData.map((d: any) => d.value)).toFixed(decimals) : "—", color: "#4ade80" },
-            { label: t("lowPrice"), value: effectiveData.length ? Math.min(...effectiveData.map((d: any) => d.value)).toFixed(decimals) : "—", color: "#f87171" },
+            { label: t("highPrice"), value: effectiveData.length ? Math.max(...effectiveData.map((d: any) => d.value)).toFixed(decimals) : "—", color: "#22c55e" },
+            { label: t("lowPrice"), value: effectiveData.length ? Math.min(...effectiveData.map((d: any) => d.value)).toFixed(decimals) : "—", color: "#ef4444" },
           ].map(({ label, value, color }) => (
             <div key={label} className="flex-1 text-center px-3 py-1.5 rounded-lg" style={{ background: `${color}08`, border: `1px solid ${color}12` }}>
               <div className="text-[9px] font-medium" style={{ color: "#64748b" }}>{label}</div>
@@ -635,30 +677,30 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       <AnimatePresence>
         {isExpanded && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+            className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: tk.isDark ? "rgba(0,0,0,0.85)" : "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}
             onClick={() => setIsExpanded(false)}>
             <motion.div initial={{ scale: 0.98 }} animate={{ scale: 1 }} exit={{ scale: 0.98 }}
               className="w-screen h-screen overflow-hidden flex flex-col"
-              style={{ background: "#0f1218" }}
+              style={{ background: tk.bg }}
               onClick={(e) => e.stopPropagation()} dir={isRTL ? "rtl" : "ltr"}>
 
               {/* Fullscreen Header */}
-              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: `${indicator.color}15`, border: `1px solid ${indicator.color}20` }}>
                     <Activity className="w-5 h-5" style={{ color: indicator.color }} />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold" style={{ color: "#e2e8f0" }}>{isRTL ? indicator.name : indicator.nameEn}</h2>
-                    <p className="text-xs" style={{ color: "#64748b" }}>{isRTL ? currency.name : currency.nameEn} • {currency.symbol}</p>
+                    <h2 className="text-lg font-bold" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</h2>
+                    <p className="text-xs" style={{ color: tk.textMuted }}>{isRTL ? currency.name : currency.nameEn} • {currency.symbol}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   {/* Price */}
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                    <span className="text-lg font-bold tabular-nums" style={{ color: "#e2e8f0" }}>{currency.price.toFixed(decimals)}</span>
-                    <span className="text-sm font-bold" style={{ color: isPositive ? "#4ade80" : "#f87171" }}>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: tk.surfaceHover }}>
+                    <span className="text-lg font-bold tabular-nums" style={{ color: tk.textPrimary }}>{currency.price.toFixed(decimals)}</span>
+                    <span className="text-sm font-bold" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
                       {isPositive ? "+" : ""}{currency.changePercent.toFixed(2)}%
                     </span>
                   </div>
@@ -684,7 +726,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     </button>
                     <button onClick={() => setIsExpanded(false)}
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
-                      style={{ background: "rgba(255,255,255,0.04)", color: "#94a3b8" }}
+                      style={{ background: tk.buttonGhost, color: tk.buttonGhostText }}
                       title={isRTL ? "إغلاق" : "Close"}>
                       <X className="w-4 h-4" />
                     </button>
@@ -693,7 +735,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               </div>
 
               {/* Fullscreen Timeframe + Navigation */}
-              <div className="px-6 py-2 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+              <div className="px-6 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
                 {indicator.id === "phase" ? (
                   <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} />
                 ) : (
@@ -733,11 +775,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   <div className="flex-shrink-0 h-full" style={{ width: "190px" }}>
                     <DrawingToolbar selectedTool={selectedTool} onToolChange={setSelectedTool}
                       onZoomIn={zoomIn} onZoomOut={zoomOut}
-                      onClear={() => { if (confirm(isRTL ? "مسح الرسومات؟" : "Clear drawings?")) setDrawings([]); }}
-                      onExport={handleExportChart} magnetEnabled={magnetEnabled} onMagnetToggle={() => setMagnetEnabled(!magnetEnabled)}
-                      locked={drawingsLocked} onLockToggle={() => setDrawingsLocked(!drawingsLocked)}
-                      visible={drawingsVisible} onVisibilityToggle={() => setDrawingsVisible(!drawingsVisible)}
-                      onClose={() => setShowDrawingTools(false)} />
+                      onClear={handleClearDrawings}
+                      onExport={handleExportChart} magnetEnabled={magnetEnabled} onMagnetToggle={handleMagnetToggle}
+                      locked={drawingsLocked} onLockToggle={handleLockToggle}
+                      visible={drawingsVisible} onVisibilityToggle={handleVisibilityToggle}
+                      onClose={handleCloseDrawingTools} />
                   </div>
                 )}
 
@@ -750,8 +792,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                           <tr>
                             <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>{isRTL ? "الوقت" : "Time"}</th>
                             <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>Open</th>
-                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#4ade80" }}>High</th>
-                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#f87171" }}>Low</th>
+                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#22c55e" }}>High</th>
+                            <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#ef4444" }}>Low</th>
                             <th className="p-2.5 text-xs font-semibold text-left" style={{ color: "#64748b" }}>Close</th>
                           </tr>
                         </thead>
@@ -775,9 +817,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                 {hasOHLC ? (
                                   <>
                                     <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#e2e8f0" }}>{row.open.toFixed(dec)}</td>
-                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#4ade80" }}>{row.high.toFixed(dec)}</td>
-                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#f87171" }}>{row.low.toFixed(dec)}</td>
-                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: isGreen ? "#4ade80" : "#f87171" }}>{row.close.toFixed(dec)}</td>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#22c55e" }}>{row.high.toFixed(dec)}</td>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: "#ef4444" }}>{row.low.toFixed(dec)}</td>
+                                    <td className="p-2.5 text-xs font-bold font-mono tabular-nums" style={{ color: isGreen ? "#22c55e" : "#ef4444" }}>{row.close.toFixed(dec)}</td>
                                   </>
                                 ) : (
                                   <>
@@ -801,8 +843,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   {!showTable && showDrawingTools && (
                     <DrawingCanvas selectedTool={selectedTool} magnetEnabled={magnetEnabled} locked={drawingsLocked} visible={drawingsVisible}
                       data={displayedData}
-                      priceRange={{ min: Math.min(...displayedData.map((d: any) => d.value)), max: Math.max(...displayedData.map((d: any) => d.value)) }}
-                      onDrawingsChange={setDrawings} onClearAll={() => setDrawings([])} />
+                      priceRange={drawingPriceRange}
+                      onDrawingsChange={setDrawings} onClearAll={clearDrawingsCallback} />
                   )}
                 </div>
               </div>

@@ -1,5 +1,5 @@
-import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useRef, useMemo, useState, useCallback, useEffect } from 'react';
+import { useThemeTokens } from '../hooks/useThemeTokens';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface TZCandlestickChartProps {
@@ -15,6 +15,7 @@ interface TZCandlestickChartProps {
     isReal?: boolean;
   }>;
   height?: number;
+  livePrice?: number; // Real-time price from WebSocket
 }
 
 // Seeded random for consistent candles (no re-randomization on re-render)
@@ -46,9 +47,10 @@ function generateOHLCFromValue(value: number, index: number) {
   return { open, high, low, close };
 }
 
-export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartProps) {
+export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data, height = 400, livePrice }: TZCandlestickChartProps) {
   const { language } = useLanguage();
-  const isDark = true;
+  const tk = useThemeTokens();
+  const isDark = tk.isDark;
   const isRTL = language === 'ar';
   const svgRef = useRef<SVGSVGElement>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; data: any } | null>(null);
@@ -155,9 +157,9 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
     setTooltip(null);
   }, []);
 
-  const gridColor = '#1a2030';
-  const textColor = '#475569';
-  const bgColor = '#111520';
+  const gridColor = tk.chartGrid;
+  const textColor = tk.chartText;
+  const bgColor = tk.surface;
   const crosshairColor = '#6366f1';
 
   return (
@@ -258,18 +260,33 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
           {candlestickData.map((candle, i) => {
             const cx = i * gap + gap / 2;
             const isGreen = candle.isGreen;
-            const color = isGreen ? '#10b981' : '#ef4444';
-            const hoverColor = isGreen ? '#34d399' : '#f87171';
+            const isLast = i === candlestickData.length - 1;
+            const isLive = isLast && livePrice !== undefined;
+
+            // For the last candle, use live price to update close/high/low
+            let effectiveClose = candle.close;
+            let effectiveHigh = candle.high;
+            let effectiveLow = candle.low;
+            let effectiveIsGreen = isGreen;
+            if (isLive) {
+              effectiveClose = livePrice!;
+              effectiveHigh = Math.max(candle.high, livePrice!);
+              effectiveLow = Math.min(candle.low, livePrice!);
+              effectiveIsGreen = effectiveClose > candle.open;
+            }
+
+            const color = (isLive ? effectiveIsGreen : isGreen) ? '#059669' : '#dc2626';
+            const hoverColor = (isLive ? effectiveIsGreen : isGreen) ? '#10b981' : '#ef4444';
             const isHovered = i === hoveredIndex;
             const fillColor = isHovered ? hoverColor : color;
 
-            const highY = scaleY(candle.high);
-            const lowY = scaleY(candle.low);
+            const highY = scaleY(isLive ? effectiveHigh : candle.high);
+            const lowY = scaleY(isLive ? effectiveLow : candle.low);
             const openY = scaleY(candle.open);
-            const closeY = scaleY(candle.close);
+            const closeY = scaleY(isLive ? effectiveClose : candle.close);
             const bodyTop = Math.min(openY, closeY);
             const bodyH = Math.max(Math.abs(openY - closeY), 1);
-            const w = isHovered ? candleWidth * 1.2 : candleWidth;
+            const w = isHovered ? candleWidth * 1.2 : isLive ? candleWidth * 1.1 : candleWidth;
 
             return (
               <g key={`candle-${i}`}>
@@ -280,20 +297,26 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
                   x2={cx}
                   y2={bodyTop}
                   stroke={fillColor}
-                  strokeWidth={isHovered ? 2 : 1.2}
-                />
+                  strokeWidth={isHovered ? 2 : isLive ? 2.2 : 1.2}
+                  strokeLinecap="round"
+                >
+                  {isLive && <animate attributeName="stroke-width" values="2.2;1.4;2.2" dur="2s" repeatCount="indefinite" />}
+                </line>
                 {/* Candle body */}
                 <rect
                   x={cx - w / 2}
                   y={bodyTop}
                   width={w}
                   height={bodyH}
-                  fill={isGreen ? fillColor : fillColor}
-                  stroke={fillColor}
-                  strokeWidth={0.5}
-                  rx={1}
-                  opacity={isHovered ? 1 : 0.9}
-                />
+                  fill={isLive ? `url(#liveGrad${effectiveIsGreen ? 'Green' : 'Red'})` : fillColor}
+                  stroke={isLive ? 'rgba(255,255,255,0.3)' : fillColor}
+                  strokeWidth={isLive ? 1 : 0.5}
+                  rx={isLive ? 2 : 1}
+                  opacity={isHovered ? 1 : isLive ? 0.95 : 0.9}
+                  filter={isLive ? `url(#liveGlow)` : undefined}
+                >
+                  {isLive && <animate attributeName="opacity" values="0.95;0.75;0.95" dur="2s" repeatCount="indefinite" />}
+                </rect>
                 {/* Lower wick */}
                 <line
                   x1={cx}
@@ -301,10 +324,140 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
                   x2={cx}
                   y2={lowY}
                   stroke={fillColor}
-                  strokeWidth={isHovered ? 2 : 1.2}
-                />
+                  strokeWidth={isHovered ? 2 : isLive ? 2.2 : 1.2}
+                  strokeLinecap="round"
+                >
+                  {isLive && <animate attributeName="stroke-width" values="1.4;2.2;1.4" dur="2s" repeatCount="indefinite" />}
+                </line>
+
+                {/* LIVE candle effects */}
+                {isLive && (
+                  <>
+                    {/* === Multi-layer Halo Rings === */}
+                    {/* Inner ring - fast pulse */}
+                    <rect
+                      x={cx - w / 2 - 4}
+                      y={bodyTop - 4}
+                      width={w + 8}
+                      height={bodyH + 8}
+                      fill="none"
+                      stroke={fillColor}
+                      strokeWidth={2}
+                      rx={4}
+                      filter="url(#liveGlow)">
+                      <animate attributeName="opacity" values="0.7;0.15;0.7" dur="1.2s" repeatCount="indefinite" />
+                    </rect>
+                    {/* Middle ring - medium pulse */}
+                    <rect
+                      x={cx - w / 2 - 8}
+                      y={bodyTop - 8}
+                      width={w + 16}
+                      height={bodyH + 16}
+                      fill="none"
+                      stroke={fillColor}
+                      strokeWidth={1}
+                      rx={6}
+                      filter="url(#liveGlowWide)">
+                      <animate attributeName="opacity" values="0.4;0.05;0.4" dur="1.8s" repeatCount="indefinite" />
+                    </rect>
+                    {/* Outer ring - slow pulse */}
+                    <rect
+                      x={cx - w / 2 - 14}
+                      y={bodyTop - 14}
+                      width={w + 28}
+                      height={bodyH + 28}
+                      fill="none"
+                      stroke={fillColor}
+                      strokeWidth={0.6}
+                      rx={8}
+                      filter="url(#liveGlowWide)">
+                      <animate attributeName="opacity" values="0.2;0.0;0.2" dur="2.5s" repeatCount="indefinite" />
+                    </rect>
+
+                    {/* === Sparkle Particles === */}
+                    {[0, 1, 2, 3, 4, 5].map((si) => {
+                      const angle = (si / 6) * Math.PI * 2;
+                      const radius = w + 12;
+                      const sx = cx + Math.cos(angle) * radius;
+                      const sy = (bodyTop + bodyH / 2) + Math.sin(angle) * (bodyH / 2 + 12);
+                      return (
+                        <circle key={`sparkle-${si}`} cx={sx} cy={sy} r={1.5} fill={fillColor}>
+                          <animate
+                            attributeName="opacity"
+                            values="0;0.9;0"
+                            dur={`${1.5 + si * 0.3}s`}
+                            begin={`${si * 0.25}s`}
+                            repeatCount="indefinite"
+                          />
+                          <animate
+                            attributeName="r"
+                            values="0.8;2;0.8"
+                            dur={`${1.5 + si * 0.3}s`}
+                            begin={`${si * 0.25}s`}
+                            repeatCount="indefinite"
+                          />
+                        </circle>
+                      );
+                    })}
+
+                    {/* === Animated Price Line === */}
+                    <line
+                      x1={cx + w / 2 + 4}
+                      y1={closeY}
+                      x2={innerWidth}
+                      y2={closeY}
+                      stroke={fillColor}
+                      strokeWidth={1.2}
+                      strokeDasharray="4 3"
+                      opacity={0.5}>
+                      <animate attributeName="stroke-dashoffset" values="0;14" dur="1s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.6;0.3;0.6" dur="2s" repeatCount="indefinite" />
+                    </line>
+
+                    {/* === Premium Price Label === */}
+                    <rect
+                      x={innerWidth + 2}
+                      y={closeY - 11}
+                      width={56}
+                      height={22}
+                      rx={4}
+                      fill={`url(#priceLabel${effectiveIsGreen ? 'Green' : 'Red'})`}
+                      stroke={effectiveIsGreen ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}
+                      strokeWidth={1}
+                      filter="url(#liveGlow)">
+                      <animate attributeName="opacity" values="1;0.75;1" dur="1.5s" repeatCount="indefinite" />
+                    </rect>
+                    <text
+                      x={innerWidth + 30}
+                      y={closeY + 4}
+                      fill="white"
+                      fontSize="9.5"
+                      fontFamily="monospace"
+                      textAnchor="middle"
+                      fontWeight="bold">
+                      {effectiveClose.toFixed(2)}
+                    </text>
+
+                    {/* === LIVE Beacon === */}
+                    {/* Outer glow ring */}
+                    <circle cx={cx} cy={highY - 12} r={6} fill="none" stroke={fillColor} strokeWidth={0.8}>
+                      <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    {/* Inner beacon dot */}
+                    <circle cx={cx} cy={highY - 12} r={3} fill={fillColor}>
+                      <animate attributeName="r" values="2;3.5;2" dur="1s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                    {/* White center */}
+                    <circle cx={cx} cy={highY - 12} r={1.2} fill="white" opacity={0.8}>
+                      <animate attributeName="opacity" values="0.9;0.4;0.9" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                  </>
+                )}
+
                 {/* Glow effect on hover */}
-                {isHovered && (
+                {isHovered && !isLive && (
                   <rect
                     x={cx - w / 2 - 2}
                     y={bodyTop - 2}
@@ -323,25 +476,35 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
           })}
 
           {/* X axis labels */}
-          {xLabels.map(({ label, index }) => (
-            <text
-              key={`xlabel-${index}`}
-              x={index * gap + gap / 2}
-              y={innerHeight + 20}
-              fill={textColor}
-              fontSize="9"
-              fontFamily="monospace"
-              textAnchor="middle"
-            >
-              {label}
-            </text>
-          ))}
+          {xLabels.map(({ label, index }) => {
+            const parts = label.split('\n');
+            return (
+              <text
+                key={`xlabel-${index}`}
+                x={index * gap + gap / 2}
+                y={innerHeight + (parts.length > 1 ? 16 : 20)}
+                fill={textColor}
+                fontSize="9"
+                fontFamily="monospace"
+                textAnchor="middle"
+              >
+                {parts.length > 1 ? (
+                  <>
+                    <tspan x={index * gap + gap / 2} dy="0">{parts[0]}</tspan>
+                    <tspan x={index * gap + gap / 2} dy="11">{parts[1]}</tspan>
+                  </>
+                ) : (
+                  label
+                )}
+              </text>
+            );
+          })}
 
           {/* X axis line */}
           <line x1={0} y1={innerHeight} x2={innerWidth} y2={innerHeight} stroke={gridColor} strokeWidth={1} />
         </g>
 
-        {/* Glow filter */}
+        {/* Glow filters & Gradients */}
         <defs>
           <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -352,6 +515,44 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="liveGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feFlood floodColor="currentColor" floodOpacity="0.6" />
+            <feComposite in2="blur" operator="in" />
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="liveGlowWide" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feFlood floodColor="currentColor" floodOpacity="0.4" />
+            <feComposite in2="blur" operator="in" />
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          {/* Live candle gradient fills */}
+          <linearGradient id="liveGradGreen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
+            <stop offset="50%" stopColor="#10b981" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#059669" stopOpacity="0.95" />
+          </linearGradient>
+          <linearGradient id="liveGradRed" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+            <stop offset="50%" stopColor="#dc2626" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0.9" />
+          </linearGradient>
+          {/* Price label gradients */}
+          <linearGradient id="priceLabelGreen" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#059669" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+          <linearGradient id="priceLabelRed" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
         </defs>
       </svg>
 
@@ -369,7 +570,7 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
               transform: 'translateX(-50%)',
             }}
           >
-            <div className="p-3 rounded-xl border shadow-2xl backdrop-blur-sm" style={{ background: 'rgba(17,21,32,0.95)', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="p-3 rounded-xl border shadow-2xl backdrop-blur-sm" style={{ background: tk.isDark ? 'rgba(17,21,32,0.95)' : 'rgba(255,255,255,0.95)', borderColor: tk.borderStrong }}>
               <p className="text-xs text-gray-400 mb-1.5 font-mono flex items-center gap-1.5">
                 📅 {tooltip.data.fullTime || tooltip.data.time}
                 {tooltip.data.isReal && <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold">★ JSON</span>}
@@ -403,4 +604,4 @@ export function TZCandlestickChart({ data, height = 400 }: TZCandlestickChartPro
       })()}
     </div>
   );
-}
+});

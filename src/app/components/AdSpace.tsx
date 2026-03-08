@@ -1,10 +1,12 @@
 import { motion } from "motion/react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { ExternalLink, Sparkles } from "lucide-react";
+import { useThemeTokens } from "../hooks/useThemeTokens";
 
 export function AdSpace() {
   const { language } = useLanguage();
   const isRTL = language === "ar";
+  const tk = useThemeTokens();
 
   const ads = [
     {
@@ -40,7 +42,7 @@ export function AdSpace() {
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.12 }}
           whileHover={{ y: -3, scale: 1.01 }}
           className="relative rounded-xl overflow-hidden cursor-pointer group"
-          style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)", flex: 1 }}>
+          style={{ background: tk.surface, border: `1px solid ${tk.border}`, flex: 1 }}>
 
           {/* Image */}
           <div className="absolute inset-0">

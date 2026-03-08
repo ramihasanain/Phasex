@@ -79,12 +79,21 @@ function cleanSymbol(symbol: string): string {
 }
 
 /**
- * Parse API time string "2026.03.07 21:25" into a Date and formatted strings.
+ * Parse API time string into a Date and formatted strings.
+ * Handles both formats:
+ *   "2026.03.07 21:25" (dot-separated with space)
+ *   "2026-03-08T03:55:00" (ISO format)
  */
 function parseAPITime(timeStr: string): { date: Date; display: string; full: string } {
-    // "2026.03.07 21:25" → "2026-03-07T21:25:00"
-    const iso = timeStr.replace(/\./g, "-").replace(" ", "T") + ":00";
-    const date = new Date(iso);
+    let date: Date;
+    if (timeStr.includes("T")) {
+        // Already ISO format
+        date = new Date(timeStr);
+    } else {
+        // Dot format: "2026.03.07 21:25" → "2026-03-07T21:25:00"
+        const iso = timeStr.replace(/\./g, "-").replace(" ", "T") + ":00";
+        date = new Date(iso);
+    }
 
     const dd = date.getDate().toString().padStart(2, "0");
     const mo = (date.getMonth() + 1).toString().padStart(2, "0");

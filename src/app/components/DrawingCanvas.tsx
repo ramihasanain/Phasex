@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { DrawingTool } from "./DrawingToolbar";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -29,7 +29,7 @@ interface DrawingCanvasProps {
   onClearAll?: () => void;
 }
 
-export function DrawingCanvas({
+export const DrawingCanvas = React.memo(function DrawingCanvas({
   selectedTool,
   magnetEnabled,
   locked,
@@ -1041,4 +1041,4 @@ export function DrawingCanvas({
       />
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { MarketList, Asset } from "./MarketList";
 import { IndicatorChart, Indicator } from "./IndicatorChart";
 import { SubscriptionPanel } from "./SubscriptionPanel";
@@ -16,9 +16,14 @@ import {
   Upload,
   CheckCircle,
   FileJson,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
+import { useLivePrices } from "../hooks/useLivePrices";
+import { useThemeTokens } from "../hooks/useThemeTokens";
+import { useTheme } from "../contexts/ThemeContext";
 
 /* ─── Types ─── */
 interface TradingDashboardProps {
@@ -240,6 +245,8 @@ function generateCandlesFromReal(real: PhaseCandle, count: number = 90): any[] {
 export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   const { language, toggleLanguage, t } = useLanguage();
   const isRTL = language === "ar";
+  const tk = useThemeTokens();
+  const { toggleTheme } = useTheme();
 
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
@@ -258,6 +265,27 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const subInfo = { isActive: true, daysRemaining: 3 };
+
+  // Live WebSocket prices
+  const { prices: livePrices, initialPrices, connected: wsConnected } = useLivePrices();
+
+  // Merge live prices into asset list
+  const liveAssets = useMemo(() => {
+    return mockAssets.map((asset) => {
+      const live = livePrices[asset.symbol];
+      if (!live) return asset;
+      const livePrice = (live.bid + live.ask) / 2;
+      const basePrice = initialPrices[asset.symbol] || livePrice;
+      const change = livePrice - basePrice;
+      const changePercent = basePrice !== 0 ? (change / basePrice) * 100 : 0;
+      return {
+        ...asset,
+        price: +livePrice.toFixed(asset.price < 10 ? 4 : asset.price < 1000 ? 2 : 2),
+        change: +change.toFixed(asset.price < 10 ? 4 : 2),
+        changePercent: +changePercent.toFixed(2),
+      };
+    });
+  }, [livePrices, initialPrices]);
 
   /* ─── File Upload Handler ─── */
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -313,11 +341,17 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   const pickIndicator = (ind: Indicator) => { setSelectedIndicator(ind); if (selectedAsset) setChartData(generateChartData(selectedAsset, ind, timeframe)); };
   const pickTimeframe = (tf: 5 | 15 | 30 | 60) => { setTimeframe(tf); if (selectedAsset && selectedIndicator) setChartData(generateChartData(selectedAsset, selectedIndicator, tf)); };
 
+  // Keep selectedAsset in sync with live prices
+  const liveSelectedAsset = useMemo(() => {
+    if (!selectedAsset) return null;
+    return liveAssets.find((a) => a.id === selectedAsset.id) || selectedAsset;
+  }, [selectedAsset, liveAssets]);
+
   return (
-    <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ background: "#0b0e14", fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ background: tk.bg, fontFamily: "'Inter', system-ui, sans-serif", transition: "background 0.3s" }}>
 
       {/* ═══════════════ HEADER ═══════════════ */}
-      <header style={{ background: "linear-gradient(180deg, #12161f 0%, #0d1017 100%)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <header style={{ background: tk.headerBg, borderBottom: `1px solid ${tk.headerBorder}`, transition: "background 0.3s, border-color 0.3s" }}>
         <div className="flex items-center justify-between px-5 py-2.5">
           {/* Logo */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
@@ -360,22 +394,28 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
 
             <motion.button onClick={onLogout} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
-              style={{ color: "#94a3b8", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              style={{ color: tk.buttonGhostText, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
               <LogOut className="w-3.5 h-3.5" /> {t("logout")}
+            </motion.button>
+
+            <motion.button onClick={toggleTheme} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
+              style={{ color: tk.isDark ? "#fbbf24" : "#6366f1", background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
+              {tk.isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </motion.button>
 
             <motion.button onClick={toggleLanguage} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
               className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
-              style={{ color: "#64748b", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              style={{ color: tk.textMuted, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
               <Languages className="w-3.5 h-3.5" />
             </motion.button>
 
             <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer"
-              style={{ color: "#fbbf24", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.15)" }}>
+              style={{ color: tk.warning, background: tk.warningBg, border: `1px solid ${tk.isDark ? 'rgba(251,191,36,0.15)' : 'rgba(217,119,6,0.15)'}` }}>
               <Crown className="w-3.5 h-3.5" />
               <span>{t("subscription")}</span>
-              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md" style={{ background: "rgba(251,191,36,0.15)" }}>
+              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md" style={{ background: tk.warningBg }}>
                 {subInfo.daysRemaining} {t("daysRemaining")}
               </span>
             </motion.button>
@@ -389,7 +429,7 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
         {/* ── LEFT: Market List ── */}
         <motion.div initial={false} animate={{ width: isMarketListCollapsed ? 64 : 280 }}
           transition={{ type: "spring", damping: 26, stiffness: 220 }} className="flex-shrink-0 sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
-          <MarketList assets={mockAssets} selectedAsset={selectedAsset} onSelectAsset={pickAsset}
+          <MarketList assets={liveAssets} selectedAsset={selectedAsset} onSelectAsset={pickAsset}
             isCollapsed={isMarketListCollapsed} onToggleCollapse={() => setIsMarketListCollapsed(!isMarketListCollapsed)} />
         </motion.div>
 
@@ -397,7 +437,7 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
         <div className="flex-1 flex flex-col gap-3 min-w-0 px-0">
 
           {/* Indicator Ribbon */}
-          <div className="rounded-xl overflow-hidden" style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="rounded-xl overflow-hidden" style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
             <div className="flex items-center gap-1 p-2">
               {indicators.map((ind) => {
                 const Icon = indicatorIcons[ind.icon];
@@ -411,13 +451,13 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
                       border: active ? `1px solid ${ind.color}30` : "1px solid transparent",
                     }}>
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
-                      background: active ? `linear-gradient(135deg, ${ind.color}, ${ind.color}88)` : "rgba(255,255,255,0.03)",
+                      background: active ? `linear-gradient(135deg, ${ind.color}, ${ind.color}88)` : tk.surfaceHover,
                       boxShadow: active ? `0 4px 20px ${ind.color}25` : "none",
                     }}>
-                      <Icon className="w-5 h-5" style={{ color: active ? "#fff" : "#555" }} />
+                      <Icon className="w-5 h-5" style={{ color: active ? "#fff" : tk.textDim }} />
                     </div>
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: ind.color, opacity: active ? 1 : 0.25 }} />
-                    <span className="text-[10px] font-bold leading-tight text-center" style={{ color: active ? ind.color : "#6b7280" }}>
+                    <span className="text-[10px] font-bold leading-tight text-center" style={{ color: active ? ind.color : tk.textMuted }}>
                       {isRTL ? ind.name : ind.nameEn}
                     </span>
                   </motion.button>
@@ -431,7 +471,7 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
             <AnimatePresence mode="wait">
               <IndicatorChart
                 key={`${selectedAsset?.id}-${selectedIndicator?.id}-${timeframe}`}
-                currency={selectedAsset} indicator={selectedIndicator} data={chartData}
+                currency={liveSelectedAsset} indicator={selectedIndicator} data={chartData}
                 timeframe={timeframe} onTimeframeChange={pickTimeframe}
                 mtfEnabled={mtfEnabled} mtfSmallTimeframe={mtfSmallTimeframe} mtfLargeTimeframe={mtfLargeTimeframe}
                 onMtfEnabledChange={setMtfEnabled} onMtfSmallTimeframeChange={setMtfSmallTimeframe} onMtfLargeTimeframeChange={setMtfLargeTimeframe}

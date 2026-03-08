@@ -4,6 +4,7 @@ import { Logo } from "./Logo";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion } from "motion/react";
 import { TermsModal } from "./TermsAndConditions";
+import { useThemeTokens } from "../hooks/useThemeTokens";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -26,6 +27,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   };
 
   const isRTL = language === "ar";
+  const tk = useThemeTokens();
   const accent = "#00e5a0";
   const accentG = "rgba(0,229,160,";
 
@@ -54,7 +56,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
       dir={isRTL ? "rtl" : "ltr"}
-      style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}>
+      style={{ background: tk.isDark ? "#060a10" : "#dcdfe5", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* Ambient background */}
       <div className="absolute inset-0 pointer-events-none">

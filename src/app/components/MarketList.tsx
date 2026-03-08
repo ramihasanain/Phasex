@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Search, DollarSign, Gem, Landmark, Bitcoin, ArrowUpRight, ArrowDownRight, ChevronsLeft, ChevronsRight, TrendingUp, Droplets } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useThemeTokens } from "../hooks/useThemeTokens";
 
 export interface Asset {
   id: string;
@@ -21,6 +22,20 @@ interface MarketListProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
+
+/* ─── Price flash CSS ─── */
+const flashStyles = `
+@keyframes flashUp {
+  0% { background: rgba(34,197,94,0.35); color: #22c55e; text-shadow: 0 0 8px rgba(34,197,94,0.5); }
+  100% { background: transparent; color: #cbd5e1; text-shadow: none; }
+}
+@keyframes flashDown {
+  0% { background: rgba(239,68,68,0.35); color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.5); }
+  100% { background: transparent; color: #cbd5e1; text-shadow: none; }
+}
+.price-flash-up { animation: flashUp 1.2s ease-out; }
+.price-flash-down { animation: flashDown 1.2s ease-out; }
+`;
 
 /* ─── Symbol Icons from Structural Dynamics ─── */
 const symbolIcons: Record<string, string> = {
@@ -59,8 +74,42 @@ const markets = [
 export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, onToggleCollapse }: MarketListProps) {
   const { language, t } = useLanguage();
   const isRTL = language === "ar";
+  const tk = useThemeTokens();
   const [activeMarket, setActiveMarket] = useState<"FOREX" | "COMMODITY" | "INDEX" | "CRYPTO" | "METALS">("FOREX");
   const [search, setSearch] = useState("");
+
+  // Track previous prices for flash animation
+  const prevPrices = useRef<Record<string, number>>({});
+  const [flashMap, setFlashMap] = useState<Record<string, "up" | "down" | null>>({});
+  const flashTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  useEffect(() => {
+    const newFlashes: Record<string, "up" | "down" | null> = {};
+    let hasChange = false;
+
+    for (const asset of assets) {
+      const prev = prevPrices.current[asset.symbol];
+      if (prev !== undefined && prev !== asset.price) {
+        const dir = asset.price > prev ? "up" : "down";
+        newFlashes[asset.symbol] = dir;
+        hasChange = true;
+
+        // Clear previous timer
+        if (flashTimers.current[asset.symbol]) {
+          clearTimeout(flashTimers.current[asset.symbol]);
+        }
+        // Auto-clear flash after animation
+        flashTimers.current[asset.symbol] = setTimeout(() => {
+          setFlashMap((prev) => ({ ...prev, [asset.symbol]: null }));
+        }, 1200);
+      }
+      prevPrices.current[asset.symbol] = asset.price;
+    }
+
+    if (hasChange) {
+      setFlashMap((prev) => ({ ...prev, ...newFlashes }));
+    }
+  }, [assets]);
 
   const filtered = assets.filter(
     (a) => a.market === activeMarket &&
@@ -80,10 +129,10 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
   if (isCollapsed) {
     return (
       <div className="h-full rounded-xl flex flex-col items-center py-3 gap-2"
-        style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>
+        style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
         {onToggleCollapse && (
           <button onClick={onToggleCollapse} className="w-9 h-9 rounded-lg flex items-center justify-center mb-2 cursor-pointer"
-            style={{ color: "#64748b", background: "rgba(255,255,255,0.04)" }}>
+            style={{ color: tk.textMuted, background: tk.surfaceHover }}>
             <ChevronsRight className="w-4 h-4" />
           </button>
         )}
@@ -104,11 +153,12 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
     );
   }
 
-  /* ── Expanded State ── */
   return (
     <div className="h-full rounded-xl flex flex-col overflow-hidden"
-      style={{ background: "#111520", border: "1px solid rgba(255,255,255,0.05)" }}>
+      style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
 
+      {/* Flash animation styles */}
+      <style dangerouslySetInnerHTML={{ __html: flashStyles }} />
       {/* Header */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -117,13 +167,13 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
             <TrendingUp className="w-4 h-4" style={{ color: currentAccent }} />
           </div>
           <div>
-            <h2 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>{t("markets")}</h2>
-            <span className="text-[10px]" style={{ color: "#64748b" }}>{allMarketAssets.length} {t("total")}</span>
+            <h2 className="text-sm font-bold" style={{ color: tk.textPrimary }}>{t("markets")}</h2>
+            <span className="text-[10px]" style={{ color: tk.textMuted }}>{allMarketAssets.length} {t("total")}</span>
           </div>
         </div>
         {onToggleCollapse && (
           <button onClick={onToggleCollapse} className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer"
-            style={{ color: "#64748b", background: "rgba(255,255,255,0.03)" }}>
+            style={{ color: tk.textMuted, background: tk.surfaceHover }}>
             <ChevronsLeft className="w-3.5 h-3.5" />
           </button>
         )}
@@ -131,7 +181,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
 
       {/* Market Tabs — 5 categories */}
       <div className="px-3 py-2">
-        <div className="flex gap-0.5 p-1 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+        <div className="flex gap-0.5 p-1 rounded-lg" style={{ background: tk.surfaceHover }}>
           {markets.map((m) => {
             const active = activeMarket === m.key;
             return (
@@ -143,7 +193,7 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                   border: active ? `1px solid ${m.accent}25` : "1px solid transparent",
                 }}>
                 <span className="text-[22px] leading-none">{m.emoji}</span>
-                <span className="text-[10px] font-semibold" style={{ color: active ? m.accent : "#64748b" }}>
+                <span className="text-[10px] font-semibold" style={{ color: active ? m.accent : tk.textMuted }}>
                   {isRTL ? m.labelAr : m.labelEn}
                 </span>
                 {active && <div className="w-1.5 h-1.5 rounded-full" style={{ background: m.accent }} />}
@@ -156,13 +206,13 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
       {/* Sentiment Bar */}
       <div className="px-4 py-1.5">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] font-medium" style={{ color: "#94a3b8" }}>{positivePct}% {t("positive")}</span>
+          <span className="text-[11px] font-medium" style={{ color: tk.textSecondary }}>{positivePct}% {t("positive")}</span>
           <div className="flex items-center gap-3 text-[10px]">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span style={{ color: "#64748b" }}>{positiveCount}</span></span>
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /><span style={{ color: "#64748b" }}>{negativeCount}</span></span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /><span style={{ color: tk.textMuted }}>{positiveCount}</span></span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /><span style={{ color: tk.textMuted }}>{negativeCount}</span></span>
           </div>
         </div>
-        <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: tk.surfaceHover }}>
           <motion.div initial={{ width: 0 }} animate={{ width: `${positivePct}%` }}
             className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${currentAccent}, ${currentAccent}88)` }} />
         </div>
@@ -171,14 +221,14 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
       {/* Search */}
       <div className="px-3 py-2">
         <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "#475569", [isRTL ? "right" : "left"]: 10 }} />
+          <Search className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: tk.textDim, [isRTL ? "right" : "left"]: 10 }} />
           <input type="text" placeholder={t("searchAsset")} value={search} onChange={(e) => setSearch(e.target.value)}
             dir={isRTL ? "rtl" : "ltr"}
             className="w-full h-8 rounded-lg text-xs outline-none"
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "#e2e8f0",
+              background: tk.inputBg,
+              border: `1px solid ${tk.inputBorder}`,
+              color: tk.inputText,
               paddingLeft: isRTL ? 10 : 32,
               paddingRight: isRTL ? 32 : 10,
             }} />
@@ -186,13 +236,16 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
       </div>
 
       {/* Asset List */}
-      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#1e293b transparent" }}>
+      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: `${tk.scrollbar} transparent` }}>
         <AnimatePresence mode="popLayout">
           {filtered.length > 0 ? filtered.map((asset) => {
             const pos = asset.change >= 0;
             const selected = selectedAsset?.id === asset.id;
             const decimals = asset.market === "CRYPTO" || asset.market === "INDEX" ? 2 : 4;
             const icon = symbolIcons[asset.symbol] || "📌";
+
+            const flash = flashMap[asset.symbol];
+            const priceColor = pos ? "#22c55e" : "#ef4444";
 
             return (
               <motion.button key={asset.id} onClick={() => onSelectAsset(asset)}
@@ -207,19 +260,22 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <span className="text-[14px] flex-shrink-0 w-5 text-center">{icon}</span>
                   <div className="min-w-0">
-                    <div className="text-[12px] font-bold truncate" style={{ color: "#e2e8f0" }}>
+                    <div className="text-[12px] font-bold truncate" style={{ color: tk.textPrimary }}>
                       {asset.symbol.replace(".p", "")}
                     </div>
-                    <div className="text-[9px]" style={{ color: "#475569" }}>{isRTL ? asset.name : asset.nameEn}</div>
+                    <div className="text-[9px]" style={{ color: tk.textDim }}>{isRTL ? asset.name : asset.nameEn}</div>
                   </div>
                 </div>
-                {/* Center: price */}
-                <div className="text-[12px] font-bold tabular-nums px-2" style={{ color: "#cbd5e1" }}>
+                {/* Center: price with flash */}
+                <div
+                  key={`${asset.symbol}-${asset.price}`}
+                  className={`text-[12px] font-bold tabular-nums px-2 py-0.5 rounded ${flash === "up" ? "price-flash-up" : flash === "down" ? "price-flash-down" : ""}`}
+                  style={{ color: priceColor, transition: "color 0.3s" }}>
                   {asset.price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
                 </div>
                 {/* Right: change */}
                 <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold"
-                  style={{ background: pos ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: pos ? "#4ade80" : "#f87171" }}>
+                  style={{ background: pos ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: pos ? "#22c55e" : "#ef4444" }}>
                   {pos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                   {pos ? "+" : ""}{asset.changePercent.toFixed(2)}%
                 </div>
@@ -227,8 +283,8 @@ export function MarketList({ assets, selectedAsset, onSelectAsset, isCollapsed, 
             );
           }) : (
             <div className="text-center py-12">
-              <Search className="w-10 h-10 mx-auto mb-2" style={{ color: "#1e293b" }} />
-              <p className="text-xs" style={{ color: "#475569" }}>{t("noResults")}</p>
+              <Search className="w-10 h-10 mx-auto mb-2" style={{ color: tk.textDim }} />
+              <p className="text-xs" style={{ color: tk.textMuted }}>{t("noResults")}</p>
             </div>
           )}
         </AnimatePresence>
