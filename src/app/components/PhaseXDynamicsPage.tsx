@@ -2076,18 +2076,27 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 {(() => {
                                     const info = symbolIcons[selectedSymbol] || { icon: "📈", label: selectedSymbol, labelAr: selectedSymbol };
                                     return (
-                                        <motion.div className="text-center px-5 py-2.5"
+                                        <motion.div className="text-center relative flex flex-col items-center justify-center min-w-[140px] px-2"
                                             initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                                             key={selectedSymbol}>
-                                            <motion.span className="text-2xl block mb-1"
-                                                animate={{ scale: [1, 1.1, 1] }}
-                                                transition={{ duration: 2, repeat: Infinity }}>
+                                            <motion.div className="absolute inset-0 z-0 pointer-events-none rounded-full"
+                                                style={{ background: `radial-gradient(circle at 50% 50%, ${accent}25 0%, transparent 60%)`, filter: "blur(12px)" }}
+                                                animate={{ opacity: [0.5, 1, 0.5], scale: [0.8, 1.2, 0.8] }}
+                                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                            />
+                                            <motion.span className="text-[3.5rem] leading-none block mb-1 relative z-10"
+                                                style={{ filter: `drop-shadow(0 4px 15px ${accent}60)` }}
+                                                animate={{ y: [0, -6, 0] }}
+                                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
                                                 {info.icon}
                                             </motion.span>
-                                            <div className="text-[14px] font-black" style={{ color: accent }}>
+                                            <motion.div className="text-[22px] font-black tracking-[0.1em] relative z-10 uppercase mt-1"
+                                                style={{ color: "#fff", textShadow: `0 0 15px ${accent}80, 0 0 30px ${accent}40` }}
+                                                animate={{ opacity: [0.8, 1, 0.8] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
                                                 {isRTL ? info.labelAr : info.label}
-                                            </div>
-                                            <div className="text-[9px] font-mono text-gray-500">{selectedSymbol}</div>
+                                            </motion.div>
+                                            <div className="text-[12px] font-mono font-bold mt-0.5 tracking-widest relative z-10" style={{ color: accent, opacity: 0.8 }}>{selectedSymbol}</div>
                                         </motion.div>
                                     );
                                 })()}
