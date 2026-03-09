@@ -2,7 +2,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import { Asset } from "./MarketList";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, TrendingDown, Activity, Maximize2, Minimize2, Table, BarChart3, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Download } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Maximize2, Minimize2, Table, BarChart3, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Download, Info } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { TZCandlestickChart } from "./TZCandlestickChart";
@@ -137,7 +137,7 @@ const AnimatedStat = ({ label, value, color, isDirection }: AnimatedStatProps) =
 
   return (
     <motion.div
-      className="flex-col justify-center items-center text-center px-1.5 py-1.5 md:px-3 rounded-lg flex"
+      className="flex-col justify-center items-center text-center px-1.5 py-1.5 md:px-3 rounded-lg flex relative"
       animate={{
         background: flash ? `${color}30` : `${color}08`,
         borderColor: flash ? `${color}60` : `${color}12`,
@@ -167,6 +167,7 @@ const AnimatedStat = ({ label, value, color, isDirection }: AnimatedStatProps) =
 
 export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange, phaseStateData, generateCandlesFromReal }: IndicatorChartProps) {
   const { language, t } = useLanguage();
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
   const isRTL = language === "ar";
   const tk = useThemeTokens();
 
@@ -748,29 +749,46 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </AnimatePresence>
         </div>
 
-        <div className="px-4 py-2 grid grid-cols-2 md:grid-cols-6 items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          {(() => {
-            const high = displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)) : 0;
-            const low = displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)) : 0;
-            const average = (high + low) / 2;
-            const isBuy = currency.price > average;
+        <div className="px-4 py-2 flex items-center justify-between gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 items-center gap-2 md:gap-3">
+            {(() => {
+              const high = displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)) : 0;
+              const low = displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)) : 0;
+              const average = (high + low) / 2;
+              const isBuy = currency.price > average;
+              const profit = isBuy ? currency.price - average : average - currency.price;
 
-            return [
-              { label: isRTL ? "السعر الحالي" : t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
-              { label: isRTL ? "أعلى سعر" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: "#22c55e" },
-              { label: isRTL ? "أدنى سعر" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: "#ef4444" },
-              { label: isRTL ? "الشموع المعروضة" : "Candles Showed", value: displayedData.length, color: "#a78bfa" },
-              { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: "#fcd34d" },
-              {
-                label: isRTL ? "الاتجاه" : "Direction",
-                value: displayedData.length ? (isBuy ? "BUY" : "SELL") : "—",
-                color: displayedData.length ? (isBuy ? "#10b981" : "#f43f5e") : "#64748b",
-                isDirection: true
-              },
-            ].map(({ label, value, color, isDirection }) => (
-              <AnimatedStat key={label} label={label} value={value} color={color} isDirection={isDirection} />
-            ));
-          })()}
+              return [
+                { label: isRTL ? "السعر الحالي" : t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
+                { label: isRTL ? "أعلى سعر" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: "#22c55e" },
+                { label: isRTL ? "أدنى سعر" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: "#ef4444" },
+                { label: isRTL ? "الشموع المعروضة" : "Candles Showed", value: displayedData.length, color: "#a78bfa" },
+                { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: "#fcd34d" },
+                {
+                  label: isRTL ? "الاتجاه" : "Direction",
+                  value: displayedData.length ? (isBuy ? "BUY" : "SELL") : "—",
+                  color: displayedData.length ? (isBuy ? "#10b981" : "#f43f5e") : "#64748b",
+                  isDirection: true
+                },
+                {
+                  label: isRTL ? "الربح" : "Profit",
+                  value: displayedData.length ? profit.toFixed(decimals) : "—",
+                  color: displayedData.length ? (profit >= 0 ? "#10b981" : "#f43f5e") : "#64748b"
+                },
+              ].map(({ label, value, color, isDirection }) => (
+                <AnimatedStat key={label} label={label} value={value} color={color} isDirection={isDirection} />
+              ));
+            })()}
+          </div>
+          <button
+            onClick={() => setShowInfoPopup(true)}
+            className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center cursor-pointer transition-colors"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", color: "#94a3b8" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#f8fafc"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#94a3b8"; }}
+          >
+            <Info className="w-5 h-5" />
+          </button>
         </div>
       </motion.div>
 
@@ -801,31 +819,48 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 </div>
                 <div className="flex items-center gap-3">
                   {/* Price & Stats Grid in Fullscreen */}
-                  <div className="flex-1 px-8 grid grid-cols-3 xl:grid-cols-6 items-center gap-3">
-                    {(() => {
-                      const high = displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)) : 0;
-                      const low = displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)) : 0;
-                      const average = (high + low) / 2;
-                      const isBuy = currency.price > average;
+                  <div className="flex-1 px-4 lg:px-8 flex items-center gap-3">
+                    <div className="flex-1 grid grid-cols-3 xl:grid-cols-7 items-center gap-2 lg:gap-3">
+                      {(() => {
+                        const high = displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)) : 0;
+                        const low = displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)) : 0;
+                        const average = (high + low) / 2;
+                        const isBuy = currency.price > average;
+                        const profit = isBuy ? currency.price - average : average - currency.price;
 
-                      return [
-                        { label: isRTL ? "السعر" : t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
-                        { label: isRTL ? "أعلى" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: "#22c55e" },
-                        { label: isRTL ? "أدنى" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: "#ef4444" },
-                        { label: isRTL ? "الشموع" : "Candles", value: displayedData.length, color: "#a78bfa" },
-                        { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: "#fcd34d" },
-                        {
-                          label: isRTL ? "الاتجاه" : "Direction",
-                          value: displayedData.length ? (isBuy ? "BUY" : "SELL") : "—",
-                          color: displayedData.length ? (isBuy ? "#10b981" : "#f43f5e") : "#64748b",
-                          isDirection: true
-                        },
-                      ].map(({ label, value, color, isDirection }) => (
-                        <div key={label} className="min-w-0">
-                          <AnimatedStat label={label} value={value} color={color} isDirection={isDirection} />
-                        </div>
-                      ));
-                    })()}
+                        return [
+                          { label: isRTL ? "السعر" : t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
+                          { label: isRTL ? "أعلى" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: "#22c55e" },
+                          { label: isRTL ? "أدنى" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: "#ef4444" },
+                          { label: isRTL ? "الشموع" : "Candles", value: displayedData.length, color: "#a78bfa" },
+                          { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: "#fcd34d" },
+                          {
+                            label: isRTL ? "الاتجاه" : "Direction",
+                            value: displayedData.length ? (isBuy ? "BUY" : "SELL") : "—",
+                            color: displayedData.length ? (isBuy ? "#10b981" : "#f43f5e") : "#64748b",
+                            isDirection: true
+                          },
+                          {
+                            label: isRTL ? "الربح" : "Profit",
+                            value: displayedData.length ? profit.toFixed(decimals) : "—",
+                            color: displayedData.length ? (profit >= 0 ? "#10b981" : "#f43f5e") : "#64748b"
+                          },
+                        ].map(({ label, value, color, isDirection }) => (
+                          <div key={label} className="min-w-0">
+                            <AnimatedStat label={label} value={value} color={color} isDirection={isDirection} />
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                    <button
+                      onClick={() => setShowInfoPopup(true)}
+                      className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center cursor-pointer transition-colors"
+                      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", color: "#94a3b8" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#f8fafc"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#94a3b8"; }}
+                    >
+                      <Info className="w-5 h-5" />
+                    </button>
                   </div>
                   {/* Toolbar buttons */}
                   <div className="flex items-center gap-1">
@@ -975,6 +1010,41 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </motion.div>
         )}
       </AnimatePresence >
+      <AnimatePresence>
+        {showInfoPopup && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}
+            onClick={() => setShowInfoPopup(false)}>
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              className="max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl relative"
+              style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)" }}
+              onClick={(e) => e.stopPropagation()} dir="ltr">
+              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Info className="w-5 h-5 text-indigo-400" />
+                  Analytical Derivation Notice
+                </h3>
+                <button onClick={() => setShowInfoPopup(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors text-slate-400 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-sm md:text-base leading-relaxed text-slate-300">
+                  What you see here is not a direct recommendation to buy or sell. Rather, it is a real-time derivation and analysis based on the number of candles currently displayed on your chart.
+                  <br /><br />
+                  The system identifies the total number of visible candles, the highest value and the lowest value within those candles, and calculates the midpoint between them. If the current price is above this midpoint, the likely directional bias is toward buying; conversely, if it is below, the bias is toward selling. The system also displays the potential profit or loss that would result if the trade were executed at that specific moment.
+                </p>
+              </div>
+              <div className="px-6 py-4 flex justify-end" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "rgba(0,0,0,0.2)" }}>
+                <button onClick={() => setShowInfoPopup(false)} className="px-6 py-2 rounded-lg font-bold text-sm bg-indigo-500 hover:bg-indigo-600 text-white transition-colors">
+                  Got it
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
