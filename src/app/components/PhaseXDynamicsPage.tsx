@@ -11,7 +11,7 @@ interface PhaseXDynamicsPageProps {
     onBack: () => void;
 }
 
-type MarketCategory = "Forex" | "Metals" | "Commodities" | "Indices" | "Crypto";
+type MarketCategory = "Forex" | "Metals" | "Commodities" | "Indices" | "Crypto" | "Other";
 
 type AnalysisTab = "Vector Core" | "Delta Engine" | "Pulse Matrix" | "Boundary Shell" | "Power Field" | "Phase X Layer";
 
@@ -97,6 +97,16 @@ const symbolsData: Record<string, SymbolData> = {
     "USOIL": { "symbol": "USOIL", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
     "XRPUSD": { "symbol": "XRPUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
     "YFIUSD": { "symbol": "YFIUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "UKOILRoll": { "symbol": "UKOILRoll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "USOILRoll": { "symbol": "USOILRoll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "DE40Roll": { "symbol": "DE40Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "JP225Roll": { "symbol": "JP225Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "UK100Roll": { "symbol": "UK100Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "UT100Roll": { "symbol": "UT100Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "US30Roll": { "symbol": "US30Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "US500Roll": { "symbol": "US500Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "AMD": { "symbol": "AMD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
+    "AIG": { "symbol": "AIG", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
 };
 
 const marketCategories: { name: MarketCategory; nameAr: string; icon: string; symbols: string[] }[] = [
@@ -118,7 +128,7 @@ const marketCategories: { name: MarketCategory; nameAr: string; icon: string; sy
         "nameAr": "سلع",
         "icon": "🛢️",
         "symbols": [
-            "BRENT", "GOLD", "SILVER", "WTI"
+            "XAUUSD", "XAGUSD", "UKOILRoll", "USOILRoll"
         ]
     },
     {
@@ -126,7 +136,7 @@ const marketCategories: { name: MarketCategory; nameAr: string; icon: string; sy
         "nameAr": "مؤشرات",
         "icon": "📊",
         "symbols": [
-            "GER30", "JAP225", "UK100", "US100", "US30", "US500", "VIXRoll",
+            "DE40Roll", "JP225Roll", "UK100Roll", "UT100Roll", "US30Roll", "US500Roll", "VIXRoll",
             "NL25Roll", "NORWAY25Roll", "RUSS2000", "EU50Roll", "FRA40Roll",
             "AUS200Roll", "CHshares", "SWISS20Roll", "CHINA50Roll", "ESP35Roll", "HK50Roll"
         ]
@@ -136,42 +146,50 @@ const marketCategories: { name: MarketCategory; nameAr: string; icon: string; sy
         "nameAr": "عملات رقمية",
         "icon": "₿",
         "symbols": [
-            "ADAUSD.p", "ATMUSD.p", "AVAUSD.p", "AXSUSD.p", "BCHUSD.p", "BNBUSD.p", "BTCUSD.p",
-            "COMUSD.p", "DOTUSD.p", "DSHUSD.p", "ETCUSD.p", "ETHUSD.p", "LNKUSD.p", "LTCUSD.p",
-            "SOLUSD.p", "TRUUSD.p", "UNIUSD.p", "XRPUSD.p", "YFIUSD.p"
+            "ADAUSD", "ATMUSD", "AVAUSD", "AXSUSD", "BCHUSD", "BNBUSD", "BTCUSD",
+            "COMUSD", "DOTUSD", "DSHUSD", "ETCUSD", "ETHUSD", "LNKUSD", "LTCUSD",
+            "SOLUSD", "TRUUSD", "UNIUSD", "XRPUSD", "YFIUSD"
+        ]
+    },
+    {
+        "name": "Other",
+        "nameAr": "أخرى",
+        "icon": "🏢",
+        "symbols": [
+            "AMD", "AIG"
         ]
     }
 ];
 
 const symbolIcons: Record<string, { icon: string; label: string; labelAr: string; flag?: string }> = {
-    "ADAUSD.p": { "icon": "🔵", "label": "Cardano", "labelAr": "كاردانو" },
-    "ATMUSD.p": { "icon": "⚡", "label": "Cosmos", "labelAr": "كوزموس" },
+    "ADAUSD": { "icon": "🔵", "label": "Cardano", "labelAr": "كاردانو" },
+    "ATMUSD": { "icon": "⚡", "label": "Cosmos", "labelAr": "كوزموس" },
     "AUDCAD": { "icon": "A$", "label": "AUD/CAD", "labelAr": "AUD/CAD", "flag": "C$" },
     "AUDCHF": { "icon": "A$", "label": "AUD/CHF", "labelAr": "AUD/CHF", "flag": "🏦" },
     "AUDJPY": { "icon": "A$", "label": "AUD/JPY", "labelAr": "AUD/JPY", "flag": "¥" },
     "AUDNZD": { "icon": "A$", "label": "AUD/NZD", "labelAr": "AUD/NZD", "flag": "🥝" },
     "AUDUSD": { "icon": "A$", "label": "AUD/USD", "labelAr": "AUD/USD", "flag": "$" },
     "AUS200Roll": { "icon": "🏛️", "label": "ASX 200", "labelAr": "أستراليا 200" },
-    "AVAUSD.p": { "icon": "🔺", "label": "Avalanche", "labelAr": "أفالانش" },
-    "AXSUSD.p": { "icon": "🎮", "label": "Axie", "labelAr": "أكسي" },
-    "BCHUSD.p": { "icon": "💚", "label": "Bitcoin Cash", "labelAr": "بتكوين كاش" },
-    "BNBUSD.p": { "icon": "💛", "label": "Binance", "labelAr": "بينانس" },
+    "AVAUSD": { "icon": "🔺", "label": "Avalanche", "labelAr": "أفالانش" },
+    "AXSUSD": { "icon": "🎮", "label": "Axie", "labelAr": "أكسي" },
+    "BCHUSD": { "icon": "💚", "label": "Bitcoin Cash", "labelAr": "بتكوين كاش" },
+    "BNBUSD": { "icon": "💛", "label": "Binance", "labelAr": "بينانس" },
     "BRENT": { "icon": "🛢️", "label": "Brent", "labelAr": "برنت" },
     "GOLD": { "icon": "🥇", "label": "Gold", "labelAr": "ذهب" },
     "SILVER": { "icon": "🥈", "label": "Silver", "labelAr": "فضة" },
     "WTI": { "icon": "🛢️", "label": "WTI", "labelAr": "نفط خام" },
-    "BTCUSD.p": { "icon": "₿", "label": "Bitcoin", "labelAr": "بتكوين" },
+    "BTCUSD": { "icon": "₿", "label": "Bitcoin", "labelAr": "بتكوين" },
     "CADCHF": { "icon": "C$", "label": "CAD/CHF", "labelAr": "CAD/CHF", "flag": "🏦" },
     "CADJPY": { "icon": "C$", "label": "CAD/JPY", "labelAr": "CAD/JPY", "flag": "¥" },
     "CHFJPY": { "icon": "🏦", "label": "CHF/JPY", "labelAr": "CHF/JPY", "flag": "¥" },
     "CHINA50Roll": { "icon": "🏮", "label": "China A50", "labelAr": "الصين 50" },
     "CHshares": { "icon": "⛰️", "label": "Swiss Shares", "labelAr": "أسهم سويسرا" },
-    "COMUSD.p": { "icon": "🌐", "label": "Compound", "labelAr": "كومباوند" },
-    "DOTUSD.p": { "icon": "⚪", "label": "Polkadot", "labelAr": "بولكادوت" },
-    "DSHUSD.p": { "icon": "🔷", "label": "Dash", "labelAr": "داش" },
+    "COMUSD": { "icon": "🌐", "label": "Compound", "labelAr": "كومباوند" },
+    "DOTUSD": { "icon": "⚪", "label": "Polkadot", "labelAr": "بولكادوت" },
+    "DSHUSD": { "icon": "🔷", "label": "Dash", "labelAr": "داش" },
     "ESP35Roll": { "icon": "🏟️", "label": "Spain 35", "labelAr": "إسبانيا 35" },
-    "ETCUSD.p": { "icon": "💎", "label": "ETH Classic", "labelAr": "إيثريوم كلاسيك" },
-    "ETHUSD.p": { "icon": "⟠", "label": "Ethereum", "labelAr": "إيثريوم" },
+    "ETCUSD": { "icon": "💎", "label": "ETH Classic", "labelAr": "إيثريوم كلاسيك" },
+    "ETHUSD": { "icon": "⟠", "label": "Ethereum", "labelAr": "إيثريوم" },
     "EU50Roll": { "icon": "🏦", "label": "Euro Stoxx 50", "labelAr": "يورو ستوكس 50" },
     "EURAUD": { "icon": "€", "label": "EUR/AUD", "labelAr": "EUR/AUD", "flag": "A$" },
     "EURCAD": { "icon": "€", "label": "EUR/CAD", "labelAr": "EUR/CAD", "flag": "C$" },
@@ -191,8 +209,8 @@ const symbolIcons: Record<string, { icon: string; label: string; labelAr: string
     "XAUUSD": { "icon": "🥇", "label": "Gold", "labelAr": "ذهب" },
     "HK50Roll": { "icon": "🏙️", "label": "Hang Seng", "labelAr": "هانج سينج" },
     "JAP225": { "icon": "⛩️", "label": "Nikkei 225", "labelAr": "نيكي 225" },
-    "LNKUSD.p": { "icon": "🔗", "label": "Chainlink", "labelAr": "تشين لينك" },
-    "LTCUSD.p": { "icon": "🪨", "label": "Litecoin", "labelAr": "لايتكوين" },
+    "LNKUSD": { "icon": "🔗", "label": "Chainlink", "labelAr": "تشين لينك" },
+    "LTCUSD": { "icon": "🪨", "label": "Litecoin", "labelAr": "لايتكوين" },
     "NL25Roll": { "icon": "🌷", "label": "AEX 25", "labelAr": "هولندا 25" },
     "NORWAY25Roll": { "icon": "⛷️", "label": "Norway 25", "labelAr": "النرويج 25" },
     "NZDCAD": { "icon": "🥝", "label": "NZD/CAD", "labelAr": "NZD/CAD", "flag": "C$" },
@@ -201,11 +219,11 @@ const symbolIcons: Record<string, { icon: string; label: string; labelAr: string
     "NZDUSD": { "icon": "🥝", "label": "NZD/USD", "labelAr": "NZD/USD", "flag": "$" },
     "RUSS2000": { "icon": "📈", "label": "Russell 2000", "labelAr": "راسل 2000" },
     "XAGUSD": { "icon": "🥈", "label": "Silver", "labelAr": "فضة" },
-    "SOLUSD.p": { "icon": "◎", "label": "Solana", "labelAr": "سولانا" },
+    "SOLUSD": { "icon": "◎", "label": "Solana", "labelAr": "سولانا" },
     "SWISS20Roll": { "icon": "⛰️", "label": "SMI 20", "labelAr": "سويسرا 20" },
-    "TRUUSD.p": { "icon": "🟢", "label": "TrueUSD", "labelAr": "ترو يو إس دي" },
+    "TRUUSD": { "icon": "🟢", "label": "TrueUSD", "labelAr": "ترو يو إس دي" },
     "UK100": { "icon": "🏰", "label": "FTSE 100", "labelAr": "فوتسي 100" },
-    "UNIUSD.p": { "icon": "🦄", "label": "Uniswap", "labelAr": "يونيسواب" },
+    "UNIUSD": { "icon": "🦄", "label": "Uniswap", "labelAr": "يونيسواب" },
     "US100": { "icon": "💻", "label": "Nasdaq 100", "labelAr": "ناسداك 100" },
     "US30": { "icon": "🏛️", "label": "Dow Jones", "labelAr": "داو جونز" },
     "US500": { "icon": "📊", "label": "S&P 500", "labelAr": "إس آند بي 500" },
@@ -214,8 +232,18 @@ const symbolIcons: Record<string, { icon: string; label: string; labelAr: string
     "USDJPY": { "icon": "$", "label": "USD/JPY", "labelAr": "USD/JPY", "flag": "¥" },
     "VIXRoll": { "icon": "📉", "label": "VIX", "labelAr": "مؤشر التقلب" },
     "USOIL": { "icon": "🛢️", "label": "Crude Oil", "labelAr": "نفط خام" },
-    "XRPUSD.p": { "icon": "💧", "label": "XRP", "labelAr": "ريبل" },
-    "YFIUSD.p": { "icon": "💰", "label": "Yearn", "labelAr": "ييرن" }
+    "XRPUSD": { "icon": "💧", "label": "XRP", "labelAr": "ريبل" },
+    "YFIUSD": { "icon": "💰", "label": "Yearn", "labelAr": "ييرن" },
+    "UKOILRoll": { "icon": "🛢️", "label": "Brent Oil", "labelAr": "برنت" },
+    "USOILRoll": { "icon": "🛢️", "label": "US Crude", "labelAr": "النفط الخام" },
+    "DE40Roll": { "icon": "🏭", "label": "DAX 40", "labelAr": "داكس 40" },
+    "JP225Roll": { "icon": "⛩️", "label": "Nikkei 225", "labelAr": "نيكي 225" },
+    "UK100Roll": { "icon": "🏰", "label": "FTSE 100", "labelAr": "فوتسي 100" },
+    "UT100Roll": { "icon": "💻", "label": "Nasdaq 100", "labelAr": "ناسداك 100" },
+    "US30Roll": { "icon": "🏛️", "label": "Dow Jones", "labelAr": "داو جونز" },
+    "US500Roll": { "icon": "📊", "label": "S&P 500", "labelAr": "إس آند بي 500" },
+    "AMD": { "icon": "🖥️", "label": "AMD", "labelAr": "إي إم دي" },
+    "AIG": { "icon": "🏢", "label": "AIG", "labelAr": "إيه آي جي" }
 };
 
 
@@ -308,65 +336,65 @@ const vcTfLabels = ["5M", "10M", "15M", "20M", "30M", "H1", "H2", "H3", "H4", "H
 
 
 
-// Map from app symbol IDs to JSON keys
+// Map from app symbol IDs to JSON keys (matches API response format)
 const symbolToJsonKey: Record<string, string> = {
-    "ADAUSD.p": "ADAUSD.p - CRYPTO",
-    "ATMUSD.p": "ATMUSD.p - CRYPTO",
-    "AVAUSD.p": "AVAUSD.p - CRYPTO",
-    "AXSUSD.p": "AXSUSD.p - CRYPTO",
-    "BCHUSD.p": "BCHUSD.p - CRYPTO",
-    "BNBUSD.p": "BNBUSD.p - CRYPTO",
-    "BTCUSD.p": "BTCUSD.p - CRYPTO",
-    "COMUSD.p": "COMUSD.p - CRYPTO",
-    "DOTUSD.p": "DOTUSD.p - CRYPTO",
-    "DSHUSD.p": "DSHUSD.p - CRYPTO",
-    "ETCUSD.p": "ETCUSD.p - CRYPTO",
-    "ETHUSD.p": "ETHUSD.p - CRYPTO",
-    "LNKUSD.p": "LNKUSD.p - CRYPTO",
-    "LTCUSD.p": "LTCUSD.p - CRYPTO",
-    "SOLUSD.p": "SOLUSD.p - CRYPTO",
-    "TRUUSD.p": "TRUUSD.p - CRYPTO",
-    "UNIUSD.p": "UNIUSD.p - CRYPTO",
-    "XRPUSD.p": "XRPUSD.p - CRYPTO",
-    "YFIUSD.p": "YFIUSD.p - CRYPTO",
-    "AUDCAD": "AUDCAD - FOREX",
-    "AUDCHF": "AUDCHF - FOREX",
-    "AUDJPY": "AUDJPY - FOREX",
-    "AUDNZD": "AUDNZD - FOREX",
-    "AUDUSD": "AUDUSD - FOREX",
-    "CADCHF": "CADCHF - FOREX",
-    "CADJPY": "CADJPY - FOREX",
-    "CHFJPY": "CHFJPY - FOREX",
-    "EURAUD": "EURAUD - FOREX",
-    "EURCAD": "EURCAD - FOREX",
-    "EURCHF": "EURCHF - FOREX",
-    "EURGBP": "EURGBP - FOREX",
-    "EURJPY": "EURJPY - FOREX",
-    "EURNZD": "EURNZD - FOREX",
-    "EURUSD": "EURUSD - FOREX",
-    "GBPAUD": "GBPAUD - FOREX",
-    "GBPCAD": "GBPCAD - FOREX",
-    "GBPCHF": "GBPCHF - FOREX",
-    "GBPJPY": "GBPJPY - FOREX",
-    "GBPNZD": "GBPNZD - FOREX",
-    "GBPUSD": "GBPUSD - FOREX",
-    "NZDCAD": "NZDCAD - FOREX",
-    "NZDCHF": "NZDCHF - FOREX",
-    "NZDJPY": "NZDJPY - FOREX",
-    "NZDUSD": "NZDUSD - FOREX",
-    "USDCAD": "USDCAD - FOREX",
-    "USDCHF": "USDCHF - FOREX",
-    "USDJPY": "USDJPY - FOREX",
-    "BRENT": "BRENT - COMMODITY",
-    "GOLD": "GOLD - COMMODITY",
-    "SILVER": "SILVER - COMMODITY",
-    "WTI": "WTI - COMMODITY",
-    "GER30": "GER30 - INDEX",
-    "JAP225": "JAP225 - INDEX",
-    "UK100": "UK100 - INDEX",
-    "US100": "US100 - INDEX",
-    "US30": "US30 - INDEX",
-    "US500": "US500 - INDEX",
+    "ADAUSD": "ADAUSD.lv - CRYPTO",
+    "ATMUSD": "ATMUSD.lv - CRYPTO",
+    "AVAUSD": "AVAUSD.lv - CRYPTO",
+    "AXSUSD": "AXSUSD.lv - CRYPTO",
+    "BCHUSD": "BCHUSD.lv - CRYPTO",
+    "BNBUSD": "BNBUSD.lv - CRYPTO",
+    "BTCUSD": "BTCUSD.lv - CRYPTO",
+    "COMUSD": "COMUSD.lv - CRYPTO",
+    "DOTUSD": "DOTUSD.lv - CRYPTO",
+    "DSHUSD": "DSHUSD.lv - CRYPTO",
+    "ETCUSD": "ETCUSD.lv - CRYPTO",
+    "ETHUSD": "ETHUSD.lv - CRYPTO",
+    "LNKUSD": "LNKUSD.lv - CRYPTO",
+    "LTCUSD": "LTCUSD.lv - CRYPTO",
+    "SOLUSD": "SOLUSD.lv - CRYPTO",
+    "TRUUSD": "TRUUSD.lv - CRYPTO",
+    "UNIUSD": "UNIUSD.lv - CRYPTO",
+    "XRPUSD": "XRPUSD.lv - CRYPTO",
+    "YFIUSD": "YFIUSD.lv - CRYPTO",
+    "AUDCAD": "AUDCAD.sd - FOREX",
+    "AUDCHF": "AUDCHF.sd - FOREX",
+    "AUDJPY": "AUDJPY.sd - FOREX",
+    "AUDNZD": "AUDNZD.sd - FOREX",
+    "AUDUSD": "AUDUSD.sd - FOREX",
+    "CADCHF": "CADCHF.sd - FOREX",
+    "CADJPY": "CADJPY.sd - FOREX",
+    "CHFJPY": "CHFJPY.sd - FOREX",
+    "EURAUD": "EURAUD.sd - FOREX",
+    "EURCAD": "EURCAD.sd - FOREX",
+    "EURCHF": "EURCHF.sd - FOREX",
+    "EURGBP": "EURGBP.sd - FOREX",
+    "EURJPY": "EURJPY.sd - FOREX",
+    "EURNZD": "EURNZD.sd - FOREX",
+    "EURUSD": "EURUSD.sd - FOREX",
+    "GBPAUD": "GBPAUD.sd - FOREX",
+    "GBPCAD": "GBPCAD.sd - FOREX",
+    "GBPCHF": "GBPCHF.sd - FOREX",
+    "GBPJPY": "GBPJPY.sd - FOREX",
+    "GBPNZD": "GBPNZD.sd - FOREX",
+    "GBPUSD": "GBPUSD.sd - FOREX",
+    "NZDCAD": "NZDCAD.sd - FOREX",
+    "NZDCHF": "NZDCHF.sd - FOREX",
+    "NZDJPY": "NZDJPY.sd - FOREX",
+    "NZDUSD": "NZDUSD.sd - FOREX",
+    "USDCAD": "USDCAD.sd - FOREX",
+    "USDCHF": "USDCHF.sd - FOREX",
+    "USDJPY": "USDJPY.sd - FOREX",
+    "XAUUSD": "XAUUSD.sd - COMMODITY",
+    "XAGUSD": "XAGUSD.sd - COMMODITY",
+    "UKOILRoll": "UKOILRoll - COMMODITY",
+    "USOILRoll": "USOILRoll - COMMODITY",
+    "DE40Roll": "DE40Roll - INDEX",
+    "JP225Roll": "JP225Roll - INDEX",
+    "UK100Roll": "UK100Roll - INDEX",
+    "UT100Roll": "UT100Roll - INDEX",
+    "US30Roll": "US30Roll - INDEX",
+    "US500Roll": "US500Roll - INDEX",
     "VIXRoll": "VIXRoll - INDEX",
     "NL25Roll": "NL25Roll - INDEX",
     "NORWAY25Roll": "NORWAY25Roll - INDEX",
@@ -378,7 +406,9 @@ const symbolToJsonKey: Record<string, string> = {
     "SWISS20Roll": "SWISS20Roll - INDEX",
     "CHINA50Roll": "CHINA50Roll - INDEX",
     "ESP35Roll": "ESP35Roll - INDEX",
-    "HK50Roll": "HK50Roll - INDEX"
+    "HK50Roll": "HK50Roll - INDEX",
+    "AMD": "AMD - OTHER",
+    "AIG": "AIG - OTHER",
 };
 
 
@@ -1472,6 +1502,116 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
 
     const layerData = useMemo(() => getDynamicLayerData(selectedSymbol, sources), [selectedSymbol, sources]);
 
+    // Auto-fetch structural dynamics data from API
+    useEffect(() => {
+        const SD_API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/structural-dynamics";
+        const stages: { endpoint: string; idx: number }[] = [
+            { endpoint: "fast", idx: 0 },
+            { endpoint: "medium", idx: 1 },
+            { endpoint: "slow", idx: 2 },
+        ];
+
+        const fileNameToTab = (name: string): AnalysisTab | null => {
+            const n = name.toLowerCase();
+            if (n.includes("vector_core") || n.includes("vector-core")) return "Vector Core";
+            if (n.includes("delta_engine") || n.includes("delta-engine")) return "Delta Engine";
+            if (n.includes("pulse_matrix") || n.includes("pulse-matrix")) return "Pulse Matrix";
+            if (n.includes("boundary_shell") || n.includes("boundary-shell")) return "Boundary Shell";
+            if (n.includes("power_field") || n.includes("power-field")) return "Power Field";
+            if (n.includes("vector")) return "Vector Core";
+            if (n.includes("delta")) return "Delta Engine";
+            if (n.includes("pulse")) return "Pulse Matrix";
+            if (n.includes("boundary")) return "Boundary Shell";
+            if (n.includes("power")) return "Power Field";
+            return null;
+        };
+
+        let cancelled = false;
+
+        const fetchAll = async () => {
+            const newSources: Record<AnalysisTab, any[]> = {
+                "Vector Core": [null, null, null],
+                "Delta Engine": [null, null, null],
+                "Pulse Matrix": [null, null, null],
+                "Boundary Shell": [null, null, null],
+                "Power Field": [null, null, null],
+                "Phase X Layer": [null, null, null],
+            };
+            const newStatus: Record<AnalysisTab, boolean[]> = {
+                "Vector Core": [false, false, false],
+                "Delta Engine": [false, false, false],
+                "Pulse Matrix": [false, false, false],
+                "Boundary Shell": [false, false, false],
+                "Power Field": [false, false, false],
+                "Phase X Layer": [false, false, false],
+            };
+
+            await Promise.all(stages.map(async ({ endpoint, idx }) => {
+                try {
+                    const res = await fetch(`${SD_API_BASE}/${endpoint}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (!data?.files) return;
+
+                    for (const file of data.files) {
+                        const tab = fileNameToTab(file.name);
+                        if (tab && file.payload) {
+                            newSources[tab][idx] = file.payload;
+                            newStatus[tab][idx] = true;
+                        }
+                    }
+                } catch (err) {
+                    console.error(`SD API fetch error (${endpoint}):`, err);
+                }
+            }));
+
+            if (!cancelled) {
+                setSources(newSources);
+                setUploadStatus(newStatus);
+            }
+        };
+
+        fetchAll();
+
+        // Calculate time until next fetch (exactly at MM:00:30, MM:05:30, MM:10:30, etc.)
+        const scheduleNextFetch = () => {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const ms = now.getMilliseconds();
+
+            // Next target minute is the next multiple of 5
+            let targetMinute = Math.floor(minutes / 5) * 5;
+
+            // If we are past the 30-second mark of the current 5-minute window, go to the next 5-minute window
+            if (minutes % 5 !== 0 || seconds >= 30) {
+                targetMinute += 5;
+            }
+
+            const targetDate = new Date(now);
+            targetDate.setMinutes(targetMinute);
+            targetDate.setSeconds(30);
+            targetDate.setMilliseconds(0);
+
+            const delayParams = targetDate.getTime() - now.getTime();
+
+            return setTimeout(() => {
+                if (!cancelled) {
+                    fetchAll();
+                    // Once synchronized, run exactly every 5 minutes
+                    setInterval(fetchAll, 5 * 60 * 1000);
+                }
+            }, delayParams);
+        };
+
+        const initialTimeout = scheduleNextFetch();
+
+        return () => {
+            cancelled = true;
+            clearTimeout(initialTimeout);
+        };
+    }, []);
+
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
         const files = Array.from(e.target.files);
@@ -2005,7 +2145,32 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             {(() => {
                                 const cat = marketCategories.find(c => c.name === selectedCategory);
                                 if (!cat?.symbols.length) return null;
-                                return cat.symbols.map((sym, si) => {
+
+                                // Only show symbols that have data in at least one tab of the loaded sources
+                                const availableSymbols = cat.symbols.filter(sym => {
+                                    // Default data always has info, but we only want to show it if there's real API data available
+                                    // Check if the symbol exists in the actual 'sources' object
+                                    const jsonKey = symbolToJsonKey[sym];
+                                    if (!jsonKey) return false;
+
+                                    // Check if ANY tab has data for this jsonKey
+                                    for (const tab in sources) {
+                                        for (const stageData of sources[tab as AnalysisTab]) {
+                                            if (stageData && stageData[jsonKey]) {
+                                                return true; // Found actual data from API JSON
+                                            }
+                                        }
+                                    }
+                                    return false; // No real API data loaded yet for this symbol
+                                });
+
+                                if (!availableSymbols.length) return (
+                                    <div className="text-gray-500 text-sm px-4 py-2 italic">
+                                        {isRTL ? "جاري تحميل البيانات..." : "Loading data or no symbols available in JSON..."}
+                                    </div>
+                                );
+
+                                return availableSymbols.map((sym, si) => {
                                     const info = symbolIcons[sym] || { icon: "📈", label: sym, labelAr: sym };
                                     const isActive = selectedSymbol === sym;
                                     const symData = symbolsData[sym];
