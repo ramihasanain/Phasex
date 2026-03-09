@@ -1620,6 +1620,8 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
 
         let cancelled = false;
 
+        let globalExportedAt: string | null = null;
+
         const fetchAll = async () => {
             const newSources: Record<AnalysisTab, any[]> = {
                 "Vector Core": [null, null, null],
@@ -1650,6 +1652,9 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
                         if (tab && file.payload) {
                             newSources[tab][idx] = file.payload;
                             newStatus[tab][idx] = true;
+                            if (file.payload.exported_at && !globalExportedAt) {
+                                globalExportedAt = file.payload.exported_at;
+                            }
                         }
                     }
                 } catch (err) {
@@ -1660,6 +1665,15 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
             if (!cancelled) {
                 setSources(newSources);
                 setUploadStatus(newStatus);
+                if (globalExportedAt) {
+                    // exported_at format is usually "2026.03.09 21:55:05"
+                    // replace dots with dashes for standard ISO parsing if needed, but JS Date handles "YYYY/MM/DD" or "YYYY-MM-DD" best
+                    const parsable = globalExportedAt.replace(/\./g, '-');
+                    const ts = new Date(parsable).getTime();
+                    if (!isNaN(ts)) {
+                        setLastSystemUpdate(ts);
+                    }
+                }
             }
         };
 
