@@ -178,7 +178,9 @@ export function usePhaseStateAPI(
 
         try {
             const cleanSym = cleanSymbol(sym);
-            const stateKey = `${main}_from_${sub}`;
+            // API uses "Daily" instead of "D1"
+            const apiMain = main === "D1" ? "Daily" : main;
+            const stateKey = `${apiMain}_from_${sub}`;
             const url = `${API_BASE}?symbol=${cleanSym}&state_key=${stateKey}&limit=1000`;
 
             const res = await fetch(url, { signal: controller.signal });
