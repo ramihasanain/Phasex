@@ -1,8 +1,9 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
 import { Upload, CheckCircle, FileJson, ChevronDown, ChevronUp, Rocket, Search, X, Maximize2, Minimize2 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useThemeTokens } from "../hooks/useThemeTokens";
+import { useLivePrices } from "../hooks/useLivePrices";
 
 /* ═══════════ Symbol Icons ═══════════ */
 const symbolIcons: Record<string, string> = {
@@ -30,7 +31,23 @@ const symbolIcons: Record<string, string> = {
     "CHINA50Roll": "🏮", "ESP35Roll": "🏟️", "HK50Roll": "🏙️",
 };
 
-const getIcon = (asset: string): string => symbolIcons[asset] || "📈";
+const getIcon = (asset: string): string => {
+    if (symbolIcons[asset]) return symbolIcons[asset];
+    const base = asset.replace(/\.(sd|lv|p)$/i, '');
+    if (symbolIcons[base]) return symbolIcons[base];
+    if (symbolIcons[base + ".p"]) return symbolIcons[base + ".p"];
+
+    if (base.includes("JP225") || base.includes("JAP225")) return "⛩️";
+    if (base.includes("US500")) return "📊";
+    if (base.includes("US100") || base.includes("UT100")) return "💻";
+    if (base.includes("US30")) return "🏛️";
+    if (base.includes("AUS200")) return "🏛️";
+    if (base.includes("CHINA50") || base.includes("CHshares")) return "🏮";
+    if (base.includes("HK50")) return "🏙️";
+    if (base.includes("GER40") || base.includes("DE40")) return "🏭";
+
+    return "📈";
+};
 
 /* ═══════════ Types ═══════════ */
 interface SignalEntry {
@@ -43,8 +60,41 @@ interface SignalEntry {
 
 type AssetSignals = Record<string, Record<string, SignalEntry>>;
 
-const TF_ORDER: Record<string, number> = { M1: 1, M2: 2, M3: 3, M4: 4, M5: 5, M6: 6, M10: 7, M12: 8, M15: 9, M20: 10, M30: 11, H1: 12, H2: 13, H3: 14, H4: 15, H6: 16, H8: 17, H12: 18, D1: 19, W1: 20, MN1: 21 };
-const sortTF = (a: string, b: string) => (TF_ORDER[a] || 99) - (TF_ORDER[b] || 99);
+const parseTF = (tf: string): number => {
+    const s = tf.trim().toLowerCase();
+    const num = parseInt(s.replace(/[^0-9]/g, "")) || 1;
+    if (s.includes("m") && !s.includes("mn")) return num;
+    if (s.includes("h")) return num * 60;
+    if (s.includes("d")) return num * 60 * 24;
+    if (s.includes("w")) return num * 60 * 24 * 7;
+    if (s.includes("mn")) return num * 60 * 24 * 30;
+    return 9999;
+};
+const sortTF = (a: string, b: string) => parseTF(a) - parseTF(b);
+
+const PriceCell = ({ price, isLive, fmt }: { price: number; isLive: boolean; fmt: (v: number) => string }) => {
+    const prevPriceRef = useRef(price);
+    const [flashStyle, setFlashStyle] = useState<React.CSSProperties>({});
+
+    useEffect(() => {
+        if (!isLive) return;
+        if (price > prevPriceRef.current) {
+            setFlashStyle({ color: "#4ade80", textShadow: "0 0 12px rgba(74,222,128,0.8)", transition: "none" });
+            const timer = setTimeout(() => setFlashStyle({ transition: "all 1s ease-out" }), 150);
+            prevPriceRef.current = price;
+            return () => clearTimeout(timer);
+        } else if (price < prevPriceRef.current) {
+            setFlashStyle({ color: "#f87171", textShadow: "0 0 12px rgba(248,113,113,0.8)", transition: "none" });
+            const timer = setTimeout(() => setFlashStyle({ transition: "all 1s ease-out" }), 150);
+            prevPriceRef.current = price;
+            return () => clearTimeout(timer);
+        }
+        prevPriceRef.current = price;
+    }, [price, isLive]);
+
+    const baseColor = isLive ? "#38bdf8" : "#cbd5e1";
+    return <span style={{ color: baseColor, ...flashStyle }}>{fmt(price)}</span>;
+};
 
 const MARKET_FILTERS = [
     { key: "ALL", label: "All", labelAr: "الكل", color: "#818cf8", emoji: "🌐" },
@@ -75,11 +125,13 @@ export function TradingSignalsTable() {
     const tk = useThemeTokens();
 
     const [signalData, setSignalData] = useState<AssetSignals>({});
-    const [uploadedCount, setUploadedCount] = useState(0);
-    const [isUploading, setIsUploading] = useState(false);
-    const [collapsedAssets, setCollapsedAssets] = useState<Set<string>>(new Set());
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isFetching, setIsFetching] = useState(true);
+    const [fetchError, setFetchError] = useState("");
 
+    const { prices: livePrices } = useLivePrices();
+
+    // UI States
+    const [collapsedAssets, setCollapsedAssets] = useState<Set<string>>(new Set());
     const [searchQuery, setSearchQuery] = useState("");
     const [marketFilter, setMarketFilter] = useState("ALL");
     const [actionFilter, setActionFilter] = useState("ALL");
@@ -87,43 +139,92 @@ export function TradingSignalsTable() {
     const [tfFilter, setTfFilter] = useState("ALL");
     const [showAssetDropdown, setShowAssetDropdown] = useState(false);
 
-    const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        setIsUploading(true);
-        const newData: AssetSignals = { ...signalData };
+    // Auto-fetch structural dynamics data from API
+    useEffect(() => {
+        const SD_API_FAST = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/structural-dynamics/fast";
+        let cancelled = false;
 
-        for (const file of Array.from(files)) {
+        const fetchEnvelopState = async () => {
+            if (!cancelled) setIsFetching(true);
             try {
-                const text = await file.text();
-                const json = JSON.parse(text);
-                for (const [key, value] of Object.entries(json)) {
-                    if (key === "exported_at") continue;
-                    const parts = key.split(" - ");
-                    const assetName = parts[0].trim();
-                    const market = parts[1]?.trim() || "UNKNOWN";
-                    const tfData = value as Record<string, any>;
-                    for (const [tfKey, entry] of Object.entries(tfData)) {
-                        if (!newData[assetName]) newData[assetName] = {};
-                        const displayTF = entry.tf_candle || tfKey.split("_").pop()?.toUpperCase() || tfKey;
-                        newData[assetName][displayTF] = {
-                            time: entry.time || "",
-                            open: entry.open ?? 0, high: entry.high ?? 0,
-                            low: entry.low ?? 0, close: entry.close ?? 0,
-                            net_signal: normalizeSignal(entry.net_signal || (entry.close > entry.open ? "buy" : entry.close < entry.open ? "sell" : "")),
-                            stop_loss: entry.stop_loss ?? 0, take_profit: entry.take_profit ?? 0,
-                            market,
-                        };
-                    }
-                }
-            } catch (err) { console.error(`Error parsing ${file.name}:`, err); }
-        }
+                const res = await fetch(SD_API_FAST);
+                if (!res.ok) throw new Error("Network response was not ok");
+                const data = await res.json();
 
-        setSignalData(newData);
-        setUploadedCount((prev) => prev + Array.from(files).length);
-        setIsUploading(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-    }, [signalData]);
+                // Find envelop_state file
+                const envelopFile = data?.files?.find((f: any) => f.name === "envelop_state");
+                if (envelopFile && envelopFile.payload) {
+                    const newData: AssetSignals = {};
+                    for (const [key, value] of Object.entries(envelopFile.payload)) {
+                        if (key === "exported_at") continue;
+                        const parts = key.split(" - ");
+                        const displayAsset = parts[0].trim();
+                        const market = parts[1]?.trim() || "UNKNOWN";
+                        const tfData = value as Record<string, any>;
+
+                        for (const [tfKey, entry] of Object.entries(tfData)) {
+                            if (!newData[displayAsset]) newData[displayAsset] = {};
+                            const displayTF = entry.tf_candle || tfKey.split("_").pop()?.toUpperCase() || tfKey;
+                            newData[displayAsset][displayTF] = {
+                                time: entry.time || "",
+                                open: entry.open ?? 0, high: entry.high ?? 0,
+                                low: entry.low ?? 0, close: entry.close ?? 0,
+                                net_signal: normalizeSignal(entry.net_signal || (entry.close > entry.open ? "buy" : entry.close < entry.open ? "sell" : "")),
+                                stop_loss: entry.stop_loss ?? 0, take_profit: entry.take_profit ?? 0,
+                                market,
+                            };
+                        }
+                    }
+                    if (!cancelled) {
+                        setSignalData(newData);
+                        setFetchError("");
+                    }
+                } else {
+                    if (!cancelled) setFetchError("envelop_state not found in API response.");
+                }
+            } catch (err) {
+                console.error("Error fetching envelop_state:", err);
+                if (!cancelled) setFetchError("Failed to fetch data from server.");
+            } finally {
+                if (!cancelled) setIsFetching(false);
+            }
+        };
+
+        fetchEnvelopState();
+
+        // Calculate time until next fetch (exactly at MM:00:30, MM:05:30, MM:10:30, etc.)
+        const scheduleNextFetch = () => {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            let targetMinute = Math.floor(minutes / 5) * 5;
+            if (minutes % 5 !== 0 || seconds >= 30) {
+                targetMinute += 5;
+            }
+
+            const targetDate = new Date(now);
+            targetDate.setMinutes(targetMinute);
+            targetDate.setSeconds(30);
+            targetDate.setMilliseconds(0);
+
+            const delayParams = targetDate.getTime() - now.getTime();
+
+            return setTimeout(() => {
+                if (!cancelled) {
+                    fetchEnvelopState();
+                    setInterval(fetchEnvelopState, 5 * 60 * 1000);
+                }
+            }, delayParams);
+        };
+
+        const initialTimeout = scheduleNextFetch();
+
+        return () => {
+            cancelled = true;
+            clearTimeout(initialTimeout);
+        };
+    }, []);
 
     const toggleAsset = (asset: string) => {
         const next = new Set(collapsedAssets);
@@ -142,9 +243,9 @@ export function TradingSignalsTable() {
         return val.toFixed(1);
     };
 
-    const calcProfit = (e: SignalEntry): number => {
+    const calcProfit = (e: SignalEntry, mPrice: number): number => {
         if (!e.net_signal) return 0;
-        return e.net_signal === "Buy" ? e.close - e.open : e.net_signal === "Sell" ? e.open - e.close : 0;
+        return e.net_signal === "Buy" ? mPrice - e.close : e.net_signal === "Sell" ? e.close - mPrice : 0;
     };
 
     const allAssetNames = useMemo(() => Object.keys(signalData).sort(), [signalData]);
@@ -208,20 +309,24 @@ export function TradingSignalsTable() {
                                 PHASE <span style={{ color: "#ef4444", textShadow: "0 0 12px rgba(239,68,68,0.4)" }}>X</span> Trading Dashboard
                             </h3>
                             <p className="text-xs mt-0.5" style={{ color: tk.textDim }}>
-                                {isRTL ? "ارفع ملف JSON لعرض إشارات التداول" : "Upload JSON to launch trading signals"}
+                                {isRTL ? "جاري جلب إشارات التداول المباشرة..." : "Fetching live trading signals..."}
                             </p>
                         </div>
                     </div>
-                    <input ref={fileInputRef} type="file" accept=".json" multiple onChange={handleUpload} className="hidden" />
-                    <motion.button onClick={() => fileInputRef.current?.click()}
-                        whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(99,102,241,0.3)" }} whileTap={{ scale: 0.96 }}
-                        className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold cursor-pointer"
-                        style={{ color: "#a5b4fc", background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))", border: "1px solid rgba(99,102,241,0.2)", boxShadow: "0 0 15px rgba(99,102,241,0.08)" }}>
-                        <FileJson className="w-4 h-4" /> {isRTL ? "رفع ملف JSON" : "Upload JSON"}
-                    </motion.button>
                 </div>
-                <div className="px-6 py-10 text-center">
-                    <p className="text-sm" style={{ color: "#334155" }}>⚡ {isRTL ? "لم يتم رفع أي بيانات بعد" : "No data uploaded yet"}</p>
+                <div className="px-6 py-10 flex flex-col items-center justify-center gap-4">
+                    {isFetching ? (
+                        <>
+                            <div className="w-8 h-8 rounded-full border-2 border-t-indigo-500 border-indigo-500/20 animate-spin" />
+                            <p className="text-sm font-medium" style={{ color: tk.textDim }}>
+                                {isRTL ? "جاري تحميل بيانات المنصة..." : "Loading platform data..."}
+                            </p>
+                        </>
+                    ) : (
+                        <p className="text-sm" style={{ color: fetchError ? "#ef4444" : "#334155" }}>
+                            {fetchError ? `⚠️ ${fetchError}` : `⚡ ${isRTL ? 'لا توجد بيانات متاحة حالياً' : 'No data available currently'}`}
+                        </p>
+                    )}
                 </div>
             </div>
         );
@@ -255,7 +360,21 @@ export function TradingSignalsTable() {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                    {/* Live Sync Indicator */}
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.15)" }}>
+                        {isFetching ? (
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        ) : (
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" style={{ boxShadow: "0 0 8px rgba(16,185,129,0.5)" }} />
+                        )}
+                        <span className="text-[10px] font-bold tracking-wide" style={{ color: "#10b981" }}>
+                            {isFetching ? (isRTL ? "جاري التحديث..." : "SYNCING...") : (isRTL ? "مباشر" : "LIVE")}
+                        </span>
+                    </div>
+
+                    <div className="w-px h-5" style={{ background: "rgba(99,102,241,0.1)" }} />
+
                     {/* Expand/Collapse All */}
                     <motion.button onClick={expandAll} whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-1 px-2.5 py-2 rounded-lg text-[11px] font-bold cursor-pointer"
@@ -268,23 +387,6 @@ export function TradingSignalsTable() {
                         style={{ color: "#818cf8", background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}
                         title={isRTL ? "إغلاق الكل" : "Collapse All"}>
                         <Minimize2 className="w-3.5 h-3.5" />
-                    </motion.button>
-
-                    <div className="w-px h-6" style={{ background: "rgba(99,102,241,0.1)" }} />
-
-                    <input ref={fileInputRef} type="file" accept=".json" multiple onChange={handleUpload} className="hidden" />
-                    <motion.button onClick={() => fileInputRef.current?.click()}
-                        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer"
-                        style={{
-                            color: uploadedCount > 0 ? "#4ade80" : "#a5b4fc",
-                            background: uploadedCount > 0 ? "rgba(74,222,128,0.06)" : "rgba(99,102,241,0.08)",
-                            border: uploadedCount > 0 ? "1px solid rgba(74,222,128,0.15)" : "1px solid rgba(99,102,241,0.15)",
-                        }}>
-                        {isUploading ? (
-                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}><Upload className="w-3.5 h-3.5" /></motion.div>
-                        ) : uploadedCount > 0 ? <CheckCircle className="w-3.5 h-3.5" /> : <FileJson className="w-3.5 h-3.5" />}
-                        {isUploading ? "..." : uploadedCount > 0 ? `+ ${isRTL ? "إضافة" : "Add"}` : (isRTL ? "رفع" : "Upload")}
                     </motion.button>
                 </div>
             </div>
@@ -508,9 +610,32 @@ export function TradingSignalsTable() {
                                         const entry = tfs[tf];
                                         const isBuy = entry.net_signal === "Buy";
                                         const isSell = entry.net_signal === "Sell";
-                                        const profit = calcProfit(entry);
-                                        const profitPos = profit >= 0;
                                         const midPrice = (entry.high + entry.low) / 2;
+
+                                        // Lookup live price from WS
+                                        const baseAsset = asset.replace(/\.(sd|lv|p)$/i, '');
+
+                                        // Identify alias if WS dictates different names
+                                        let alias = baseAsset;
+                                        if (baseAsset === "XAUUSD") alias = "GOLD";
+                                        else if (baseAsset === "XAGUSD") alias = "SILVER";
+                                        else if (baseAsset === "UKOILRoll" || baseAsset === "UKOIL") alias = livePrices["BRENT"] ? "BRENT" : "UKOIL";
+                                        else if (baseAsset === "USOILRoll" || baseAsset === "USOIL") alias = livePrices["WTI"] ? "WTI" : "USOIL";
+                                        else if (baseAsset === "US500Roll") alias = "US500";
+                                        else if (baseAsset === "US30Roll") alias = "US30";
+                                        else if (baseAsset === "UK100Roll") alias = "UK100";
+                                        else if (baseAsset === "UT100Roll") alias = "US100"; // Sometimes UT100 or US100
+
+                                        const liveMatch = livePrices[asset]
+                                            || livePrices[baseAsset]
+                                            || livePrices[alias]
+                                            || livePrices[baseAsset + ".p"]
+                                            || null;
+
+                                        const mPrice = liveMatch ? (liveMatch.bid + liveMatch.ask) / 2 : midPrice;
+
+                                        const profit = calcProfit(entry, mPrice);
+                                        const profitPos = profit >= 0;
 
                                         // Row background color based on Buy/Sell
                                         const rowBg = isBuy ? "rgba(74,222,128,0.03)" : isSell ? "rgba(248,113,113,0.03)" : "transparent";
@@ -540,7 +665,9 @@ export function TradingSignalsTable() {
                                                 <td className="p-2.5 text-sm font-black font-mono text-right tabular-nums" style={{ color: "#f0f4f8" }}>{fmt(entry.close)}</td>
                                                 <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.stop_loss ? "#fb7185" : "#1e293b" }}>{entry.stop_loss ? fmt(entry.stop_loss) : "—"}</td>
                                                 <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.take_profit ? "#34d399" : "#1e293b" }}>{entry.take_profit ? fmt(entry.take_profit) : "—"}</td>
-                                                <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: "#cbd5e1" }}>{fmt(midPrice)}</td>
+                                                <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums">
+                                                    <PriceCell price={mPrice} isLive={!!liveMatch} fmt={fmt} />
+                                                </td>
                                                 <td className="p-2.5 text-right">
                                                     <span className="text-xs font-black font-mono tabular-nums px-2.5 py-1 rounded-lg" style={{
                                                         color: profitPos ? "#22c55e" : "#ef4444",

@@ -11,6 +11,94 @@ interface PhaseXDynamicsPageProps {
     onBack: () => void;
 }
 
+const SciFiClock = ({ isLive, label, timeMs, isRTL, accent = "#00e676", mode = "lastUpdate" }: { isLive: boolean, label: string, timeMs?: number | null, isRTL?: boolean, accent?: string, mode?: "lastUpdate" | "currentTime" }) => {
+    const [time, setTime] = useState(timeMs ? new Date(timeMs) : new Date());
+
+    useEffect(() => {
+        if (mode === "currentTime") {
+            const interval = setInterval(() => setTime(new Date()), 1000);
+            return () => clearInterval(interval);
+        } else if (timeMs) {
+            setTime(new Date(timeMs));
+        }
+    }, [mode, timeMs]);
+
+    const hh = time.getHours().toString().padStart(2, '0');
+    const mm = time.getMinutes().toString().padStart(2, '0');
+    const ss = time.getSeconds().toString().padStart(2, '0');
+
+    const primaryColor = mode === "currentTime" ? "#00c8ff" : accent;
+    const shadowColor = mode === "currentTime" ? "rgba(0, 200, 255, " : "rgba(0, 230, 118, ";
+
+    return (
+        <div className="flex flex-col items-center justify-center relative p-3 rounded-2xl overflow-hidden min-w-[150px]"
+            style={{
+                background: "linear-gradient(180deg, rgba(16,25,35,0.7) 0%, rgba(8,12,20,0.95) 100%)",
+                border: `1px solid ${primaryColor}40`,
+                boxShadow: `0 0 15px ${shadowColor}0.15), inset 0 0 20px ${shadowColor}0.05)`,
+                backdropFilter: "blur(12px)"
+            }}>
+
+            {/* Radar / Sweep effect */}
+            {mode === "currentTime" && (
+                <motion.div
+                    className="absolute inset-0 z-0 pointer-events-none"
+                    style={{ background: `linear-gradient(90deg, transparent, ${shadowColor}0.15), transparent)` }}
+                    animate={{ left: ["-100%", "200%"] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+            )}
+            {mode === "lastUpdate" && isLive && (
+                <motion.div
+                    className="absolute inset-0 z-0 pointer-events-none"
+                    style={{ background: `linear-gradient(180deg, transparent, ${shadowColor}0.1), transparent)` }}
+                    animate={{ top: ["-100%", "200%"] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                />
+            )}
+
+            <div className="text-[10px] text-gray-400 tracking-[0.2em] font-bold uppercase mb-1 z-10 flex items-center gap-1.5"
+                style={{ direction: isRTL ? "rtl" : "ltr" }}>
+                {mode === "currentTime" && (
+                    <motion.div className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: primaryColor, boxShadow: `0 0 6px ${primaryColor}` }}
+                        animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                        transition={{ duration: 1.5, repeat: Infinity }} />
+                )}
+                {label}
+            </div>
+
+            <div className="flex items-center gap-1 font-mono text-3xl font-black italic tracking-wider z-10"
+                style={{
+                    color: primaryColor,
+                    textShadow: `0 0 10px ${shadowColor}0.4), 0 0 25px ${shadowColor}0.2)`
+                }}>
+                <span>{hh}</span>
+                <motion.span
+                    animate={mode === "currentTime" ? { opacity: [1, 0.2, 1] } : {}}
+                    transition={mode === "currentTime" ? { duration: 1, repeat: Infinity } : {}}>
+                    :
+                </motion.span>
+                <span>{mm}</span>
+                <motion.span
+                    className="text-lg opacity-70 ml-0.5 mt-1.5"
+                    animate={mode === "currentTime" ? { opacity: [0.7, 0.1, 0.7] } : {}}
+                    transition={mode === "currentTime" ? { duration: 1, repeat: Infinity, delay: 0.1 } : {}}>
+                    {ss}
+                </motion.span>
+            </div>
+
+            {/* Hexagon tech overlay */}
+            <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
+                style={{
+                    backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${primaryColor} 2px, ${primaryColor} 3px)`,
+                    backgroundSize: "100% 4px"
+                }}
+            />
+        </div>
+    );
+};
+
 type MarketCategory = "Forex" | "Metals" | "Commodities" | "Indices" | "Crypto" | "Other";
 
 type AnalysisTab = "Vector Core" | "Delta Engine" | "Pulse Matrix" | "Boundary Shell" | "Power Field" | "Phase X Layer";
@@ -1136,8 +1224,11 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                             {isRTL ? analysisTabsAr[tab] : tab}
                         </span>
                         {(displayRows.length > 0) && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: "rgba(0,229,160,0.1)", color: "#00e5a0", border: "1px solid rgba(0,229,160,0.2)" }}>
-                                JSON AGGREGATE
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1.5" style={{ background: "rgba(0,229,160,0.1)", color: "#00e5a0", border: "1px solid rgba(0,229,160,0.2)" }}>
+                                <motion.div className="w-1.5 h-1.5 rounded-full bg-[#00e5a0]"
+                                    animate={{ opacity: [0.3, 1, 0.3], boxShadow: ["0 0 0 rgba(0,229,160,0)", "0 0 8px rgba(0,229,160,0.8)", "0 0 0 rgba(0,229,160,0)"] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }} />
+                                LIVE
                             </span>
                         )}
                     </div>
@@ -1484,6 +1575,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const [selectedCategory, setSelectedCategory] = useState<MarketCategory>("Metals");
 
     const [selectedSymbol, setSelectedSymbol] = useState("XAUUSD");
+    const [lastSystemUpdate, setLastSystemUpdate] = useState<number | null>(Date.now());
 
     const [selectedTab, setSelectedTab] = useState<AnalysisTab>("Vector Core");
     const [filterOpen, setFilterOpen] = useState(true);
@@ -1661,6 +1753,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
         Promise.all(readers).then(() => {
             setSources({ ...newSources });
             setUploadStatus({ ...newStatus });
+            setLastSystemUpdate(Date.now());
         });
     };
 
@@ -1948,8 +2041,18 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 {isRTL ? (trendAr[data.marketState] || data.marketState) : data.marketState}
                             </motion.h2>
 
-                            {/* ═══ Currency Badge (above pyramid, centered) ═══ */}
-                            <div className="-mt-6 flex justify-center mb-1" style={{ paddingLeft: '150px' }}>
+                            {/* ═══ Top Cluster: Clocks + Currency Badge ═══ */}
+                            <div className="-mt-6 flex justify-center items-center gap-8 mb-4 w-full relative z-30" style={{ paddingLeft: '150px' }}>
+                                {/* LEFT CLOCK: Last Update */}
+                                <SciFiClock
+                                    isLive={true}
+                                    label={isRTL ? "اخر ابديت" : "LAST UPDATE"}
+                                    timeMs={lastSystemUpdate}
+                                    isRTL={isRTL}
+                                    mode="lastUpdate"
+                                    accent={accent}
+                                />
+
                                 {(() => {
                                     const info = symbolIcons[selectedSymbol] || { icon: "📈", label: selectedSymbol, labelAr: selectedSymbol };
                                     return (
@@ -1968,6 +2071,14 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                         </motion.div>
                                     );
                                 })()}
+
+                                {/* RIGHT CLOCK: Current Time */}
+                                <SciFiClock
+                                    isLive={true}
+                                    label={isRTL ? "الوقت الحالي" : "CURRENT TIME"}
+                                    isRTL={isRTL}
+                                    mode="currentTime"
+                                />
                             </div>
 
                             {/* ═══ Pyramid Row 1 — Phase, Volatility, Risk ═══ */}
@@ -2061,6 +2172,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 <SupercarGauge score={data.globalScore} confidence={data.confidence} isRTL={isRTL} />
                             </div>
                         </div>
+
                     </div>
                 </motion.div>
                 {/* ═══ MARKET FILTER ═══ */}
