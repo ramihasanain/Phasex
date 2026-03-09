@@ -119,9 +119,10 @@ interface AnimatedStatProps {
   label: string;
   value: string | number;
   color: string;
+  isDirection?: boolean;
 }
 
-const AnimatedStat = ({ label, value, color }: AnimatedStatProps) => {
+const AnimatedStat = ({ label, value, color, isDirection }: AnimatedStatProps) => {
   const [flash, setFlash] = useState(false);
   const prevValueRef = useRef(value);
 
@@ -136,17 +137,30 @@ const AnimatedStat = ({ label, value, color }: AnimatedStatProps) => {
 
   return (
     <motion.div
-      className="flex-1 text-center px-3 py-1.5 rounded-lg"
+      className="flex-col justify-center items-center text-center px-1.5 py-1.5 md:px-3 rounded-lg flex"
       animate={{
-        background: flash ? `${color}30` : `${color}08`, // Flash brighter background
-        borderColor: flash ? `${color}60` : `${color}12`, // Flash brighter border
-        boxShadow: flash ? `0 0 10px ${color}40` : "none" // Add a subtle glow
+        background: flash ? `${color}30` : `${color}08`,
+        borderColor: flash ? `${color}60` : `${color}12`,
+        boxShadow: flash
+          ? `0 0 15px ${color}50, inset 0 0 10px ${color}20`
+          : (isDirection ? `0 0 8px ${color}20, inset 0 0 5px ${color}10` : "none"),
+        scale: flash && isDirection ? 1.05 : 1
       }}
       transition={{ duration: 0.3 }}
-      style={{ border: `1px solid ${color}12` }}
+      style={{ border: `1px solid ${color}12`, minWidth: 0 }}
     >
-      <div className="text-[9px] font-medium" style={{ color: "#64748b" }}>{label}</div>
-      <div className="text-[12px] font-bold tabular-nums" style={{ color }}>{value}</div>
+      <div className="text-[9px] font-medium truncate w-full" style={{ color: "#64748b" }}>{label}</div>
+      <motion.div
+        className={`font-bold tabular-nums truncate w-full ${isDirection ? 'text-[14px] tracking-widest' : 'text-[12px]'}`}
+        style={{
+          color,
+          textShadow: isDirection ? `0 0 10px ${color}80` : 'none'
+        }}
+        animate={isDirection && !flash ? { opacity: [0.8, 1, 0.8] } : {}}
+        transition={isDirection && !flash ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
+      >
+        {value}
+      </motion.div>
     </motion.div>
   );
 };
@@ -734,15 +748,29 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </AnimatePresence>
         </div>
 
-        {/* ─── Stats Footer ─── */}
-        <div className="px-4 py-2 flex items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          {[
-            { label: t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
-            { label: t("highPrice"), value: displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)).toFixed(decimals) : "—", color: "#22c55e" },
-            { label: t("lowPrice"), value: displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)).toFixed(decimals) : "—", color: "#ef4444" },
-          ].map(({ label, value, color }) => (
-            <AnimatedStat key={label} label={label} value={value} color={color} />
-          ))}
+        <div className="px-4 py-2 grid grid-cols-2 md:grid-cols-6 items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+          {(() => {
+            const high = displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)) : 0;
+            const low = displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)) : 0;
+            const average = (high + low) / 2;
+            const isBuy = currency.price > average;
+
+            return [
+              { label: isRTL ? "السعر الحالي" : t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
+              { label: isRTL ? "أعلى سعر" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: "#22c55e" },
+              { label: isRTL ? "أدنى سعر" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: "#ef4444" },
+              { label: isRTL ? "الشموع المعروضة" : "Candles Showed", value: displayedData.length, color: "#a78bfa" },
+              { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: "#fcd34d" },
+              {
+                label: isRTL ? "الاتجاه" : "Direction",
+                value: displayedData.length ? (isBuy ? "BUY" : "SELL") : "—",
+                color: displayedData.length ? (isBuy ? "#10b981" : "#f43f5e") : "#64748b",
+                isDirection: true
+              },
+            ].map(({ label, value, color, isDirection }) => (
+              <AnimatedStat key={label} label={label} value={value} color={color} isDirection={isDirection} />
+            ));
+          })()}
         </div>
       </motion.div>
 
@@ -772,12 +800,32 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* Price */}
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: tk.surfaceHover }}>
-                    <span className="text-lg font-bold tabular-nums" style={{ color: tk.textPrimary }}>{currency.price.toFixed(decimals)}</span>
-                    <span className="text-sm font-bold" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
-                      {isPositive ? "+" : ""}{currency.changePercent.toFixed(2)}%
-                    </span>
+                  {/* Price & Stats Grid in Fullscreen */}
+                  <div className="flex-1 px-8 grid grid-cols-3 xl:grid-cols-6 items-center gap-3">
+                    {(() => {
+                      const high = displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)) : 0;
+                      const low = displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)) : 0;
+                      const average = (high + low) / 2;
+                      const isBuy = currency.price > average;
+
+                      return [
+                        { label: isRTL ? "السعر" : t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
+                        { label: isRTL ? "أعلى" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: "#22c55e" },
+                        { label: isRTL ? "أدنى" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: "#ef4444" },
+                        { label: isRTL ? "الشموع" : "Candles", value: displayedData.length, color: "#a78bfa" },
+                        { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: "#fcd34d" },
+                        {
+                          label: isRTL ? "الاتجاه" : "Direction",
+                          value: displayedData.length ? (isBuy ? "BUY" : "SELL") : "—",
+                          color: displayedData.length ? (isBuy ? "#10b981" : "#f43f5e") : "#64748b",
+                          isDirection: true
+                        },
+                      ].map(({ label, value, color, isDirection }) => (
+                        <div key={label} className="min-w-0">
+                          <AnimatedStat label={label} value={value} color={color} isDirection={isDirection} />
+                        </div>
+                      ));
+                    })()}
                   </div>
                   {/* Toolbar buttons */}
                   <div className="flex items-center gap-1">
