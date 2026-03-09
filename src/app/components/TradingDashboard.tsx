@@ -209,6 +209,11 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
     "USOIL": "USOILRoll",
     "BRENT": "UKOILRoll",
     "WTI": "USOILRoll",
+    "UK100": "UK100Roll",
+    "US30": "US30Roll",
+    "US500": "US500Roll",
+    "US100": "UT100Roll",
+    "UT100": "UT100Roll",
   };
   // Reverse map: API symbol → all possible WS names
   const API_TO_WS: Record<string, string[]> = {};
