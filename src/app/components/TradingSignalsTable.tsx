@@ -4,6 +4,7 @@ import { Upload, CheckCircle, FileJson, ChevronDown, ChevronUp, Rocket, Search, 
 import { useLanguage } from "../contexts/LanguageContext";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 import { useLivePrices } from "../hooks/useLivePrices";
+import { SciFiClock } from "./SciFiClock";
 
 /* ═══════════ Symbol Icons ═══════════ */
 const symbolIcons: Record<string, string> = {
@@ -127,6 +128,7 @@ export function TradingSignalsTable() {
     const [signalData, setSignalData] = useState<AssetSignals>({});
     const [isFetching, setIsFetching] = useState(true);
     const [fetchError, setFetchError] = useState("");
+    const [lastSystemUpdate, setLastSystemUpdate] = useState<number | null>(Date.now());
 
     const { prices: livePrices } = useLivePrices();
 
@@ -143,6 +145,19 @@ export function TradingSignalsTable() {
     useEffect(() => {
         const SD_API_FAST = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/structural-dynamics/fast";
         let cancelled = false;
+
+        const getLatestAPIInterval = () => {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            let targetMinute = Math.floor(minutes / 5) * 5;
+            if (minutes % 5 === 0 && seconds < 30) targetMinute -= 5;
+            const targetDate = new Date(now);
+            targetDate.setMinutes(targetMinute);
+            targetDate.setSeconds(30);
+            targetDate.setMilliseconds(0);
+            return targetDate.getTime();
+        };
 
         const fetchEnvelopState = async () => {
             if (!cancelled) setIsFetching(true);
@@ -178,6 +193,7 @@ export function TradingSignalsTable() {
                     if (!cancelled) {
                         setSignalData(newData);
                         setFetchError("");
+                        setLastSystemUpdate(getLatestAPIInterval());
                     }
                 } else {
                     if (!cancelled) setFetchError("envelop_state not found in API response.");
@@ -371,6 +387,11 @@ export function TradingSignalsTable() {
                         <span className="text-[10px] font-bold tracking-wide" style={{ color: "#10b981" }}>
                             {isFetching ? (isRTL ? "جاري التحديث..." : "SYNCING...") : (isRTL ? "مباشر" : "LIVE")}
                         </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <SciFiClock label={isRTL ? "آخر تحديث" : "LAST UPDATE"} timeMs={lastSystemUpdate} isLive={true} isRTL={isRTL} size="sm" />
+                        <SciFiClock label={isRTL ? "الوقت الحالي" : "CURRENT TIME"} mode="currentTime" isLive={true} isRTL={isRTL} size="sm" />
                     </div>
 
                     <div className="w-px h-5" style={{ background: "rgba(99,102,241,0.1)" }} />

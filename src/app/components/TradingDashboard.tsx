@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { MarketList, Asset } from "./MarketList";
 import { IndicatorChart, Indicator } from "./IndicatorChart";
 import { SubscriptionPanel } from "./SubscriptionPanel";
@@ -13,9 +13,7 @@ import {
   Target,
   Activity,
   Navigation,
-  Upload,
-  CheckCircle,
-  FileJson,
+  Network,
   Sun,
   Moon,
 } from "lucide-react";
@@ -29,6 +27,7 @@ import { useMarketsAPI } from "../hooks/useMarketsAPI";
 /* ─── Types ─── */
 interface TradingDashboardProps {
   onLogout: () => void;
+  onOpenDynamics: () => void;
 }
 
 /* ─── Assets from API ─── */
@@ -164,7 +163,7 @@ function generateCandlesFromReal(real: PhaseCandle, count: number = 90): any[] {
   return candles;
 }
 
-export function TradingDashboard({ onLogout }: TradingDashboardProps) {
+export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardProps) {
   const { language, toggleLanguage, t } = useLanguage();
   const isRTL = language === "ar";
   const tk = useThemeTokens();
@@ -189,12 +188,6 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   const [mtfEnabled, setMtfEnabled] = useState(false);
   const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<5 | 15 | 30 | 60>(5);
   const [mtfLargeTimeframe, setMtfLargeTimeframe] = useState<240 | 720 | 1440>(240);
-
-  // Phase State uploaded data
-  const [phaseStateData, setPhaseStateData] = useState<PhaseStateDataMap>({});
-  const [uploadedFileCount, setUploadedFileCount] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const subInfo = { isActive: true, daysRemaining: 3 };
 
@@ -260,55 +253,6 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
     });
   }, [filteredAssets, livePrices, initialPrices]);
 
-  /* ─── File Upload Handler ─── */
-  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setIsUploading(true);
-
-    const newData: PhaseStateDataMap = { ...phaseStateData };
-    let count = 0;
-
-    for (const file of Array.from(files)) {
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
-
-        // Extract mainTF and subTF from filename: phasestate_H1_M5_results.json
-        const match = file.name.match(/phasestate_([A-Z0-9]+)_([A-Z0-9]+)_results/);
-        if (!match) continue;
-        const [, mainTF, subTF] = match;
-        const key = `${mainTF}_${subTF}`;
-
-        if (!newData[key]) newData[key] = {};
-
-        // Parse each symbol in the JSON
-        for (const [symbolKey, phaseObj] of Object.entries(json)) {
-          if (symbolKey === "exported_at") continue;
-
-          // symbolKey = "AUDCAD - FOREX" -> symbol = "AUDCAD"
-          const symbol = symbolKey.split(" - ")[0].trim();
-          const phaseKey = Object.keys(phaseObj as object)[0];
-          const candle = (phaseObj as any)[phaseKey] as PhaseCandle;
-
-          if (candle && candle.open !== undefined) {
-            newData[key][symbol] = candle;
-            count++;
-          }
-        }
-      } catch (err) {
-        console.error(`Error parsing ${file.name}:`, err);
-      }
-    }
-
-    setPhaseStateData(newData);
-    setUploadedFileCount((prev) => prev + Array.from(files).length);
-    setIsUploading(false);
-
-    // Reset input so same files can be re-uploaded
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }, [phaseStateData]);
-
   /* ─── Data Generation ─── */
   const pickAsset = (a: Asset) => { setSelectedAsset(a); if (selectedIndicator) setChartData(generateChartData(a, selectedIndicator, timeframe)); };
   const pickIndicator = (ind: Indicator) => { setSelectedIndicator(ind); if (selectedAsset) setChartData(generateChartData(selectedAsset, ind, timeframe)); };
@@ -319,6 +263,26 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
     if (!selectedAsset) return null;
     return liveAssets.find((a) => a.id === selectedAsset.id) || selectedAsset;
   }, [selectedAsset, liveAssets]);
+
+  // Default selections: Gold (XAUUSD) + Phase State
+  useEffect(() => {
+    if (!selectedIndicator) {
+      const phaseInd = indicators.find((i) => i.id === "phase");
+      if (phaseInd) setSelectedIndicator(phaseInd);
+    }
+  }, [selectedIndicator]);
+
+  useEffect(() => {
+    // Wait for the complete symbol list to load so that we definitely find Gold
+    if (!selectedAsset && liveAssets && liveAssets.length > 0 && !symbolsLoading) {
+      const gold = liveAssets.find((a) => a.symbol === "XAUUSD" || a.id === "GOLD") || liveAssets[0];
+      if (gold) {
+        setSelectedAsset(gold);
+        const ind = selectedIndicator || indicators.find((i) => i.id === "phase");
+        if (ind) setChartData(generateChartData(gold, ind, timeframe));
+      }
+    }
+  }, [selectedAsset, liveAssets, selectedIndicator, timeframe, symbolsLoading]);
 
   return (
     <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ background: tk.bg, fontFamily: "'Inter', system-ui, sans-serif", transition: "background 0.3s" }}>
@@ -335,33 +299,19 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Upload Phase State Data */}
-            <input ref={fileInputRef} type="file" accept=".json" multiple onChange={handleFileUpload}
-              className="hidden" id="phase-upload" />
+            {/* Structural Dynamics Link */}
             <motion.button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={onOpenDynamics}
               whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
               style={{
-                color: uploadedFileCount > 0 ? "#4ade80" : "#818cf8",
-                background: uploadedFileCount > 0 ? "rgba(74,222,128,0.08)" : "rgba(99,102,241,0.08)",
-                border: uploadedFileCount > 0 ? "1px solid rgba(74,222,128,0.15)" : "1px solid rgba(99,102,241,0.15)",
+                color: "#818cf8",
+                background: "rgba(99,102,241,0.08)",
+                border: "1px solid rgba(99,102,241,0.15)",
               }}>
-              {isUploading ? (
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-                  <Upload className="w-3.5 h-3.5" />
-                </motion.div>
-              ) : uploadedFileCount > 0 ? (
-                <CheckCircle className="w-3.5 h-3.5" />
-              ) : (
-                <FileJson className="w-3.5 h-3.5" />
-              )}
+              <Network className="w-3.5 h-3.5" />
               <span>
-                {isUploading
-                  ? (isRTL ? "جاري التحميل..." : "Uploading...")
-                  : uploadedFileCount > 0
-                    ? `${uploadedFileCount} ${isRTL ? "ملف" : "files"}`
-                    : (isRTL ? "رفع بيانات" : "Upload Data")}
+                {isRTL ? "الديناميكية الهيكلية" : "Structural Dynamics"}
               </span>
             </motion.button>
 
@@ -458,7 +408,6 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
                 timeframe={timeframe} onTimeframeChange={pickTimeframe}
                 mtfEnabled={mtfEnabled} mtfSmallTimeframe={mtfSmallTimeframe} mtfLargeTimeframe={mtfLargeTimeframe}
                 onMtfEnabledChange={setMtfEnabled} onMtfSmallTimeframeChange={setMtfSmallTimeframe} onMtfLargeTimeframeChange={setMtfLargeTimeframe}
-                phaseStateData={phaseStateData}
                 generateCandlesFromReal={generateCandlesFromReal}
               />
             </AnimatePresence>

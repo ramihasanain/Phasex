@@ -6,98 +6,13 @@ import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, 
 
 import { useLanguage } from "../contexts/LanguageContext";
 import type { VCRow } from "./phase-x/types";
+import { SciFiClock } from "./SciFiClock";
 
 interface PhaseXDynamicsPageProps {
     onBack: () => void;
 }
 
-const SciFiClock = ({ isLive, label, timeMs, isRTL, accent = "#00e676", mode = "lastUpdate" }: { isLive: boolean, label: string, timeMs?: number | null, isRTL?: boolean, accent?: string, mode?: "lastUpdate" | "currentTime" }) => {
-    const [time, setTime] = useState(timeMs ? new Date(timeMs) : new Date());
 
-    useEffect(() => {
-        if (mode === "currentTime") {
-            const interval = setInterval(() => setTime(new Date()), 1000);
-            return () => clearInterval(interval);
-        } else if (timeMs) {
-            setTime(new Date(timeMs));
-        }
-    }, [mode, timeMs]);
-
-    const hh = time.getHours().toString().padStart(2, '0');
-    const mm = time.getMinutes().toString().padStart(2, '0');
-    const ss = time.getSeconds().toString().padStart(2, '0');
-
-    const primaryColor = mode === "currentTime" ? "#00c8ff" : accent;
-    const shadowColor = mode === "currentTime" ? "rgba(0, 200, 255, " : "rgba(0, 230, 118, ";
-
-    return (
-        <div className="flex flex-col items-center justify-center relative p-3 rounded-2xl overflow-hidden min-w-[150px]"
-            style={{
-                background: "linear-gradient(180deg, rgba(16,25,35,0.7) 0%, rgba(8,12,20,0.95) 100%)",
-                border: `1px solid ${primaryColor}40`,
-                boxShadow: `0 0 15px ${shadowColor}0.15), inset 0 0 20px ${shadowColor}0.05)`,
-                backdropFilter: "blur(12px)"
-            }}>
-
-            {/* Radar / Sweep effect */}
-            {mode === "currentTime" && (
-                <motion.div
-                    className="absolute inset-0 z-0 pointer-events-none"
-                    style={{ background: `linear-gradient(90deg, transparent, ${shadowColor}0.15), transparent)` }}
-                    animate={{ left: ["-100%", "200%"] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                />
-            )}
-            {mode === "lastUpdate" && isLive && (
-                <motion.div
-                    className="absolute inset-0 z-0 pointer-events-none"
-                    style={{ background: `linear-gradient(180deg, transparent, ${shadowColor}0.1), transparent)` }}
-                    animate={{ top: ["-100%", "200%"] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                />
-            )}
-
-            <div className="text-[10px] text-gray-400 tracking-[0.2em] font-bold uppercase mb-1 z-10 flex items-center gap-1.5"
-                style={{ direction: isRTL ? "rtl" : "ltr" }}>
-                {mode === "currentTime" && (
-                    <motion.div className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: primaryColor, boxShadow: `0 0 6px ${primaryColor}` }}
-                        animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-                        transition={{ duration: 1.5, repeat: Infinity }} />
-                )}
-                {label}
-            </div>
-
-            <div className="flex items-center gap-1 font-mono text-3xl font-black italic tracking-wider z-10"
-                style={{
-                    color: primaryColor,
-                    textShadow: `0 0 10px ${shadowColor}0.4), 0 0 25px ${shadowColor}0.2)`
-                }}>
-                <span>{hh}</span>
-                <motion.span
-                    animate={mode === "currentTime" ? { opacity: [1, 0.2, 1] } : {}}
-                    transition={mode === "currentTime" ? { duration: 1, repeat: Infinity } : {}}>
-                    :
-                </motion.span>
-                <span>{mm}</span>
-                <motion.span
-                    className="text-lg opacity-70 ml-0.5 mt-1.5"
-                    animate={mode === "currentTime" ? { opacity: [0.7, 0.1, 0.7] } : {}}
-                    transition={mode === "currentTime" ? { duration: 1, repeat: Infinity, delay: 0.1 } : {}}>
-                    {ss}
-                </motion.span>
-            </div>
-
-            {/* Hexagon tech overlay */}
-            <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
-                style={{
-                    backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${primaryColor} 2px, ${primaryColor} 3px)`,
-                    backgroundSize: "100% 4px"
-                }}
-            />
-        </div>
-    );
-};
 
 type MarketCategory = "Forex" | "Metals" | "Commodities" | "Indices" | "Crypto" | "Other";
 
@@ -1724,58 +1639,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
         };
     }, []);
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files) return;
-        const files = Array.from(e.target.files);
-        const newSources = { ...sources };
-        const newStatus = { ...uploadStatus };
-        const readers: Promise<void>[] = [];
 
-        files.forEach(file => {
-            readers.push(new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const json = JSON.parse(event.target?.result as string);
-                        const fileName = file.name.toLowerCase();
-
-                        let targetTab: AnalysisTab | null = null;
-                        if (fileName.includes("vector_core") || fileName.includes("vector-core")) targetTab = "Vector Core";
-                        else if (fileName.includes("delta_engine") || fileName.includes("delta-engine")) targetTab = "Delta Engine";
-                        else if (fileName.includes("pulse_matrix") || fileName.includes("pulse-matrix")) targetTab = "Pulse Matrix";
-                        else if (fileName.includes("boundary_shell") || fileName.includes("boundary-shell")) targetTab = "Boundary Shell";
-                        else if (fileName.includes("power_field") || fileName.includes("power-field")) targetTab = "Power Field";
-                        else if (fileName.includes("vector")) targetTab = "Vector Core";
-                        else if (fileName.includes("delta")) targetTab = "Delta Engine";
-                        else if (fileName.includes("pulse")) targetTab = "Pulse Matrix";
-                        else if (fileName.includes("boundary")) targetTab = "Boundary Shell";
-                        else if (fileName.includes("power")) targetTab = "Power Field";
-
-                        if (targetTab) {
-                            if (!newSources[targetTab]) newSources[targetTab] = [null, null, null];
-                            // Map index based on fast, medium, slow
-                            let idx = 1; // Default medium
-                            if (fileName.includes("fast")) idx = 0;
-                            else if (fileName.includes("slow")) idx = 2;
-
-                            newSources[targetTab][idx] = json;
-                            newStatus[targetTab][idx] = true;
-                        }
-                    } catch (err) {
-                        console.error("Error parsing JSON:", err);
-                    }
-                    resolve();
-                };
-                reader.readAsText(file);
-            }));
-        });
-
-        Promise.all(readers).then(() => {
-            setSources({ ...newSources });
-            setUploadStatus({ ...newStatus });
-            setLastSystemUpdate(Date.now());
-        });
-    };
 
     const resetSources = () => {
         setSources(defaultAnalysisSources);
@@ -1944,10 +1808,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 ))}
                             </div>
 
-                            <label className="p-1.5 rounded-lg hover:bg-white/5 cursor-pointer title-none" title={isRTL ? "رفع البيانات" : "Upload Dataset"}>
-                                <Upload className="w-3.5 h-3.5 text-gray-600" />
-                                <input type="file" multiple accept=".json" onChange={handleFileUpload} className="hidden" />
-                            </label>
+
                             <button onClick={resetSources} className="p-1.5 rounded-lg hover:bg-white/5" title="Reset to Defaults">
                                 <RotateCcw className="w-3.5 h-3.5 text-gray-600" />
                             </button>

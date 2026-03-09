@@ -9,6 +9,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<"landing" | "login" | "register" | "dashboard" | "phasex-dynamics">("landing");
+  const [lastMainPage, setLastMainPage] = useState<"landing" | "dashboard">("landing");
 
   return (
     <ThemeProvider>
@@ -17,7 +18,7 @@ export default function App() {
           <LandingPage
             onGetStarted={() => setCurrentPage("login")}
             onRegister={() => setCurrentPage("register")}
-            onOpenDynamics={() => setCurrentPage("phasex-dynamics")}
+            onOpenDynamics={() => { setLastMainPage("landing"); setCurrentPage("phasex-dynamics"); }}
           />
         )}
         {currentPage === "login" && (
@@ -33,10 +34,13 @@ export default function App() {
           />
         )}
         {currentPage === "dashboard" && (
-          <TradingDashboard onLogout={() => setCurrentPage("landing")} />
+          <TradingDashboard
+            onLogout={() => setCurrentPage("landing")}
+            onOpenDynamics={() => { setLastMainPage("dashboard"); setCurrentPage("phasex-dynamics"); }}
+          />
         )}
         {currentPage === "phasex-dynamics" && (
-          <PhaseXDynamicsPage onBack={() => setCurrentPage("landing")} />
+          <PhaseXDynamicsPage onBack={() => setCurrentPage(lastMainPage)} />
         )}
       </LanguageProvider>
     </ThemeProvider>
