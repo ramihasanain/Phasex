@@ -115,6 +115,42 @@ function PhaseTimeframeSelector({ mainTF, subTF, onMainTFChange, onSubTFChange, 
   );
 }
 
+interface AnimatedStatProps {
+  label: string;
+  value: string | number;
+  color: string;
+}
+
+const AnimatedStat = ({ label, value, color }: AnimatedStatProps) => {
+  const [flash, setFlash] = useState(false);
+  const prevValueRef = useRef(value);
+
+  useEffect(() => {
+    if (prevValueRef.current !== value) {
+      setFlash(true);
+      const timer = setTimeout(() => setFlash(false), 500); // 500ms flash duration
+      prevValueRef.current = value;
+      return () => clearTimeout(timer);
+    }
+  }, [value]);
+
+  return (
+    <motion.div
+      className="flex-1 text-center px-3 py-1.5 rounded-lg"
+      animate={{
+        background: flash ? `${color}30` : `${color}08`, // Flash brighter background
+        borderColor: flash ? `${color}60` : `${color}12`, // Flash brighter border
+        boxShadow: flash ? `0 0 10px ${color}40` : "none" // Add a subtle glow
+      }}
+      transition={{ duration: 0.3 }}
+      style={{ border: `1px solid ${color}12` }}
+    >
+      <div className="text-[9px] font-medium" style={{ color: "#64748b" }}>{label}</div>
+      <div className="text-[12px] font-bold tabular-nums" style={{ color }}>{value}</div>
+    </motion.div>
+  );
+};
+
 export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange, phaseStateData, generateCandlesFromReal }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const isRTL = language === "ar";
@@ -702,13 +738,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         <div className="px-4 py-2 flex items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           {[
             { label: t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
-            { label: t("highPrice"), value: effectiveData.length ? Math.max(...effectiveData.map((d: any) => d.value)).toFixed(decimals) : "—", color: "#22c55e" },
-            { label: t("lowPrice"), value: effectiveData.length ? Math.min(...effectiveData.map((d: any) => d.value)).toFixed(decimals) : "—", color: "#ef4444" },
+            { label: t("highPrice"), value: displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)).toFixed(decimals) : "—", color: "#22c55e" },
+            { label: t("lowPrice"), value: displayedData.length ? Math.min(...displayedData.map((d: any) => d.low ?? d.value)).toFixed(decimals) : "—", color: "#ef4444" },
           ].map(({ label, value, color }) => (
-            <div key={label} className="flex-1 text-center px-3 py-1.5 rounded-lg" style={{ background: `${color}08`, border: `1px solid ${color}12` }}>
-              <div className="text-[9px] font-medium" style={{ color: "#64748b" }}>{label}</div>
-              <div className="text-[12px] font-bold tabular-nums" style={{ color }}>{value}</div>
-            </div>
+            <AnimatedStat key={label} label={label} value={value} color={color} />
           ))}
         </div>
       </motion.div>
