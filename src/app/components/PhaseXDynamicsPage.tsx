@@ -586,12 +586,12 @@ function generateSignals(score: number, rowCount: number, paramType: string): {
 }
 function getTabData(tab: AnalysisTab, symbol: string, currentSources: Record<AnalysisTab, any[]>) {
     const paramLabels: Record<AnalysisTab, string> = {
-        "Vector Core": "MA",
-        "Delta Engine": "MACD",
-        "Pulse Matrix": "∿",
-        "Boundary Shell": "🛡",
-        "Power Field": "Bollinger",
-        "Phase X Layer": "⌬",
+        "Vector Core": "VC",
+        "Delta Engine": "DE",
+        "Pulse Matrix": "PM",
+        "Boundary Shell": "BS",
+        "Power Field": "PF",
+        "Phase X Layer": "PX",
     };
 
     const rows = getComponentDataFromJson(tab, symbol, currentSources[tab]) || [];
@@ -1813,8 +1813,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 {(() => {
                                     const info = symbolIcons[selectedSymbol] || { icon: "📈", label: selectedSymbol, labelAr: selectedSymbol };
                                     return (
-                                        <motion.div className="text-center px-5 py-2.5 rounded-xl"
-                                            style={{ background: `${accentG}0.08)`, border: `1px solid ${accentG}0.15)` }}
+                                        <motion.div className="text-center px-5 py-2.5"
                                             initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                                             key={selectedSymbol}>
                                             <motion.span className="text-2xl block mb-1"
