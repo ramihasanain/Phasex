@@ -1620,7 +1620,25 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
 
         let cancelled = false;
 
-        let globalExportedAt: string | null = null;
+        const getLatestAPIInterval = () => {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // Current 5-minute bucket
+            let targetMinute = Math.floor(minutes / 5) * 5;
+
+            // If we are before the 30-second mark of this bucket, the "last update" was actually the previous bucket
+            if (minutes % 5 === 0 && seconds < 30) {
+                targetMinute -= 5;
+            }
+
+            const targetDate = new Date(now);
+            targetDate.setMinutes(targetMinute);
+            targetDate.setSeconds(30);
+            targetDate.setMilliseconds(0);
+            return targetDate.getTime();
+        };
 
         const fetchAll = async () => {
             const newSources: Record<AnalysisTab, any[]> = {
@@ -1652,9 +1670,6 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
                         if (tab && file.payload) {
                             newSources[tab][idx] = file.payload;
                             newStatus[tab][idx] = true;
-                            if (file.payload.exported_at && !globalExportedAt) {
-                                globalExportedAt = file.payload.exported_at;
-                            }
                         }
                     }
                 } catch (err) {
@@ -1665,15 +1680,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
             if (!cancelled) {
                 setSources(newSources);
                 setUploadStatus(newStatus);
-                if (globalExportedAt) {
-                    // exported_at format is usually "2026.03.09 21:55:05"
-                    // replace dots with dashes for standard ISO parsing if needed, but JS Date handles "YYYY/MM/DD" or "YYYY-MM-DD" best
-                    const parsable = globalExportedAt.replace(/\./g, '-');
-                    const ts = new Date(parsable).getTime();
-                    if (!isNaN(ts)) {
-                        setLastSystemUpdate(ts);
-                    }
-                }
+                setLastSystemUpdate(getLatestAPIInterval());
             }
         };
 
@@ -1684,7 +1691,6 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
             const now = new Date();
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
-            const ms = now.getMilliseconds();
 
             // Next target minute is the next multiple of 5
             let targetMinute = Math.floor(minutes / 5) * 5;
