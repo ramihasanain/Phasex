@@ -205,29 +205,44 @@ export function TradingDashboard({ onLogout }: TradingDashboardProps) {
   const WS_ALIASES: Record<string, string> = {
     "GOLD": "XAUUSD",
     "SILVER": "XAGUSD",
+    "UKOIL": "UKOILRoll",
+    "USOIL": "USOILRoll",
+    "BRENT": "UKOILRoll",
+    "WTI": "USOILRoll",
   };
-  // Reverse map: API symbol → WS name
-  const API_TO_WS: Record<string, string> = Object.fromEntries(
-    Object.entries(WS_ALIASES).map(([ws, api]) => [api, ws])
-  );
+  // Reverse map: API symbol → all possible WS names
+  const API_TO_WS: Record<string, string[]> = {};
+  for (const [ws, api] of Object.entries(WS_ALIASES)) {
+    if (!API_TO_WS[api]) API_TO_WS[api] = [];
+    API_TO_WS[api].push(ws);
+  }
 
   // Merge live prices into filtered assets from API
   const liveAssets = useMemo(() => {
     return filteredAssets.map((asset) => {
-      // Try: exact symbol, then .p suffix (crypto), then WS alias (GOLD/SILVER)
-      const wsAlias = API_TO_WS[asset.symbol];
-      const live = livePrices[asset.symbol]
+      // Try: exact symbol → .p suffix → all WS aliases
+      const aliases = API_TO_WS[asset.symbol] || [];
+      let live = livePrices[asset.symbol]
         || livePrices[asset.symbol + ".p"]
-        || (wsAlias ? livePrices[wsAlias] : undefined);
+        || undefined;
+      let matchedKey = livePrices[asset.symbol] ? asset.symbol
+        : livePrices[asset.symbol + ".p"] ? asset.symbol + ".p"
+          : "";
+
+      if (!live) {
+        for (const alias of aliases) {
+          if (livePrices[alias]) {
+            live = livePrices[alias];
+            matchedKey = alias;
+            break;
+          }
+        }
+      }
 
       if (!live) return asset;
 
       const livePrice = (live.bid + live.ask) / 2;
-      // Find which WS key matched for initial price lookup
-      const wsKey = livePrices[asset.symbol] ? asset.symbol
-        : livePrices[asset.symbol + ".p"] ? asset.symbol + ".p"
-          : wsAlias || asset.symbol;
-      const basePrice = initialPrices[wsKey] || livePrice;
+      const basePrice = initialPrices[matchedKey] || livePrice;
       const change = livePrice - basePrice;
       const changePercent = basePrice !== 0 ? (change / basePrice) * 100 : 0;
       const priceDec = livePrice < 10 ? 4 : livePrice < 1000 ? 2 : 2;
