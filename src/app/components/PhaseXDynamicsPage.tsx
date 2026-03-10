@@ -1169,7 +1169,7 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                     </div>
                 </div>
                 {/* Scrollable Table */}
-                <div ref={tableRef} className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.04)" }}>
+                <div ref={tableRef} className="rounded-xl overflow-x-auto no-scrollbar" style={{ border: "1px solid rgba(255,255,255,0.04)" }}>
                     <table className="w-full border-collapse">
                         <thead className="sticky top-0 z-10">
                             <tr style={{ background: "rgba(10,16,28,0.98)" }}>
@@ -1300,9 +1300,9 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
     return (
         <div className="space-y-5">
             {/* ═══ Summary Cards Above Tables ═══ */}
-            <div className="grid grid-cols-12 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 {/* ALL Summary Card */}
-                <div className="col-span-8">
+                <div className="col-span-1 lg:col-span-8">
                     <Panel accent={`${accentG}0.06)`}>
                         <div className="p-5">
                             <div className="flex items-center justify-between mb-4">
@@ -1349,7 +1349,7 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                     </Panel>
                 </div>
                 {/* Confidence + Global Score Card */}
-                <div className="col-span-4 space-y-4">
+                <div className="col-span-1 lg:col-span-4 space-y-4">
                     <Panel accent={`${accentG}0.08)`}>
                         <div className="p-5 text-center">
                             <div className="text-[10px] text-gray-600 tracking-[0.25em] uppercase font-semibold mb-1">{isRTL ? "النتيجة الإجمالية" : "Global Score"}</div>
@@ -1951,8 +1951,8 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
             }} />
             {/* ═══ HEADER ══_═ */}
             <header className="relative z-30 border-b" style={{ background: "rgba(6,10,16,0.88)", backdropFilter: "blur(30px) saturate(200%)", borderColor: "rgba(255,255,255,0.04)" }}>
-                <div className="max-w-[1700px] mx-auto px-5 py-2.5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <div className="max-w-[1700px] mx-auto px-3 sm:px-5 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
                         <button onClick={onBack} className="p-2 rounded-xl hover:bg-white/5 transition-all group">
                             <ArrowLeft className="w-4 h-4 text-gray-600 group-hover:text-gray-300" />
                         </button>
@@ -1964,12 +1964,12 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             <span className="text-gray-500 font-medium">{t.title}</span>
                         </span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
 
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 shrink-0">
                             {/* Data Status Indicator */}
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] mr-2">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] sm:mr-2">
                                 {indicatorTabs.map(tab => (
                                     <div key={tab} className="flex flex-col gap-1 items-center">
                                         <div className="text-[6px] text-gray-600 uppercase font-black">{tab.split(' ')[0]}</div>
@@ -2069,12 +2069,12 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                         transition={{ duration: 2.2, repeat: Infinity, ease: "linear", delay: 1.5 }}
                     />
 
-                    <div className="flex items-center relative z-20" style={{
+                    <div className="flex flex-col lg:flex-row items-center relative z-20" style={{
                         background: `linear-gradient(135deg, rgba(8,12,20,0.75) 0%, rgba(10,16,26,0.7) 40%, rgba(8,12,20,0.6) 100%)`,
                         borderRadius: "16px",
                     }}>
 
-                        <div className="flex-1 px-8 py-1">
+                        <div className="flex-1 px-4 sm:px-8 py-4 lg:py-1 w-full">
                             <div className="text-[13px] text-gray-600 tracking-[0.25em] uppercase mt-3 mb-1 font-semibold flex items-center gap-3">
                                 <motion.div className="w-2 h-2 rounded-full"
                                     style={{ backgroundColor: accent }}
@@ -2102,7 +2102,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             </motion.h2>
 
                             {/* ═══ Top Cluster: Clocks + Currency Badge ═══ */}
-                            <div className="-mt-6 flex justify-center items-center gap-8 mb-4 w-full relative z-30" style={{ paddingLeft: '150px' }}>
+                            <div className="mt-4 lg:-mt-6 flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mb-4 w-full relative z-30 lg:pl-[150px]">
                                 {/* LEFT CLOCK: Last Update */}
                                 <SciFiClock
                                     isLive={true}
@@ -2151,7 +2151,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             </div>
 
                             {/* ═══ Pyramid Row 1 — Phase, Volatility, Risk ═══ */}
-                            <div className="flex items-center justify-center gap-3 text-[15px] flex-wrap" style={{ paddingLeft: '150px' }}>
+                            <div className="flex items-center justify-center gap-3 text-[15px] flex-wrap lg:pl-[150px]">
                                 {[
                                     { k: t.phase, va: tv(data.phase), c: data.phase === "Directional" ? "#00e676" : data.phase === "Developing" ? "#ffc400" : "#ff1744" },
                                     { k: t.volatility, va: tv(data.volatility), c: data.volatility === "Elevated" ? "#ff1744" : data.volatility === "Moderate" ? "#ffc400" : "#00e676" },
@@ -2176,7 +2176,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             </div>
 
                             {/* ═══ Pyramid Layout: Row 2 — Trend, Momentum, Bias, Reversal ═══ */}
-                            <div className="mt-1 flex items-center justify-center gap-3 text-[15px] flex-wrap" style={{ paddingLeft: '150px' }}>
+                            <div className="mt-3 lg:mt-1 flex items-center justify-center gap-3 text-[15px] flex-wrap lg:pl-[150px]">
                                 {[
                                     { k: t.trend, v: data.dynamics.primaryTrend },
                                     { k: t.momentum, v: data.dynamics.momentumState },
@@ -2205,8 +2205,8 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             </div>
                         </div>
 
-                        <div className="flex-shrink-0 pr-6 relative">
-                            <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0 lg:pr-6 relative w-full lg:w-auto pb-6 lg:pb-0">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 lg:gap-4">
                                 {/* Score & Confidence Numbers */}
                                 <div className="flex flex-col gap-3 items-end">
                                     <motion.div className="text-center px-4 py-2.5 rounded-xl relative overflow-hidden"
@@ -2451,7 +2451,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                 {/* ══_═ ANALYSIS TABS (separate layer) ══_═ */}
                 <div className="mb-4">
                     <div className="h-px w-full mb-3" style={{ background: `linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.04) 70%, transparent 95%)` }} />
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2">
                         {analysisTabs.map(tab => {
 
                             const isActive = selectedTab === tab;
@@ -2503,9 +2503,9 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                     ) : selectedTab === "Phase X Layer" ? (
                         <DynamicLayerTable symbol={selectedSymbol} isRTL={isRTL} sources={sources} />
                     ) : (
-                        <div className="grid grid-cols-12 gap-4">
+                        <div className="flex flex-col xl:flex-row gap-4">
                             {/* Main Table — 9 cols */}
-                            <div className="col-span-9">
+                            <div className="w-full xl:w-3/4 overflow-hidden">
                                 <AnalysisTable
                                     tab={selectedTab}
                                     symbol={selectedSymbol}
@@ -2514,7 +2514,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 />
                             </div>
                             {/* Sidebar — 3 cols */}
-                            <div className="col-span-3 space-y-4">
+                            <div className="w-full xl:w-1/4 space-y-4">
                                 {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Layer Summary Panel ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
                                 <Panel accent={`${accentG}0.05)`}>
                                     <div className="p-5">

@@ -316,9 +316,9 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             </motion.button>
 
             <motion.button onClick={onLogout} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
+              className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
               style={{ color: tk.buttonGhostText, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
-              <LogOut className="w-3.5 h-3.5" /> {t("logout")}
+              <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t("logout")}</span>
             </motion.button>
 
             <motion.button onClick={toggleTheme} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
@@ -334,12 +334,12 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             </motion.button>
 
             <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer"
+              className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer"
               style={{ color: tk.warning, background: tk.warningBg, border: `1px solid ${tk.isDark ? 'rgba(251,191,36,0.15)' : 'rgba(217,119,6,0.15)'}` }}>
               <Crown className="w-3.5 h-3.5" />
-              <span>{t("subscription")}</span>
-              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md" style={{ background: tk.warningBg }}>
-                {subInfo.daysRemaining} {t("daysRemaining")}
+              <span className="hidden md:inline">{t("subscription")}</span>
+              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md hidden xs:inline" style={{ background: tk.warningBg }}>
+                {subInfo.daysRemaining} <span className="hidden sm:inline">{t("daysRemaining")}</span>
               </span>
             </motion.button>
           </div>
@@ -347,11 +347,11 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
       </header>
 
       {/* ═══════════════ BODY ═══════════════ */}
-      <div className="flex gap-0 py-3" style={{ minHeight: "calc(100vh - 52px)" }}>
+      <div className="flex flex-col lg:flex-row gap-0 py-0 lg:py-3 h-auto lg:h-[calc(100vh-52px)]">
 
         {/* ── LEFT: Market List ── */}
-        <motion.div initial={false} animate={{ width: isMarketListCollapsed ? 64 : 280 }}
-          transition={{ type: "spring", damping: 26, stiffness: 220 }} className="flex-shrink-0 sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
+        <motion.div initial={false} animate={{ width: isMarketListCollapsed ? (window.innerWidth < 1024 ? '100%' : 64) : (window.innerWidth < 1024 ? '100%' : 280) }}
+          transition={{ type: "spring", damping: 26, stiffness: 220 }} className="flex-shrink-0 lg:sticky lg:top-0 lg:self-start w-full lg:w-auto h-[400px] lg:h-[calc(100vh-64px)] z-10 border-b lg:border-b-0 border-[#2d3748]">
           <MarketList
             assets={liveAssets}
             selectedAsset={selectedAsset}
@@ -367,18 +367,18 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
         </motion.div>
 
         {/* ── CENTER: Indicators + Chart + Signals ── */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0 px-0">
+        <div className="flex-1 flex flex-col gap-3 min-w-0 px-2 lg:px-0 py-3 lg:py-0">
 
           {/* Indicator Ribbon */}
           <div className="rounded-xl overflow-hidden" style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
-            <div className="flex items-center gap-1 p-2">
+            <div className="flex items-center gap-1 p-2 overflow-x-auto no-scrollbar snap-x">
               {indicators.map((ind) => {
                 const Icon = indicatorIcons[ind.icon];
                 const active = selectedIndicator?.id === ind.id;
                 return (
                   <motion.button key={ind.id} onClick={() => pickIndicator(ind)}
                     whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                    className="flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg cursor-pointer transition-all"
+                    className="flex-shrink-0 min-w-[80px] lg:flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg cursor-pointer transition-all snap-center"
                     style={{
                       background: active ? `${ind.color}10` : "transparent",
                       border: active ? `1px solid ${ind.color}30` : "1px solid transparent",
