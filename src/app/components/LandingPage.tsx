@@ -449,6 +449,51 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
         </div>
       </section>
 
+      {/* ═══════════ DECISION ENGINE ═══════════ */}
+      <section id="decision-engine" className="py-20 relative z-10">
+        <div className="container mx-auto px-4">
+          <SectionTitle sub={isRTL ? "Phase X Dynamic Trading Decision Engine" : "Phase X Dynamic Trading Decision Engine"}>
+            {isRTL ? "محرك اتخاذ القرار البنيوي" : "Structural Decision Engine"}
+          </SectionTitle>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-4xl mx-auto">
+            <GlassCard glow={accent} className="p-10 md:p-14">
+              <div className="mb-8 flex justify-center">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                  style={{ background: `linear-gradient(135deg, ${accentG}0.15), ${accentG}0.02))` }}>
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border border-dashed rounded-2xl" style={{ borderColor: accent, opacity: 0.3 }} />
+                  <Brain className="w-10 h-10 relative z-10" style={{ color: accent }} />
+                </div>
+              </div>
+
+              <div className="space-y-6 text-gray-300 text-lg leading-relaxed text-justify px-2 md:px-8">
+                <p>
+                  {isRTL
+                    ? "يعتمد نظام Phase X على نموذج تحليلي متعدد الطبقات يقوم بتقييم الحالة البنيوية للسوق من خلال مجموعة متكاملة من المؤشرات الهيكلية. يقوم هذا المحرك بتحليل الاتجاه الرئيسي للسعر، والانحياز البنيوي للسوق، وقوة الزخم، ومرحلة تطور السوق، ومستويات التقلب، ومخاطر الانعكاس المحتملة، إضافة إلى درجة الثقة الإحصائية في الإشارة الناتجة."
+                    : "The Phase X platform operates through a multi-layer analytical framework designed to evaluate the structural state of financial markets. The engine continuously assesses several core dimensions of market behavior, including the primary trend direction, structural bias, momentum strength, market phase development, volatility conditions, reversal risk dynamics, and the statistical confidence level of the generated signal."
+                  }
+                </p>
+                <p>
+                  {isRTL
+                    ? "يتم دمج هذه العوامل ضمن إطار ترجيحي ديناميكي يهدف إلى تحديد حالات السوق التي تظهر أعلى درجات الاتساق الداخلي بين مكونات الحركة السعرية. عند تحقق هذا الاتساق البنيوي، يقوم النظام بترشيح المشتق المالي كفرصة محتملة لاتخاذ قرار الشراء (BUY) أو البيع (SELL). أما في الحالات التي يظهر فيها تضارب بين العوامل الأساسية أو انخفاض في درجة الثقة، فإن النظام يقوم بتصنيف الحالة ضمن بيئة تداول غير مناسبة (NO TRADE)."
+                    : "These variables are integrated within a dynamic weighting architecture that identifies market states exhibiting the highest degree of internal structural alignment. When this alignment is achieved, the system flags the instrument as a potential BUY or SELL candidate. In contrast, when market variables display conflicting signals or insufficient confidence, the engine classifies the environment as NO TRADE."
+                  }
+                </p>
+                <div className="font-bold py-4 px-6 mt-6 rounded-xl relative overflow-hidden" style={{ background: "rgba(0, 229, 160, 0.05)", border: `1px solid ${accentG}0.2)` }}>
+                  <div className={`absolute top-0 bottom-0 ${isRTL ? "right-0" : "left-0"} w-1.5`} style={{ background: accent }} />
+                  <p className="relative z-10" style={{ color: "white" }}>
+                    {isRTL
+                      ? "يمثل هذا المحرك طبقة تحليلية متقدمة تهدف إلى توجيه المتداول نحو الأدوات المالية التي تظهر أعلى درجات التوافق بين الاتجاه والزخم والمخاطر، مما يساهم في تحسين جودة قرارات التداول وتقليل الاعتماد على التفسيرات العشوائية لحركة السوق."
+                      : "This structural decision engine serves as an advanced analytical layer designed to guide traders toward instruments where trend, momentum, and risk conditions converge, thereby enhancing decision quality and minimizing random or noise-driven signals."
+                    }
+                  </p>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ═══════════ SCREENSHOTS ═══════════ */}
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4">

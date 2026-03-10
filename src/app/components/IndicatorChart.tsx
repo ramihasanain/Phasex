@@ -2,7 +2,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import { Asset } from "./MarketList";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, TrendingDown, Activity, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, ChevronDown, Check, Table, BarChart3, Maximize2, Minimize2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, ChevronDown, Check, Table, BarChart3, Maximize2, Minimize2, ListOrdered, Edit3 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { TZCandlestickChart } from "./TZCandlestickChart";
@@ -278,6 +278,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTable, setShowTable] = useState(false);
+  const [showDirections, setShowDirections] = useState(false);
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -653,8 +654,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             {/* View Buttons */}
             <div className="flex items-center gap-0.5">
               {[
-                { icon: Table, active: showTable, onClick: () => setShowTable(true), title: "Table" },
-                { icon: BarChart3, active: !showTable, onClick: () => setShowTable(false), title: "Chart" },
+                { icon: ListOrdered, active: showDirections, onClick: () => { setShowDirections(true); setShowTable(false); }, title: "Directions" },
+                { icon: Table, active: showTable && !showDirections, onClick: () => { setShowTable(true); setShowDirections(false); }, title: "Table" },
+                { icon: BarChart3, active: !showTable && !showDirections, onClick: () => { setShowTable(false); setShowDirections(false); }, title: "Chart" },
                 { icon: Maximize2, active: false, onClick: () => setIsExpanded(true), title: isRTL ? "تكبير" : "Fullscreen" },
               ].map(({ icon: Ic, active, onClick, title }) => (
                 <button key={title} onClick={onClick} className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-all"
@@ -794,6 +796,116 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 {renderChart(Math.max(300, (chartRef.current?.offsetHeight ?? 400) - 16))}
               </motion.div>
             )}
+
+            {showDirections && (
+              <motion.div key="directions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                className="absolute inset-0 z-40 overflow-hidden flex flex-col bg-slate-900/95 backdrop-blur-md rounded-lg"
+                style={{ border: `1px solid ${tk.border}` }}>
+                {/* Custom Header for Directions Table */}
+                <div className="px-4 py-3 flex items-center justify-between" style={{ background: "rgba(15, 23, 42, 0.6)", borderBottom: `1px solid ${tk.border}` }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-white tracking-widest">
+                      Phase <span className="text-red-500 font-black">X</span> State Candles Directions
+                    </span>
+                  </div>
+                  <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors" style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: `1px solid ${tk.border}` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}>
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    {isRTL ? "العودة للشارت" : "Back to Chart"}
+                  </button>
+                </div>
+
+                {/* Table Data */}
+                <div className="flex-1 overflow-auto">
+                  <table className="w-full text-center border-collapse">
+                    <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: "rgba(15, 23, 42, 0.85)", borderBottom: `1px solid ${tk.border}` }}>
+                      <tr>
+                        {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit"].map((head, idx) => (
+                          <th key={idx} className="p-2 text-[12px] font-bold text-white border border-slate-700/50 whitespace-nowrap">
+                            {isRTL ? (
+                              head === "Current Price" ? "السعر الحالي" :
+                                head === "High Price" ? "أعلى سعر" :
+                                  head === "Low Price" ? "أدنى سعر" :
+                                    head === "Candles" ? "الشموع" :
+                                      head === "Entry" ? "الدخول" :
+                                        head === "Direction" ? "الاتجاه" :
+                                          "الربح"
+                            ) : head}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const rows = Array.from({ length: 50 }, (_, i) => (i + 1) * 10).map((windowSize, idx) => {
+                          if (effectiveData.length === 0) return null;
+                          if (windowSize > effectiveData.length) return null;
+
+                          const dataSlice = effectiveData.slice(-windowSize);
+                          if (dataSlice.length === 0) return null;
+
+                          const high = Math.max(...dataSlice.map((d: any) => d.high ?? d.value));
+                          const low = Math.min(...dataSlice.map((d: any) => d.low ?? d.value));
+                          const entry = (high + low) / 2;
+                          const currentPrice = currency.price;
+                          const isBuy = currentPrice >= entry;
+                          const directionStr = isBuy ? "Buy" : "Sell";
+                          const profit = isBuy ? currentPrice - entry : entry - currentPrice;
+
+                          return { windowSize, idx, high, low, entry, currentPrice, isBuy, directionStr, profit };
+                        }).filter(Boolean) as any[];
+
+                        if (rows.length === 0) return null;
+
+                        const maxProfitWindow = [...rows].reduce((max, row) => row.profit > max.profit ? row : max, rows[0]).windowSize;
+                        const minProfitWindow = [...rows].reduce((min, row) => row.profit < min.profit ? row : min, rows[0]).windowSize;
+
+                        return rows.map((row) => {
+                          const isEven = row.idx % 2 === 0;
+                          const rowBg = isEven ? "rgba(255,255,255,0.03)" : "transparent";
+                          const dirBg = row.isBuy ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)";
+                          const dirColor = row.isBuy ? "#10b981" : "#f43f5e";
+
+                          const isMax = row.windowSize === maxProfitWindow;
+                          const isMin = row.windowSize === minProfitWindow;
+
+                          return (
+                            <tr key={row.windowSize} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: rowBg }}>
+                              <td className="p-2 text-[13px] font-bold font-mono" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
+                                {row.currentPrice.toFixed(decimals)}
+                              </td>
+                              <td className="p-2 text-[13px] font-bold font-mono border-l border-r border-slate-700/50">
+                                {row.high.toFixed(decimals)}
+                              </td>
+                              <td className="p-2 text-[13px] font-bold font-mono border-r border-slate-700/50">
+                                {row.low.toFixed(decimals)}
+                              </td>
+                              <td className="p-2 text-[13px] font-bold font-mono border-r border-slate-700/50"
+                                style={{
+                                  background: isMax ? "rgba(234, 179, 8, 0.15)" : isMin ? "rgba(239, 68, 68, 0.15)" : "rgba(30, 41, 59, 0.5)",
+                                  color: isMax ? "#eab308" : isMin ? "#ef4444" : "white"
+                                }}>
+                                {row.windowSize}
+                                {isMax && <span className="ml-1 text-[10px]">⭐</span>}
+                                {isMin && <span className="ml-1 text-[10px]">🔻</span>}
+                              </td>
+                              <td className="p-2 text-[13px] font-bold font-mono border-r border-slate-700/50">
+                                {row.entry.toFixed(decimals)}
+                              </td>
+                              <td className="p-2 text-[13px] font-bold border-r border-slate-700/50" style={{ background: dirBg, color: dirColor }}>
+                                {row.directionStr}
+                              </td>
+                              <td className="p-2 text-[13px] font-bold font-mono" style={{ color: "#10b981" }}>
+                                {row.profit.toFixed(decimals)}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
@@ -912,7 +1024,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   </div>
                   {/* Toolbar buttons */}
                   <div className="flex items-center gap-1">
-                    <button onClick={() => setShowTable(!showTable)}
+                    <button onClick={() => { setShowDirections(!showDirections); setShowTable(false); }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
+                      style={{ background: showDirections ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.03)", color: showDirections ? "#10b981" : "#64748b" }}
+                      title={isRTL ? "الاتجاهات" : "Directions"}>
+                      <ListOrdered className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => { setShowTable(!showTable); setShowDirections(false); }}
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
                       style={{ background: showTable ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)", color: showTable ? "#e2e8f0" : "#64748b" }}
                       title={isRTL ? "جدول" : "Table"}>
@@ -922,7 +1040,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
                       style={{ background: showDrawingTools ? `${indicator.color} 15` : "rgba(255,255,255,0.03)", color: showDrawingTools ? indicator.color : "#64748b", border: showDrawingTools ? `1px solid ${indicator.color} 30` : "1px solid transparent" }}
                       title={isRTL ? "أدوات الرسم" : "Drawing Tools"}>
-                      <Layers className="w-4 h-4" />
+                      <Edit3 className="w-4 h-4" />
                     </button>
                     <button onClick={() => setIsExpanded(false)}
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
@@ -1049,11 +1167,119 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   )}
 
                   {/* Drawing Canvas overlay — only in fullscreen */}
-                  {!showTable && showDrawingTools && (
+                  {!showTable && !showDirections && showDrawingTools && (
                     <DrawingCanvas selectedTool={selectedTool} magnetEnabled={magnetEnabled} locked={drawingsLocked} visible={drawingsVisible}
                       data={displayedData}
                       priceRange={drawingPriceRange}
                       onDrawingsChange={setDrawings} onClearAll={clearDrawingsCallback} />
+                  )}
+
+                  {showDirections && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                      className="absolute inset-0 z-40 overflow-hidden flex flex-col bg-slate-900/95 backdrop-blur-md rounded-lg"
+                      style={{ border: `1px solid ${tk.border}` }}>
+                      <div className="px-6 py-4 flex items-center justify-between" style={{ background: "rgba(15, 23, 42, 0.6)", borderBottom: `1px solid ${tk.border}` }}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl font-bold text-white tracking-widest">
+                            Phase <span className="text-red-500 font-black">X</span> State Candles Directions
+                          </span>
+                        </div>
+                        <button onClick={() => setShowDirections(false)} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors" style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: `1px solid ${tk.border}` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}>
+                          <BarChart3 className="w-4 h-4" />
+                          {isRTL ? "العودة للشارت" : "Back to Chart"}
+                        </button>
+                      </div>
+
+                      <div className="flex-1 overflow-auto p-2">
+                        <table className="w-full text-center border-collapse">
+                          <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: "rgba(15, 23, 42, 0.85)", borderBottom: `1px solid ${tk.border}` }}>
+                            <tr>
+                              {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit"].map((head, idx) => (
+                                <th key={idx} className="p-3 text-[14px] font-bold text-white border border-slate-700/50 whitespace-nowrap">
+                                  {isRTL ? (
+                                    head === "Current Price" ? "السعر الحالي" :
+                                      head === "High Price" ? "أعلى سعر" :
+                                        head === "Low Price" ? "أدنى سعر" :
+                                          head === "Candles" ? "الشموع" :
+                                            head === "Entry" ? "الدخول" :
+                                              head === "Direction" ? "الاتجاه" :
+                                                "الربح"
+                                  ) : head}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(() => {
+                              const rows = Array.from({ length: 50 }, (_, i) => (i + 1) * 10).map((windowSize, idx) => {
+                                if (effectiveData.length === 0) return null;
+                                if (windowSize > effectiveData.length) return null;
+
+                                const dataSlice = effectiveData.slice(-windowSize);
+                                if (dataSlice.length === 0) return null;
+
+                                const high = Math.max(...dataSlice.map((d: any) => d.high ?? d.value));
+                                const low = Math.min(...dataSlice.map((d: any) => d.low ?? d.value));
+                                const entry = (high + low) / 2;
+                                const currentPrice = currency.price;
+                                const isBuy = currentPrice >= entry;
+                                const directionStr = isBuy ? "Buy" : "Sell";
+                                const profit = isBuy ? currentPrice - entry : entry - currentPrice;
+
+                                return { windowSize, idx, high, low, entry, currentPrice, isBuy, directionStr, profit };
+                              }).filter(Boolean) as any[];
+
+                              if (rows.length === 0) return null;
+
+                              const maxProfitWindow = [...rows].reduce((max, row) => row.profit > max.profit ? row : max, rows[0]).windowSize;
+                              const minProfitWindow = [...rows].reduce((min, row) => row.profit < min.profit ? row : min, rows[0]).windowSize;
+
+                              return rows.map((row) => {
+                                const isEven = row.idx % 2 === 0;
+                                const rowBg = isEven ? "rgba(255,255,255,0.03)" : "transparent";
+                                const dirBg = row.isBuy ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)";
+                                const dirColor = row.isBuy ? "#10b981" : "#f43f5e";
+
+                                const isMax = row.windowSize === maxProfitWindow;
+                                const isMin = row.windowSize === minProfitWindow;
+
+                                return (
+                                  <tr key={row.windowSize} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: rowBg }}>
+                                    <td className="p-3 text-[14px] font-bold font-mono" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
+                                      {row.currentPrice.toFixed(decimals)}
+                                    </td>
+                                    <td className="p-3 text-[14px] font-bold font-mono border-l border-r border-slate-700/50">
+                                      {row.high.toFixed(decimals)}
+                                    </td>
+                                    <td className="p-3 text-[14px] font-bold font-mono border-r border-slate-700/50">
+                                      {row.low.toFixed(decimals)}
+                                    </td>
+                                    <td className="p-3 text-[14px] font-bold font-mono border-r border-slate-700/50"
+                                      style={{
+                                        background: isMax ? "rgba(234, 179, 8, 0.15)" : isMin ? "rgba(239, 68, 68, 0.15)" : "rgba(30, 41, 59, 0.5)",
+                                        color: isMax ? "#eab308" : isMin ? "#ef4444" : "white"
+                                      }}>
+                                      {row.windowSize}
+                                      {isMax && <span className="ml-2 text-[12px]">⭐</span>}
+                                      {isMin && <span className="ml-2 text-[12px]">🔻</span>}
+                                    </td>
+                                    <td className="p-3 text-[14px] font-bold font-mono border-r border-slate-700/50">
+                                      {row.entry.toFixed(decimals)}
+                                    </td>
+                                    <td className="p-3 text-[14px] font-bold border-r border-slate-700/50" style={{ background: dirBg, color: dirColor }}>
+                                      {row.directionStr}
+                                    </td>
+                                    <td className="p-3 text-[14px] font-bold font-mono" style={{ color: "#10b981" }}>
+                                      {row.profit.toFixed(decimals)}
+                                    </td>
+                                  </tr>
+                                );
+                              });
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </motion.div>
                   )}
                 </div>
               </div>

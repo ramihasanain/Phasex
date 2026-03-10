@@ -16,7 +16,7 @@ interface PhaseXDynamicsPageProps {
 
 type MarketCategory = "Forex" | "Metals" | "Commodities" | "Indices" | "Crypto" | "Other";
 
-type AnalysisTab = "Vector Core" | "Delta Engine" | "Pulse Matrix" | "Boundary Shell" | "Power Field" | "Phase X Layer";
+type AnalysisTab = "Vector Core" | "Delta Engine" | "Pulse Matrix" | "Boundary Shell" | "Power Field" | "Phase X Layer" | "Decision Engine";
 
 type Signal = "Buy" | "Sell" | "Neutral" | "NA";
 
@@ -26,6 +26,7 @@ interface SymbolData {
     symbol: string; globalScore: number; confidence: number;
     marketState: string; phase: string; volatility: string; risk: string; dominantLayer: string;
     strength: number; alignment: string; primaryTrend: TrendLabel;
+    decision?: string;
     layerSummary: { shortTerm: TrendLabel; mediumTerm: TrendLabel; longTerm: TrendLabel };
     dynamics: { primaryTrend: TrendLabel; momentumState: string; structuralBias: string; marketPhase: string; reversalRisk: string };
 }
@@ -312,7 +313,7 @@ const symbolIcons: Record<string, { icon: string; label: string; labelAr: string
 
 
 
-const analysisTabs: AnalysisTab[] = ["Vector Core", "Delta Engine", "Pulse Matrix", "Boundary Shell", "Power Field", "Phase X Layer"];
+const analysisTabs: AnalysisTab[] = ["Vector Core", "Delta Engine", "Pulse Matrix", "Boundary Shell", "Power Field", "Phase X Layer", "Decision Engine"];
 
 const analysisTabsAr: Record<string, string> = {
     "Vector Core": "المتجهات الأساسية",
@@ -321,6 +322,7 @@ const analysisTabsAr: Record<string, string> = {
     "Boundary Shell": "الغلاف الحدودي",
     "Power Field": "حقل القوة",
     "Phase X Layer": "طبقة المرحلة X",
+    "Decision Engine": "محرك اتخاذ القرار",
 };
 
 const analysisTabIcons: Record<string, React.ReactNode> = {
@@ -330,6 +332,7 @@ const analysisTabIcons: Record<string, React.ReactNode> = {
     "Boundary Shell": <Shield className="w-4 h-4" />,
     "Power Field": <Flame className="w-4 h-4" />,
     "Phase X Layer": <Layers className="w-4 h-4" />,
+    "Decision Engine": <Activity className="w-4 h-4" />,
 };
 
 const tfColumns = ["5M", "10M", "15M", "20M", "30M", "H1", "H2", "H3", "H4", "H6", "H8", "Daily"];
@@ -421,7 +424,8 @@ const defaultAnalysisSources: Record<AnalysisTab, any[]> = {
     "Pulse Matrix": [],
     "Boundary Shell": [],
     "Power Field": [],
-    "Phase X Layer": []
+    "Phase X Layer": [],
+    "Decision Engine": []
 };
 
 function getComponentDataFromJson(tab: AnalysisTab, symbol: string, sources: any[]): VCRow[] | null {
@@ -625,6 +629,7 @@ function getTabData(tab: AnalysisTab, symbol: string, currentSources: Record<Ana
         "Boundary Shell": "BS",
         "Power Field": "PF",
         "Phase X Layer": "PX",
+        "Decision Engine": "DX",
     };
 
     const rows = getComponentDataFromJson(tab, symbol, currentSources[tab]) || [];
@@ -1473,6 +1478,171 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
         </div>
     );
 }
+
+/* ═ ═ ═  Trading Decision Engine Table  ═ ═ ═ */
+function TradingDecisionEngineTable({
+    category,
+    onCategoryChange,
+    selectedSymbol,
+    onSymbolSelect,
+    isRTL,
+    sources
+}: {
+    category: MarketCategory;
+    onCategoryChange: (c: MarketCategory) => void;
+    selectedSymbol: string;
+    onSymbolSelect: (s: string) => void;
+    isRTL: boolean;
+    sources: Record<AnalysisTab, any[]>;
+}) {
+    const [decisionFilter, setDecisionFilter] = useState<"ALL" | "BUY" | "SELL" | "NO TRADE">("ALL");
+
+    const cat = marketCategories.find(c => c.name === category);
+    const symbols = cat?.symbols.filter(sym => {
+        const jsonKey = symbolToJsonKey[sym];
+        if (!jsonKey) return false;
+        for (const tab in sources) {
+            for (const stageData of sources[tab as AnalysisTab]) {
+                if (stageData && stageData[jsonKey]) return true;
+            }
+        }
+        return false;
+    }) || [];
+
+    const tv = (v: string) => isRTL ? (trendAr[v] || v) : v;
+    const tvh = (h: string) => isRTL ? ({
+        "Symbol": "الرمز", "Primary Trend": "الاتجاه الرئيسي", "Structural Bias": "الانحياز الهيكلي",
+        "Momentum": "الزخم", "Phase": "المرحلة", "Volatility": "التذبذب", "Reversal Risk": "مخاطر الانعكاس",
+        "Confidence": "الثقة", "Market Phase": "مرحلة السوق", "Decision": "القرار"
+    }[h] || h) : h;
+
+    const rows = symbols.map(sym => {
+        const layerData = getDynamicLayerData(sym, sources);
+        const gs = layerData.globalScorePct / 100;
+        const dsrST = layerData.byTeam[0]?.overall.dsr ?? 0;
+        const dsrMT = layerData.byTeam[1]?.overall.dsr ?? 0;
+        const dsrLT = layerData.byTeam[2]?.overall.dsr ?? 0;
+
+        const primaryTrendFull = gs > 0.6 ? "Strong Uptrend" : gs > 0.2 ? "Bullish" : gs >= -0.2 ? "Neutral" : gs >= -0.6 ? "Bearish" : "Strong Downtrend";
+        const momentumState = dsrST >= 0.6 ? "Strong" : dsrST >= 0.2 ? "Moderate" : dsrST <= -0.6 ? "Strong" : dsrST <= -0.2 ? "Moderate" : "Weak";
+        const structuralBias = dsrLT > 0 ? "Upward" : dsrLT < 0 ? "Downward" : "Neutral";
+        const rRange = Math.max(dsrST, dsrMT, dsrLT) - Math.min(dsrST, dsrMT, dsrLT);
+        const reversalRisk = rRange < 0.2 ? "Low" : rRange < 0.5 ? "Moderate" : "High";
+        const phaseAvg = (dsrST + dsrMT + dsrLT) / 3;
+        const phase = phaseAvg > 0.5 ? "Directional" : phaseAvg >= 0.2 ? "Developing" : "Range";
+
+        const deltaEngineData = layerData.byIndicator.find(b => b.indicator === "Delta Engine");
+        const deDsrST = deltaEngineData?.teams[0]?.dsr ?? 0;
+        const deDsrMT = deltaEngineData?.teams[1]?.dsr ?? 0;
+        const deDsrLT = deltaEngineData?.teams[2]?.dsr ?? 0;
+        const deAvg = (deDsrST + deDsrMT + deDsrLT) / 3;
+        const v = deAvg > 0.3 ? "Elevated" : deAvg >= 0.1 ? "Moderate" : "Low";
+        const t = gs > 0.2 ? "Up" : gs < -0.2 ? "Down" : "Flat";
+
+        let marketPhase: string;
+        if (phase === "Range") marketPhase = "Range";
+        else if (phase === "Directional" && v === "Elevated" && t === "Up") marketPhase = "Bullish Expansion";
+        else if (phase === "Directional" && v === "Elevated" && t === "Down") marketPhase = "Bearish Expansion";
+        else if (phase === "Directional" && v === "Low") marketPhase = "Compression";
+        else marketPhase = "Transition";
+
+        let decision = "NO TRADE";
+        if ((primaryTrendFull === "Strong Uptrend" || primaryTrendFull === "Bullish") && structuralBias === "Upward") decision = "BUY";
+        if ((primaryTrendFull === "Strong Downtrend" || primaryTrendFull === "Bearish") && structuralBias === "Downward") decision = "SELL";
+
+        const confStr = layerData.confidence >= 70 ? "High Confidence" : layerData.confidence >= 40 ? "Medium Confidence" : "Low Confidence";
+
+        return { sym, primaryTrendFull, structuralBias, momentumState, phase, volatility: v, reversalRisk, confStr, marketPhase, decision, confidence: layerData.confidence, score: gs };
+    });
+
+    const filteredRows = rows.filter(r => decisionFilter === "ALL" || r.decision === decisionFilter);
+
+    return (
+        <div className="space-y-4">
+            {/* Local Filters for Decision Engine */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                {/* Market Filter */}
+                <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{isRTL ? "السوق:" : "MARKET:"}</span>
+                    {marketCategories.map(c => (
+                        <button key={c.name} onClick={() => onCategoryChange(c.name)}
+                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all
+                                ${category === c.name ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-transparent text-gray-400 hover:bg-white/5"}`}>
+                            <span className="text-sm">{c.icon}</span>
+                            <span>{isRTL ? c.nameAr : c.name}</span>
+                        </button>
+                    ))}
+                </div>
+                {/* Decision Filter */}
+                <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{isRTL ? "القرار:" : "DECISION:"}</span>
+                    {["ALL", "BUY", "SELL", "NO TRADE"].map(df => (
+                        <button key={df} onClick={() => setDecisionFilter(df as any)}
+                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all
+                                ${decisionFilter === df
+                                    ? df === "BUY" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
+                                        : df === "SELL" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-[0_0_10px_rgba(225,29,72,0.15)]"
+                                            : df === "NO TRADE" ? "bg-slate-500/20 text-slate-300 border border-slate-500/30 shadow-[0_0_10px_rgba(100,116,139,0.15)]"
+                                                : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+                                    : "bg-transparent text-gray-400 hover:bg-white/5"}`}>
+                            {isRTL ? (df === "ALL" ? "الكل" : df) : df}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid rgba(0, 200, 255, 0.15)` }}>
+                <table className="w-full border-collapse whitespace-nowrap">
+                    <thead>
+                        <tr style={{ background: "rgba(10,16,28,0.98)" }}>
+                            {["Symbol", "Primary Trend", "Structural Bias", "Momentum", "Phase", "Volatility", "Reversal Risk", "Confidence", "Market Phase", "Decision"].map((h, i) => (
+                                <th key={i} className="text-left py-4 px-5 text-[11px] font-black tracking-widest uppercase text-cyan-400 border-r border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }} dir="auto">
+                                    {tvh(h)}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredRows.map((r, i) => (
+                            <motion.tr key={r.sym}
+                                onClick={() => onSymbolSelect(r.sym)}
+                                className={`cursor-pointer transition-colors ${selectedSymbol === r.sym ? "bg-cyan-500/10" : "hover:bg-white/[0.04]"}`}
+                                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold text-white flex items-center gap-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                    <span className="text-lg">{symbolIcons[r.sym]?.icon || '📈'}</span> {r.sym}
+                                </td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.primaryTrendFull) }}>{tv(r.primaryTrendFull)}</td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.structuralBias) }}>{tv(r.structuralBias)}</td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.momentumState) }}>{tv(r.momentumState)}</td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.phase === "Directional" ? "#00e676" : r.phase === "Developing" ? "#ffc400" : "#ff1744" }}>{tv(r.phase)}</td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.volatility === "Elevated" ? "#ff1744" : r.volatility === "Moderate" ? "#ffc400" : "#00e676" }}>{tv(r.volatility)}</td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.reversalRisk === "Low" ? "#00e676" : r.reversalRisk === "Moderate" ? "#ffc400" : "#ff1744" }}>{tv(r.reversalRisk)}</td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.confidence >= 70 ? "#00e5ff" : r.confidence >= 40 ? "#ffab00" : "#ff6e40" }}>
+                                    {isRTL && r.confStr === "High Confidence" ? "ثقة عالية" : isRTL && r.confStr === "Medium Confidence" ? "ثقة متوسطة" : isRTL ? "ثقة منخفضة" : r.confStr}
+                                </td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.marketPhase) }}>{tv(r.marketPhase)}</td>
+                                <td className="py-2.5 px-5 border-r border-b text-[13.5px] font-black tracking-wider" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                    {r.decision === "BUY" && <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(16,185,129,0.2)] block text-center min-w-[70px] border border-emerald-500/30">BUY</span>}
+                                    {r.decision === "SELL" && <span className="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(225,29,72,0.2)] block text-center min-w-[70px] border border-rose-500/30">SELL</span>}
+                                    {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-300 px-3 py-1.5 rounded-md block text-center min-w-[70px] border border-slate-500/30">NO TRADE</span>}
+                                </td>
+                            </motion.tr>
+                        ))}
+                        {filteredRows.length === 0 && (
+                            <tr>
+                                <td colSpan={10} className="py-8 text-center text-gray-500 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                    {isRTL ? "لا يوجد بيانات لهذه التصفية" : "No symbols match this filter"}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
 /* ═══════════ MAIN COMPONENT ═══════════ */
 
 export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
@@ -1504,7 +1674,8 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
         "Pulse Matrix": [false, false, false],
         "Boundary Shell": [false, false, false],
         "Power Field": [false, false, false],
-        "Phase X Layer": [false, false, false]
+        "Phase X Layer": [false, false, false],
+        "Decision Engine": [false, false, false]
     });
 
     const layerData = useMemo(() => getDynamicLayerData(selectedSymbol, sources), [selectedSymbol, sources]);
@@ -1563,6 +1734,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
                 "Boundary Shell": [null, null, null],
                 "Power Field": [null, null, null],
                 "Phase X Layer": [null, null, null],
+                "Decision Engine": [null, null, null]
             };
             const newStatus: Record<AnalysisTab, boolean[]> = {
                 "Vector Core": [false, false, false],
@@ -1571,6 +1743,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
                 "Boundary Shell": [false, false, false],
                 "Power Field": [false, false, false],
                 "Phase X Layer": [false, false, false],
+                "Decision Engine": [false, false, false]
             };
 
             await Promise.all(stages.map(async ({ endpoint, idx }) => {
@@ -1649,7 +1822,8 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
             "Pulse Matrix": [false, false, false],
             "Boundary Shell": [false, false, false],
             "Power Field": [false, false, false],
-            "Phase X Layer": [false, false, false]
+            "Phase X Layer": [false, false, false],
+            "Decision Engine": [false, false, false]
         });
     };
 
@@ -1698,6 +1872,10 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
         else if (p === "Directional" && v === "Low") marketPhase = "Compression";
         else marketPhase = "Transition";
 
+        let decision = "NO TRADE";
+        if ((primaryTrendFull === "Strong Uptrend" || primaryTrendFull === "Bullish") && structuralBias === "Upward") decision = "BUY";
+        if ((primaryTrendFull === "Strong Downtrend" || primaryTrendFull === "Bearish") && structuralBias === "Downward") decision = "SELL";
+
         return {
             symbol: selectedSymbol,
             globalScore: gs,
@@ -1710,6 +1888,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
             strength: Math.abs(gs),
             alignment: layerData.confidence > 70 ? "Strong" : "Medium",
             primaryTrend,
+            decision,
             layerSummary: {
                 shortTerm: layerData.byTeam[0].overall.classification as TrendLabel,
                 mediumTerm: layerData.byTeam[1].overall.classification as TrendLabel,
@@ -1770,7 +1949,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                 backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
                 backgroundSize: "60px 60px",
             }} />
-            {/* ═══ HEADER ═══ */}
+            {/* ═══ HEADER ══_═ */}
             <header className="relative z-30 border-b" style={{ background: "rgba(6,10,16,0.88)", backdropFilter: "blur(30px) saturate(200%)", borderColor: "rgba(255,255,255,0.04)" }}>
                 <div className="max-w-[1700px] mx-auto px-5 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1819,7 +1998,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                     </div>
                 </div>
             </header>
-            {/* ═══ BODY ═══ */}
+            {/* ═══ BODY ══_═ */}
             <div className="relative z-10 max-w-[1700px] mx-auto px-5 -mt-2">
                 {/* BANNER with Gauge — F1 Racing Level */}
                 <motion.div className="rounded-2xl mb-2 relative overflow-hidden"
@@ -2057,6 +2236,31 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             })}
                                         </div>
                                     </motion.div>
+
+                                    {/* DECISION BOX */}
+                                    {data.decision && (
+                                        <motion.div className="w-full text-center px-4 py-2 rounded-xl relative overflow-hidden"
+                                            style={{
+                                                background: data.decision === "BUY" ? "rgba(16,185,129,0.12)" : data.decision === "SELL" ? "rgba(225,29,72,0.12)" : "rgba(100,116,139,0.2)",
+                                                border: `1px solid ${data.decision === "BUY" ? "rgba(16,185,129,0.25)" : data.decision === "SELL" ? "rgba(225,29,72,0.25)" : "rgba(100,116,139,0.3)"}`
+                                            }}
+                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                                            <div className="text-[10px] tracking-widest uppercase mb-0.5 font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                                {isRTL ? "القرار" : "DECISION"}
+                                            </div>
+                                            <div className="text-[18px] font-black tracking-wider"
+                                                style={{ color: data.decision === "BUY" ? "#34d399" : data.decision === "SELL" ? "#fb7185" : "#cbd5e1" }}>
+                                                {data.decision}
+                                            </div>
+                                            {/* Decision Glow Pulse (only for BUY/SELL) */}
+                                            {data.decision !== "NO TRADE" && (
+                                                <motion.div className="absolute inset-0 pointer-events-none"
+                                                    style={{ background: `radial-gradient(circle at 50% 50%, ${data.decision === "BUY" ? "rgba(16,185,129,0.2)" : "rgba(225,29,72,0.2)"} 0%, transparent 70%)` }}
+                                                    animate={{ opacity: [0.2, 0.6, 0.2], scale: [0.9, 1.1, 0.9] }}
+                                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
+                                            )}
+                                        </motion.div>
+                                    )}
                                 </div>
                                 {/* Gauge */}
                                 <SupercarGauge score={data.globalScore} confidence={data.confidence} isRTL={isRTL} />
@@ -2065,81 +2269,83 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
 
                     </div>
                 </motion.div>
-                {/* ═══ MARKET FILTER ═══ */}
-                <div className="mb-3">
-                    <motion.button onClick={() => setFilterOpen(!filterOpen)}
-                        className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-xl cursor-pointer transition-all"
-                        style={{
-                            background: filterOpen ? `${accentG}0.08)` : 'rgba(255,255,255,0.03)',
-                            border: filterOpen ? `1px solid ${accentG}0.2)` : '1px solid rgba(255,255,255,0.06)',
-                        }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}>
-                        <Activity className="w-4 h-4" style={{ color: filterOpen ? accent : '#6b7280' }} />
-                        <span className="text-[12px] tracking-[0.15em] uppercase font-bold" style={{ color: filterOpen ? accent : '#6b7280' }}>{t.marketFilter}</span>
-                        <motion.div animate={{ rotate: filterOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                            <ChevronDown className="w-4 h-4" style={{ color: filterOpen ? accent : '#6b7280' }} />
-                        </motion.div>
-                    </motion.button>
-                    <AnimatePresence>
-                        {filterOpen && (
-                            <motion.div className="flex items-center gap-2"
-                                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}>
-                                {marketCategories.map(cat => {
-                                    const isActive = selectedCategory === cat.name;
-                                    return (
-                                        <motion.button key={cat.name} onClick={() => handleCategoryChange(cat.name)}
-                                            className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all overflow-hidden"
-                                            style={{
-                                                background: isActive
-                                                    ? `linear-gradient(135deg, ${accentG}0.15) 0%, ${accentG}0.05) 100%)`
-                                                    : "rgba(255,255,255,0.015)",
-                                                border: isActive ? `1px solid ${accentG}0.3)` : "1px solid rgba(255,255,255,0.04)",
-                                                boxShadow: isActive ? `0 4px 25px ${accentG}0.12), 0 0 40px ${accentG}0.05), inset 0 1px 0 rgba(255,255,255,0.08)` : "none",
-                                            }}
-                                            whileHover={{ scale: 1.06, y: -2, boxShadow: `0 6px 30px ${accentG}0.15)` }}
-                                            whileTap={{ scale: 0.95 }}
-                                            initial={{ opacity: 0, y: 15 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ type: "spring", stiffness: 400, damping: 25 }}>
-                                            {/* Racing glow pulse for active */}
-                                            {isActive && (
-                                                <>
-                                                    <motion.div className="absolute inset-0 pointer-events-none"
-                                                        style={{ background: `radial-gradient(circle at 50% 100%, ${accentG}0.15) 0%, transparent 60%)` }}
-                                                        animate={{ opacity: [0.4, 1, 0.4] }}
-                                                        transition={{ duration: 1.5, repeat: Infinity }} />
-                                                    <motion.div className="absolute inset-0 pointer-events-none"
-                                                        style={{ background: `linear-gradient(90deg, transparent, ${accentG}0.08), transparent)` }}
-                                                        animate={{ x: ["-100%", "200%"] }}
-                                                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
-                                                </>
-                                            )}
-                                            <motion.span className="text-lg relative z-10"
-                                                animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
-                                                transition={{ duration: 2, repeat: Infinity }}>{cat.icon}</motion.span>
-                                            <div className="relative z-10">
-                                                <div className="text-[12px] font-bold" style={{ color: isActive ? accent : "#6b7280" }}>{isRTL ? cat.nameAr : cat.name}</div>
-                                            </div>
-                                            {isActive && (
-                                                <motion.div className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full"
-                                                    layoutId="marketFilter"
-                                                    style={{ background: `linear-gradient(90deg, transparent, ${accent}, ${accent}, transparent)` }}
-                                                    animate={{ opacity: [0.5, 1, 0.5] }}
-                                                    transition={{ type: "spring", stiffness: 400, damping: 30 }} />
-                                            )}
-                                        </motion.button>
-                                    );
-                                })}
+                {/* ═ ═ ═  MARKET FILTER ═ ═_═  */}
+                {selectedTab !== "Decision Engine" && (
+                    <div className="mb-3">
+                        <motion.button onClick={() => setFilterOpen(!filterOpen)}
+                            className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-xl cursor-pointer transition-all"
+                            style={{
+                                background: filterOpen ? `${accentG}0.08)` : 'rgba(255,255,255,0.03)',
+                                border: filterOpen ? `1px solid ${accentG}0.2)` : '1px solid rgba(255,255,255,0.06)',
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}>
+                            <Activity className="w-4 h-4" style={{ color: filterOpen ? accent : '#6b7280' }} />
+                            <span className="text-[12px] tracking-[0.15em] uppercase font-bold" style={{ color: filterOpen ? accent : '#6b7280' }}>{t.marketFilter}</span>
+                            <motion.div animate={{ rotate: filterOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                                <ChevronDown className="w-4 h-4" style={{ color: filterOpen ? accent : '#6b7280' }} />
                             </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+                        </motion.button>
+                        <AnimatePresence>
+                            {filterOpen && (
+                                <motion.div className="flex items-center gap-2"
+                                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3 }}>
+                                    {marketCategories.map(cat => {
+                                        const isActive = selectedCategory === cat.name;
+                                        return (
+                                            <motion.button key={cat.name} onClick={() => handleCategoryChange(cat.name)}
+                                                className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all overflow-hidden"
+                                                style={{
+                                                    background: isActive
+                                                        ? `linear-gradient(135deg, ${accentG}0.15) 0%, ${accentG}0.05) 100%)`
+                                                        : "rgba(255,255,255,0.015)",
+                                                    border: isActive ? `1px solid ${accentG}0.3)` : "1px solid rgba(255,255,255,0.04)",
+                                                    boxShadow: isActive ? `0 4px 25px ${accentG}0.12), 0 0 40px ${accentG}0.05), inset 0 1px 0 rgba(255,255,255,0.08)` : "none",
+                                                }}
+                                                whileHover={{ scale: 1.06, y: -2, boxShadow: `0 6px 30px ${accentG}0.15)` }}
+                                                whileTap={{ scale: 0.95 }}
+                                                initial={{ opacity: 0, y: 15 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ type: "spring", stiffness: 400, damping: 25 }}>
+                                                {/* Racing glow pulse for active */}
+                                                {isActive && (
+                                                    <>
+                                                        <motion.div className="absolute inset-0 pointer-events-none"
+                                                            style={{ background: `radial-gradient(circle at 50% 100%, ${accentG}0.15) 0%, transparent 60%)` }}
+                                                            animate={{ opacity: [0.4, 1, 0.4] }}
+                                                            transition={{ duration: 1.5, repeat: Infinity }} />
+                                                        <motion.div className="absolute inset-0 pointer-events-none"
+                                                            style={{ background: `linear-gradient(90deg, transparent, ${accentG}0.08), transparent)` }}
+                                                            animate={{ x: ["-100%", "200%"] }}
+                                                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
+                                                    </>
+                                                )}
+                                                <motion.span className="text-lg relative z-10"
+                                                    animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
+                                                    transition={{ duration: 2, repeat: Infinity }}>{cat.icon}</motion.span>
+                                                <div className="relative z-10">
+                                                    <div className="text-[12px] font-bold" style={{ color: isActive ? accent : "#6b7280" }}>{isRTL ? cat.nameAr : cat.name}</div>
+                                                </div>
+                                                {isActive && (
+                                                    <motion.div className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full"
+                                                        layoutId="marketFilter"
+                                                        style={{ background: `linear-gradient(90deg, transparent, ${accent}, ${accent}, transparent)` }}
+                                                        animate={{ opacity: [0.5, 1, 0.5] }}
+                                                        transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                                                )}
+                                            </motion.button>
+                                        );
+                                    })}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                )}
 
                 {/* ═══ SYMBOL SELECTOR STRIP ═══ */}
                 <AnimatePresence mode="wait">
-                    {filterOpen && (
+                    {filterOpen && selectedTab !== "Decision Engine" && (
                         <motion.div key={selectedCategory}
                             className="mb-4 flex items-center gap-2 flex-wrap"
                             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
@@ -2242,7 +2448,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {/* ═══ ANALYSIS TABS (separate layer) ═══ */}
+                {/* ══_═ ANALYSIS TABS (separate layer) ══_═ */}
                 <div className="mb-4">
                     <div className="h-px w-full mb-3" style={{ background: `linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.04) 70%, transparent 95%)` }} />
                     <div className="flex items-center gap-1.5">
@@ -2285,14 +2491,16 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                     </div>
                 </div>
             </div>
-            {/* ═══ ANALYSIS TABLE + SIDEBAR ═══ */}
+            {/* ══_═ ANALYSIS TABLE + SIDEBAR ══_═ */}
             <AnimatePresence mode="wait">
                 <motion.div key={selectedTab + selectedSymbol}
                     initial={{ opacity: 0, y: 30, scale: 0.97, filter: "blur(8px)" }}
                     animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                     exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(4px)" }}
                     transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }} className="pb-8">
-                    {selectedTab === "Phase X Layer" ? (
+                    {selectedTab === "Decision Engine" ? (
+                        <TradingDecisionEngineTable category={selectedCategory} onCategoryChange={handleCategoryChange} selectedSymbol={selectedSymbol} onSymbolSelect={setSelectedSymbol} isRTL={isRTL} sources={sources} />
+                    ) : selectedTab === "Phase X Layer" ? (
                         <DynamicLayerTable symbol={selectedSymbol} isRTL={isRTL} sources={sources} />
                     ) : (
                         <div className="grid grid-cols-12 gap-4">
