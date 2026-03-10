@@ -2,7 +2,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import { Asset } from "./MarketList";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, TrendingDown, Activity, Maximize2, Minimize2, Table, BarChart3, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Download, Info } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Maximize2, Minimize2, Table, BarChart3, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Download, Info, ChevronDown, Check } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { TZCandlestickChart } from "./TZCandlestickChart";
@@ -68,10 +68,10 @@ function PhaseTimeframeSelector({ mainTF, subTF, onMainTFChange, onSubTFChange, 
           const active = mainTF === tf;
           return (
             <motion.button key={tf} onClick={() => onMainTFChange(tf)} whileTap={{ scale: 0.95 }}
-              className={`${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"} rounded-md font-bold cursor-pointer transition-all`}
+              className={`${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"} rounded - md font - bold cursor - pointer transition - all`}
               style={{
-                background: active ? `${color}18` : "transparent",
-                border: active ? `1px solid ${color}35` : "1px solid transparent",
+                background: active ? `${color} 18` : "transparent",
+                border: active ? `1px solid ${color} 35` : "1px solid transparent",
                 color: active ? color : "#64748b",
               }}>
               {tf}
@@ -93,7 +93,7 @@ function PhaseTimeframeSelector({ mainTF, subTF, onMainTFChange, onSubTFChange, 
                 initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.15 }}
                 whileTap={{ scale: 0.95 }}
-                className={`${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"} rounded-md font-bold cursor-pointer transition-all`}
+                className={`${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"} rounded - md font - bold cursor - pointer transition - all`}
                 style={{
                   background: active ? "#6366f115" : "transparent",
                   border: active ? "1px solid #6366f135" : "1px solid transparent",
@@ -107,7 +107,7 @@ function PhaseTimeframeSelector({ mainTF, subTF, onMainTFChange, onSubTFChange, 
       </div>
 
       {/* Active label */}
-      <span className={`${compact ? "text-[9px]" : "text-[10px]"} font-mono px-2 py-0.5 rounded`}
+      <span className={`${compact ? "text-[9px]" : "text-[10px]"} font - mono px - 2 py - 0.5 rounded`}
         style={{ color: "#64748b", background: "rgba(255,255,255,0.02)" }}>
         {mainTF} → {subTF}
       </span>
@@ -139,22 +139,22 @@ const AnimatedStat = ({ label, value, color, isDirection }: AnimatedStatProps) =
     <motion.div
       className="flex-col justify-center items-center text-center px-1.5 py-1.5 md:px-3 rounded-lg flex relative"
       animate={{
-        background: flash ? `${color}30` : `${color}08`,
-        borderColor: flash ? `${color}60` : `${color}12`,
+        background: flash ? `${color} 30` : `${color}08`,
+        borderColor: flash ? `${color} 60` : `${color} 12`,
         boxShadow: flash
-          ? `0 0 15px ${color}50, inset 0 0 10px ${color}20`
-          : (isDirection ? `0 0 8px ${color}20, inset 0 0 5px ${color}10` : "none"),
+          ? `0 0 15px ${color} 50, inset 0 0 10px ${color} 20`
+          : (isDirection ? `0 0 8px ${color} 20, inset 0 0 5px ${color} 10` : "none"),
         scale: flash && isDirection ? 1.05 : 1
       }}
       transition={{ duration: 0.3 }}
-      style={{ border: `1px solid ${color}12`, minWidth: 0 }}
+      style={{ border: `1px solid ${color} 12`, minWidth: 0 }}
     >
       <div className="text-[9px] font-medium truncate w-full" style={{ color: "#64748b" }}>{label}</div>
       <motion.div
-        className={`font-bold tabular-nums truncate w-full ${isDirection ? 'text-[14px] tracking-widest' : 'text-[12px]'}`}
+        className={`font - bold tabular - nums truncate w - full ${isDirection ? 'text-[14px] tracking-widest' : 'text-[12px]'} `}
         style={{
           color,
-          textShadow: isDirection ? `0 0 10px ${color}80` : 'none'
+          textShadow: isDirection ? `0 0 10px ${color} 80` : 'none'
         }}
         animate={isDirection && !flash ? { opacity: [0.8, 1, 0.8] } : {}}
         transition={isDirection && !flash ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
@@ -165,9 +165,114 @@ const AnimatedStat = ({ label, value, color, isDirection }: AnimatedStatProps) =
   );
 };
 
+// Custom Candle Limit Popup
+function CandleLimitSelector({ value, onChange, isRTL, tk, color, compact = false }: {
+  value: number | "Auto";
+  onChange: (val: string) => void;
+  isRTL: boolean;
+  tk: any;
+  color: string;
+  compact?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [customVal, setCustomVal] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const handleSelect = (v: string) => { onChange(v); setIsOpen(false); };
+  const handleCustomSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const num = parseInt(customVal);
+    if (!isNaN(num) && num > 0) {
+      handleSelect(num.toString());
+    }
+  };
+
+  const presets = ["Auto", 50, 100, 200, 500];
+
+  return (
+    <div className="relative" ref={ref}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-1.5 rounded cursor-pointer transition-colors ${compact ? 'px-2 py-0.5 mr-1 md:mr-2' : 'px-3 py-1 rounded-lg mr-2 md:mr-4 shadow-inner'}`}
+        style={{
+          background: compact ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.2)",
+          border: compact ? "1px solid rgba(255,255,255,0.05)" : `1px solid ${tk.border}`
+        }}
+      >
+        <span className={`text-slate-400 font-bold uppercase ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+          {isRTL ? "الشموع" : "Candles"}:
+        </span>
+        <span className={`font-bold font-mono ${compact ? 'text-[11px]' : 'text-xs md:text-sm'}`}
+          style={{ color: value === "Auto" ? "#e2e8f0" : color }}>
+          {value}
+        </span>
+        <ChevronDown className="w-3 h-3 text-slate-500" />
+      </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 mt-2 p-2 rounded-xl backdrop-blur-xl shadow-2xl overflow-hidden"
+            style={{
+              background: "rgba(15, 23, 42, 0.95)", border: `1px solid ${tk.border}`,
+              ...(isRTL ? { left: 0 } : { right: 0 })
+            }}
+          >
+            <div className="flex flex-col gap-1 w-32">
+              <div className="text-[10px] uppercase font-bold text-slate-500 px-2 py-1 mb-1">{isRTL ? 'إعدادات مسبقة' : 'Presets'}</div>
+              {presets.map(p => (
+                <button
+                  key={p}
+                  onClick={() => handleSelect(p.toString())}
+                  className="text-left px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-colors flex items-center justify-between"
+                  style={{
+                    background: value === p ? `${color}15` : "transparent",
+                    color: value === p ? color : "#e2e8f0"
+                  }}
+                >
+                  {p}
+                  {value === p && <Check className="w-3 h-3" />}
+                </button>
+              ))}
+
+              <div className="w-full h-px my-1" style={{ background: tk.border }} />
+
+              <div className="text-[10px] uppercase font-bold text-slate-500 px-2 py-1">{isRTL ? 'مخصص' : 'Custom'}</div>
+              <form onSubmit={handleCustomSubmit} className="flex gap-1 px-1 mt-1">
+                <input
+                  type="number" min="1" max="5000"
+                  value={customVal} onChange={e => setCustomVal(e.target.value)}
+                  placeholder={typeof value === 'number' && !presets.includes(value) ? value.toString() : "..."}
+                  className="w-full bg-slate-800/50 rounded flex-1 px-2 py-1.5 text-xs text-white font-mono outline-none focus:ring-1 focus:ring-opacity-50"
+                  style={{ border: `1px solid ${tk.border}` } as any}
+                />
+                <button type="submit" className="px-2 rounded bg-slate-700/50 hover:bg-slate-700 text-white transition-colors">
+                  <Check className="w-3 h-3" />
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange, phaseStateData, generateCandlesFromReal }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [candleLimit, setCandleLimit] = useState<number | "Auto">("Auto");
   const isRTL = language === "ar";
   const tk = useThemeTokens();
 
@@ -178,6 +283,21 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragStartIndex, setDragStartIndex] = useState(0);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [yOffset, setYOffset] = useState(0);
+  const [dragStartYOffset, setDragStartYOffset] = useState(0);
+
+  const handleLimitChange = useCallback((val: string) => {
+    if (val === "Auto") {
+      setCandleLimit("Auto");
+    } else {
+      const num = Number(val);
+      setCandleLimit(num);
+      setViewWindow(num);
+      setYOffset(0);
+      setStartIndex(Math.max(0, dataLenRef.current - num));
+    }
+  }, []);
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Phase State hierarchical timeframes
@@ -233,7 +353,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
   const handleExportChart = useCallback(async () => {
     const { isExpanded, currency, indicator, isRTL, timeframe } = exportDataRef.current;
-    const ref = isExpanded ? fullscreenChartRef.current : chartRef.current;
+
+    // Target the entire expanded modal container or the simple chart container
+    // We navigate to the parent element of the fullscreenChartRef to capture the header too.
+    const ref = isExpanded
+      ? fullscreenChartRef.current?.parentElement
+      : chartRef.current?.parentElement;
+
     if (!ref || !currency || !indicator) return;
     setIsExporting(true);
 
@@ -242,14 +368,38 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       const mod = await import("html2canvas");
       const html2canvas = mod.default;
 
-      // Capture the chart area
-      const captured = await html2canvas(ref, {
+      // Temporarily stash UI elements we don't want in the screenshot (like the close button toolbar)
+      const toolbarButtons = ref.querySelectorAll('button');
+      const originalDisplayStyles: string[] = [];
+      toolbarButtons.forEach(btn => {
+        // Keep the main active filter buttons visible, but hide actions like 'Close' or 'Export' or 'Table'
+        if (btn.title === "Close" || btn.title === "إغلاق" || btn.title === "Export Image" || btn.title === "تصدير صورة" || btn.title === "Table" || btn.title === "جدول") {
+          originalDisplayStyles.push(btn.style.display);
+          btn.style.display = 'none';
+        } else {
+          originalDisplayStyles.push("keep");
+        }
+      });
+
+      // Capture the entire area
+      const captured = await html2canvas(ref as HTMLElement, {
         backgroundColor: "#0b0e14",
         scale: 2,
         logging: false,
         useCORS: true,
         allowTaint: true,
-        removeContainer: true,
+        // Ensure SVGs stroke rendering works properly
+        onclone: (clonedDoc) => {
+          const svgs = clonedDoc.querySelectorAll('svg');
+          svgs.forEach(svg => { svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); });
+        }
+      });
+
+      // Restore UI elements
+      toolbarButtons.forEach((btn, idx) => {
+        if (originalDisplayStyles[idx] !== "keep") {
+          btn.style.display = originalDisplayStyles[idx];
+        }
       });
 
       // Create final canvas with watermark footer
@@ -327,7 +477,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       ctx.font = "bold 20px Arial, sans-serif";
       ctx.fillStyle = "#94a3b8";
       ctx.textBaseline = "alphabetic";
-      const infoText = `${currency.symbol}  •  ${isRTL ? indicator.name : indicator.nameEn}  •  ${timeframe}${isRTL ? "د" : "M"}`;
+      const infoText = `${currency.symbol}  •  ${isRTL ? indicator.name : indicator.nameEn}  •  ${timeframe}${isRTL ? "د" : "M"} `;
       ctx.fillText(infoText, bx + bw + 30, fy + 52);
 
       // Timestamp
@@ -368,7 +518,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       }
       // Priority 2: Uploaded JSON data
       if (phaseStateData && generateCandlesFromReal && currency) {
-        const key = `${mainTF}_${subTF}`;
+        const key = `${mainTF}_${subTF} `;
         const symbolData = phaseStateData[key];
         if (symbolData) {
           const candle = symbolData[currency.symbol];
@@ -395,20 +545,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     return { min: Math.min(...values), max: Math.max(...values) };
   }, [displayedData]);
 
-  // Keyboard Nav
-  useEffect(() => {
-    const fn = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") { e.preventDefault(); setStartIndex((p) => Math.max(0, p - 5)); }
-      else if (e.key === "ArrowRight") { e.preventDefault(); setStartIndex((p) => Math.min(effectiveData.length - viewWindow, p + 5)); }
-      else if (e.key === "Home") { e.preventDefault(); setStartIndex(0); }
-      else if (e.key === "End") { e.preventDefault(); setStartIndex(Math.max(0, effectiveData.length - viewWindow)); }
-      else if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(); }
-      else if (e.key === "-") { e.preventDefault(); zoomOut(); }
-    };
-    window.addEventListener("keydown", fn);
-    return () => window.removeEventListener("keydown", fn);
-  }, [effectiveData.length, viewWindow]);
-
   // Zoom functions — use refs for stable callbacks (DrawingToolbar React.memo)
   const viewWindowRef = useRef(viewWindow);
   const startIndexRef = useRef(startIndex);
@@ -418,6 +554,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   useEffect(() => { dataLenRef.current = effectiveData.length; }, [effectiveData.length]);
 
   const zoomIn = useCallback(() => {
+    setCandleLimit("Auto");
+    setYOffset(0);
     const vw = viewWindowRef.current;
     const si = startIndexRef.current;
     const nw = Math.max(10, vw - 5);
@@ -426,6 +564,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     setStartIndex(Math.max(0, Math.min(dataLenRef.current - nw, Math.round(center - nw / 2))));
   }, []);
   const zoomOut = useCallback(() => {
+    setCandleLimit("Auto");
+    setYOffset(0);
     const vw = viewWindowRef.current;
     const si = startIndexRef.current;
     const nw = Math.min(dataLenRef.current, vw + 10);
@@ -433,25 +573,59 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     const center = si + vw / 2;
     setStartIndex(Math.max(0, Math.min(dataLenRef.current - nw, Math.round(center - nw / 2))));
   }, []);
-  const panLeft = () => setStartIndex((p) => Math.max(0, p - Math.max(3, Math.round(viewWindow / 5))));
-  const panRight = () => setStartIndex((p) => Math.min(effectiveData.length - viewWindow, p + Math.max(3, Math.round(viewWindow / 5))));
-  const goStart = () => setStartIndex(0);
-  const goEnd = () => setStartIndex(Math.max(0, effectiveData.length - viewWindow));
+
+  const panLeft = () => { setCandleLimit("Auto"); setYOffset(0); setStartIndex((p) => Math.max(0, p - Math.max(3, Math.round(viewWindow / 5)))); };
+  const panRight = () => { setCandleLimit("Auto"); setYOffset(0); setStartIndex((p) => Math.min(effectiveData.length - viewWindow, p + Math.max(3, Math.round(viewWindow / 5)))); };
+  const goStart = () => { setCandleLimit("Auto"); setYOffset(0); setStartIndex(0); };
+  const goEnd = () => { setCandleLimit("Auto"); setYOffset(0); setStartIndex(Math.max(0, effectiveData.length - viewWindow)); };
 
   const isDrawing = showDrawingTools && selectedTool !== "cursor" && selectedTool !== "crosshair";
 
   // Mouse drag on chart
-  const onDown = (e: React.MouseEvent) => { if (isDrawing) return; setIsDragging(true); setDragStartX(e.clientX); setDragStartIndex(startIndex); };
-  const onMove = (e: React.MouseEvent) => { if (!isDragging || !chartRef.current) return; const dx = e.clientX - dragStartX; const move = Math.round((dx / chartRef.current.offsetWidth) * viewWindow); setStartIndex(Math.max(0, Math.min(effectiveData.length - viewWindow, dragStartIndex - move))); };
+  const onDown = (e: React.MouseEvent) => {
+    if (isDrawing) return;
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+    setDragStartIndex(startIndex);
+    setDragStartY(e.clientY);
+    setDragStartYOffset(yOffset);
+  };
+  const onMove = (e: React.MouseEvent) => {
+    if (!isDragging || !chartRef.current) return;
+    setCandleLimit("Auto");
+    // Horizontal Move
+    const dx = e.clientX - dragStartX;
+    const moveX = Math.round((dx / chartRef.current.offsetWidth) * viewWindow);
+    setStartIndex(Math.max(0, Math.min(effectiveData.length - viewWindow, dragStartIndex - moveX)));
+    // Vertical Move
+    const dy = e.clientY - dragStartY;
+    const priceSpan = (drawingPriceRange.max - drawingPriceRange.min) || Math.abs(drawingPriceRange.max * 0.1) || 1;
+    const moveY = (dy / chartRef.current.offsetHeight) * priceSpan;
+    setYOffset(dragStartYOffset + moveY);
+  };
   const onUp = () => setIsDragging(false);
   const onWheel = (e: React.WheelEvent) => { e.preventDefault(); if (e.deltaY > 0) zoomOut(); else zoomIn(); };
+
+  // Keyboard Nav
+  useEffect(() => {
+    const fn = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") { e.preventDefault(); setCandleLimit("Auto"); setStartIndex((p) => Math.max(0, p - 5)); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); setCandleLimit("Auto"); setStartIndex((p) => Math.min(effectiveData.length - viewWindow, p + 5)); }
+      else if (e.key === "Home") { e.preventDefault(); setCandleLimit("Auto"); setStartIndex(0); }
+      else if (e.key === "End") { e.preventDefault(); setCandleLimit("Auto"); setStartIndex(Math.max(0, effectiveData.length - viewWindow)); }
+      else if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(); }
+      else if (e.key === "-") { e.preventDefault(); zoomOut(); }
+    };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [effectiveData.length, viewWindow, zoomIn, zoomOut]);
 
   /* ────── EMPTY STATE ────── */
   if (!currency || !indicator) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="h-full flex items-center justify-center rounded-xl"
-        style={{ background: tk.surface, border: `1px solid ${tk.border}`, minHeight: 400 }}>
+        style={{ background: tk.surface, border: `1px solid ${tk.border} `, minHeight: 400 }}>
         <div className="text-center">
           <motion.div animate={{ y: [0, -8, 0], opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 2.5, repeat: Infinity }}>
             <Activity className="w-14 h-14 mx-auto mb-4" style={{ color: tk.textDim }} />
@@ -472,16 +646,16 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const CustomTick = ({ x, y, payload }: any) => {
     if (payload.value.includes("\n")) {
       const [d, ti] = payload.value.split("\n");
-      return (<g transform={`translate(${x},${y})`}><text x={0} y={-5} textAnchor="middle" fill="#60a5fa" fontSize={11} fontWeight={700}>{d}</text><text x={0} y={10} textAnchor="middle" fill={textColor} fontSize={9}>{ti}</text></g>);
+      return (<g transform={`translate(${x}, ${y})`}><text x={0} y={-5} textAnchor="middle" fill="#60a5fa" fontSize={11} fontWeight={700}>{d}</text><text x={0} y={10} textAnchor="middle" fill={textColor} fontSize={9}>{ti}</text></g>);
     }
-    return (<g transform={`translate(${x},${y})`}><text x={0} y={5} textAnchor="middle" fill={textColor} fontSize={10}>{payload.value}</text></g>);
+    return (<g transform={`translate(${x}, ${y})`}><text x={0} y={5} textAnchor="middle" fill={textColor} fontSize={10}>{payload.value}</text></g>);
   };
 
   const TooltipContent = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const dec = currency.market === "CRYPTO" || currency.market === "INDEX" ? 2 : 4;
     return (
-      <div className="px-3 py-2 rounded-lg" style={{ background: tk.tooltipBg, border: `1px solid ${tk.tooltipBorder}` }}>
+      <div className="px-3 py-2 rounded-lg" style={{ background: tk.tooltipBg, border: `1px solid ${tk.tooltipBorder} ` }}>
         <p className="text-[10px] mb-0.5" style={{ color: tk.textMuted }}>{payload[0].payload.fullTime}</p>
         <p className="text-[12px] font-bold" style={{ color: tk.textPrimary }}>{payload[0].value.toFixed(dec)}</p>
       </div>
@@ -489,19 +663,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   };
 
   const daySeps = () => displayedData.filter((d: any) => d.time.includes("\n")).map((d: any, i: number) => (
-    <ReferenceLine key={`sep-${i}`} x={d.time} stroke="#334155" strokeWidth={1} strokeDasharray="4 4" opacity={0.4} />
+    <ReferenceLine key={`sep - ${i} `} x={d.time} stroke="#334155" strokeWidth={1} strokeDasharray="4 4" opacity={0.4} />
   ));
 
   const renderChart = (height: number) => {
     // Show loading / error / empty state for Phase State when no data
     if (isPhaseIndicator && effectiveData.length === 0) {
       return (
-        <div className="flex items-center justify-center rounded-lg" style={{ height, background: tk.surface, border: `1px solid ${tk.border}` }}>
+        <div className="flex items-center justify-center rounded-lg" style={{ height, background: tk.surface, border: `1px solid ${tk.border} ` }}>
           <div className="text-center">
             {apiLoading ? (
               <>
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                  className="w-10 h-10 mx-auto mb-3 rounded-full" style={{ border: `3px solid ${tk.border}`, borderTopColor: '#6366f1' }} />
+                  className="w-10 h-10 mx-auto mb-3 rounded-full" style={{ border: `3px solid ${tk.border} `, borderTopColor: '#6366f1' }} />
                 <p className="text-sm font-medium" style={{ color: tk.textMuted }}>
                   {isRTL ? "جاري تحميل القراءات..." : "Loading readings..."}
                 </p>
@@ -516,7 +690,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   <p className="text-xs mt-1" style={{ color: tk.negative, opacity: 0.7 }}>{apiError}</p>
                 )}
                 <p className="text-[11px] mt-2" style={{ color: tk.textDim }}>
-                  {isRTL ? `${currency?.symbol} - ${mainTF} من ${subTF}` : `${currency?.symbol} - ${mainTF} from ${subTF}`}
+                  {isRTL ? `${currency?.symbol} - ${mainTF} من ${subTF} ` : `${currency?.symbol} - ${mainTF} from ${subTF} `}
                 </p>
               </>
             )}
@@ -531,12 +705,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         return (
           <ResponsiveContainer width="100%" height={height}>
             <AreaChart {...common}>
-              <defs><linearGradient id={`g-${indicator.id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={indicator.color} stopOpacity={0.3} /><stop offset="95%" stopColor={indicator.color} stopOpacity={0} /></linearGradient></defs>
+              <defs><linearGradient id={`g - ${indicator.id} `} x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={indicator.color} stopOpacity={0.3} /><stop offset="95%" stopColor={indicator.color} stopOpacity={0} /></linearGradient></defs>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />{daySeps()}
               <XAxis dataKey="time" stroke={textColor} height={50} tick={<CustomTick />} interval="preserveStartEnd" />
-              <YAxis stroke={textColor} tick={{ fontSize: 10 }} />
+              <YAxis
+                stroke={textColor}
+                tick={{ fontSize: 10 }}
+                domain={[
+                  (dataMin: number) => (dataMin - (dataMin * 0.05)) + yOffset,
+                  (dataMax: number) => (dataMax + (dataMax * 0.05)) + yOffset,
+                ]}
+              />
               <Tooltip content={<TooltipContent />} />
-              <Area type="monotone" dataKey="value" stroke={indicator.color} fillOpacity={1} fill={`url(#g-${indicator.id})`} />
+              <Area type="monotone" dataKey="value" stroke={indicator.color} fillOpacity={1} fill={`url(#g - ${indicator.id})`} />
             </AreaChart>
           </ResponsiveContainer>);
       case "bar":
@@ -545,20 +726,40 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             <BarChart {...common}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />{daySeps()}
               <XAxis dataKey="time" stroke={textColor} height={50} tick={<CustomTick />} interval="preserveStartEnd" />
-              <YAxis stroke={textColor} tick={{ fontSize: 10 }} />
+              <YAxis
+                stroke={textColor}
+                tick={{ fontSize: 10 }}
+                domain={[
+                  (dataMin: number) => (dataMin - (dataMin * 0.05)) + yOffset,
+                  (dataMax: number) => (dataMax + (dataMax * 0.05)) + yOffset,
+                ]}
+              />
               <Tooltip content={<TooltipContent />} />
               <Bar dataKey="value" fill={indicator.color} />
             </BarChart>
           </ResponsiveContainer>);
       case "tz":
-        return <TZCandlestickChart data={displayedData} height={height} livePrice={chartLivePrice} />;
+        return (
+          <TZCandlestickChart
+            data={displayedData}
+            height={height}
+            livePrice={currency.price}
+            priceOffset={yOffset}
+          />);
       default:
         return (
           <ResponsiveContainer width="100%" height={height}>
             <LineChart {...common}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />{daySeps()}
               <XAxis dataKey="time" stroke={textColor} height={50} tick={<CustomTick />} interval="preserveStartEnd" />
-              <YAxis stroke={textColor} tick={{ fontSize: 10 }} />
+              <YAxis
+                stroke={textColor}
+                tick={{ fontSize: 10 }}
+                domain={[
+                  (dataMin: number) => (dataMin - (dataMin * 0.05)) + yOffset,
+                  (dataMax: number) => (dataMax + (dataMax * 0.05)) + yOffset,
+                ]}
+              />
               <Tooltip content={<TooltipContent />} />
               <Line type="monotone" dataKey="value" stroke={indicator.color} strokeWidth={2} dot={false} />
             </LineChart>
@@ -587,13 +788,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     <>
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
         className="h-full rounded-xl overflow-hidden flex flex-col"
-        style={{ background: tk.surface, border: `1px solid ${tk.border}` }}>
+        style={{ background: tk.surface, border: `1px solid ${tk.border} ` }}>
 
         {/* ─── Header ─── */}
-        <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
+        <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: `${indicator.color}15`, border: `1px solid ${indicator.color}20` }}>
+              style={{ background: `${indicator.color} 15`, border: `1px solid ${indicator.color} 20` }}>
               <Activity className="w-4 h-4" style={{ color: indicator.color }} />
             </div>
             <div>
@@ -630,7 +831,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         </div>
 
         {/* ─── Timeframe + Navigation Bar ─── */}
-        <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
+        <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
           {/* Timeframes */}
           {indicator.id === "phase" ? (
             <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} compact />
@@ -641,8 +842,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 <button key={tf} onClick={() => onTimeframeChange(tf as 5 | 15 | 30 | 60)}
                   className="px-3 py-1 rounded-md text-[11px] font-bold cursor-pointer transition-all"
                   style={{
-                    background: timeframe === tf ? `${indicator.color}15` : "transparent",
-                    border: timeframe === tf ? `1px solid ${indicator.color}30` : "1px solid transparent",
+                    background: timeframe === tf ? `${indicator.color} 15` : "transparent",
+                    border: timeframe === tf ? `1px solid ${indicator.color} 30` : "1px solid transparent",
                     color: timeframe === tf ? indicator.color : "#64748b",
                   }}>
                   {tf}{isRTL ? "د" : "M"}
@@ -653,6 +854,16 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
           {/* Navigation + Zoom Controls */}
           <div className="flex items-center gap-1">
+            {/* Custom Candle Limit Filter */}
+            <CandleLimitSelector
+              value={candleLimit}
+              onChange={handleLimitChange}
+              isRTL={isRTL}
+              tk={tk}
+              color={indicator.color}
+              compact={true}
+            />
+
             <NavBtn onClick={zoomIn} title={isRTL ? "تكبير" : "Zoom In"}><ZoomIn className="w-3.5 h-3.5" /></NavBtn>
             <NavBtn onClick={zoomOut} title={isRTL ? "تصغير" : "Zoom Out"}><ZoomOut className="w-3.5 h-3.5" /></NavBtn>
             <div className="w-px h-5 mx-1" style={{ background: "rgba(255,255,255,0.06)" }} />
@@ -677,14 +888,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         {/* ─── Chart Area (NO drawing tools in small view) ─── */}
         <div ref={chartRef} className="flex-1 relative min-h-0"
           onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onWheel={onWheel}
-          style={{ cursor: isDragging ? "grabbing" : "grab" }}>
+          onDoubleClick={() => setYOffset(0)}
+          style={{ cursor: isDragging ? "grabbing" : "crosshair" }}>
 
           {/* API Loading overlay */}
           {isPhaseIndicator && apiLoading && (
             <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(17,21,32,0.8)" }}>
               <div className="flex flex-col items-center gap-3">
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-8 h-8 rounded-full border-2 border-t-transparent" style={{ borderColor: `${indicator?.color || '#6366f1'}40`, borderTopColor: 'transparent' }} />
+                  className="w-8 h-8 rounded-full border-2 border-t-transparent" style={{ borderColor: `${indicator?.color || '#6366f1'} 40`, borderTopColor: 'transparent' }} />
                 <span className="text-xs font-medium" style={{ color: "#64748b" }}>{isRTL ? "جاري التحميل..." : "Loading live data..."}</span>
               </div>
             </div>
@@ -806,10 +1018,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               onClick={(e) => e.stopPropagation()} dir={isRTL ? "rtl" : "ltr"}>
 
               {/* Fullscreen Header */}
-              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
+              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: `${indicator.color}15`, border: `1px solid ${indicator.color}20` }}>
+                    style={{ background: `${indicator.color} 15`, border: `1px solid ${indicator.color} 20` }}>
                     <Activity className="w-5 h-5" style={{ color: indicator.color }} />
                   </div>
                   <div>
@@ -872,7 +1084,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     </button>
                     <button onClick={() => setShowDrawingTools(!showDrawingTools)}
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
-                      style={{ background: showDrawingTools ? `${indicator.color}15` : "rgba(255,255,255,0.03)", color: showDrawingTools ? indicator.color : "#64748b", border: showDrawingTools ? `1px solid ${indicator.color}30` : "1px solid transparent" }}
+                      style={{ background: showDrawingTools ? `${indicator.color} 15` : "rgba(255,255,255,0.03)", color: showDrawingTools ? indicator.color : "#64748b", border: showDrawingTools ? `1px solid ${indicator.color} 30` : "1px solid transparent" }}
                       title={isRTL ? "أدوات الرسم" : "Drawing Tools"}>
                       <Layers className="w-4 h-4" />
                     </button>
@@ -893,7 +1105,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               </div>
 
               {/* Fullscreen Timeframe + Navigation */}
-              <div className="px-6 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border}` }}>
+              <div className="px-6 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
                 {indicator.id === "phase" ? (
                   <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} />
                 ) : (
@@ -903,8 +1115,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       <button key={tf} onClick={() => onTimeframeChange(tf as 5 | 15 | 30 | 60)}
                         className="px-4 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
                         style={{
-                          background: timeframe === tf ? `${indicator.color}15` : "transparent",
-                          border: timeframe === tf ? `1px solid ${indicator.color}30` : "1px solid transparent",
+                          background: timeframe === tf ? `${indicator.color} 15` : "transparent",
+                          border: timeframe === tf ? `1px solid ${indicator.color} 30` : "1px solid transparent",
                           color: timeframe === tf ? indicator.color : "#64748b",
                         }}>
                         {tf}{isRTL ? "د" : "M"}
@@ -913,6 +1125,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   </div>
                 )}
                 <div className="flex items-center gap-1">
+                  {/* Custom Candle Limit Filter */}
+                  <CandleLimitSelector
+                    value={candleLimit}
+                    onChange={handleLimitChange}
+                    isRTL={isRTL}
+                    tk={tk}
+                    color={indicator.color}
+                  />
+
                   <NavBtn onClick={zoomIn} title="Zoom In"><ZoomIn className="w-3.5 h-3.5" /></NavBtn>
                   <NavBtn onClick={zoomOut} title="Zoom Out"><ZoomOut className="w-3.5 h-3.5" /></NavBtn>
                   <div className="w-px h-5 mx-1" style={{ background: "rgba(255,255,255,0.06)" }} />
@@ -942,7 +1163,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 )}
 
                 {/* Chart Area — fills remaining width */}
-                <div ref={fullscreenChartRef} className="flex-1 min-h-0 min-w-0 relative">
+                <div ref={fullscreenChartRef} className="flex-1 min-h-0 min-w-0 relative"
+                  onDoubleClick={() => setYOffset(0)}>
                   {showTable ? (
                     <div className="h-full overflow-auto rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
                       <table className="w-full">

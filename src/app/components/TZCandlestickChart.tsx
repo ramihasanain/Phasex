@@ -16,6 +16,7 @@ interface TZCandlestickChartProps {
   }>;
   height?: number;
   livePrice?: number; // Real-time price from WebSocket
+  priceOffset?: number; // Manual vertical pane offset
 }
 
 // Seeded random for consistent candles (no re-randomization on re-render)
@@ -47,7 +48,7 @@ function generateOHLCFromValue(value: number, index: number) {
   return { open, high, low, close };
 }
 
-export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data, height = 400, livePrice }: TZCandlestickChartProps) {
+export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data, height = 400, livePrice, priceOffset = 0 }: TZCandlestickChartProps) {
   const { language } = useLanguage();
   const tk = useThemeTokens();
   const isDark = tk.isDark;
@@ -124,10 +125,10 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
       if (d.low < min) min = d.low;
       if (d.high > max) max = d.high;
     }
-    if (min === Infinity || max === -Infinity) return { minY: 0, maxY: 1 };
+    if (min === Infinity || max === -Infinity) return { minY: 0 + priceOffset, maxY: 1 + priceOffset };
     const padding = (max - min) * 0.08 || 1;
-    return { minY: min - padding, maxY: max + padding };
-  }, [candlestickData]);
+    return { minY: min - padding + priceOffset, maxY: max + padding + priceOffset };
+  }, [candlestickData, priceOffset]);
 
   const scaleY = useCallback((val: number) => {
     return innerHeight - ((val - minY) / (maxY - minY)) * innerHeight;
