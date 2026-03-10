@@ -2,7 +2,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import { Asset } from "./MarketList";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, TrendingDown, Activity, Maximize2, Minimize2, Table, BarChart3, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Download, Info, ChevronDown, Check } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, ChevronDown, Check, Table, BarChart3, Maximize2, Minimize2 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { TZCandlestickChart } from "./TZCandlestickChart";
@@ -329,7 +329,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const handleVisibilityToggle = useCallback(() => setDrawingsVisible(prev => !prev), []);
   const handleCloseDrawingTools = useCallback(() => setShowDrawingTools(false), []);
   const [showDrawingTools, setShowDrawingTools] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const fullscreenChartRef = useRef<HTMLDivElement>(null);
 
   // Freeze live price when drawing tools are active to prevent chart re-renders
@@ -344,170 +343,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   }, [showDrawingTools]);
   // Use frozen price when drawing, live price otherwise
   const chartLivePrice = showDrawingTools ? frozenPriceRef.current : currency?.price;
-
-  // Export chart — use ref for dynamic values so the callback is stable
-  const exportDataRef = useRef({ isExpanded: false, currency: null as any, indicator: null as any, isRTL: false, timeframe: 5 });
-  useEffect(() => {
-    exportDataRef.current = { isExpanded, currency, indicator, isRTL, timeframe };
-  });
-
-  const handleExportChart = useCallback(async () => {
-    const { isExpanded, currency, indicator, isRTL, timeframe } = exportDataRef.current;
-
-    // Target the entire expanded modal container or the simple chart container
-    // We navigate to the parent element of the fullscreenChartRef to capture the header too.
-    const ref = isExpanded
-      ? fullscreenChartRef.current?.parentElement
-      : chartRef.current?.parentElement;
-
-    if (!ref || !currency || !indicator) return;
-    setIsExporting(true);
-
-    try {
-      // Dynamic import html2canvas
-      const mod = await import("html2canvas");
-      const html2canvas = mod.default;
-
-      // Temporarily stash UI elements we don't want in the screenshot (like the close button toolbar)
-      const toolbarButtons = ref.querySelectorAll('button');
-      const originalDisplayStyles: string[] = [];
-      toolbarButtons.forEach(btn => {
-        // Keep the main active filter buttons visible, but hide actions like 'Close' or 'Export' or 'Table'
-        if (btn.title === "Close" || btn.title === "إغلاق" || btn.title === "Export Image" || btn.title === "تصدير صورة" || btn.title === "Table" || btn.title === "جدول") {
-          originalDisplayStyles.push(btn.style.display);
-          btn.style.display = 'none';
-        } else {
-          originalDisplayStyles.push("keep");
-        }
-      });
-
-      // Capture the entire area
-      const captured = await html2canvas(ref as HTMLElement, {
-        backgroundColor: "#0b0e14",
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        // Ensure SVGs stroke rendering works properly
-        onclone: (clonedDoc) => {
-          const svgs = clonedDoc.querySelectorAll('svg');
-          svgs.forEach(svg => { svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); });
-        }
-      });
-
-      // Restore UI elements
-      toolbarButtons.forEach((btn, idx) => {
-        if (originalDisplayStyles[idx] !== "keep") {
-          btn.style.display = originalDisplayStyles[idx];
-        }
-      });
-
-      // Create final canvas with watermark footer
-      const finalW = captured.width;
-      const footerH = 120;
-      const finalH = captured.height + footerH;
-      const finalCanvas = document.createElement("canvas");
-      finalCanvas.width = finalW;
-      finalCanvas.height = finalH;
-      const ctx = finalCanvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas context failed");
-
-      // Fill background
-      ctx.fillStyle = "#0b0e14";
-      ctx.fillRect(0, 0, finalW, finalH);
-
-      // Draw captured chart image
-      ctx.drawImage(captured, 0, 0);
-
-      // ── Diagonal "PHASE X" watermark across entire image ──
-      ctx.save();
-      ctx.globalAlpha = 0.035;
-      ctx.font = "bold 52px Arial, sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "center";
-      for (let row = -200; row < finalH + 200; row += 180) {
-        for (let col = -200; col < finalW + 200; col += 420) {
-          ctx.save();
-          ctx.translate(col, row);
-          ctx.rotate(-0.42); // ~24 degrees
-          ctx.fillText("PHASE X", 0, 0);
-          ctx.restore();
-        }
-      }
-      ctx.restore();
-
-      // ── Footer bar ──
-      const fy = captured.height;
-
-      // Footer background
-      ctx.fillStyle = "#0d1017";
-      ctx.fillRect(0, fy, finalW, footerH);
-
-      // Gradient accent line at top of footer
-      const accentGrad = ctx.createLinearGradient(0, fy, finalW, fy);
-      accentGrad.addColorStop(0, "#6366f1");
-      accentGrad.addColorStop(0.5, "#8b5cf6");
-      accentGrad.addColorStop(1, "#6366f1");
-      ctx.fillStyle = accentGrad;
-      ctx.fillRect(0, fy, finalW, 3);
-
-      // PHASE X badge (rounded rect with fallback)
-      const bx = 40, by = fy + 30, bw = 200, bh = 56;
-      const bGrad = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
-      bGrad.addColorStop(0, "#6366f1");
-      bGrad.addColorStop(1, "#8b5cf6");
-      ctx.fillStyle = bGrad;
-      if (ctx.roundRect) {
-        ctx.beginPath();
-        ctx.roundRect(bx, by, bw, bh, 14);
-        ctx.fill();
-      } else {
-        // Fallback: simple rect
-        ctx.fillRect(bx, by, bw, bh);
-      }
-
-      // "PHASE X" text in badge
-      ctx.font = "bold 28px Arial, sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillText("PHASE X", bx + 30, by + bh / 2);
-
-      // Symbol + Indicator + Timeframe info
-      ctx.font = "bold 20px Arial, sans-serif";
-      ctx.fillStyle = "#94a3b8";
-      ctx.textBaseline = "alphabetic";
-      const infoText = `${currency.symbol}  •  ${isRTL ? indicator.name : indicator.nameEn}  •  ${timeframe}${isRTL ? "د" : "M"} `;
-      ctx.fillText(infoText, bx + bw + 30, fy + 52);
-
-      // Timestamp
-      ctx.font = "400 16px Arial, sans-serif";
-      ctx.fillStyle = "#475569";
-      const dateStr = new Date().toLocaleString();
-      ctx.fillText(dateStr, bx + bw + 30, fy + 78);
-
-      // Copyright on the right
-      ctx.font = "500 16px Arial, sans-serif";
-      ctx.fillStyle = "#334155";
-      ctx.textAlign = "right";
-      ctx.fillText("© PHASE X Trading Platform", finalW - 40, fy + 65);
-
-      // Trigger download
-      const dataUrl = finalCanvas.toDataURL("image/png", 1.0);
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `PHASE_X_${currency.symbol}_${indicator.id}_${timeframe}M_${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-    } catch (err) {
-      console.error("Export error:", err);
-      alert(isRTL ? "فشل التصدير، حاول مرة أخرى" : "Export failed, please try again");
-    } finally {
-      setIsExporting(false);
-    }
-  }, []);
 
   // Use live API data for Phase State, or uploaded JSON. For Phase: NO mock fallback.
   const effectiveData = useMemo(() => {
@@ -820,7 +655,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               {[
                 { icon: Table, active: showTable, onClick: () => setShowTable(true), title: "Table" },
                 { icon: BarChart3, active: !showTable, onClick: () => setShowTable(false), title: "Chart" },
-                { icon: Download, active: false, onClick: () => handleExportChart(), title: isRTL ? "تصدير" : "Export" },
                 { icon: Maximize2, active: false, onClick: () => setIsExpanded(true), title: isRTL ? "تكبير" : "Fullscreen" },
               ].map(({ icon: Ic, active, onClick, title }) => (
                 <button key={title} onClick={onClick} className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-all"
@@ -1090,12 +924,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       title={isRTL ? "أدوات الرسم" : "Drawing Tools"}>
                       <Layers className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleExportChart()} disabled={isExporting}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-all"
-                      style={{ background: isExporting ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.03)", color: isExporting ? "#818cf8" : "#64748b", border: isExporting ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent" }}
-                      title={isRTL ? "تصدير صورة" : "Export Image"}>
-                      {isExporting ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}><Download className="w-4 h-4" /></motion.div> : <Download className="w-4 h-4" />}
-                    </button>
                     <button onClick={() => setIsExpanded(false)}
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
                       style={{ background: tk.buttonGhost, color: tk.buttonGhostText }}
@@ -1156,8 +984,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   <div className="flex-shrink-0 h-full" style={{ width: "190px" }}>
                     <DrawingToolbar selectedTool={selectedTool} onToolChange={setSelectedTool}
                       onZoomIn={zoomIn} onZoomOut={zoomOut}
-                      onClear={handleClearDrawings}
-                      onExport={handleExportChart} magnetEnabled={magnetEnabled} onMagnetToggle={handleMagnetToggle}
+                      onClear={handleClearDrawings} magnetEnabled={magnetEnabled} onMagnetToggle={handleMagnetToggle}
                       locked={drawingsLocked} onLockToggle={handleLockToggle}
                       visible={drawingsVisible} onVisibilityToggle={handleVisibilityToggle}
                       onClose={handleCloseDrawingTools} />

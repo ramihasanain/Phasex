@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Lock, Mail, ArrowRight, Zap, FileText } from "lucide-react";
+import { Lock, Mail, ArrowRight, Zap } from "lucide-react";
 import { Logo } from "./Logo";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion } from "motion/react";

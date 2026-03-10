@@ -71,7 +71,6 @@ interface DrawingToolbarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onClear: () => void;
-  onExport?: () => void;
   magnetEnabled?: boolean;
   onMagnetToggle?: () => void;
   locked?: boolean;
@@ -87,7 +86,6 @@ export const DrawingToolbar = React.memo(function DrawingToolbar({
   onZoomIn,
   onZoomOut,
   onClear,
-  onExport,
   magnetEnabled = false,
   onMagnetToggle,
   locked = false,
@@ -525,24 +523,6 @@ export const DrawingToolbar = React.memo(function DrawingToolbar({
                 <Eraser className="w-4 h-4" />
                 {isRTL ? "مسح الكل" : "Clear All"}
               </motion.button>
-
-              {onExport && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onExport}
-                  className={`
-                    w-full py-2 px-3 rounded-lg text-sm font-semibold
-                    bg-gradient-to-r from-indigo-600 to-purple-600
-                    hover:from-indigo-700 hover:to-purple-700
-                    text-white shadow-lg
-                    flex items-center justify-center gap-2
-                  `}
-                >
-                  <Eye className="w-4 h-4" />
-                  {isRTL ? "حفظ" : "Export"}
-                </motion.button>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -579,18 +559,6 @@ export const DrawingToolbar = React.memo(function DrawingToolbar({
               >
                 <Eraser className="w-4 h-4" />
               </motion.button>
-
-              {onExport && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={onExport}
-                  className="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white"
-                  title={isRTL ? "حفظ" : "Export"}
-                >
-                  <Eye className="w-4 h-4" />
-                </motion.button>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
