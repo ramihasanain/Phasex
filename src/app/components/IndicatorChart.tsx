@@ -652,14 +652,24 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               </span>
             </div>
             {/* View Buttons */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1 ml-1">
+              <button onClick={() => { setShowDirections(true); setShowTable(false); }} title="Phase X State Candles Directions"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
+                style={{
+                  background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)",
+                  color: showDirections ? "#10b981" : "#0ea5e9",
+                  border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
+                  boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
+                }}>
+                <ListOrdered className="w-4 h-4" />
+              </button>
+              
               {[
-                { icon: ListOrdered, active: showDirections, onClick: () => { setShowDirections(true); setShowTable(false); }, title: "Directions" },
                 { icon: Table, active: showTable && !showDirections, onClick: () => { setShowTable(true); setShowDirections(false); }, title: "Table" },
                 { icon: BarChart3, active: !showTable && !showDirections, onClick: () => { setShowTable(false); setShowDirections(false); }, title: "Chart" },
                 { icon: Maximize2, active: false, onClick: () => setIsExpanded(true), title: isRTL ? "تكبير" : "Fullscreen" },
               ].map(({ icon: Ic, active, onClick, title }) => (
-                <button key={title} onClick={onClick} className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-all"
+                <button key={title} onClick={onClick} title={title} className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-all"
                   style={{ background: active ? "rgba(255,255,255,0.06)" : "transparent", color: active ? "#e2e8f0" : "#475569" }}>
                   <Ic className="w-3.5 h-3.5" />
                 </button>
@@ -1025,10 +1035,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   {/* Toolbar buttons */}
                   <div className="flex items-center gap-1">
                     <button onClick={() => { setShowDirections(!showDirections); setShowTable(false); }}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
-                      style={{ background: showDirections ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.03)", color: showDirections ? "#10b981" : "#64748b" }}
-                      title={isRTL ? "الاتجاهات" : "Directions"}>
-                      <ListOrdered className="w-4 h-4" />
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
+                      style={{ 
+                        background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)", 
+                        color: showDirections ? "#10b981" : "#0ea5e9",
+                        border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
+                        boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
+                      }}
+                      title="Phase X State Candles Directions">
+                      <ListOrdered className="w-5 h-5" />
                     </button>
                     <button onClick={() => { setShowTable(!showTable); setShowDirections(false); }}
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
