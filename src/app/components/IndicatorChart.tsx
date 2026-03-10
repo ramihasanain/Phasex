@@ -560,8 +560,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     const si = startIndexRef.current;
     const nw = Math.max(10, vw - 5);
     setViewWindow(nw);
-    const center = si + vw / 2;
-    setStartIndex(Math.max(0, Math.min(dataLenRef.current - nw, Math.round(center - nw / 2))));
+    // Pin to the right side (most recent candles in view)
+    const rightEdge = si + vw;
+    setStartIndex(Math.max(0, rightEdge - nw));
   }, []);
   const zoomOut = useCallback(() => {
     setCandleLimit("Auto");
@@ -570,8 +571,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     const si = startIndexRef.current;
     const nw = Math.min(dataLenRef.current, vw + 10);
     setViewWindow(nw);
-    const center = si + vw / 2;
-    setStartIndex(Math.max(0, Math.min(dataLenRef.current - nw, Math.round(center - nw / 2))));
+    // Pin to the right side (most recent candles in view)
+    const rightEdge = si + vw;
+    setStartIndex(Math.max(0, rightEdge - nw));
   }, []);
 
   const panLeft = () => { setCandleLimit("Auto"); setYOffset(0); setStartIndex((p) => Math.max(0, p - Math.max(3, Math.round(viewWindow / 5)))); };
