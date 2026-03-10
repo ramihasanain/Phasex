@@ -372,7 +372,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
   useEffect(() => { setStartIndex(Math.max(0, effectiveData.length - viewWindow)); }, [effectiveData.length]);
 
-  const displayedData = useMemo(() => effectiveData.slice(startIndex, startIndex + viewWindow), [effectiveData, startIndex, viewWindow]);
+  const displayedData = useMemo(() => {
+    const rawSlice = effectiveData.slice(startIndex, startIndex + viewWindow);
+    if (rawSlice.length > 0 && startIndex + rawSlice.length >= effectiveData.length) {
+      const lastIdx = rawSlice.length - 1;
+      rawSlice[lastIdx] = { ...rawSlice[lastIdx], isLiveIndicator: true };
+    }
+    return rawSlice;
+  }, [effectiveData, startIndex, viewWindow]);
 
   // Memoize price range for DrawingCanvas to prevent re-renders from WebSocket updates
   const drawingPriceRange = useMemo(() => {
@@ -457,6 +464,35 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
   }, [effectiveData.length, viewWindow, zoomIn, zoomOut]);
+
+  // Optimize Directions Table rendering
+  const directionsData = useMemo(() => {
+    if (!showDirections || effectiveData.length === 0 || !currency?.price) return null;
+    
+    const rows = Array.from({ length: 50 }, (_, i) => (i + 1) * 10).map((windowSize, idx) => {
+      if (windowSize > effectiveData.length) return null;
+
+      const dataSlice = effectiveData.slice(-windowSize);
+      if (dataSlice.length === 0) return null;
+
+      const high = Math.max(...dataSlice.map((d: any) => d.high ?? d.value));
+      const low = Math.min(...dataSlice.map((d: any) => d.low ?? d.value));
+      const entry = (high + low) / 2;
+      const currentPrice = currency.price;
+      const isBuy = currentPrice >= entry;
+      const directionStr = isBuy ? "Buy" : "Sell";
+      const profit = isBuy ? currentPrice - entry : entry - currentPrice;
+
+      return { windowSize, idx, high, low, entry, currentPrice, isBuy, directionStr, profit };
+    }).filter(Boolean) as any[];
+
+    if (rows.length === 0) return null;
+
+    const maxProfitWindow = [...rows].reduce((max, row) => row.profit > max.profit ? row : max, rows[0]).windowSize;
+    const minProfitWindow = [...rows].reduce((min, row) => row.profit < min.profit ? row : min, rows[0]).windowSize;
+
+    return { rows, maxProfitWindow, minProfitWindow };
+  }, [effectiveData, currency?.price, showDirections]);
 
   /* ────── EMPTY STATE ────── */
   if (!currency || !indicator) {
@@ -801,11 +837,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   </tbody>
                 </table>
               </motion.div>
-            ) : (
+            ) : !showDirections ? (
               <motion.div key="chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
                 {renderChart(Math.max(300, (chartRef.current?.offsetHeight ?? 400) - 16))}
               </motion.div>
-            )}
+            ) : null}
 
             {showDirections && (
               <motion.div key="directions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
@@ -845,38 +881,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       </tr>
                     </thead>
                     <tbody>
-                      {(() => {
-                        const rows = Array.from({ length: 50 }, (_, i) => (i + 1) * 10).map((windowSize, idx) => {
-                          if (effectiveData.length === 0) return null;
-                          if (windowSize > effectiveData.length) return null;
-
-                          const dataSlice = effectiveData.slice(-windowSize);
-                          if (dataSlice.length === 0) return null;
-
-                          const high = Math.max(...dataSlice.map((d: any) => d.high ?? d.value));
-                          const low = Math.min(...dataSlice.map((d: any) => d.low ?? d.value));
-                          const entry = (high + low) / 2;
-                          const currentPrice = currency.price;
-                          const isBuy = currentPrice >= entry;
-                          const directionStr = isBuy ? "Buy" : "Sell";
-                          const profit = isBuy ? currentPrice - entry : entry - currentPrice;
-
-                          return { windowSize, idx, high, low, entry, currentPrice, isBuy, directionStr, profit };
-                        }).filter(Boolean) as any[];
-
-                        if (rows.length === 0) return null;
-
-                        const maxProfitWindow = [...rows].reduce((max, row) => row.profit > max.profit ? row : max, rows[0]).windowSize;
-                        const minProfitWindow = [...rows].reduce((min, row) => row.profit < min.profit ? row : min, rows[0]).windowSize;
-
-                        return rows.map((row) => {
+                      {directionsData && directionsData.rows.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-4 text-sm text-slate-500">No data available for directions.</td>
+                        </tr>
+                      ) : (
+                        directionsData && directionsData.rows.map((row: any) => {
                           const isEven = row.idx % 2 === 0;
                           const rowBg = isEven ? "rgba(255,255,255,0.03)" : "transparent";
                           const dirBg = row.isBuy ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)";
                           const dirColor = row.isBuy ? "#10b981" : "#f43f5e";
 
-                          const isMax = row.windowSize === maxProfitWindow;
-                          const isMin = row.windowSize === minProfitWindow;
+                          const isMax = row.windowSize === directionsData.maxProfitWindow;
+                          const isMin = row.windowSize === directionsData.minProfitWindow;
 
                           return (
                             <tr key={row.windowSize} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: rowBg }}>
@@ -909,8 +926,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                               </td>
                             </tr>
                           );
-                        });
-                      })()}
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1177,9 +1194,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         </tbody>
                       </table>
                     </div>
-                  ) : (
-                    renderChart(window.innerHeight - 140)
-                  )}
+                  ) : !showDirections ? (
+                    <div className="absolute inset-0 z-0">
+                      {renderChart(window.innerHeight - 140)}
+                    </div>
+                  ) : null}
 
                   {/* Drawing Canvas overlay — only in fullscreen */}
                   {!showTable && !showDirections && showDrawingTools && (
@@ -1225,38 +1244,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                             </tr>
                           </thead>
                           <tbody>
-                            {(() => {
-                              const rows = Array.from({ length: 50 }, (_, i) => (i + 1) * 10).map((windowSize, idx) => {
-                                if (effectiveData.length === 0) return null;
-                                if (windowSize > effectiveData.length) return null;
-
-                                const dataSlice = effectiveData.slice(-windowSize);
-                                if (dataSlice.length === 0) return null;
-
-                                const high = Math.max(...dataSlice.map((d: any) => d.high ?? d.value));
-                                const low = Math.min(...dataSlice.map((d: any) => d.low ?? d.value));
-                                const entry = (high + low) / 2;
-                                const currentPrice = currency.price;
-                                const isBuy = currentPrice >= entry;
-                                const directionStr = isBuy ? "Buy" : "Sell";
-                                const profit = isBuy ? currentPrice - entry : entry - currentPrice;
-
-                                return { windowSize, idx, high, low, entry, currentPrice, isBuy, directionStr, profit };
-                              }).filter(Boolean) as any[];
-
-                              if (rows.length === 0) return null;
-
-                              const maxProfitWindow = [...rows].reduce((max, row) => row.profit > max.profit ? row : max, rows[0]).windowSize;
-                              const minProfitWindow = [...rows].reduce((min, row) => row.profit < min.profit ? row : min, rows[0]).windowSize;
-
-                              return rows.map((row) => {
+                            {directionsData && directionsData.rows.length === 0 ? (
+                              <tr>
+                                <td colSpan={7} className="p-4 text-sm text-slate-500">No data available for directions.</td>
+                              </tr>
+                            ) : (
+                              directionsData && directionsData.rows.map((row: any) => {
                                 const isEven = row.idx % 2 === 0;
                                 const rowBg = isEven ? "rgba(255,255,255,0.03)" : "transparent";
                                 const dirBg = row.isBuy ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)";
                                 const dirColor = row.isBuy ? "#10b981" : "#f43f5e";
 
-                                const isMax = row.windowSize === maxProfitWindow;
-                                const isMin = row.windowSize === minProfitWindow;
+                                const isMax = row.windowSize === directionsData.maxProfitWindow;
+                                const isMin = row.windowSize === directionsData.minProfitWindow;
 
                                 return (
                                   <tr key={row.windowSize} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: rowBg }}>
@@ -1289,8 +1289,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                     </td>
                                   </tr>
                                 );
-                              });
-                            })()}
+                              })
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -1298,10 +1298,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   )}
                 </div>
               </div>
-            </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence >
+        </motion.div>
+      )}
+      </AnimatePresence>
       <AnimatePresence>
         {showInfoPopup && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

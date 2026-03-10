@@ -13,6 +13,7 @@ interface TZCandlestickChartProps {
     low?: number;
     close?: number;
     isReal?: boolean;
+    isLiveIndicator?: boolean;
   }>;
   height?: number;
   livePrice?: number; // Real-time price from WebSocket
@@ -292,19 +293,23 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
             const cx = i * gap + gap / 2;
             const isGreen = candle.isGreen;
             const isLast = i === candlestickData.length - 1;
-            const isLive = isLast && livePrice !== undefined;
+            // Only apply live socket styling and price to the absolute latest candle
+            const isLive = candle.isLiveIndicator && livePrice !== undefined;
 
-            // For the last candle, use live price to update close/high/low
+            let effectiveOpen = candle.open;
             let effectiveClose = candle.close;
             let effectiveHigh = candle.high;
             let effectiveLow = candle.low;
-            let effectiveIsGreen = isGreen;
-            if (isLive) {
-              effectiveClose = livePrice!;
-              effectiveHigh = Math.max(candle.high, livePrice!);
-              effectiveLow = Math.min(candle.low, livePrice!);
-              effectiveIsGreen = effectiveClose > candle.open;
+            let effectiveIsGreen = candle.close >= candle.open;
+            
+            if (candle.isLiveIndicator && livePrice !== undefined) {
+              effectiveClose = livePrice;
+              effectiveHigh = Math.max(candle.open, effectiveClose, candle.high);
+              effectiveLow = Math.min(candle.open, effectiveClose, candle.low);
+              effectiveIsGreen = effectiveClose >= candle.open;
             }
+            
+            const displayLivePrice = candle.isLiveIndicator && livePrice !== undefined ? livePrice : candle.close;
 
             // ── NaN candle → show "no data" placeholder ──
             if (candle.isNaNCandle) {
@@ -452,9 +457,9 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
                     {/* === Animated Price Line === */}
                     <line
                       x1={cx + w / 2 + 4}
-                      y1={closeY}
+                      y1={scaleY(displayLivePrice)}
                       x2={innerWidth}
-                      y2={closeY}
+                      y2={scaleY(displayLivePrice)}
                       stroke={fillColor}
                       strokeWidth={1.2}
                       strokeDasharray="4 3"
@@ -466,7 +471,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
                     {/* === Premium Price Label === */}
                     <rect
                       x={innerWidth + 2}
-                      y={closeY - 11}
+                      y={scaleY(displayLivePrice) - 11}
                       width={56}
                       height={22}
                       rx={4}
@@ -478,13 +483,13 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
                     </rect>
                     <text
                       x={innerWidth + 30}
-                      y={closeY + 4}
+                      y={scaleY(displayLivePrice) + 4}
                       fill="white"
                       fontSize="9.5"
                       fontFamily="monospace"
                       textAnchor="middle"
                       fontWeight="bold">
-                      {effectiveClose.toFixed(2)}
+                      {displayLivePrice.toFixed(2)}
                     </text>
 
                     {/* === LIVE Beacon === */}
