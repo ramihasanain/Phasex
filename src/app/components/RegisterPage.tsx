@@ -227,7 +227,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
       <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7, type: "spring", stiffness: 100 }}
-        className="w-full sm:max-w-2xl relative z-10">
+        className="w-full max-w-2xl relative z-10">
 
         {/* Main Card */}
         <div className="rounded-2xl overflow-hidden relative"
@@ -244,7 +244,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
             transition={{ duration: 2, repeat: Infinity }} />
 
           {/* Header */}
-          <div className="px-4 sm:px-8 pt-7 pb-3 text-center">
+          <div className="px-8 pt-7 pb-3 text-center">
             <motion.div className="flex justify-center mb-3" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }}>
               <div className="relative">
                 <Logo className="w-12 h-12 relative z-10" />
@@ -265,7 +265,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
           </div>
 
           {/* Progress Steps */}
-          <div className="px-2 sm:px-8 pb-5 overflow-x-auto no-scrollbar">
+          <div className="px-8 pb-5">
             <div className="flex items-center justify-between">
               {steps.map((s, i) => {
                 const StepIcon = s.icon;
@@ -316,7 +316,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
           </div>
 
           {/* Content */}
-          <div className="px-4 sm:px-8 pb-6">
+          <div className="px-8 pb-6">
             <AnimatePresence mode="wait">
               {/* Step 1 */}
               {step === 1 && (
@@ -333,7 +333,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                     </motion.div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     {renderInput("firstName", "text", isRTL ? "الاسم الأول" : "First Name", formData.firstName, v => setFormData({ ...formData, firstName: v }), <User className="w-4 h-4" />)}
                     {renderInput("lastName", "text", isRTL ? "الاسم الأخير" : "Last Name", formData.lastName, v => setFormData({ ...formData, lastName: v }), <User className="w-4 h-4" />)}
                   </div>
@@ -371,7 +371,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
                   {renderInput("email", "email", isRTL ? "البريد الإلكتروني" : "Email", formData.email, v => setFormData({ ...formData, email: v }), <Mail className="w-4 h-4" />)}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     {renderInput("password", "password", isRTL ? "كلمة المرور" : "Password", formData.password, v => setFormData({ ...formData, password: v }), <Lock className="w-4 h-4" />)}
                     {renderInput("confirmPassword", "password", isRTL ? "تأكيد" : "Confirm", formData.confirmPassword, v => setFormData({ ...formData, confirmPassword: v }), <Lock className="w-4 h-4" />)}
                   </div>
@@ -459,7 +459,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                             </div>
                           )}
 
-                          <div className="flex flex-col sm:flex-row items-start gap-4">
+                          <div className="flex items-start gap-4">
                             <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                               style={{
                                 background: isSelected ? `linear-gradient(135deg, ${sub.color}, ${sub.color}88)` : `${sub.color}15`,
@@ -486,7 +486,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                             </div>
 
                             {isSelected && (
-                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex-shrink-0 self-end sm:self-center mt-2 sm:mt-0">
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex-shrink-0">
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center"
                                   style={{ background: `${sub.color}20`, border: `2px solid ${sub.color}` }}>
                                   <Check className="w-4 h-4" style={{ color: sub.color }} />
@@ -578,7 +578,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
         {/* Stats */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          className="mt-5 grid grid-cols-3 gap-3">
           {[
             { icon: Rocket, text: "10,000+", label: isRTL ? "متداول" : "Traders" },
             { icon: Star, text: "4.9/5", label: isRTL ? "تقييم" : "Rating" },

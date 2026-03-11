@@ -15,6 +15,7 @@ interface TZCandlestickChartProps {
     isReal?: boolean;
     isLiveIndicator?: boolean;
   }>;
+  height?: number;
   livePrice?: number; // Real-time price from WebSocket
   priceOffset?: number; // Manual vertical pane offset
 }
@@ -48,7 +49,7 @@ function generateOHLCFromValue(value: number, index: number) {
   return { open, high, low, close };
 }
 
-export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data, livePrice, priceOffset = 0 }: TZCandlestickChartProps) {
+export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data, height = 400, livePrice, priceOffset = 0 }: TZCandlestickChartProps) {
   const { language } = useLanguage();
   const tk = useThemeTokens();
   const isDark = tk.isDark;
@@ -60,20 +61,16 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
   // Chart dimensions — responsive
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(900);
-  const [containerHeight, setContainerHeight] = useState(400);
   const margin = { top: 15, right: 55, bottom: 45, left: 5 };
   const chartWidth = containerWidth;
   const innerWidth = chartWidth - margin.left - margin.right;
-  const innerHeight = containerHeight - margin.top - margin.bottom;
+  const innerHeight = height - margin.top - margin.bottom;
 
-  // Measure container dimensions on mount and resize
+  // Measure container width on mount and resize
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const update = () => {
-      setContainerWidth(el.clientWidth || 900);
-      setContainerHeight(el.clientHeight || 400);
-    };
+    const update = () => setContainerWidth(el.clientWidth || 900);
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
@@ -170,7 +167,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const scaleX = chartWidth / rect.width;
-    const scaleYFactor = containerHeight / rect.height;
+    const scaleYFactor = height / rect.height;
     const mouseX = (e.clientX - rect.left) * scaleX - margin.left;
     const idx = Math.round(mouseX / gap - 0.5);
     if (idx >= 0 && idx < candlestickData.length) {
@@ -184,7 +181,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
       setHoveredIndex(-1);
       setTooltip(null);
     }
-  }, [candlestickData, gap, chartWidth, containerHeight, margin.left]);
+  }, [candlestickData, gap, chartWidth, height, margin.left]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredIndex(-1);
@@ -201,9 +198,9 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
       <svg
         ref={svgRef}
         width={chartWidth}
-        height={containerHeight}
-        className="w-full h-full block"
-        style={{ background: bgColor }}
+        height={height}
+        className="w-full"
+        style={{ height: `${height}px`, background: bgColor, display: 'block' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
@@ -316,11 +313,11 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
 
             // ── NaN candle → show "no data" placeholder ──
             if (candle.isNaNCandle) {
-              const midY = containerHeight / 2;
+              const midY = height / 2;
               return (
                 <g key={`candle-${i}`}>
                   {/* Dashed line */}
-                  <line x1={cx} y1={margin.top + 10} x2={cx} y2={containerHeight - margin.bottom - 5}
+                  <line x1={cx} y1={margin.top + 10} x2={cx} y2={height - margin.bottom - 5}
                     stroke="#475569" strokeWidth={1} strokeDasharray="4 3" opacity={0.5} />
                   {/* No-data icon */}
                   <text x={cx} y={midY} textAnchor="middle" dominantBaseline="middle"
@@ -623,7 +620,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
             className="absolute pointer-events-none z-50"
             style={{
               left: `${Math.min(tooltip.x / chartWidth * 100, 75)}%`,
-              top: `${Math.max(tooltip.y / containerHeight * 100 - 15, 5)}%`,
+              top: `${Math.max(tooltip.y / height * 100 - 15, 5)}%`,
               transform: 'translateX(-50%)',
             }}
           >

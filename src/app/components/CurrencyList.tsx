@@ -28,11 +28,10 @@ export function CurrencyList({ currencies, selectedCurrency, onSelectCurrency }:
           <button
             key={currency.id}
             onClick={() => onSelectCurrency(currency)}
-            className={`w-full text-right p-3 rounded-lg border-2 transition-all hover:bg-slate-50 ${
-              selectedCurrency?.id === currency.id
+            className={`w-full text-right p-3 rounded-lg border-2 transition-all hover:bg-slate-50 ${selectedCurrency?.id === currency.id
                 ? "border-blue-600 bg-blue-50"
                 : "border-gray-200"
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between mb-1">
               <Badge variant={currency.change >= 0 ? "default" : "destructive"} className="text-xs">

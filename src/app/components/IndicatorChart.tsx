@@ -540,11 +540,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     <ReferenceLine key={`sep - ${i} `} x={d.time} stroke="#334155" strokeWidth={1} strokeDasharray="4 4" opacity={0.4} />
   ));
 
-  const renderChart = () => {
+  const renderChart = (height: number) => {
     // Show loading / error / empty state for Phase State when no data
     if (isPhaseIndicator && effectiveData.length === 0) {
       return (
-        <div className="flex items-center justify-center rounded-lg w-full h-full" style={{ background: tk.surface, border: `1px solid ${tk.border} ` }}>
+        <div className="flex items-center justify-center rounded-lg" style={{ height, background: tk.surface, border: `1px solid ${tk.border} ` }}>
           <div className="text-center">
             {apiLoading ? (
               <>
@@ -577,7 +577,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     switch (indicator.type) {
       case "area":
         return (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={height}>
             <AreaChart {...common}>
               <defs><linearGradient id={`g - ${indicator.id} `} x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={indicator.color} stopOpacity={0.3} /><stop offset="95%" stopColor={indicator.color} stopOpacity={0} /></linearGradient></defs>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />{daySeps()}
@@ -596,7 +596,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </ResponsiveContainer>);
       case "bar":
         return (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={height}>
             <BarChart {...common}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />{daySeps()}
               <XAxis dataKey="time" stroke={textColor} height={50} tick={<CustomTick />} interval="preserveStartEnd" />
@@ -616,12 +616,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         return (
           <TZCandlestickChart
             data={displayedData}
-            livePrice={chartLivePrice}
+            height={height}
+            livePrice={currency.price}
             priceOffset={yOffset}
           />);
       default:
         return (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={height}>
             <LineChart {...common}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />{daySeps()}
               <XAxis dataKey="time" stroke={textColor} height={50} tick={<CustomTick />} interval="preserveStartEnd" />
@@ -837,8 +838,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 </table>
               </motion.div>
             ) : !showDirections ? (
-              <motion.div key="chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 w-full h-full">
-                {renderChart()}
+              <motion.div key="chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
+                {renderChart(Math.max(300, (chartRef.current?.offsetHeight ?? 400) - 16))}
               </motion.div>
             ) : null}
 
@@ -1194,8 +1195,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       </table>
                     </div>
                   ) : !showDirections ? (
-                    <div className="absolute inset-0 z-0 w-full h-full">
-                      {renderChart()}
+                    <div className="absolute inset-0 z-0">
+                      {renderChart(window.innerHeight - 140)}
                     </div>
                   ) : null}
 

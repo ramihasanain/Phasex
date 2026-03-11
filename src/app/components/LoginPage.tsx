@@ -113,7 +113,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7, type: "spring", stiffness: 100 }}
-        className="w-[90%] sm:max-w-md mx-auto relative z-10"
+        className="w-full max-w-md mx-4 relative z-10"
       >
         <div className="rounded-2xl overflow-hidden relative"
           style={{
@@ -129,7 +129,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
             transition={{ duration: 2, repeat: Infinity }} />
 
           {/* Header */}
-          <div className="px-5 sm:px-8 pt-8 pb-4 text-center relative">
+          <div className="px-8 pt-8 pb-4 text-center relative">
             <motion.div className="flex justify-center mb-4"
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity }}>
@@ -164,7 +164,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
           </div>
 
           {/* Form */}
-          <div className="px-5 sm:px-8 pb-8">
+          <div className="px-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div className="space-y-2">
