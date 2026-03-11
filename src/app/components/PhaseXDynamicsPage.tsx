@@ -1574,7 +1574,9 @@ function TradingDecisionEngineTable({
         const sConf = confStr === "High Confidence" ? 2 : confStr === "Medium Confidence" ? 1 : 0;
         const sMph = marketPhase === "Bullish Expansion" ? 3 : marketPhase === "Bearish Expansion" ? -3 : 0;
 
-        const totalScore = sPt + sMom + sBias + sPhase + sVol + sConf + sMph;
+        const coreSum = sPt + sBias + sMph;
+        const extraSum = sMom + sPhase + sVol + sConf;
+        const totalScore = Math.sign(coreSum) * (Math.abs(coreSum) + extraSum);
 
         let decision = "NO TRADE";
         if (totalScore >= 13) decision = "STRONG BUY";
@@ -1933,7 +1935,9 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
         const sConf = confStr === "High Confidence" ? 2 : confStr === "Medium Confidence" ? 1 : 0;
         const sMph = marketPhase === "Bullish Expansion" ? 3 : marketPhase === "Bearish Expansion" ? -3 : 0;
 
-        const totalScore = sPt + sMom + sBias + sPhase + sVol + sConf + sMph;
+        const coreSum = sPt + sBias + sMph;
+        const extraSum = sMom + sPhase + sVol + sConf;
+        const totalScore = Math.sign(coreSum) * (Math.abs(coreSum) + extraSum);
 
         let decision = "NO TRADE";
         if (totalScore >= 13) decision = "STRONG BUY";
