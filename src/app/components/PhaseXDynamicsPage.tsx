@@ -1625,10 +1625,13 @@ function TradingDecisionEngineTable({
                                 }
                             }
                             const labelAr: any = { "ALL": "الكل", "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" };
+                            const count = df === "ALL" ? rows.length : rows.filter(r => r.decision === df).length;
+
                             return (
                                 <button key={df} onClick={() => setDecisionFilter(df as any)}
-                                    className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${styleCls}`}>
-                                    {isRTL ? labelAr[df] : df}
+                                    className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-1.5 ${styleCls} ${count === 0 ? "opacity-50" : ""}`}>
+                                    <span>{isRTL ? labelAr[df] : df}</span>
+                                    <span className="bg-black/20 px-1.5 py-0.5 rounded text-[10px] ml-1">{count}</span>
                                 </button>
                             );
                         })}
