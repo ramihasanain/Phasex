@@ -43,7 +43,7 @@ const indicators: Indicator[] = [
 const indicatorIcons: Record<string, any> = { Gauge, Move, Target, Activity, Navigation };
 
 /* ─── Chart Data Generator ─── */
-function generateChartData(asset: Asset, indicator: Indicator, timeframe: 5 | 15 | 30 | 60) {
+function generateChartData(asset: Asset, indicator: Indicator, timeframe: number) {
   const data = [];
   const base = asset.price;
   const points = timeframe === 5 ? 120 : timeframe === 15 ? 96 : 48;
@@ -184,10 +184,10 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [chartData, setChartData] = useState<any[]>([]);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(false);
-  const [timeframe, setTimeframe] = useState<5 | 15 | 30 | 60>(15);
+  const [timeframe, setTimeframe] = useState<number>(15);
   const [mtfEnabled, setMtfEnabled] = useState(false);
-  const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<5 | 15 | 30 | 60>(5);
-  const [mtfLargeTimeframe, setMtfLargeTimeframe] = useState<240 | 720 | 1440>(240);
+  const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<number>(5);
+  const [mtfLargeTimeframe, setMtfLargeTimeframe] = useState<number>(240);
 
   const subInfo = { isActive: true, daysRemaining: 3 };
 
@@ -256,7 +256,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   /* ─── Data Generation ─── */
   const pickAsset = (a: Asset) => { setSelectedAsset(a); if (selectedIndicator) setChartData(generateChartData(a, selectedIndicator, timeframe)); };
   const pickIndicator = (ind: Indicator) => { setSelectedIndicator(ind); if (selectedAsset) setChartData(generateChartData(selectedAsset, ind, timeframe)); };
-  const pickTimeframe = (tf: 5 | 15 | 30 | 60) => { setTimeframe(tf); if (selectedAsset && selectedIndicator) setChartData(generateChartData(selectedAsset, selectedIndicator, tf)); };
+  const pickTimeframe = (tf: number) => { setTimeframe(tf); if (selectedAsset && selectedIndicator) setChartData(generateChartData(selectedAsset, selectedIndicator, tf)); };
 
   // Keep selectedAsset in sync with live prices
   const liveSelectedAsset = useMemo(() => {

@@ -5,6 +5,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { TrendingUp, TrendingDown, Activity, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, ChevronDown, Check, Table, BarChart3, Maximize2, Minimize2, ListOrdered, Edit3 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
+import { useDirectionStateAPI } from "../hooks/useDirectionStateAPI";
+import { useOscillationStateAPI } from "../hooks/useOscillationStateAPI";
+import { useDisplacementStateAPI } from "../hooks/useDisplacementStateAPI";
+import { useReferenceStateAPI } from "../hooks/useReferenceStateAPI";
 import { TZCandlestickChart } from "./TZCandlestickChart";
 import { DrawingToolbar, DrawingTool } from "./DrawingToolbar";
 import { DrawingCanvas } from "./DrawingCanvas";
@@ -25,14 +29,14 @@ interface IndicatorChartProps {
   currency: Asset | null;
   indicator: Indicator | null;
   data: any[];
-  timeframe: 5 | 15 | 30 | 60;
-  onTimeframeChange: (timeframe: 5 | 15 | 30 | 60) => void;
+  timeframe: number;
+  onTimeframeChange: (timeframe: number) => void;
   mtfEnabled?: boolean;
-  mtfSmallTimeframe?: 5 | 15 | 30 | 60;
-  mtfLargeTimeframe?: 240 | 720 | 1440;
+  mtfSmallTimeframe?: number;
+  mtfLargeTimeframe?: number;
   onMtfEnabledChange?: (enabled: boolean) => void;
-  onMtfSmallTimeframeChange?: (timeframe: 5 | 15 | 30 | 60) => void;
-  onMtfLargeTimeframeChange?: (timeframe: 240 | 720 | 1440) => void;
+  onMtfSmallTimeframeChange?: (timeframe: number) => void;
+  onMtfLargeTimeframeChange?: (timeframe: number) => void;
   phaseStateData?: PhaseStateDataMap;
   generateCandlesFromReal?: (real: PhaseCandle, count?: number) => any[];
 }
@@ -314,6 +318,34 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     !!isPhaseIndicator
   );
 
+  const isDirectionIndicator = indicator?.id === "direction";
+  const { candles: dirCandles, loading: dirLoading, error: dirError } = useDirectionStateAPI(
+    currency?.symbol,
+    timeframe,
+    !!isDirectionIndicator
+  );
+
+  const isOscillationIndicator = indicator?.id === "oscillation";
+  const { candles: oscCandles, loading: oscLoading, error: oscError } = useOscillationStateAPI(
+    currency?.symbol,
+    timeframe,
+    !!isOscillationIndicator
+  );
+
+  const isDisplacementIndicator = indicator?.id === "displacement";
+  const { candles: dispCandles, loading: dispLoading, error: dispError } = useDisplacementStateAPI(
+    currency?.symbol,
+    timeframe,
+    !!isDisplacementIndicator
+  );
+
+  const isReferenceIndicator = indicator?.id === "reference";
+  const { candles: refCandles, loading: refLoading, error: refError } = useReferenceStateAPI(
+    currency?.symbol,
+    timeframe,
+    !!isReferenceIndicator
+  );
+
   // Drawing tools — only for fullscreen
   const [selectedTool, setSelectedTool] = useState<DrawingTool>("cursor");
   const [magnetEnabled, setMagnetEnabled] = useState(false);
@@ -366,9 +398,33 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       // Phase indicator with no data → empty (will show "no readings" message)
       return [];
     }
+    if (isDirectionIndicator) {
+      if (dirCandles.length > 0) {
+        return dirCandles;
+      }
+      return [];
+    }
+    if (isOscillationIndicator) {
+      if (oscCandles.length > 0) {
+        return oscCandles;
+      }
+      return [];
+    }
+    if (isDisplacementIndicator) {
+      if (dispCandles.length > 0) {
+        return dispCandles;
+      }
+      return [];
+    }
+    if (isReferenceIndicator) {
+      if (refCandles.length > 0) {
+        return refCandles;
+      }
+      return [];
+    }
     // Non-phase indicators: use chart data
     return data;
-  }, [isPhaseIndicator, apiCandles, mainTF, subTF, currency?.symbol, phaseStateData, data]);
+  }, [isPhaseIndicator, apiCandles, mainTF, subTF, currency?.symbol, phaseStateData, data, isDirectionIndicator, dirCandles, isOscillationIndicator, oscCandles, isDisplacementIndicator, dispCandles, isReferenceIndicator, refCandles]);
 
   useEffect(() => { setStartIndex(Math.max(0, effectiveData.length - viewWindow)); }, [effectiveData.length]);
 
@@ -542,11 +598,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
   const renderChart = (height: number) => {
     // Show loading / error / empty state for Phase State when no data
-    if (isPhaseIndicator && effectiveData.length === 0) {
+    if ((isPhaseIndicator && effectiveData.length === 0) || (isDirectionIndicator && effectiveData.length === 0) || (isOscillationIndicator && effectiveData.length === 0) || (isDisplacementIndicator && effectiveData.length === 0) || (isReferenceIndicator && effectiveData.length === 0)) {
+      const isLoading = isPhaseIndicator ? apiLoading : (isDirectionIndicator ? dirLoading : isOscillationIndicator ? oscLoading : isDisplacementIndicator ? dispLoading : refLoading);
+      const errorMsg = isPhaseIndicator ? apiError : (isDirectionIndicator ? dirError : isOscillationIndicator ? oscError : isDisplacementIndicator ? dispError : refError);
       return (
         <div className="flex items-center justify-center rounded-lg" style={{ height, background: tk.surface, border: `1px solid ${tk.border} ` }}>
           <div className="text-center">
-            {apiLoading ? (
+            {isLoading ? (
               <>
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                   className="w-10 h-10 mx-auto mb-3 rounded-full" style={{ border: `3px solid ${tk.border} `, borderTopColor: '#6366f1' }} />
@@ -560,11 +618,20 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 <p className="text-sm font-medium" style={{ color: tk.textMuted }}>
                   {isRTL ? "لا توجد قراءات حالية" : "No current readings"}
                 </p>
-                {apiError && (
-                  <p className="text-xs mt-1" style={{ color: tk.negative, opacity: 0.7 }}>{apiError}</p>
+                {errorMsg && (
+                  <p className="text-xs mt-1" style={{ color: tk.negative, opacity: 0.7 }}>{errorMsg}</p>
                 )}
                 <p className="text-[11px] mt-2" style={{ color: tk.textDim }}>
-                  {isRTL ? `${currency?.symbol} - ${mainTF} من ${subTF} ` : `${currency?.symbol} - ${mainTF} from ${subTF} `}
+                  {isPhaseIndicator 
+                    ? (isRTL ? `${currency?.symbol} - ${mainTF} من ${subTF} ` : `${currency?.symbol} - ${mainTF} from ${subTF} `)
+                    : isDirectionIndicator 
+                      ? (isRTL ? `${currency?.symbol} - الإتجاه (${timeframe}د)` : `${currency?.symbol} - Direction (M${timeframe})`)
+                      : isOscillationIndicator
+                        ? (isRTL ? `${currency?.symbol} - التذبذب (${timeframe}د)` : `${currency?.symbol} - Oscillation (M${timeframe})`)
+                        : isDisplacementIndicator
+                          ? (isRTL ? `${currency?.symbol} - الإزاحة (${timeframe}د)` : `${currency?.symbol} - Displacement (M${timeframe})`)
+                          : (isRTL ? `${currency?.symbol} - المرجع (${timeframe}د)` : `${currency?.symbol} - Reference (M${timeframe})`)
+                  }
                 </p>
               </>
             )}
@@ -720,17 +787,17 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           {indicator.id === "phase" ? (
             <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} compact />
           ) : (
-            <div className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 mr-1" style={{ color: "#475569" }} />
-              {[5, 15, 30, 60].map((tf) => (
-                <button key={tf} onClick={() => onTimeframeChange(tf as 5 | 15 | 30 | 60)}
-                  className="px-3 py-1 rounded-md text-[11px] font-bold cursor-pointer transition-all"
+            <div className="flex items-center gap-0.5 overflow-x-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+              <Clock className="w-3.5 h-3.5 mr-1 flex-shrink-0" style={{ color: "#475569" }} />
+              {(indicator.id !== "phase" ? [5, 10, 15, 30, 60, 120, 240, 360, 480, 720, 1440] : [5, 15, 30, 60]).map((tf) => (
+                <button key={tf} onClick={() => onTimeframeChange(tf)}
+                  className="px-1.5 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-all flex-shrink-0"
                   style={{
                     background: timeframe === tf ? `${indicator.color} 15` : "transparent",
                     border: timeframe === tf ? `1px solid ${indicator.color} 30` : "1px solid transparent",
                     color: timeframe === tf ? indicator.color : "#64748b",
                   }}>
-                  {tf}{isRTL ? "د" : "M"}
+                  {tf >= 1440 ? `1${isRTL ? 'ي' : 'D'}` : tf >= 60 ? `${tf/60}${isRTL ? 'س' : 'H'}` : `${tf}${isRTL ? 'د' : 'M'}`}
                 </button>
               ))}
             </div>
@@ -776,7 +843,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           style={{ cursor: isDragging ? "grabbing" : "crosshair" }}>
 
           {/* API Loading overlay */}
-          {isPhaseIndicator && apiLoading && (
+          {((isPhaseIndicator && apiLoading) || (isDirectionIndicator && dirLoading) || (isOscillationIndicator && oscLoading) || (isDisplacementIndicator && dispLoading) || (isReferenceIndicator && refLoading)) && (
             <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(17,21,32,0.8)" }}>
               <div className="flex flex-col items-center gap-3">
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -1089,17 +1156,17 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 {indicator.id === "phase" ? (
                   <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} />
                 ) : (
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 mr-1.5" style={{ color: "#475569" }} />
-                    {[5, 15, 30, 60].map((tf) => (
-                      <button key={tf} onClick={() => onTimeframeChange(tf as 5 | 15 | 30 | 60)}
-                        className="px-4 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
+                  <div className="flex items-center gap-0.5 overflow-x-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                    <Clock className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" style={{ color: "#475569" }} />
+                    {(indicator.id !== "phase" ? [5, 10, 15, 30, 60, 120, 240, 360, 480, 720, 1440] : [5, 15, 30, 60]).map((tf) => (
+                      <button key={tf} onClick={() => onTimeframeChange(tf)}
+                        className="px-2 py-1 rounded-lg text-[11px] md:text-xs font-bold cursor-pointer flex-shrink-0"
                         style={{
                           background: timeframe === tf ? `${indicator.color} 15` : "transparent",
                           border: timeframe === tf ? `1px solid ${indicator.color} 30` : "1px solid transparent",
                           color: timeframe === tf ? indicator.color : "#64748b",
                         }}>
-                        {tf}{isRTL ? "د" : "M"}
+                        {tf >= 1440 ? `1${isRTL ? 'ي' : 'D'}` : tf >= 60 ? `${tf/60}${isRTL ? 'س' : 'H'}` : `${tf}${isRTL ? 'د' : 'M'}`}
                       </button>
                     ))}
                   </div>

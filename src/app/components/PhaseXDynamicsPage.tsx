@@ -2,8 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 
 import { motion, AnimatePresence } from "motion/react";
 
-import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, TrendingDown, Activity, Zap, Upload, RotateCcw, Target, Cpu, Activity as Pulse, Shield, Flame, Layers } from "lucide-react";
-
+import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, TrendingDown, Activity, Zap, Upload, RotateCcw, Target, Cpu, Activity as Pulse, Shield, Flame, Layers, Bot, X } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import type { VCRow } from "./phase-x/types";
 import { SciFiClock } from "./SciFiClock";
@@ -12,9 +11,20 @@ interface PhaseXDynamicsPageProps {
     onBack: () => void;
 }
 
+const PhaseXBotIcon = ({ size = 26, color = "currentColor", className = "", style = {} }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+        <path d="M12 4v4" />
+        <path d="M10 4h4" />
+        <rect x="5" y="8" width="14" height="10" rx="3" />
+        <path d="M9 12v2" />
+        <path d="M15 12v2" />
+        <path d="M2 13h3" />
+        <path d="M19 13h3" />
+    </svg>
+);
 
 
-type MarketCategory = "Forex" | "Metals" | "Commodities" | "Indices" | "Crypto" | "Other";
+type MarketCategory = "Forex" | "Commodities" | "Indices" | "Crypto" | "Other";
 
 type AnalysisTab = "Vector Core" | "Delta Engine" | "Pulse Matrix" | "Boundary Shell" | "Power Field" | "Phase X Layer" | "Decision Engine";
 
@@ -1495,7 +1505,7 @@ function TradingDecisionEngineTable({
     isRTL: boolean;
     sources: Record<AnalysisTab, any[]>;
 }) {
-    const [decisionFilter, setDecisionFilter] = useState<"ALL" | "BUY" | "SELL" | "NO TRADE">("ALL");
+    const [decisionFilter, setDecisionFilter] = useState<"ALL" | "STRONG BUY" | "BUY" | "WEAK BUY" | "NO TRADE" | "WEAK SELL" | "SELL" | "STRONG SELL">("ALL");
 
     const cat = marketCategories.find(c => c.name === category);
     const symbols = cat?.symbols.filter(sym => {
@@ -1546,13 +1556,30 @@ function TradingDecisionEngineTable({
         else if (phase === "Directional" && v === "Low") marketPhase = "Compression";
         else marketPhase = "Transition";
 
-        let decision = "NO TRADE";
-        if ((primaryTrendFull === "Strong Uptrend" || primaryTrendFull === "Bullish") && structuralBias === "Upward") decision = "BUY";
-        if ((primaryTrendFull === "Strong Downtrend" || primaryTrendFull === "Bearish") && structuralBias === "Downward") decision = "SELL";
-
         const confStr = layerData.confidence >= 70 ? "High Confidence" : layerData.confidence >= 40 ? "Medium Confidence" : "Low Confidence";
 
-        return { sym, primaryTrendFull, structuralBias, momentumState, phase, volatility: v, reversalRisk, confStr, marketPhase, decision, confidence: layerData.confidence, score: gs };
+        // ----- SCORES -----
+        const sPt = primaryTrendFull === "Strong Uptrend" ? 4 : primaryTrendFull === "Bullish" ? 2 : primaryTrendFull === "Bearish" ? -2 : primaryTrendFull === "Strong Downtrend" ? -4 : 0;
+        const sMom = momentumState === "Strong" ? 2 : momentumState === "Moderate" ? 1 : 0;
+        const sBias = structuralBias === "Upward" ? 2 : structuralBias === "Downward" ? -2 : 0;
+        const sPhase = phase === "Directional" ? 2 : phase === "Developing" ? 1 : 0;
+        const sVol = v === "Elevated" ? 1 : v === "Moderate" ? 2 : 0;
+        // Reversal risk doesn't add to score
+        const sConf = confStr === "High Confidence" ? 2 : confStr === "Medium Confidence" ? 1 : 0;
+        const sMph = marketPhase === "Bullish Expansion" ? 3 : marketPhase === "Bearish Expansion" ? -3 : 0;
+
+        const totalScore = sPt + sMom + sBias + sPhase + sVol + sConf + sMph;
+
+        let decision = "NO TRADE";
+        if (totalScore >= 13) decision = "STRONG BUY";
+        else if (totalScore > 7) decision = "BUY";
+        else if (totalScore > 0) decision = "WEAK BUY";
+        else if (totalScore === 0) decision = "NO TRADE";
+        else if (totalScore > -7) decision = "WEAK SELL";
+        else if (totalScore > -13) decision = "SELL";
+        else decision = "STRONG SELL";
+
+        return { sym, primaryTrendFull, structuralBias, momentumState, phase, volatility: v, reversalRisk, confStr, marketPhase, decision, confidence: layerData.confidence, score: gs, totalScore };
     });
 
     const filteredRows = rows.filter(r => decisionFilter === "ALL" || r.decision === decisionFilter);
@@ -1560,7 +1587,7 @@ function TradingDecisionEngineTable({
     return (
         <div className="space-y-4">
             {/* Local Filters for Decision Engine */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+            <div className="grid grid-cols-1 gap-4 mb-2">
                 {/* Market Filter */}
                 <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
                     <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{isRTL ? "السوق:" : "MARKET:"}</span>
@@ -1574,20 +1601,32 @@ function TradingDecisionEngineTable({
                     ))}
                 </div>
                 {/* Decision Filter */}
-                <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{isRTL ? "القرار:" : "DECISION:"}</span>
-                    {["ALL", "BUY", "SELL", "NO TRADE"].map(df => (
-                        <button key={df} onClick={() => setDecisionFilter(df as any)}
-                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all
-                                ${decisionFilter === df
-                                    ? df === "BUY" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-                                        : df === "SELL" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-[0_0_10px_rgba(225,29,72,0.15)]"
-                                            : df === "NO TRADE" ? "bg-slate-500/20 text-slate-300 border border-slate-500/30 shadow-[0_0_10px_rgba(100,116,139,0.15)]"
-                                                : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]"
-                                    : "bg-transparent text-gray-400 hover:bg-white/5"}`}>
-                            {isRTL ? (df === "ALL" ? "الكل" : df) : df}
-                        </button>
-                    ))}
+                <div className="p-3 rounded-xl flex items-center justify-between gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{isRTL ? "القرار:" : "DECISION:"}</span>
+                        {["ALL", "STRONG BUY", "BUY", "WEAK BUY", "NO TRADE", "WEAK SELL", "SELL", "STRONG SELL"].map(df => {
+                            let styleCls = "bg-transparent text-gray-400 hover:bg-white/5";
+                            if (decisionFilter === df) {
+                                switch (df) {
+                                    case "STRONG BUY": styleCls = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]"; break;
+                                    case "BUY": styleCls = "bg-lime-500/20 text-lime-400 border border-lime-500/30 shadow-[0_0_10px_rgba(132,204,22,0.15)]"; break;
+                                    case "WEAK BUY": styleCls = "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]"; break;
+                                    case "NO TRADE": styleCls = "bg-slate-500/20 text-slate-300 border border-slate-500/30 shadow-[0_0_10px_rgba(100,116,139,0.15)]"; break;
+                                    case "WEAK SELL": styleCls = "bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"; break;
+                                    case "SELL": styleCls = "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-[0_0_10px_rgba(225,29,72,0.15)]"; break;
+                                    case "STRONG SELL": styleCls = "bg-red-500/20 text-red-400 border border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.25)]"; break;
+                                    case "ALL": styleCls = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]"; break;
+                                }
+                            }
+                            const labelAr: any = { "ALL": "الكل", "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" };
+                            return (
+                                <button key={df} onClick={() => setDecisionFilter(df as any)}
+                                    className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${styleCls}`}>
+                                    {isRTL ? labelAr[df] : df}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
@@ -1623,9 +1662,13 @@ function TradingDecisionEngineTable({
                                 </td>
                                 <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.marketPhase) }}>{tv(r.marketPhase)}</td>
                                 <td className="py-2.5 px-5 border-r border-b text-[13.5px] font-black tracking-wider" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                                    {r.decision === "BUY" && <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(16,185,129,0.2)] block text-center min-w-[70px] border border-emerald-500/30">BUY</span>}
-                                    {r.decision === "SELL" && <span className="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(225,29,72,0.2)] block text-center min-w-[70px] border border-rose-500/30">SELL</span>}
-                                    {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-300 px-3 py-1.5 rounded-md block text-center min-w-[70px] border border-slate-500/30">NO TRADE</span>}
+                                    {r.decision === "STRONG BUY" && <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(16,185,129,0.4)] block text-center min-w-[90px] border border-emerald-500/40">{isRTL ? "شراء قوي" : "STRONG BUY"}</span>}
+                                    {r.decision === "BUY" && <span className="bg-lime-500/20 text-lime-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(132,204,22,0.2)] block text-center min-w-[90px] border border-lime-500/30">{isRTL ? "شراء" : "BUY"}</span>}
+                                    {r.decision === "WEAK BUY" && <span className="bg-yellow-500/15 text-yellow-500 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]">{isRTL ? "شراء ضعيف" : "WEAK BUY"}</span>}
+                                    {r.decision === "STRONG SELL" && <span className="bg-red-500/20 text-red-400 px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(239,68,68,0.4)] block text-center min-w-[90px] border border-red-500/40">{isRTL ? "بيع قوي" : "STRONG SELL"}</span>}
+                                    {r.decision === "SELL" && <span className="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(225,29,72,0.2)] block text-center min-w-[90px] border border-rose-500/30">{isRTL ? "بيع" : "SELL"}</span>}
+                                    {r.decision === "WEAK SELL" && <span className="bg-orange-500/15 text-orange-500 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]">{isRTL ? "بيع ضعيف" : "WEAK SELL"}</span>}
+                                    {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-400 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-slate-500/30">{isRTL ? "لا تداول" : "NO TRADE"}</span>}
                                 </td>
                             </motion.tr>
                         ))}
@@ -1656,16 +1699,14 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const t = i18n[lang];
 
     const tv = (v: string) => isRTL ? (trendAr[v] || v) : v;
+    const [selectedCategory, setSelectedCategory] = useState<MarketCategory>("Forex");
 
-    const [selectedCategory, setSelectedCategory] = useState<MarketCategory>("Metals");
-
-    const [selectedSymbol, setSelectedSymbol] = useState("XAUUSD");
+    const [selectedSymbol, setSelectedSymbol] = useState("EURUSD");
     const [lastSystemUpdate, setLastSystemUpdate] = useState<number | null>(Date.now());
 
     const [selectedTab, setSelectedTab] = useState<AnalysisTab>("Vector Core");
     const [filterOpen, setFilterOpen] = useState(true);
-
-
+    const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
 
     const [sources, setSources] = useState<Record<AnalysisTab, any[]>>(defaultAnalysisSources);
     const [uploadStatus, setUploadStatus] = useState<Record<AnalysisTab, boolean[]>>({
@@ -1872,9 +1913,27 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
         else if (p === "Directional" && v === "Low") marketPhase = "Compression";
         else marketPhase = "Transition";
 
+        const confStr = layerData.confidence >= 70 ? "High Confidence" : layerData.confidence >= 40 ? "Medium Confidence" : "Low Confidence";
+
+        // ----- SCORES -----
+        const sPt = primaryTrendFull === "Strong Uptrend" ? 4 : primaryTrendFull === "Bullish" ? 2 : primaryTrendFull === "Bearish" ? -2 : primaryTrendFull === "Strong Downtrend" ? -4 : 0;
+        const sMom = momentumState === "Strong" ? 2 : momentumState === "Moderate" ? 1 : 0;
+        const sBias = structuralBias === "Upward" ? 2 : structuralBias === "Downward" ? -2 : 0;
+        const sPhase = p === "Directional" ? 2 : p === "Developing" ? 1 : 0;
+        const sVol = v === "Elevated" ? 1 : v === "Moderate" ? 2 : 0;
+        const sConf = confStr === "High Confidence" ? 2 : confStr === "Medium Confidence" ? 1 : 0;
+        const sMph = marketPhase === "Bullish Expansion" ? 3 : marketPhase === "Bearish Expansion" ? -3 : 0;
+
+        const totalScore = sPt + sMom + sBias + sPhase + sVol + sConf + sMph;
+
         let decision = "NO TRADE";
-        if ((primaryTrendFull === "Strong Uptrend" || primaryTrendFull === "Bullish") && structuralBias === "Upward") decision = "BUY";
-        if ((primaryTrendFull === "Strong Downtrend" || primaryTrendFull === "Bearish") && structuralBias === "Downward") decision = "SELL";
+        if (totalScore >= 13) decision = "STRONG BUY";
+        else if (totalScore > 7) decision = "BUY";
+        else if (totalScore > 0) decision = "WEAK BUY";
+        else if (totalScore === 0) decision = "NO TRADE";
+        else if (totalScore > -7) decision = "WEAK SELL";
+        else if (totalScore > -13) decision = "SELL";
+        else decision = "STRONG SELL";
 
         return {
             symbol: selectedSymbol,
@@ -2073,6 +2132,95 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                         background: `linear-gradient(135deg, rgba(8,12,20,0.75) 0%, rgba(10,16,26,0.7) 40%, rgba(8,12,20,0.6) 100%)`,
                         borderRadius: "16px",
                     }}>
+                        {/* ════  AI FLOATING BOT  ════ */}
+                        <div className={`absolute top-[45%] -translate-y-1/2 ${isRTL ? "right-8" : "left-8"} z-50`}>
+                            {/* Outer attention ring */}
+                            <motion.div className="absolute inset-0 rounded-full"
+                                style={{ border: `2px solid ${accent}` }}
+                                animate={{ scale: [1, 1.8], opacity: [0.8, 0] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }} />
+                            {/* Second attention ring */}
+                            <motion.div className="absolute inset-0 rounded-full"
+                                style={{ border: `1px solid ${accent}` }}
+                                animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 1 }} />
+                            
+                            <motion.button
+                                onClick={() => setIsAiPanelOpen(true)}
+                                className="w-14 h-14 rounded-full flex items-center justify-center relative overflow-hidden group hover:scale-110 transition-transform cursor-pointer"
+                                style={{
+                                    background: `linear-gradient(135deg, ${accent}40 0%, rgba(0,0,0,0.6) 100%)`,
+                                    border: `1.5px solid ${accent}80`,
+                                    boxShadow: `0 0 25px ${accentG}0.5), inset 0 0 15px ${accentG}0.4)`
+                                }}
+                                animate={{ y: [0, -6, 0], boxShadow: [`0 0 20px ${accentG}0.4)`, `0 0 40px ${accentG}0.8)`, `0 0 20px ${accentG}0.4)`] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                <motion.div className="absolute inset-0 pointer-events-none"
+                                    style={{ background: `radial-gradient(circle at 50% 50%, ${accent}60 0%, transparent 70%)` }}
+                                    animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.8, 1.3, 0.8] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
+                                {/* Robot Icon */}
+                                <motion.div animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+                                    <PhaseXBotIcon size={28} color="#fff" className="relative z-10" style={{ filter: `drop-shadow(0 0 10px ${accent})` }} />
+                                </motion.div>
+                            </motion.button>
+                        </div>
+
+                        {/* ════  AI INSIGHT PANEL OVERLAY  ════ */}
+                        <AnimatePresence>
+                            {isAiPanelOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    className={`absolute top-0 bottom-0 ${isRTL ? "right-0" : "left-0"} z-50 rounded-2xl flex flex-col justify-center overflow-hidden`}
+                                    style={{
+                                        width: "100%",
+                                        background: "rgba(10, 15, 25, 0.95)",
+                                        backdropFilter: "blur(12px)",
+                                        border: `1px solid ${accent}40`,
+                                        boxShadow: `0 0 50px rgba(0,0,0,0.8), inset 0 0 30px ${accentG}0.15)`
+                                    }}
+                                >
+                                    {/* Sci-fi background grid */}
+                                    <div className="absolute inset-0 pointer-events-none opacity-20"
+                                        style={{ backgroundImage: `linear-gradient(${accent} 1px, transparent 1px), linear-gradient(90deg, ${accent} 1px, transparent 1px)`, backgroundSize: "30px 30px" }} />
+                                    
+                                    <button onClick={() => setIsAiPanelOpen(false)} className={`absolute top-5 ${isRTL ? "left-5" : "right-5"} text-gray-400 hover:text-white transition-colors z-20`}>
+                                        <X size={28} />
+                                    </button>
+
+                                    <div className="px-14 py-8 relative z-10 flex gap-8 items-center h-full">
+                                        <div className="w-24 h-24 rounded-full flex-shrink-0 flex items-center justify-center relative bg-black/40 border border-white/10"
+                                            style={{ boxShadow: `0 0 30px ${accentG}0.3)` }}>
+                                            <motion.div className="absolute inset-0 rounded-full"
+                                                style={{ border: `2px dashed ${accent}60` }}
+                                                animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} />
+                                            <PhaseXBotIcon size={44} color={accent} style={{ filter: `drop-shadow(0 0 12px ${accent})` }} />
+                                        </div>
+                                        
+                                        <div className="flex-1">
+                                            <h3 className="text-xl font-black mb-4 flex items-center gap-3 tracking-wider uppercase" style={{ color: accent }}>
+                                                <Zap size={20} />
+                                                {isRTL ? "تحليل الذكاء الاصطناعي" : "AI MARKET INSIGHT"}
+                                            </h3>
+                                            <p className="text-gray-200 text-lg leading-relaxed font-medium" style={{ textShadow: "0 2px 4px rgba(0,0,0,0.5)" }} dir={isRTL ? "rtl" : "ltr"}>
+                                                {isRTL ? (
+                                                    <>
+                                                        تُظهر القراءة الفنية الحالية اتجاهاً <span style={{ color: accent }}>{tv(data.dynamics.primaryTrend)}</span>، يعززه زخم <span style={{ color: accent }}>{tv(data.dynamics.momentumState)}</span> مع انحياز هيكلي <span style={{ color: accent }}>{tv(data.dynamics.structuralBias)}</span>. ويتحرك السوق حالياً ضمن مرحلة <span style={{ color: accent }}>{tv(data.phase)}</span> تعكس حالة المرحلة السوقية بـ <span style={{ color: accent }}>{tv(data.dynamics.marketPhase)}</span>. وفي ظل تذبذب <span style={{ color: accent }}>{tv(data.volatility)}</span>، تبقى مخاطر الانعكاس عند مستوى <span style={{ color: accent }}>{tv(data.risk)}</span>، مما يدعم درجة الثقة الـ <span style={{ color: accent }}>{data.confidence}%</span> في استمرارية المعطيات الكمية الحالية.
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        The current technical outlook confirms a Primary Trend that is <span style={{ color: accent }}>{data.dynamics.primaryTrend}</span>, bolstered by Momentum that is <span style={{ color: accent }}>{data.dynamics.momentumState}</span> and an <span style={{ color: accent }}>{data.dynamics.structuralBias}</span> Structural Bias. This price action is unfolding within a <span style={{ color: accent }}>{data.phase}</span> Phase, while the broader Market Phase is characterized by <span style={{ color: accent }}>{data.dynamics.marketPhase}</span>. With Volatility remaining <span style={{ color: accent }}>{data.volatility}</span> and Reversal Risk assessed as <span style={{ color: accent }}>{data.risk}</span>, the <span style={{ color: accent }}>{data.confidence}%</span> Confidence level underscores the strong alignment of all underlying factors.
+                                                    </>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         <div className="flex-1 px-8 py-1">
                             <div className="text-[13px] text-gray-600 tracking-[0.25em] uppercase mt-3 mb-1 font-semibold flex items-center gap-3">
@@ -2087,7 +2235,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 </motion.span>
                             </div>
 
-                            <motion.h2 className="text-[48px] font-black tracking-tight mb-0 leading-none"
+                            <motion.h2 className="text-[48px] font-black tracking-tight mb-8 leading-none z-10 relative"
                                 style={{ color: accent, fontStyle: "italic" }}
                                 animate={{
                                     textShadow: [
@@ -2102,7 +2250,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             </motion.h2>
 
                             {/* ═══ Top Cluster: Clocks + Currency Badge ═══ */}
-                            <div className="-mt-6 flex justify-center items-center gap-8 mb-4 w-full relative z-30" style={{ paddingLeft: '150px' }}>
+                            <div className="mt-4 flex justify-center items-center gap-8 mb-6 w-full relative z-30" style={{ paddingLeft: '150px' }}>
                                 {/* LEFT CLOCK: Last Update */}
                                 <SciFiClock
                                     isLive={true}
@@ -2238,29 +2386,46 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                     </motion.div>
 
                                     {/* DECISION BOX */}
-                                    {data.decision && (
-                                        <motion.div className="w-full text-center px-4 py-2 rounded-xl relative overflow-hidden"
-                                            style={{
-                                                background: data.decision === "BUY" ? "rgba(16,185,129,0.12)" : data.decision === "SELL" ? "rgba(225,29,72,0.12)" : "rgba(100,116,139,0.2)",
-                                                border: `1px solid ${data.decision === "BUY" ? "rgba(16,185,129,0.25)" : data.decision === "SELL" ? "rgba(225,29,72,0.25)" : "rgba(100,116,139,0.3)"}`
-                                            }}
-                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                                            <div className="text-[10px] tracking-widest uppercase mb-0.5 font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>
-                                                {isRTL ? "القرار" : "DECISION"}
-                                            </div>
-                                            <div className="text-[18px] font-black tracking-wider"
-                                                style={{ color: data.decision === "BUY" ? "#34d399" : data.decision === "SELL" ? "#fb7185" : "#cbd5e1" }}>
-                                                {data.decision}
-                                            </div>
-                                            {/* Decision Glow Pulse (only for BUY/SELL) */}
-                                            {data.decision !== "NO TRADE" && (
-                                                <motion.div className="absolute inset-0 pointer-events-none"
-                                                    style={{ background: `radial-gradient(circle at 50% 50%, ${data.decision === "BUY" ? "rgba(16,185,129,0.2)" : "rgba(225,29,72,0.2)"} 0%, transparent 70%)` }}
-                                                    animate={{ opacity: [0.2, 0.6, 0.2], scale: [0.9, 1.1, 0.9] }}
-                                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
-                                            )}
-                                        </motion.div>
-                                    )}
+                                    {data.decision && (() => {
+                                        const getDecisionColors = (decision: string) => {
+                                            switch (decision) {
+                                                case "STRONG BUY": return { bg: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.3)", text: "#34d399", glow: "rgba(16,185,129,0.3)" };
+                                                case "BUY": return { bg: "rgba(132,204,22,0.12)", border: "rgba(132,204,22,0.25)", text: "#a3e635", glow: "rgba(132,204,22,0.2)" };
+                                                case "WEAK BUY": return { bg: "rgba(234,179,8,0.1)", border: "rgba(234,179,8,0.2)", text: "#facc15", glow: "rgba(234,179,8,0.15)" };
+                                                case "NO TRADE": return { bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.2)", text: "#94a3b8", glow: "transparent" };
+                                                case "WEAK SELL": return { bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.2)", text: "#fb923c", glow: "rgba(249,115,22,0.15)" };
+                                                case "SELL": return { bg: "rgba(225,29,72,0.12)", border: "rgba(225,29,72,0.25)", text: "#fb7185", glow: "rgba(225,29,72,0.2)" };
+                                                case "STRONG SELL": return { bg: "rgba(239,68,68,0.15)", border: "rgba(239,68,68,0.3)", text: "#f87171", glow: "rgba(239,68,68,0.3)" };
+                                                default: return { bg: "rgba(100,116,139,0.1)", border: "rgba(100,116,139,0.2)", text: "#94a3b8", glow: "transparent" };
+                                            }
+                                        };
+                                        const dColors = getDecisionColors(data.decision);
+                                        const decisionLabelAr = { "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" }[data.decision];
+
+                                        return (
+                                            <motion.div className="w-full text-center px-4 py-2 rounded-xl relative overflow-hidden"
+                                                style={{
+                                                    background: dColors.bg,
+                                                    border: `1px solid ${dColors.border}`
+                                                }}
+                                                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                                                <div className="text-[10px] tracking-widest uppercase mb-0.5 font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>
+                                                    {isRTL ? "القرار" : "DECISION"}
+                                                </div>
+                                                <div className="text-[18px] font-black tracking-wider"
+                                                    style={{ color: dColors.text }}>
+                                                    {isRTL && decisionLabelAr ? decisionLabelAr : data.decision}
+                                                </div>
+                                                {/* Decision Glow Pulse */}
+                                                {data.decision !== "NO TRADE" && (
+                                                    <motion.div className="absolute inset-0 pointer-events-none"
+                                                        style={{ background: `radial-gradient(circle at 50% 50%, ${dColors.glow} 0%, transparent 70%)` }}
+                                                        animate={{ opacity: [0.2, 0.6, 0.2], scale: [0.9, 1.1, 0.9] }}
+                                                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
+                                                )}
+                                            </motion.div>
+                                        );
+                                    })()}
                                 </div>
                                 {/* Gauge */}
                                 <SupercarGauge score={data.globalScore} confidence={data.confidence} isRTL={isRTL} />
