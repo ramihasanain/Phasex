@@ -1696,7 +1696,7 @@ function TradingDecisionEngineTable({
 
 export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
 
-    const { language } = useLanguage();
+    const { language, toggleLanguage } = useLanguage();
 
     const isRTL = language === "ar";
 
@@ -2052,6 +2052,9 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 ))}
                             </div>
 
+                            <button onClick={toggleLanguage} className="px-3 py-1.5 rounded-lg text-[11px] font-black tracking-widest text-cyan-400 hover:text-white hover:bg-white/10 transition-colors uppercase border border-cyan-500/20 bg-cyan-500/10 mr-2">
+                                {language === 'en' ? 'عربي' : 'EN'}
+                            </button>
 
                             <button onClick={resetSources} className="p-1.5 rounded-lg hover:bg-white/5" title="Reset to Defaults">
                                 <RotateCcw className="w-3.5 h-3.5 text-gray-600" />
