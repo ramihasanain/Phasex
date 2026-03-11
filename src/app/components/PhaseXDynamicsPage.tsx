@@ -24,7 +24,7 @@ const PhaseXBotIcon = ({ size = 26, color = "currentColor", className = "", styl
 );
 
 
-type MarketCategory = "Forex" | "Commodities" | "Indices" | "Crypto" | "Other";
+type MarketCategory = "All" | "Forex" | "Commodities" | "Indices" | "Crypto" | "Other";
 
 type AnalysisTab = "Vector Core" | "Delta Engine" | "Pulse Matrix" | "Boundary Shell" | "Power Field" | "Phase X Layer" | "Decision Engine";
 
@@ -124,6 +124,12 @@ const symbolsData: Record<string, SymbolData> = {
 };
 
 const marketCategories: { name: MarketCategory; nameAr: string; icon: string; symbols: string[] }[] = [
+    {
+        "name": "All",
+        "nameAr": "كل الأسواق",
+        "icon": "🌍",
+        "symbols": Object.keys(symbolsData)
+    },
     {
         "name": "Forex",
         "nameAr": "فوركس",
