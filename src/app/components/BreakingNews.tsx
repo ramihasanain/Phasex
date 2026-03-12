@@ -349,8 +349,8 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
 
     useEffect(() => {
         fetchNews();
-        // Refresh every 5 minutes
-        const interval = setInterval(fetchNews, 5 * 60 * 1000);
+        // Refresh every 7 minutes
+        const interval = setInterval(fetchNews, 7 * 60 * 1000);
         return () => clearInterval(interval);
     }, []);
 
