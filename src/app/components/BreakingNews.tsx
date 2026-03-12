@@ -50,7 +50,12 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
         "ForexLive": "loading",
         "CNBC": "loading",
         "Investing.com": "loading",
-        "Wall Street Journal": "loading"
+        "Wall Street Journal": "loading",
+        "Forbes": "loading",
+        "DailyFX": "loading",
+        "Investing.com Forex": "loading",
+        "Finance Magnates": "loading",
+        "Cointelegraph": "loading"
     };
 
     // Switch state from local FFCalendarEvent to the global NewsEvent
@@ -281,22 +286,40 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
             // 17. WSJ Markets (RSS - Markets)
             const wsjMarketsPromise = fetchRSS("https://feeds.a.dj.com/rss/RSSMarketsMain.xml", "general", "Wall Street Journal");
 
+            // 18. Forbes Crypto & Blockchain (RSS - Crypto)
+            const forbesPromise = fetchRSS("https://www.forbes.com/crypto-blockchain/feed/", "crypto", "Forbes");
+
+            // 19. DailyFX (RSS - Forex)
+            const dailyfxPromise = fetchRSS("https://www.dailyfx.com/feeds/forex-market-news", "forex", "DailyFX");
+
+            // 20. Investing.com Forex (RSS - Forex)
+            const investingForexPromise = fetchRSS("https://www.investing.com/rss/news_1.rss", "forex", "Investing.com Forex");
+
+            // 21. Finance Magnates (RSS - Markets/General)
+            const financeMagnatesPromise = fetchRSS("https://www.financemagnates.com/feed/", "general", "Finance Magnates");
+
+            // 22. Cointelegraph (RSS - Crypto)
+            const coinTelegraphPromise = fetchRSS("https://cointelegraph.com/rss", "crypto", "Cointelegraph");
+
             // Await all sources
             const [
                 ffEvents, cryptoEvents, commoditiesEvents, indicesEvents, coindeskEvents, tradFiEvents, yahooEvents,
                 ftEvents, seekingAlphaEvents, marketWatchEvents, theBlockEvents, decryptEvents,
-                fxstreetEvents, forexliveEvents, cnbcTopEvents, investingCryptoEvents, wsjMarketsEvents
+                fxstreetEvents, forexliveEvents, cnbcTopEvents, investingCryptoEvents, wsjMarketsEvents,
+                forbesEvents, dailyfxEvents, investingForexEvents, financeMagnatesEvents, coinTelegraphEvents
             ] = await Promise.all([
                 ffPromise, cryptoPromise, commoditiesPromise, indicesPromise, coindeskPromise, tradFiPromise, yahooPromise,
                 ftPromise, seekingAlphaPromise, marketWatchPromise, theBlockPromise, decryptPromise,
-                fxstreetPromise, forexlivePromise, cnbcTopPromise, investingCryptoPromise, wsjMarketsPromise
+                fxstreetPromise, forexlivePromise, cnbcTopPromise, investingCryptoPromise, wsjMarketsPromise,
+                forbesPromise, dailyfxPromise, investingForexPromise, financeMagnatesPromise, coinTelegraphPromise
             ]);
             
             // Merge & sort news articles (newest first)
             const newsCombined = [
                 ...cryptoEvents, ...commoditiesEvents, ...indicesEvents, ...coindeskEvents, ...tradFiEvents, ...yahooEvents,
                 ...ftEvents, ...seekingAlphaEvents, ...marketWatchEvents, ...theBlockEvents, ...decryptEvents,
-                ...fxstreetEvents, ...forexliveEvents, ...cnbcTopEvents, ...investingCryptoEvents, ...wsjMarketsEvents
+                ...fxstreetEvents, ...forexliveEvents, ...cnbcTopEvents, ...investingCryptoEvents, ...wsjMarketsEvents,
+                ...forbesEvents, ...dailyfxEvents, ...investingForexEvents, ...financeMagnatesEvents, ...coinTelegraphEvents
             ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             
             // Limit news to top 1000 freshest items
