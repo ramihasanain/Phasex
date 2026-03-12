@@ -12,7 +12,7 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [focused, setFocused] = useState<string | null>(null);
@@ -26,7 +26,6 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
     }
   };
 
-  const isRTL = language === "ar";
   const tk = useThemeTokens();
   const accent = "#00e5a0";
   const accentG = "rgba(0,229,160,";
@@ -55,7 +54,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      dir={isRTL ? "rtl" : "ltr"}
+      dir="auto"
       style={{ background: tk.isDark ? "#060a10" : "#dcdfe5", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* Ambient background */}
@@ -146,11 +145,11 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
               style={{ color: accent }}
               animate={{ textShadow: [`0 0 15px ${accentG}0.3)`, `0 0 30px ${accentG}0.5)`, `0 0 15px ${accentG}0.3)`] }}
               transition={{ duration: 2.5, repeat: Infinity }}>
-              {isRTL ? "تسجيل الدخول" : "Login"}
+              {t("authLoginTitle")}
             </motion.h1>
 
             <p className="text-gray-500 text-sm font-medium tracking-wide">
-              {isRTL ? "سجل دخولك للوصول إلى منصة PHASE X" : "Login to access PHASE X platform"}
+              {t("loginSub")}
             </p>
 
             <div className="flex justify-center gap-1 mt-3">
@@ -170,7 +169,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-gray-400 tracking-wider uppercase"
                   htmlFor="email">
-                  {isRTL ? "البريد الإلكتروني" : "Email"}
+                  {t("emailLabel")}
                 </label>
                 <div className="relative group">
                   <motion.div className="absolute inset-0 rounded-xl pointer-events-none"
@@ -180,17 +179,16 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                   <input
                     id="email"
                     type="email"
-                    placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "Enter your email"}
+                    placeholder={t("emailPlaceholder")}
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     onFocus={() => setFocused("email")}
                     onBlur={() => setFocused(null)}
                     required
-                    dir={isRTL ? "rtl" : "ltr"}
-                    className="w-full bg-[rgba(255,255,255,0.03)] text-white placeholder:text-gray-600 rounded-xl py-3.5 text-sm font-medium outline-none transition-all"
-                    style={{ paddingLeft: isRTL ? "16px" : "44px", paddingRight: isRTL ? "44px" : "16px" }}
+                    dir="auto"
+                    className="w-full bg-[rgba(255,255,255,0.03)] text-white placeholder:text-gray-600 rounded-xl py-3.5 px-10 text-sm font-medium outline-none transition-all"
                   />
-                  <Mail className={`absolute ${isRTL ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 w-4 h-4`}
+                  <Mail className={`absolute ltr:left-4 rtl:right-4 top-1/2 -translate-y-1/2 w-4 h-4 rtl:right-4`}
                     style={{ color: focused === "email" ? accent : "#4b5563" }} />
                 </div>
               </div>
@@ -199,7 +197,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-gray-400 tracking-wider uppercase"
                   htmlFor="password">
-                  {isRTL ? "كلمة المرور" : "Password"}
+                  {t("passwordLabel")}
                 </label>
                 <div className="relative group">
                   <motion.div className="absolute inset-0 rounded-xl pointer-events-none"
@@ -209,17 +207,16 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                   <input
                     id="password"
                     type="password"
-                    placeholder={isRTL ? "أدخل كلمة المرور" : "Enter your password"}
+                    placeholder={t("passwordPlaceholder")}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onFocus={() => setFocused("password")}
                     onBlur={() => setFocused(null)}
                     required
-                    dir={isRTL ? "rtl" : "ltr"}
-                    className="w-full bg-[rgba(255,255,255,0.03)] text-white placeholder:text-gray-600 rounded-xl py-3.5 text-sm font-medium outline-none transition-all"
-                    style={{ paddingLeft: isRTL ? "16px" : "44px", paddingRight: isRTL ? "44px" : "16px" }}
+                    dir="auto"
+                    className="w-full bg-[rgba(255,255,255,0.03)] text-white placeholder:text-gray-600 rounded-xl py-3.5 px-10 text-sm font-medium outline-none transition-all"
                   />
-                  <Lock className={`absolute ${isRTL ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 w-4 h-4`}
+                  <Lock className={`absolute ltr:left-4 rtl:right-4 top-1/2 -translate-y-1/2 w-4 h-4 rtl:right-4`}
                     style={{ color: focused === "password" ? accent : "#4b5563" }} />
                 </div>
               </div>
@@ -239,8 +236,8 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                   animate={{ left: ["-100%", "200%"] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
                 <Zap className="w-5 h-5" />
-                {isRTL ? "تسجيل الدخول" : "Login"}
-                <ArrowRight className="w-5 h-5" />
+                {t("loginWrap")}
+                <ArrowRight className="w-5 h-5 rtl:rotate-180" />
               </motion.button>
 
               {/* Divider */}
@@ -251,7 +248,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                 <div className="relative flex justify-center">
                   <span className="px-4 text-[10px] font-bold text-gray-600 tracking-[0.2em] uppercase"
                     style={{ background: "rgba(10,14,24,1)" }}>
-                    {isRTL ? "أو" : "or"}
+                    {t("orTxt")}
                   </span>
                 </div>
               </div>
@@ -276,16 +273,16 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                   )}
                 </motion.button>
                 <p className="text-[12px] text-gray-400 leading-relaxed">
-                  {isRTL ? "أوافق على " : "I agree to the "}
+                  {t("iAgreeTo")}
                   <button
                     type="button"
                     onClick={() => setTermsOpen(true)}
                     className="font-bold underline cursor-pointer hover:opacity-80 transition-opacity"
                     style={{ color: accent }}
                   >
-                    {isRTL ? "الشروط والأحكام" : "Terms and Conditions"}
+                    {t("termsAndCondTxt")}
                   </button>
-                  {isRTL ? " الخاصة بمنصة PHASEX" : " of PHASEX platform"}
+                  {t("ofPlatformTxt")}
                 </p>
               </div>
 
@@ -301,7 +298,7 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                 }}
                 whileHover={agreedToTerms ? { background: `${accentG}0.06)`, borderColor: `${accentG}0.3)`, scale: 1.02 } : {}}
                 whileTap={agreedToTerms ? { scale: 0.98 } : {}}>
-                {isRTL ? "إنشاء حساب جديد" : "Create New Account"}
+                {t("createNewAcc")}
               </motion.button>
             </form>
           </div>

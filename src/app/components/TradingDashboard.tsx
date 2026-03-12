@@ -5,17 +5,10 @@ import { SubscriptionPanel } from "./SubscriptionPanel";
 import { AdSpace } from "./AdSpace";
 import { TradingSignalsTable } from "./TradingSignalsTable";
 import {
-  LogOut,
-  Gauge,
-  Crown,
-  Languages,
-  Move,
-  Target,
-  Activity,
-  Navigation,
-  Network,
-  Sun,
-  Moon,
+  LineChart, Activity, LogOut, Search, Star,
+  TrendingUp, TrendingDown, Sun, Moon, Map, User, KeySquare, MonitorDot, AlertTriangle, ArrowRight, X, Maximize2, Minimize2,
+  Calendar, Layers, Filter, CheckCircle2, ChevronDown, Lock, ShieldAlert, Cpu, Crown, Clock, Flame, BarChart3, RadioTower, Languages,
+  Gauge, Move, Target, Navigation, Network
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
@@ -23,6 +16,7 @@ import { useLivePrices } from "../hooks/useLivePrices";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { useMarketsAPI } from "../hooks/useMarketsAPI";
+import { BreakingNews } from "./BreakingNews";
 
 /* ─── Types ─── */
 interface TradingDashboardProps {
@@ -164,10 +158,33 @@ function generateCandlesFromReal(real: PhaseCandle, count: number = 90): any[] {
 }
 
 export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardProps) {
-  const { language, toggleLanguage, t } = useLanguage();
-  const isRTL = language === "ar";
-  const tk = useThemeTokens();
+  const [chartLayout, setChartLayout] = useState<"single" | "split" | "quad">("single");
   const { toggleTheme } = useTheme();
+  const tk = useThemeTokens();
+  const { language, setLanguageKey, t } = useLanguage();
+  const isRTL = language === "ar";
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close language dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLangDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const languageOptions = [
+    { code: "ar", label: "العربية", flagUrl: "sa" },
+    { code: "en", label: "English", flagUrl: "gb" },
+    { code: "ru", label: "Русский", flagUrl: "ru" },
+    { code: "tr", label: "Türkçe", flagUrl: "tr" }
+  ];
+
+  const currentLangObj = languageOptions.find(l => l.code === language) || languageOptions[1];
 
   // Markets + Symbols API (two-step: markets on load, symbols on tab change)
   const {
@@ -183,6 +200,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(false);
   const [timeframe, setTimeframe] = useState<number>(15);
   const [mtfEnabled, setMtfEnabled] = useState(false);
@@ -311,8 +329,15 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
               }}>
               <Network className="w-3.5 h-3.5" />
               <span>
-                {isRTL ? "الديناميكية الهيكلية" : "Structural Dynamics"}
+                {t("structuralDynamics")}
               </span>
+            </motion.button>
+
+            <motion.button onClick={() => setIsNewsOpen(!isNewsOpen)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer transition-colors ${isNewsOpen ? "bg-red-500/10 text-red-500 border-red-500/20" : "text-gray-400 hover:text-red-400"}`}
+              style={{ border: isNewsOpen ? `1px solid rgba(239,68,68,0.3)` : `1px solid ${tk.buttonGhostBorder}` }}>
+              <RadioTower className={`w-3.5 h-3.5 ${isNewsOpen ? "animate-pulse" : ""}`} />
+              {t("breakingNews")}
             </motion.button>
 
             <motion.button onClick={onLogout} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
@@ -327,11 +352,55 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
               {tk.isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </motion.button>
 
-            <motion.button onClick={toggleLanguage} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
-              className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
-              style={{ color: tk.textMuted, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
-              <Languages className="w-3.5 h-3.5" />
-            </motion.button>
+            {/* Language Dropdown */}
+            <div className="relative mr-3" ref={dropdownRef}>
+              <button
+                onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-widest transition-colors border cursor-pointer"
+                style={{
+                  color: tk.textPrimary,
+                  borderColor: tk.border,
+                  backgroundColor: tk.surface,
+                }}
+              >
+                <img src={`https://flagcdn.com/${currentLangObj.flagUrl}.svg`} alt={currentLangObj.code} className="w-5 h-auto rounded-sm object-cover" />
+                <span className="uppercase">{currentLangObj.code}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ml-1 ${langDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {langDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full mt-2 w-36 rounded-xl shadow-2xl overflow-hidden z-[60]"
+                    style={{ background: tk.surface, border: `1px solid ${tk.border}`, right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
+                  >
+                    <div className="py-1 flex flex-col">
+                      {languageOptions.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => {
+                            setLanguageKey(lang.code as any);
+                            setLangDropdownOpen(false);
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 text-xs transition-colors text-left"
+                          style={{
+                            color: language === lang.code ? tk.textPrimary : tk.textMuted,
+                            background: language === lang.code ? tk.buttonGhost : 'transparent'
+                          }}
+                        >
+                          <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
+                          <span className={language === lang.code ? "font-bold" : ""}>{lang.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer"
@@ -345,6 +414,21 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
           </div>
         </div>
       </header>
+
+      {/* ═══════════════ BREAKING NEWS (TOGGLED) ═══════════════ */}
+      <AnimatePresence>
+        {isNewsOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            style={{ overflow: "hidden" }}
+            className="px-5 w-full"
+          >
+            <BreakingNews selectedSymbol={selectedAsset?.symbol || "EURUSD"} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════════ BODY ═══════════════ */}
       <div className="flex gap-0 py-3" style={{ minHeight: "calc(100vh - 52px)" }}>
@@ -391,7 +475,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                     </div>
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: ind.color, opacity: active ? 1 : 0.25 }} />
                     <span className="text-[10px] font-bold leading-tight text-center" style={{ color: active ? ind.color : tk.textMuted }}>
-                      {isRTL ? ind.name : ind.nameEn}
+                      {t((ind.id + "State") as any)}
                     </span>
                   </motion.button>
                 );

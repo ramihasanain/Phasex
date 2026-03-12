@@ -2,270 +2,23 @@ import { useState, useEffect, useRef, useMemo } from "react";
 
 import { motion, AnimatePresence } from "motion/react";
 
-import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, TrendingDown, Activity, Zap, Upload, RotateCcw, Target, Cpu, Activity as Pulse, Shield, Flame, Layers, Bot, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, TrendingDown, Activity, Zap, Upload, RotateCcw, Target, Cpu, Activity as Pulse, Shield, Flame, Layers, Bot, X, RadioTower } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import type { VCRow } from "./phase-x/types";
 import { SciFiClock } from "./SciFiClock";
+import { BreakingNews } from "./BreakingNews";
+import { PhaseXBotIcon } from "./phase-x/PhaseXBotIcon";
+import { Panel, ScanLine, SignalCell, SupercarGauge } from "./phase-x/UIComponents";
 
 interface PhaseXDynamicsPageProps {
     onBack: () => void;
 }
 
-const PhaseXBotIcon = ({ size = 26, color = "currentColor", className = "", style = {} }: any) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-        <path d="M12 4v4" />
-        <path d="M10 4h4" />
-        <rect x="5" y="8" width="14" height="10" rx="3" />
-        <path d="M9 12v2" />
-        <path d="M15 12v2" />
-        <path d="M2 13h3" />
-        <path d="M19 13h3" />
-    </svg>
-);
-
-
-type MarketCategory = "All" | "Forex" | "Commodities" | "Indices" | "Crypto" | "Other";
-
-type AnalysisTab = "Vector Core" | "Delta Engine" | "Pulse Matrix" | "Boundary Shell" | "Power Field" | "Phase X Layer" | "Decision Engine";
-
-type Signal = "Buy" | "Sell" | "Neutral" | "NA";
-
-type TrendLabel = "Bullish" | "Bearish" | "Neutral";
-
-interface SymbolData {
-    symbol: string; globalScore: number; confidence: number;
-    marketState: string; phase: string; volatility: string; risk: string; dominantLayer: string;
-    strength: number; alignment: string; primaryTrend: TrendLabel;
-    decision?: string;
-    layerSummary: { shortTerm: TrendLabel; mediumTerm: TrendLabel; longTerm: TrendLabel };
-    dynamics: { primaryTrend: TrendLabel; momentumState: string; structuralBias: string; marketPhase: string; reversalRisk: string };
-}
-
-const symbolsData: Record<string, SymbolData> = {
-    "ADAUSD": { "symbol": "ADAUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "ATMUSD": { "symbol": "ATMUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AUDCAD": { "symbol": "AUDCAD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AUDCHF": { "symbol": "AUDCHF", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AUDJPY": { "symbol": "AUDJPY", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AUDNZD": { "symbol": "AUDNZD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AUDUSD": { "symbol": "AUDUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AUS200Roll": { "symbol": "AUS200Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AVAUSD": { "symbol": "AVAUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AXSUSD": { "symbol": "AXSUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "BCHUSD": { "symbol": "BCHUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "BNBUSD": { "symbol": "BNBUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "BRENT": { "symbol": "BRENT", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "BTCUSD": { "symbol": "BTCUSD", "globalScore": 0.78, "confidence": 88, "marketState": "STRONG BULLISH EXPANSION", "phase": "Directional", "volatility": "Expanding", "risk": "Low", "dominantLayer": "Long-Term", "strength": 0.78, "alignment": "Strong", "primaryTrend": "Bullish", "layerSummary": { "shortTerm": "Bullish", "mediumTerm": "Bullish", "longTerm": "Bullish" }, "dynamics": { "primaryTrend": "Bullish", "momentumState": "Strong", "structuralBias": "Upward", "marketPhase": "Expansion", "reversalRisk": "Low" } },
-    "CADCHF": { "symbol": "CADCHF", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "CADJPY": { "symbol": "CADJPY", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "CHFJPY": { "symbol": "CHFJPY", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "CHINA50Roll": { "symbol": "CHINA50Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "CHshares": { "symbol": "CHshares", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "COMUSD": { "symbol": "COMUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "DOTUSD": { "symbol": "DOTUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "DSHUSD": { "symbol": "DSHUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "ESP35Roll": { "symbol": "ESP35Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "ETCUSD": { "symbol": "ETCUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "ETHUSD": { "symbol": "ETHUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EU50Roll": { "symbol": "EU50Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EURAUD": { "symbol": "EURAUD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EURCAD": { "symbol": "EURCAD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EURCHF": { "symbol": "EURCHF", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EURGBP": { "symbol": "EURGBP", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EURJPY": { "symbol": "EURJPY", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EURNZD": { "symbol": "EURNZD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "EURUSD": { "symbol": "EURUSD", "globalScore": 0.45, "confidence": 76, "marketState": "MODERATE BULLISH", "phase": "Directional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Short-Term", "strength": 0.32, "alignment": "Medium", "primaryTrend": "Bullish", "layerSummary": { "shortTerm": "Bullish", "mediumTerm": "Neutral", "longTerm": "Bearish" }, "dynamics": { "primaryTrend": "Bullish", "momentumState": "Moderate", "structuralBias": "Upward", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "FRA40Roll": { "symbol": "FRA40Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "GBPAUD": { "symbol": "GBPAUD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "GBPCAD": { "symbol": "GBPCAD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "GBPCHF": { "symbol": "GBPCHF", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "GBPJPY": { "symbol": "GBPJPY", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "GBPNZD": { "symbol": "GBPNZD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "GBPUSD": { "symbol": "GBPUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "GER30": { "symbol": "GER30", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "XAUUSD": { "symbol": "XAUUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "HK50Roll": { "symbol": "HK50Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "JAP225": { "symbol": "JAP225", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "LNKUSD": { "symbol": "LNKUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "LTCUSD": { "symbol": "LTCUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "NL25Roll": { "symbol": "NL25Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "NORWAY25Roll": { "symbol": "NORWAY25Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "NZDCAD": { "symbol": "NZDCAD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "NZDCHF": { "symbol": "NZDCHF", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "NZDJPY": { "symbol": "NZDJPY", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "NZDUSD": { "symbol": "NZDUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "RUSS2000": { "symbol": "RUSS2000", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "XAGUSD": { "symbol": "XAGUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "SOLUSD": { "symbol": "SOLUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "SWISS20Roll": { "symbol": "SWISS20Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "TRUUSD": { "symbol": "TRUUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "UK100": { "symbol": "UK100", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "UNIUSD": { "symbol": "UNIUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "US100": { "symbol": "US100", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "US30": { "symbol": "US30", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "US500": { "symbol": "US500", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "USDCAD": { "symbol": "USDCAD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "USDCHF": { "symbol": "USDCHF", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "USDJPY": { "symbol": "USDJPY", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "VIXRoll": { "symbol": "VIXRoll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "USOIL": { "symbol": "USOIL", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "XRPUSD": { "symbol": "XRPUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "YFIUSD": { "symbol": "YFIUSD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "UKOILRoll": { "symbol": "UKOILRoll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "USOILRoll": { "symbol": "USOILRoll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "DE40Roll": { "symbol": "DE40Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "JP225Roll": { "symbol": "JP225Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "UK100Roll": { "symbol": "UK100Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "UT100Roll": { "symbol": "UT100Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "US30Roll": { "symbol": "US30Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "US500Roll": { "symbol": "US500Roll", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AMD": { "symbol": "AMD", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-    "AIG": { "symbol": "AIG", "globalScore": 0.0, "confidence": 70, "marketState": "NEUTRAL", "phase": "Transitional", "volatility": "Normal", "risk": "Low", "dominantLayer": "Medium-Term", "strength": 0.0, "alignment": "Medium", "primaryTrend": "Neutral", "layerSummary": { "shortTerm": "Neutral", "mediumTerm": "Neutral", "longTerm": "Neutral" }, "dynamics": { "primaryTrend": "Neutral", "momentumState": "Moderate", "structuralBias": "Neutral", "marketPhase": "Transition", "reversalRisk": "Moderate" } },
-};
-
-const marketCategories: { name: MarketCategory; nameAr: string; icon: string; symbols: string[] }[] = [
-    {
-        "name": "All",
-        "nameAr": "كل الأسواق",
-        "icon": "🌍",
-        "symbols": Object.keys(symbolsData)
-    },
-    {
-        "name": "Forex",
-        "nameAr": "فوركس",
-        "icon": "💱",
-        "symbols": [
-            "AUDCAD", "AUDCHF", "AUDJPY", "AUDNZD", "AUDUSD",
-            "CADCHF", "CADJPY", "CHFJPY",
-            "EURAUD", "EURCAD", "EURCHF", "EURGBP", "EURJPY", "EURNZD", "EURUSD",
-            "GBPAUD", "GBPCAD", "GBPCHF", "GBPJPY", "GBPNZD", "GBPUSD",
-            "NZDCAD", "NZDCHF", "NZDJPY", "NZDUSD",
-            "USDCAD", "USDCHF", "USDJPY"
-        ]
-    },
-    {
-        "name": "Commodities",
-        "nameAr": "سلع",
-        "icon": "🛢️",
-        "symbols": [
-            "XAUUSD", "XAGUSD", "UKOILRoll", "USOILRoll"
-        ]
-    },
-    {
-        "name": "Indices",
-        "nameAr": "مؤشرات",
-        "icon": "📊",
-        "symbols": [
-            "DE40Roll", "JP225Roll", "UK100Roll", "UT100Roll", "US30Roll", "US500Roll", "VIXRoll",
-            "NL25Roll", "NORWAY25Roll", "RUSS2000", "EU50Roll", "FRA40Roll",
-            "AUS200Roll", "CHshares", "SWISS20Roll", "CHINA50Roll", "ESP35Roll", "HK50Roll"
-        ]
-    },
-    {
-        "name": "Crypto",
-        "nameAr": "عملات رقمية",
-        "icon": "₿",
-        "symbols": [
-            "ADAUSD", "ATMUSD", "AVAUSD", "AXSUSD", "BCHUSD", "BNBUSD", "BTCUSD",
-            "COMUSD", "DOTUSD", "DSHUSD", "ETCUSD", "ETHUSD", "LNKUSD", "LTCUSD",
-            "SOLUSD", "TRUUSD", "UNIUSD", "XRPUSD", "YFIUSD"
-        ]
-    },
-    {
-        "name": "Other",
-        "nameAr": "أخرى",
-        "icon": "🏢",
-        "symbols": [
-            "AMD", "AIG"
-        ]
-    }
-];
-
-const symbolIcons: Record<string, { icon: string; label: string; labelAr: string; flag?: string }> = {
-    "ADAUSD": { "icon": "🔵", "label": "Cardano", "labelAr": "كاردانو" },
-    "ATMUSD": { "icon": "⚡", "label": "Cosmos", "labelAr": "كوزموس" },
-    "AUDCAD": { "icon": "A$", "label": "AUD/CAD", "labelAr": "AUD/CAD", "flag": "C$" },
-    "AUDCHF": { "icon": "A$", "label": "AUD/CHF", "labelAr": "AUD/CHF", "flag": "🏦" },
-    "AUDJPY": { "icon": "A$", "label": "AUD/JPY", "labelAr": "AUD/JPY", "flag": "¥" },
-    "AUDNZD": { "icon": "A$", "label": "AUD/NZD", "labelAr": "AUD/NZD", "flag": "🥝" },
-    "AUDUSD": { "icon": "A$", "label": "AUD/USD", "labelAr": "AUD/USD", "flag": "$" },
-    "AUS200Roll": { "icon": "🏛️", "label": "ASX 200", "labelAr": "أستراليا 200" },
-    "AVAUSD": { "icon": "🔺", "label": "Avalanche", "labelAr": "أفالانش" },
-    "AXSUSD": { "icon": "🎮", "label": "Axie", "labelAr": "أكسي" },
-    "BCHUSD": { "icon": "💚", "label": "Bitcoin Cash", "labelAr": "بتكوين كاش" },
-    "BNBUSD": { "icon": "💛", "label": "Binance", "labelAr": "بينانس" },
-    "BRENT": { "icon": "🛢️", "label": "Brent", "labelAr": "برنت" },
-    "GOLD": { "icon": "🥇", "label": "Gold", "labelAr": "ذهب" },
-    "SILVER": { "icon": "🥈", "label": "Silver", "labelAr": "فضة" },
-    "WTI": { "icon": "🛢️", "label": "WTI", "labelAr": "نفط خام" },
-    "BTCUSD": { "icon": "₿", "label": "Bitcoin", "labelAr": "بتكوين" },
-    "CADCHF": { "icon": "C$", "label": "CAD/CHF", "labelAr": "CAD/CHF", "flag": "🏦" },
-    "CADJPY": { "icon": "C$", "label": "CAD/JPY", "labelAr": "CAD/JPY", "flag": "¥" },
-    "CHFJPY": { "icon": "🏦", "label": "CHF/JPY", "labelAr": "CHF/JPY", "flag": "¥" },
-    "CHINA50Roll": { "icon": "🏮", "label": "China A50", "labelAr": "الصين 50" },
-    "CHshares": { "icon": "⛰️", "label": "Swiss Shares", "labelAr": "أسهم سويسرا" },
-    "COMUSD": { "icon": "🌐", "label": "Compound", "labelAr": "كومباوند" },
-    "DOTUSD": { "icon": "⚪", "label": "Polkadot", "labelAr": "بولكادوت" },
-    "DSHUSD": { "icon": "🔷", "label": "Dash", "labelAr": "داش" },
-    "ESP35Roll": { "icon": "🏟️", "label": "Spain 35", "labelAr": "إسبانيا 35" },
-    "ETCUSD": { "icon": "💎", "label": "ETH Classic", "labelAr": "إيثريوم كلاسيك" },
-    "ETHUSD": { "icon": "⟠", "label": "Ethereum", "labelAr": "إيثريوم" },
-    "EU50Roll": { "icon": "🏦", "label": "Euro Stoxx 50", "labelAr": "يورو ستوكس 50" },
-    "EURAUD": { "icon": "€", "label": "EUR/AUD", "labelAr": "EUR/AUD", "flag": "A$" },
-    "EURCAD": { "icon": "€", "label": "EUR/CAD", "labelAr": "EUR/CAD", "flag": "C$" },
-    "EURCHF": { "icon": "€", "label": "EUR/CHF", "labelAr": "EUR/CHF", "flag": "🏦" },
-    "EURGBP": { "icon": "€", "label": "EUR/GBP", "labelAr": "EUR/GBP", "flag": "£" },
-    "EURJPY": { "icon": "€", "label": "EUR/JPY", "labelAr": "EUR/JPY", "flag": "¥" },
-    "EURNZD": { "icon": "€", "label": "EUR/NZD", "labelAr": "EUR/NZD", "flag": "🥝" },
-    "EURUSD": { "icon": "€", "label": "EUR/USD", "labelAr": "يورو/دولار", "flag": "$" },
-    "FRA40Roll": { "icon": "🗼", "label": "France 40", "labelAr": "فرنسا 40" },
-    "GBPAUD": { "icon": "£", "label": "GBP/AUD", "labelAr": "GBP/AUD", "flag": "A$" },
-    "GBPCAD": { "icon": "£", "label": "GBP/CAD", "labelAr": "GBP/CAD", "flag": "C$" },
-    "GBPCHF": { "icon": "£", "label": "GBP/CHF", "labelAr": "GBP/CHF", "flag": "🏦" },
-    "GBPJPY": { "icon": "£", "label": "GBP/JPY", "labelAr": "GBP/JPY", "flag": "¥" },
-    "GBPNZD": { "icon": "£", "label": "GBP/NZD", "labelAr": "GBP/NZD", "flag": "🥝" },
-    "GBPUSD": { "icon": "£", "label": "GBP/USD", "labelAr": "جنيه/دولار", "flag": "$" },
-    "GER30": { "icon": "🏭", "label": "DAX 30", "labelAr": "داكس 30" },
-    "XAUUSD": { "icon": "🥇", "label": "Gold", "labelAr": "ذهب" },
-    "HK50Roll": { "icon": "🏙️", "label": "Hang Seng", "labelAr": "هانج سينج" },
-    "JAP225": { "icon": "⛩️", "label": "Nikkei 225", "labelAr": "نيكي 225" },
-    "LNKUSD": { "icon": "🔗", "label": "Chainlink", "labelAr": "تشين لينك" },
-    "LTCUSD": { "icon": "🪨", "label": "Litecoin", "labelAr": "لايتكوين" },
-    "NL25Roll": { "icon": "🌷", "label": "AEX 25", "labelAr": "هولندا 25" },
-    "NORWAY25Roll": { "icon": "⛷️", "label": "Norway 25", "labelAr": "النرويج 25" },
-    "NZDCAD": { "icon": "🥝", "label": "NZD/CAD", "labelAr": "NZD/CAD", "flag": "C$" },
-    "NZDCHF": { "icon": "🥝", "label": "NZD/CHF", "labelAr": "NZD/CHF", "flag": "🏦" },
-    "NZDJPY": { "icon": "🥝", "label": "NZD/JPY", "labelAr": "NZD/JPY", "flag": "¥" },
-    "NZDUSD": { "icon": "🥝", "label": "NZD/USD", "labelAr": "NZD/USD", "flag": "$" },
-    "RUSS2000": { "icon": "📈", "label": "Russell 2000", "labelAr": "راسل 2000" },
-    "XAGUSD": { "icon": "🥈", "label": "Silver", "labelAr": "فضة" },
-    "SOLUSD": { "icon": "◎", "label": "Solana", "labelAr": "سولانا" },
-    "SWISS20Roll": { "icon": "⛰️", "label": "SMI 20", "labelAr": "سويسرا 20" },
-    "TRUUSD": { "icon": "🟢", "label": "TrueUSD", "labelAr": "ترو يو إس دي" },
-    "UK100": { "icon": "🏰", "label": "FTSE 100", "labelAr": "فوتسي 100" },
-    "UNIUSD": { "icon": "🦄", "label": "Uniswap", "labelAr": "يونيسواب" },
-    "US100": { "icon": "💻", "label": "Nasdaq 100", "labelAr": "ناسداك 100" },
-    "US30": { "icon": "🏛️", "label": "Dow Jones", "labelAr": "داو جونز" },
-    "US500": { "icon": "📊", "label": "S&P 500", "labelAr": "إس آند بي 500" },
-    "USDCAD": { "icon": "$", "label": "USD/CAD", "labelAr": "USD/CAD", "flag": "C$" },
-    "USDCHF": { "icon": "$", "label": "USD/CHF", "labelAr": "USD/CHF", "flag": "🏦" },
-    "USDJPY": { "icon": "$", "label": "USD/JPY", "labelAr": "USD/JPY", "flag": "¥" },
-    "VIXRoll": { "icon": "📉", "label": "VIX", "labelAr": "مؤشر التقلب" },
-    "USOIL": { "icon": "🛢️", "label": "Crude Oil", "labelAr": "نفط خام" },
-    "XRPUSD": { "icon": "💧", "label": "XRP", "labelAr": "ريبل" },
-    "YFIUSD": { "icon": "💰", "label": "Yearn", "labelAr": "ييرن" },
-    "UKOILRoll": { "icon": "🛢️", "label": "Brent Oil", "labelAr": "برنت" },
-    "USOILRoll": { "icon": "🛢️", "label": "US Crude", "labelAr": "النفط الخام" },
-    "DE40Roll": { "icon": "🏭", "label": "DAX 40", "labelAr": "داكس 40" },
-    "JP225Roll": { "icon": "⛩️", "label": "Nikkei 225", "labelAr": "نيكي 225" },
-    "UK100Roll": { "icon": "🏰", "label": "FTSE 100", "labelAr": "فوتسي 100" },
-    "UT100Roll": { "icon": "💻", "label": "Nasdaq 100", "labelAr": "ناسداك 100" },
-    "US30Roll": { "icon": "🏛️", "label": "Dow Jones", "labelAr": "داو جونز" },
-    "US500Roll": { "icon": "📊", "label": "S&P 500", "labelAr": "إس آند بي 500" },
-    "AMD": { "icon": "🖥️", "label": "AMD", "labelAr": "إي إم دي" },
-    "AIG": { "icon": "🏢", "label": "AIG", "labelAr": "إيه آي جي" }
-};
+import type { MarketCategory, AnalysisTab, Signal, TrendLabel, SymbolData } from "./phase-x/types";
 
+import { symbolsData } from "./phase-x/symbolsData";
+import { marketCategories, symbolIcons } from "./phase-x/marketCategories";
+import { SpeedStreaks, EnergyWaves, RacingParticles, LEDBorderPulse, HeatHaze } from "./phase-x/CinematicEffects";
 
 
 
@@ -304,145 +57,36 @@ const symbolIcons: Record<string, { icon: string; label: string; labelAr: string
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const analysisTabs: AnalysisTab[] = ["Vector Core", "Delta Engine", "Pulse Matrix", "Boundary Shell", "Power Field", "Phase X Layer", "Decision Engine"];
-
-const analysisTabsAr: Record<string, string> = {
-    "Vector Core": "المتجهات الأساسية",
-    "Delta Engine": "محرك التغيرات",
-    "Pulse Matrix": "مصفوفة النبض",
-    "Boundary Shell": "الغلاف الحدودي",
-    "Power Field": "حقل القوة",
-    "Phase X Layer": "طبقة المرحلة X",
-    "Decision Engine": "محرك اتخاذ القرار",
-};
-
-const analysisTabIcons: Record<string, React.ReactNode> = {
-    "Vector Core": <Target className="w-4 h-4" />,
-    "Delta Engine": <Cpu className="w-4 h-4" />,
-    "Pulse Matrix": <Pulse className="w-4 h-4" />,
-    "Boundary Shell": <Shield className="w-4 h-4" />,
-    "Power Field": <Flame className="w-4 h-4" />,
-    "Phase X Layer": <Layers className="w-4 h-4" />,
-    "Decision Engine": <Activity className="w-4 h-4" />,
-};
-
-const tfColumns = ["5M", "10M", "15M", "20M", "30M", "H1", "H2", "H3", "H4", "H6", "H8", "Daily"];
-
-const vcTfColumns = ["M5", "M10", "M15", "M20", "M30", "H1", "H2", "H3", "H4", "H6", "H8", "D1"];
-const vcTfLabels = ["5M", "10M", "15M", "20M", "30M", "H1", "H2", "H3", "H4", "H6", "H8", "D1"];
-
-
-
-// Map from app symbol IDs to JSON keys (matches API response format)
-const symbolToJsonKey: Record<string, string> = {
-    "ADAUSD": "ADAUSD.lv - CRYPTO",
-    "ATMUSD": "ATMUSD.lv - CRYPTO",
-    "AVAUSD": "AVAUSD.lv - CRYPTO",
-    "AXSUSD": "AXSUSD.lv - CRYPTO",
-    "BCHUSD": "BCHUSD.lv - CRYPTO",
-    "BNBUSD": "BNBUSD.lv - CRYPTO",
-    "BTCUSD": "BTCUSD.lv - CRYPTO",
-    "COMUSD": "COMUSD.lv - CRYPTO",
-    "DOTUSD": "DOTUSD.lv - CRYPTO",
-    "DSHUSD": "DSHUSD.lv - CRYPTO",
-    "ETCUSD": "ETCUSD.lv - CRYPTO",
-    "ETHUSD": "ETHUSD.lv - CRYPTO",
-    "LNKUSD": "LNKUSD.lv - CRYPTO",
-    "LTCUSD": "LTCUSD.lv - CRYPTO",
-    "SOLUSD": "SOLUSD.lv - CRYPTO",
-    "TRUUSD": "TRUUSD.lv - CRYPTO",
-    "UNIUSD": "UNIUSD.lv - CRYPTO",
-    "XRPUSD": "XRPUSD.lv - CRYPTO",
-    "YFIUSD": "YFIUSD.lv - CRYPTO",
-    "AUDCAD": "AUDCAD.sd - FOREX",
-    "AUDCHF": "AUDCHF.sd - FOREX",
-    "AUDJPY": "AUDJPY.sd - FOREX",
-    "AUDNZD": "AUDNZD.sd - FOREX",
-    "AUDUSD": "AUDUSD.sd - FOREX",
-    "CADCHF": "CADCHF.sd - FOREX",
-    "CADJPY": "CADJPY.sd - FOREX",
-    "CHFJPY": "CHFJPY.sd - FOREX",
-    "EURAUD": "EURAUD.sd - FOREX",
-    "EURCAD": "EURCAD.sd - FOREX",
-    "EURCHF": "EURCHF.sd - FOREX",
-    "EURGBP": "EURGBP.sd - FOREX",
-    "EURJPY": "EURJPY.sd - FOREX",
-    "EURNZD": "EURNZD.sd - FOREX",
-    "EURUSD": "EURUSD.sd - FOREX",
-    "GBPAUD": "GBPAUD.sd - FOREX",
-    "GBPCAD": "GBPCAD.sd - FOREX",
-    "GBPCHF": "GBPCHF.sd - FOREX",
-    "GBPJPY": "GBPJPY.sd - FOREX",
-    "GBPNZD": "GBPNZD.sd - FOREX",
-    "GBPUSD": "GBPUSD.sd - FOREX",
-    "NZDCAD": "NZDCAD.sd - FOREX",
-    "NZDCHF": "NZDCHF.sd - FOREX",
-    "NZDJPY": "NZDJPY.sd - FOREX",
-    "NZDUSD": "NZDUSD.sd - FOREX",
-    "USDCAD": "USDCAD.sd - FOREX",
-    "USDCHF": "USDCHF.sd - FOREX",
-    "USDJPY": "USDJPY.sd - FOREX",
-    "XAUUSD": "XAUUSD.sd - COMMODITY",
-    "XAGUSD": "XAGUSD.sd - COMMODITY",
-    "UKOILRoll": "UKOILRoll - COMMODITY",
-    "USOILRoll": "USOILRoll - COMMODITY",
-    "DE40Roll": "DE40Roll - INDEX",
-    "JP225Roll": "JP225Roll - INDEX",
-    "UK100Roll": "UK100Roll - INDEX",
-    "UT100Roll": "UT100Roll - INDEX",
-    "US30Roll": "US30Roll - INDEX",
-    "US500Roll": "US500Roll - INDEX",
-    "VIXRoll": "VIXRoll - INDEX",
-    "NL25Roll": "NL25Roll - INDEX",
-    "NORWAY25Roll": "NORWAY25Roll - INDEX",
-    "RUSS2000": "RUSS2000 - INDEX",
-    "EU50Roll": "EU50Roll - INDEX",
-    "FRA40Roll": "FRA40Roll - INDEX",
-    "AUS200Roll": "AUS200Roll - INDEX",
-    "CHshares": "CHshares - INDEX",
-    "SWISS20Roll": "SWISS20Roll - INDEX",
-    "CHINA50Roll": "CHINA50Roll - INDEX",
-    "ESP35Roll": "ESP35Roll - INDEX",
-    "HK50Roll": "HK50Roll - INDEX",
-    "AMD": "AMD - OTHER",
-    "AIG": "AIG - OTHER",
-};
-
-
-const defaultAnalysisSources: Record<AnalysisTab, any[]> = {
-    "Vector Core": [],
-    "Delta Engine": [],
-    "Pulse Matrix": [],
-    "Boundary Shell": [],
-    "Power Field": [],
-    "Phase X Layer": [],
-    "Decision Engine": []
-};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import {
+    analysisTabs,
+    analysisTabsAr,
+    analysisTabIcons,
+    tfColumns,
+    vcTfColumns,
+    vcTfLabels,
+    symbolToJsonKey,
+    defaultAnalysisSources,
+    trendAr,
+    trendRu,
+    trendTr,
+    i18n
+} from "./phase-x/constants";
 
 function getComponentDataFromJson(tab: AnalysisTab, symbol: string, sources: any[]): VCRow[] | null {
     const jsonKey = symbolToJsonKey[symbol];
@@ -520,52 +164,7 @@ function getComponentDataFromJson(tab: AnalysisTab, symbol: string, sources: any
 }
 
 
-const trendAr: Record<string, string> = {
-    "Bullish": "صعودي", "Bearish": "هبوطي", "Neutral": "محايد",
-    "Strong": "قوي", "Moderate": "معتدل", "Weak": "ضعيف",
-    "Upward": "صاعد", "Downward": "هابط",
-    "Expansion": "توسع", "Contraction": "انكماش", "Transition": "تحول",
-    "Low": "منخفض", "High": "مرتفع",
-    "Directional": "اتجاهي", "Ranging": "عرضي", "Transitional": "انتقالي",
-    "Normal": "طبيعي", "Expanding": "متوسع",
-    "Strong Uptrend": "صعود قوي", "Strong Downtrend": "هبوط قوي",
-    "Strong Upt": "صعود قوي", "Strong Dow": "هبوط قوي",
-    "Strong Downward": "هبوط قوي", "Buy": "شراء", "Sell": "بيع",
-    "Short-Term": "قصير المدى", "Medium-Term": "متوسط المدى", "Long-Term": "طويل المدى",
-    "STRONG BULLISH EXPANSION": "توسع صعودي قوي", "MODERATE BULLISH": "صعودي معتدل",
-    "WEAK BEARISH": "هبوطي ضعيف", "MODERATE DOWNTREND": "هبوط معتدل",
-    "Bullish Expansion": "توسع صعودي", "Bearish Expansion": "توسع هبوطي",
-    "Compression": "انضغاط", "Range": "عرضي", "Developing": "قيد التطور", "Elevated": "مرتفع",
-};
 
-const i18n: Record<string, Record<string, string>> = {
-    ar: {
-        title: "نظام الديناميكيات الهيكلية", score: "النتيجة", confidence: "الثقة",
-        timeframe: "الإطار الزمني", layer: "الطبقة", globalState: "حالة السوق العالمية",
-        phase: "المرحلة", volatility: "التذبذب", risk: "المخاطرة",
-        trend: "الاتجاه", momentum: "الزخم", bias: "الانحياز", reversal: "الانعكاس",
-        marketFilter: "تصفية الأسواق", globalScore: "النتيجة الكلية",
-        layerSummary: "ملخص الطبقات", dynamicsOutput: "مخرجات الديناميكيات",
-        primaryTrend: "الاتجاه الرئيسي", momentumState: "حالة الزخم",
-        structuralBias: "الانحياز الهيكلي", marketPhase: "مرحلة السوق",
-        reversalRisk: "مخاطر الانعكاس", strength: "القوة", alignment: "التوافق",
-        total: "المجموع", classification: "التصنيف",
-        shortTerm: "قصير المدى", mediumTerm: "متوسط المدى", longTerm: "طويل المدى",
-    },
-    en: {
-        title: "Structural Dynamics", score: "Score", confidence: "Confidence",
-        timeframe: "Timeframe", layer: "Layer", globalState: "GLOBAL MARKET STATE",
-        phase: "Phase", volatility: "Volatility", risk: "Risk",
-        trend: "Trend", momentum: "Momentum", bias: "Bias", reversal: "Reversal",
-        marketFilter: "MARKET FILTER", globalScore: "GLOBAL SCORE",
-        layerSummary: "LAYER SUMMARY", dynamicsOutput: "DYNAMICS OUTPUT",
-        primaryTrend: "Primary Trend", momentumState: "Momentum State",
-        structuralBias: "Structural Bias", marketPhase: "Market Phase",
-        reversalRisk: "Reversal Risk", strength: "Strength", alignment: "Alignment",
-        total: "Total", classification: "Classification",
-        shortTerm: "Short-Term", mediumTerm: "Medium-Term", longTerm: "Long-Term",
-    },
-};
 
 function getTrendColor(t: string): string {
 
@@ -773,367 +372,21 @@ function getDynamicLayerData(symbol: string, currentSources: Record<AnalysisTab,
     return { byIndicator, byTeam, allRow, globalScorePct, confidence };
 }
 
-/* ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  F1 Racing Cinematic Effects ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  */
 
-/* Speed Streaks — horizontal racing lines that fly across the banner */
-const SpeedStreaks = ({ color }: { color: string }) => {
-    const streaks = useMemo(() => Array.from({ length: 12 }).map((_, i) => ({
-        id: i,
-        y: 8 + Math.random() * 84,
-        width: 60 + Math.random() * 200,
-        height: 0.5 + Math.random() * 1.5,
-        duration: 1.2 + Math.random() * 2,
-        delay: Math.random() * 4,
-        opacity: 0.3 + Math.random() * 0.5,
-    })), []);
-
-    return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {streaks.map(s => (
-                <motion.div
-                    key={s.id}
-                    className="absolute rounded-full"
-                    style={{
-                        top: `${s.y}%`,
-                        width: s.width,
-                        height: s.height,
-                        background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-                        filter: `blur(${s.height > 1 ? 1 : 0}px)`,
-                        boxShadow: `0 0 8px ${color}`,
-                    }}
-                    animate={{ left: ["-15%", "115%"] }}
-                    transition={{
-                        duration: s.duration,
-                        repeat: Infinity,
-                        ease: "linear",
-                        delay: s.delay,
-                    }}
-                />
-            ))}
-        </div>
-    );
-};
-
-/* Energy Wave — powerful SVG wave grid */
-const EnergyWaves = ({ color }: { color: string }) => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <svg className="w-full h-full" preserveAspectRatio="none" style={{ opacity: 0.4 }}>
-            {[20, 40, 55, 70, 85].map((y, i) => (
-                <motion.path
-                    key={i}
-                    d={`M-200 ${y} Q 300 ${y - 30}, 600 ${y} T 1400 ${y} T 2200 ${y}`}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth={1.5 - i * 0.2}
-                    animate={{
-                        d: [
-                            `M-200 ${y} Q 300 ${y - 30}, 600 ${y} T 1400 ${y} T 2200 ${y}`,
-                            `M-200 ${y} Q 300 ${y + 40}, 600 ${y} T 1400 ${y} T 2200 ${y}`,
-                            `M-200 ${y} Q 300 ${y - 30}, 600 ${y} T 1400 ${y} T 2200 ${y}`,
-                        ],
-                        opacity: [0.3, 0.7, 0.3],
-                    }}
-                    transition={{ duration: 4 + i * 1.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.6 }}
-                />
-            ))}
-        </svg>
-    </div>
-);
-
-/* Particle Emitter — sparks flying like exhaust particles */
-const RacingParticles = ({ color }: { color: string }) => {
-    const particles = useMemo(() => Array.from({ length: 90 }).map((_, i) => ({
-        id: i,
-        startX: Math.random() * 50 + 25,
-        startY: Math.random() * 100,
-        size: Math.random() * 2.5 + 0.4,
-        duration: 2 + Math.random() * 5,
-        delay: Math.random() * 6,
-        driftX: (Math.random() - 0.5) * 80,
-        driftY: -(20 + Math.random() * 60),
-    })), []);
-
-    return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {particles.map(p => (
-                <motion.div
-                    key={p.id}
-                    className="absolute rounded-full"
-                    style={{
-                        left: `${p.startX}%`,
-                        top: `${p.startY}%`,
-                        width: p.size,
-                        height: p.size,
-                        backgroundColor: color,
-                        boxShadow: `0 0 ${6 + p.size * 4}px ${color}`,
-                    }}
-                    animate={{
-                        x: [0, p.driftX],
-                        y: [0, p.driftY],
-                        opacity: [0, 0.9, 0],
-                        scale: [0.5, 1.5, 0.2],
-                    }}
-                    transition={{
-                        duration: p.duration,
-                        repeat: Infinity,
-                        ease: "easeOut",
-                        delay: p.delay,
-                    }}
-                />
-            ))}
-        </div>
-    );
-};
-
-/* LED Border Pulse — racing car LED strips */
-const LEDBorderPulse = ({ color }: { color: string }) => (
-    <>
-        {/* Top LED strip */}
-        <motion.div className="absolute top-0 left-0 right-0 h-[2px] z-30"
-            style={{ background: `linear-gradient(90deg, transparent 5%, ${color} 30%, ${color} 70%, transparent 95%)` }}
-            animate={{ opacity: [0.2, 1, 0.2], scaleX: [0.7, 1, 0.7] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Bottom LED strip */}
-        <motion.div className="absolute bottom-0 left-0 right-0 h-[2px] z-30"
-            style={{ background: `linear-gradient(90deg, transparent 10%, ${color}80 40%, ${color}80 60%, transparent 90%)` }}
-            animate={{ opacity: [0.1, 0.7, 0.1], scaleX: [0.8, 1.1, 0.8] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        />
-        {/* Left LED strip */}
-        <motion.div className="absolute top-0 bottom-0 left-0 w-[2px] z-30"
-            style={{ background: `linear-gradient(180deg, ${color} 0%, transparent 60%)` }}
-            animate={{ opacity: [0.3, 0.9, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-        />
-        {/* Right LED strip */}
-        <motion.div className="absolute top-0 bottom-0 right-0 w-[2px] z-30"
-            style={{ background: `linear-gradient(180deg, ${color} 0%, transparent 60%)` }}
-            animate={{ opacity: [0.3, 0.9, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-        />
-    </>
-);
-
-/* Heat Haze — radial glow that breathes intensely */
-const HeatHaze = ({ color }: { color: string }) => (
-    <>
-        <motion.div className="absolute inset-0 z-0"
-            animate={{
-                background: [
-                    `radial-gradient(ellipse 60% 80% at 75% 50%, ${color}22 0%, transparent 50%), radial-gradient(ellipse 40% 60% at 20% 40%, ${color}11 0%, transparent 40%)`,
-                    `radial-gradient(ellipse 80% 100% at 75% 50%, ${color}33 0%, transparent 50%), radial-gradient(ellipse 50% 70% at 25% 60%, ${color}22 0%, transparent 40%)`,
-                    `radial-gradient(ellipse 60% 80% at 75% 50%, ${color}22 0%, transparent 50%), radial-gradient(ellipse 40% 60% at 20% 40%, ${color}11 0%, transparent 40%)`,
-                ]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Corner bloom */}
-        <motion.div className="absolute -top-10 -right-10 w-72 h-72 rounded-full z-0"
-            style={{ background: `radial-gradient(circle, ${color}18 0%, transparent 70%)`, filter: "blur(30px)" }}
-            animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-    </>
-);
-
-/* ═══════════ SUPERCAR GAUGE ═══════════ */
-
-function SupercarGauge({ score, confidence, isRTL }: { score: number; confidence: number; isRTL: boolean }) {
-
-    // 5-state color based on Global Score
-    const primary = score > 0.6 ? "#00c853"   // Strong Uptrend
-        : score > 0.2 ? "#00e676"              // Bullish
-            : score >= -0.2 ? "#ffc400"            // Neutral
-                : score >= -0.6 ? "#ff6d00"            // Bearish
-                    : "#ff1744";                            // Strong Downtrend
-
-    const glow = score > 0.6 ? "rgba(0,200,83,"
-        : score > 0.2 ? "rgba(0,230,118,"
-            : score >= -0.2 ? "rgba(255,196,0,"
-                : score >= -0.6 ? "rgba(255,109,0,"
-                    : "rgba(255,23,68,";
-
-    // Confidence ring color (5 levels)
-    const confColor = confidence >= 85 ? "#00e5ff"
-        : confidence >= 70 ? "#448aff"
-            : confidence >= 55 ? "#26c6da"
-                : confidence >= 40 ? "#ffab00"
-                    : "#ff6e40";
-
-    const size = 260;
-
-    const cx = size / 2, cy = size / 2;
-
-    const arc = (sd: number, ed: number, r: number) => {
-
-        const s = (sd * Math.PI) / 180, e = (ed * Math.PI) / 180;
-
-        const x1 = cx + r * Math.cos(s), y1 = cy + r * Math.sin(s);
-
-        const x2 = cx + r * Math.cos(e), y2 = cy + r * Math.sin(e);
-        return `M ${x1} ${y1} A ${r} ${r} 0 ${ed - sd > 180 ? 1 : 0} 1 ${x2} ${y2}`;
-    };
-
-    const startA = -225, sweepA = 270;
-
-    const norm = (score + 1) / 2;
-
-    const scoreAngle = startA + norm * sweepA;
-
-    const segments = 60;
-
-    const segAngle = sweepA / segments;
-
-    const activeSegs = Math.round(norm * segments);
-
-    const confNorm = confidence / 100;
-
-    const ticks = Array.from({ length: 55 }, (_, i) => {
-
-        const angle = startA + (i / 54) * sweepA;
-
-        const rad = (angle * Math.PI) / 180;
-
-        const isMajor = i % 5 === 0;
-
-        const r1 = 110, r2 = isMajor ? 100 : 104;
-        return { x1: cx + r1 * Math.cos(rad), y1: cy + r1 * Math.sin(rad), x2: cx + r2 * Math.cos(rad), y2: cy + r2 * Math.sin(rad), isMajor };
-    });
-
-    const needleRad = (scoreAngle * Math.PI) / 180;
-
-    const nx = cx + 98 * Math.cos(needleRad), ny = cy + 98 * Math.sin(needleRad);
-
-    const scorePct = Math.round(score * 100);
-    const scoreText = (scorePct > 0 ? "+" : "") + scorePct + "%";
-    return (
-        <div className="relative" style={{ width: size, height: size * 0.68 }}>
-            <div className="absolute" style={{ top: -15, left: -15, right: -15, bottom: -15, background: `radial-gradient(circle at 50% 55%, ${glow}0.12) 0%, transparent 65%)`, filter: "blur(8px)" }} />
-            <svg width={size} height={size * 0.68} viewBox={`0 0 ${size} ${size * 0.68}`} className="relative z-10">
-                <defs>
-                    <filter id="hGlow"><feGaussianBlur stdDeviation="5" result="b1" /><feGaussianBlur stdDeviation="2" result="b2" /><feMerge><feMergeNode in="b1" /><feMergeNode in="b2" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                    <filter id="sGlow"><feGaussianBlur stdDeviation="3" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                    <filter id="tGlow"><feGaussianBlur stdDeviation="7" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                    <radialGradient id="iDisc" cx="50%" cy="50%"><stop offset="0%" stopColor="#0d1520" /><stop offset="100%" stopColor="#060a10" /></radialGradient>
-                    <filter id="vGlow"><feGaussianBlur stdDeviation="12" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter>
-                </defs>
-                {Array.from({ length: segments }, (_, i) => {
-
-                    const a1 = startA + i * segAngle + 0.5, a2 = startA + (i + 1) * segAngle - 0.5;
-
-                    const isActive = i < activeSegs;
-
-                    const p = i / segments;
-                    let c = "#1a2332";
-                    if (isActive) { if (p < 0.25) c = "#ff1744"; else if (p < 0.4) c = "#ff6d00"; else if (p < 0.55) c = "#ffc400"; else if (p < 0.75) c = "#76ff03"; else c = "#00e676"; }
-                    return <motion.path key={i} d={arc(a1, a2, 122)} fill="none" stroke={c} strokeWidth={isActive ? "5" : "2"} strokeLinecap="round" opacity={isActive ? 0.9 : 0.15} initial={{ opacity: 0 }} animate={{ opacity: isActive ? 0.9 : 0.15 }} transition={{ delay: i * 0.01, duration: 0.2 }} />;
-                })}
-                <path d={arc(-225, 45, 90)} fill="none" stroke="#111a28" strokeWidth="3" strokeLinecap="round" />
-                <motion.path d={arc(-225, -225 + confNorm * 270, 90)} fill="none" stroke={confColor} strokeWidth="3" strokeLinecap="round" opacity="0.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 1.2 }} />
-                {ticks.map((t, i) => <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={t.isMajor ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.08)"} strokeWidth={t.isMajor ? 1.5 : 0.7} />)}
-                <circle cx={cx} cy={cy} r="72" fill="url(#iDisc)" /><circle cx={cx} cy={cy} r="72" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                {(() => {
-                    const nRad = (scoreAngle * Math.PI) / 180;
-                    const tipX = cx + 92 * Math.cos(nRad), tipY = cy + 92 * Math.sin(nRad);
-                    const baseX = cx - 3 * Math.cos(nRad), baseY = cy - 3 * Math.sin(nRad);
-                    const perpX = 2.5 * Math.sin(nRad), perpY = -2.5 * Math.cos(nRad);
-                    const b1x = baseX + perpX, b1y = baseY + perpY;
-                    const b2x = baseX - perpX, b2y = baseY - perpY;
-                    return (
-                        <>
-                            <motion.polygon
-                                points={`${tipX},${tipY} ${b1x},${b1y} ${b2x},${b2y}`}
-                                fill={primary} opacity="0.8" filter="url(#sGlow)"
-                                initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}
-                                transition={{ delay: 0.3, duration: 0.8 }}
-                            />
-                            <circle cx={cx} cy={cy} r="5" fill="#0a0e14" stroke={primary} strokeWidth="2" />
-                        </>
-                    );
-                })()}
-                <motion.circle cx={nx} cy={ny} r="3.5" fill={primary} filter="url(#hGlow)" initial={{ opacity: 0 }} animate={{ opacity: [0.6, 1, 0.6] }} transition={{ delay: 1.5, duration: 2, repeat: Infinity }} />
-                <motion.text x={cx} y={cy + 2} fill={primary} fontSize="30" fontWeight="900" textAnchor="middle" dominantBaseline="middle" fontFamily="'Inter', system-ui" letterSpacing="-1" filter="url(#tGlow)" initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.8, duration: 0.8, type: "spring" }}>{scoreText}</motion.text>
-                <text x={cx} y={cy + 22} fill="rgba(255,255,255,0.35)" fontSize="8" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" letterSpacing="2">{i18n[isRTL ? 'ar' : 'en'].globalScore}</text>
-                <circle cx={cx} cy={cy} r="115" fill="none" stroke={primary} strokeWidth="1" opacity="0.1" filter="url(#vGlow)" />
-            </svg>
-        </div>
-    );
-}
 /* ═══════════ Glass Panel ═══════════ */
 
-function Panel({ children, className = "", accent }: { children: React.ReactNode; className?: string; accent?: string }) {
-    return (
-        <motion.div className={`rounded-2xl overflow-hidden ${className}`}
-            initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, type: "spring", stiffness: 150 }}
-            whileHover={{ boxShadow: accent ? `0 12px 50px rgba(0,0,0,0.6), 0 0 60px ${accent}` : "0 12px 50px rgba(0,0,0,0.6)" }}
-            style={{
-                background: "linear-gradient(160deg, rgba(14,20,33,0.92) 0%, rgba(8,12,22,0.96) 100%)",
-                border: "1px solid rgba(255,255,255,0.05)",
-                boxShadow: accent ? `0 8px 40px rgba(0,0,0,0.5), 0 0 50px ${accent}, inset 0 1px 0 rgba(255,255,255,0.04)` : "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
-            }}>
-            {children}
-        </motion.div>
-    );
-}
+
 /* ═══════════ Scanning line ═══════════ */
 
-function ScanLine({ color }: { color: string }) {
-    return (
-        <motion.div className="absolute left-0 right-0 h-px pointer-events-none z-20"
-            style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }}
-            animate={{ top: ["0%", "100%", "0%"] }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} />
-    );
-}
+
 /* ═══════════ Animated Buy/Sell Cell ═══════════ */
 
-function SignalCell({ signal, rowIdx, colIdx }: { signal: Signal; rowIdx: number; colIdx: number }) {
-    const isBuy = signal === "Buy";
-    const isSell = signal === "Sell";
-    const isNeutral = signal === "Neutral" || signal === "NA";
 
-    let color = "#666"; // Gray for NA
-    let bgColor = "rgba(255,255,255,0.03)";
-    let label = "-";
-
-    if (isBuy) {
-        color = "#00e676";
-        bgColor = "rgba(0,230,118,0.06)";
-        label = "Buy";
-    } else if (isSell) {
-        color = "#ff1744";
-        bgColor = "rgba(255,23,68,0.06)";
-        label = "Sell";
-    } else if (signal === "Neutral") {
-        color = "#ffc400";
-        bgColor = "rgba(255,196,0,0.06)";
-        label = "Neu";
-    }
-
-    return (
-        <motion.td className="text-center text-[10px] font-bold py-[5px] px-0.5 border-r border-b relative"
-            style={{
-                color: color,
-                background: bgColor,
-                borderColor: "rgba(255,255,255,0.03)",
-            }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: rowIdx * 0.008 + colIdx * 0.004, duration: 0.2 }}
-            whileHover={{
-                scale: 1.15,
-                zIndex: 20,
-                boxShadow: `0 0 10px ${color}30`,
-                background: isBuy ? "rgba(0,230,118,0.12)" : isSell ? "rgba(255,23,68,0.12)" : "rgba(255,255,255,0.08)",
-            }}
-        >
-            {label}
-        </motion.td>
-    );
-}
 /* ═══════════ Analysis Data Table ═══════════ */
 
 function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symbol: string; isRTL: boolean; sources: Record<AnalysisTab, any[]> }) {
+    const { language, t: globalT } = useLanguage();
+    const lang = language === "ar" ? "ar" : language === "ru" ? "ru" : language === "tr" ? "tr" : "en";
     const data = getTabData(tab, symbol, sources);
     const displayRows = data.rows;
     const displayTfCols = vcTfLabels;
@@ -1142,9 +395,24 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
     const displayOverallTotal = data.overallTotal;
     const displayOverallClass = data.overallClass;
 
-    const t = i18n[isRTL ? 'ar' : 'en'];
+    const t = i18n[lang];
     const accentColor = displayOverallTotal >= 0 ? "#00e676" : "#ff1744";
     const accentGlow = displayOverallTotal >= 0 ? "rgba(0,230,118,0.04)" : "rgba(255,23,68,0.04)";
+
+    const tvTab = (v: string) => {
+        switch(v) {
+            case "Vector Core": return t.vectorCore;
+            case "Delta Engine": return t.deltaEngine;
+            case "Pulse Matrix": return t.pulseMatrix;
+            case "Boundary Shell": return t.boundaryShell;
+            case "Power Field": return t.powerField;
+            case "Phase X Layer": return t.phaseXLayer;
+            case "Decision Engine": return t.decisionEngine;
+            default: return v;
+        }
+    };
+
+    const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : v;
 
     const tableRef = useRef<HTMLDivElement>(null);
     return (
@@ -1157,7 +425,7 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                             {analysisTabIcons[tab]}
                         </motion.span>
                         <span className="text-[14px] font-black text-white tracking-wider uppercase" dir="auto">
-                            {isRTL ? analysisTabsAr[tab] : tab}
+                            {tvTab(tab)}
                         </span>
                         {(displayRows.length > 0) && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1.5" style={{ background: "rgba(0,229,160,0.1)", color: "#00e5a0", border: "1px solid rgba(0,229,160,0.2)" }}>
@@ -1200,9 +468,9 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                                     </th>
                                 ))}
                                 <th className="text-center text-[10px] font-bold text-amber-400 py-2 px-2 border-r border-b tracking-wider"
-                                    style={{ borderColor: "rgba(255,255,255,0.05)", minWidth: "55px" }}>{i18n[isRTL ? 'ar' : 'en'].total}</th>
+                                    style={{ borderColor: "rgba(255,255,255,0.05)", minWidth: "55px" }}>{t.total}</th>
                                 <th className="text-center text-[10px] font-bold text-cyan-400 py-2 px-2 border-b tracking-wider"
-                                    style={{ borderColor: "rgba(255,255,255,0.05)", minWidth: "110px" }}>{i18n[isRTL ? 'ar' : 'en'].classification}</th>
+                                    style={{ borderColor: "rgba(255,255,255,0.05)", minWidth: "110px" }}>{t.classification}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1231,7 +499,7 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                                     </td>
                                     <td className="text-center text-[10px] font-bold py-[5px] px-2 border-b"
                                         style={{ color: getClassColor(row.classification), borderColor: "rgba(255,255,255,0.03)" }}>
-                                        {isRTL ? (trendAr[row.classification] || row.classification) : row.classification}
+                                        {tv(row.classification)}
                                     </td>
                                 </motion.tr>
                             ))}
@@ -1239,7 +507,7 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                             <tr style={{ background: "rgba(255,200,0,0.04)" }}>
                                 <td className="text-[11px] font-black text-amber-400 py-2 px-3 border-r border-b sticky left-0"
                                     style={{ background: "rgba(10,16,28,0.98)", borderColor: "rgba(255,255,255,0.05)" }}>
-                                    {i18n[isRTL ? 'ar' : 'en'].total}
+                                    {t.total}
                                 </td>
                                 {displayColTotals.map((t, ci) => (
                                     <td key={ci} className="text-center text-[11px] font-black py-2 px-1 border-r border-b"
@@ -1260,12 +528,12 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                             <tr style={{ background: "rgba(0,200,255,0.03)" }}>
                                 <td className="text-[10px] font-bold text-cyan-400 py-2 px-3 border-r sticky left-0"
                                     style={{ background: "rgba(10,16,28,0.98)", borderColor: "rgba(255,255,255,0.05)" }}>
-                                    {i18n[isRTL ? 'ar' : 'en'].classification}
+                                    {t.classification}
                                 </td>
                                 {displayColClassifications.map((c, ci) => (
                                     <td key={ci} className="text-center text-[9px] font-bold py-2 px-0.5 border-r"
                                         style={{ color: getClassColor(c), borderColor: "rgba(255,255,255,0.05)", direction: 'ltr' }}>
-                                        {isRTL ? (trendAr[c] || c) : c}
+                                        {tv(c)}
                                     </td>
                                 ))}
                                 <td className="border-r" style={{ borderColor: "rgba(255,255,255,0.05)" }}></td>
@@ -1281,12 +549,39 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
 /* ═══════════ Dynamic Layer Table ═══════════ */
 
 function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: boolean; sources: Record<AnalysisTab, any[]> }) {
+    const { language, t: globalT } = useLanguage();
+    const lang = language === "ar" ? "ar" : language === "ru" ? "ru" : language === "tr" ? "tr" : "en";
+    const t = i18n[lang];
+
     const layerData = getDynamicLayerData(symbol, sources);
     const score = layerData.globalScorePct / 100;
 
-    const tv = (v: string) => isRTL ? (trendAr[v] || v) : v;
-    const tvTeam = (v: string) => isRTL ? (teamLabelsAr[v] || v) : v;
-    const tvTab = (v: string) => isRTL ? (analysisTabsAr[v] || v) : v;
+    const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : v;
+    
+    const tvTeam = (v: string) => {
+        if (lang === "en") return v;
+        switch(v) {
+            case "Short Term": return t.shortTerm;
+            case "Medium Term": return t.mediumTerm;
+            case "Long Term": return t.longTerm;
+            case "Over all": return t.total;
+            case "Overall": return t.total;
+            default: return v;
+        }
+    };
+
+    const tvTab = (v: string) => {
+        switch(v) {
+            case "Vector Core": return t.vectorCore;
+            case "Delta Engine": return t.deltaEngine;
+            case "Pulse Matrix": return t.pulseMatrix;
+            case "Boundary Shell": return t.boundaryShell;
+            case "Power Field": return t.powerField;
+            case "Phase X Layer": return t.phaseXLayer;
+            case "Decision Engine": return t.decisionEngine;
+            default: return v;
+        }
+    };
 
     const bullish = score >= 0;
     const accent = bullish ? "#00e676" : "#ff1744";
@@ -1324,15 +619,15 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2.5">
                                     <motion.span className="text-xl" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
-                                    <span className="text-[16px] font-black text-white tracking-wider uppercase" dir="auto">ALL</span>
+                                    <span className="text-[16px] font-black text-white tracking-wider uppercase" dir="auto">{globalT("allTxt")}</span>
                                 </div>
-                                <span className="text-[10px] text-gray-600 tracking-widest uppercase">{isRTL ? "ملخص التصنيف" : "CLASSIFICATION SUMMARY"}</span>
+                                <span className="text-[10px] text-gray-600 tracking-widest uppercase">{globalT("classificationSummary")}</span>
                             </div>
                             <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${accentG}0.1)` }}>
                                 <table className="w-full border-collapse">
                                     <thead>
                                         <tr style={{ background: "rgba(10,16,28,0.98)" }}>
-                                            {[isRTL ? "الفترة" : "Team", isRTL ? "شراء" : "Buy", isRTL ? "بيع" : "Sell", "Net", "DSR", isRTL ? "التصنيف" : "Classification"].map((h, i) => (
+                                            {[globalT("team"), globalT("buyBtn"), globalT("sellBtn"), "Net", "DSR", t.classification].map((h, i) => (
                                                 <th key={i} className="text-[12px] font-bold text-gray-400 py-3 px-4 border-r border-b tracking-wider"
                                                     style={{ borderColor: borderC, background: i === 0 ? `${accentG}0.05)` : undefined }}>{h}</th>
                                             ))}
@@ -1368,7 +663,7 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                 <div className="col-span-4 space-y-4">
                     <Panel accent={`${accentG}0.08)`}>
                         <div className="p-5 text-center">
-                            <div className="text-[10px] text-gray-600 tracking-[0.25em] uppercase font-semibold mb-1">{isRTL ? "النتيجة الإجمالية" : "Global Score"}</div>
+                            <div className="text-[10px] text-gray-600 tracking-[0.25em] uppercase font-semibold mb-1">{globalT("globalScore")}</div>
                             <motion.div className="text-[44px] font-black leading-none my-2" style={{ color: accent }}
                                 animate={{ textShadow: [`0 0 20px ${accentG}0.2)`, `0 0 45px ${accentG}0.5)`, `0 0 20px ${accentG}0.2)`] }}
                                 transition={{ duration: 2.5, repeat: Infinity }}>{layerData.globalScorePct}%</motion.div>
@@ -1377,11 +672,11 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                     </Panel>
                     <Panel accent={`${accentG}0.08)`}>
                         <div className="p-5 text-center" style={{ background: `linear-gradient(180deg, transparent 0%, ${accentG}0.04) 100%)` }}>
-                            <div className="text-[10px] text-gray-600 tracking-[0.25em] uppercase font-semibold mb-1">{isRTL ? "مستوى الثقة" : "Confidence"}</div>
+                            <div className="text-[10px] text-gray-600 tracking-[0.25em] uppercase font-semibold mb-1">{globalT("confidence")}</div>
                             <motion.div className="text-[44px] font-black leading-none my-2" style={{ color: accent }}
                                 animate={{ textShadow: [`0 0 20px ${accentG}0.2)`, `0 0 45px ${accentG}0.5)`, `0 0 20px ${accentG}0.2)`] }}
                                 transition={{ duration: 2.5, repeat: Infinity }}>{layerData.confidence}%</motion.div>
-                            <span className="text-[14px] font-bold" style={{ color: accent }}>{layerData.confidence >= 70 ? (isRTL ? "ثقة عالية" : "High Confidence") : (isRTL ? "ثقة متوسطة" : "Medium Confidence")}</span>
+                            <span className="text-[14px] font-bold" style={{ color: accent }}>{layerData.confidence >= 70 ? globalT("highConfidence") : globalT("mediumConfidence")}</span>
                         </div>
                     </Panel>
                 </div>
@@ -1392,14 +687,14 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                     <div className="flex items-center gap-2.5 mb-4">
                         <motion.span className="text-xl" animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 3, repeat: Infinity }}> </motion.span>
                         <span className="text-[15px] font-black text-white tracking-wider uppercase" dir="auto">
-                            {isRTL ? "المؤشرات حسب الفترة" : "INDICATORS BY TEAM"}
+                            {globalT("indicatorsByTeam")}
                         </span>
                     </div>
                     <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${accentG}0.08)` }}>
                         <table className="w-full border-collapse">
                             <thead>
                                 <tr style={{ background: "rgba(10,16,28,0.98)" }}>
-                                    {[isRTL ? "المؤشر" : "Indicator", isRTL ? "الفترة" : "Team", isRTL ? "شراء" : "Buy", isRTL ? "بيع" : "Sell", "Net", "DSR", isRTL ? "التصنيف" : "Regime Classification"].map((h, i) => (
+                                    {[globalT("indicatorLbl"), globalT("team"), globalT("buyBtn"), globalT("sellBtn"), "Net", "DSR", t.classification].map((h, i) => (
                                         <th key={i} className={thCls}
                                             style={{ borderColor: borderC, background: i < 2 ? "rgba(255,200,0,0.04)" : undefined }}>{h}</th>
                                     ))}
@@ -1451,14 +746,14 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                     <div className="flex items-center gap-2.5 mb-4">
                         <motion.span className="text-xl" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
                         <span className="text-[15px] font-black text-white tracking-wider uppercase" dir="auto">
-                            {isRTL ? "الفترات حسب المؤشر" : "TEAMS BY INDICATOR"}
+                            {globalT("teamsByIndicator")}
                         </span>
                     </div>
                     <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${accentG}0.08)` }}>
                         <table className="w-full border-collapse">
                             <thead>
                                 <tr style={{ background: "rgba(10,16,28,0.98)" }}>
-                                    {[isRTL ? "الفترة" : "Team", isRTL ? "المؤشر" : "Indicator", isRTL ? "شراء" : "Buy", isRTL ? "بيع" : "Sell", "Net", "DSR", isRTL ? "التصنيف" : "Regime Classification"].map((h, i) => (
+                                    {[globalT("team"), globalT("indicatorLbl"), globalT("buyBtn"), globalT("sellBtn"), "Net", "DSR", t.classification].map((h, i) => (
                                         <th key={i} className={thCls}
                                             style={{ borderColor: borderC, background: i < 2 ? "rgba(0,200,255,0.04)" : undefined }}>{h}</th>
                                     ))}
@@ -1511,6 +806,9 @@ function TradingDecisionEngineTable({
     isRTL: boolean;
     sources: Record<AnalysisTab, any[]>;
 }) {
+    const { language, t: globalT } = useLanguage();
+    const lang = language === "ar" ? "ar" : language === "ru" ? "ru" : language === "tr" ? "tr" : "en";
+    const t = i18n[lang];
     const [decisionFilter, setDecisionFilter] = useState<"ALL" | "STRONG BUY" | "BUY" | "WEAK BUY" | "NO TRADE" | "WEAK SELL" | "SELL" | "STRONG SELL">("ALL");
 
     const cat = marketCategories.find(c => c.name === category);
@@ -1525,12 +823,31 @@ function TradingDecisionEngineTable({
         return false;
     }) || [];
 
-    const tv = (v: string) => isRTL ? (trendAr[v] || v) : v;
-    const tvh = (h: string) => isRTL ? ({
-        "Symbol": "الرمز", "Primary Trend": "الاتجاه الرئيسي", "Structural Bias": "الانحياز الهيكلي",
-        "Momentum": "الزخم", "Phase": "المرحلة", "Volatility": "التذبذب", "Reversal Risk": "مخاطر الانعكاس",
-        "Confidence": "الثقة", "Market Phase": "مرحلة السوق", "Decision": "القرار"
-    }[h] || h) : h;
+    const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : v;
+    
+    // Translation logic for headers
+    const tvh = (h: string) => {
+        if (lang === "ar") {
+            return {
+                "Symbol": "الرمز", "Primary Trend": "الاتجاه الرئيسي", "Structural Bias": "الانحياز الهيكلي",
+                "Momentum": "الزخم", "Phase": "المرحلة", "Volatility": "التذبذب", "Reversal Risk": "مخاطر الانعكاس",
+                "Confidence": "الثقة", "Market Phase": "مرحلة السوق", "Decision": "القرار"
+            }[h] || h;
+        } else if (lang === "ru") {
+            return {
+                "Symbol": "Символ", "Primary Trend": "Основной тренд", "Structural Bias": "Структ. смещение",
+                "Momentum": "Импульс", "Phase": "Фаза", "Volatility": "Волатильность", "Reversal Risk": "Риск разворота",
+                "Confidence": "Уверенность", "Market Phase": "Фаза рынка", "Decision": "Решение"
+            }[h] || h;
+        } else if (lang === "tr") {
+            return {
+                "Symbol": "Sembol", "Primary Trend": "Ana Trend", "Structural Bias": "Yapısal Eğilim",
+                "Momentum": "İvme", "Phase": "Aşama", "Volatility": "Volatilite", "Reversal Risk": "Dönüş Riski",
+                "Confidence": "Güven", "Market Phase": "Piyasa Aşaması", "Decision": "Karar"
+            }[h] || h;
+        }
+        return h;
+    };
 
     const rows = symbols.map(sym => {
         const layerData = getDynamicLayerData(sym, sources);
@@ -1598,20 +915,20 @@ function TradingDecisionEngineTable({
             <div className="grid grid-cols-1 gap-4 mb-2">
                 {/* Market Filter */}
                 <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{isRTL ? "السوق:" : "MARKET:"}</span>
+                    <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{lang === "ar" ? "السوق:" : lang === "ru" ? "РЫНОК:" : lang === "tr" ? "PİYASA:" : "MARKET:"}</span>
                     {marketCategories.map(c => (
                         <button key={c.name} onClick={() => onCategoryChange(c.name)}
                             className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all
                                 ${category === c.name ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-transparent text-gray-400 hover:bg-white/5"}`}>
                             <span className="text-sm">{c.icon}</span>
-                            <span>{isRTL ? c.nameAr : c.name}</span>
+                            <span>{lang === "ar" ? c.nameAr : lang === "ru" ? t[c.name.toLowerCase() as keyof typeof t] : lang === "tr" ? t[c.name.toLowerCase() as keyof typeof t] : c.name}</span>
                         </button>
                     ))}
                 </div>
                 {/* Decision Filter */}
                 <div className="p-3 rounded-xl flex items-center justify-between gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{isRTL ? "القرار:" : "DECISION:"}</span>
+                        <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{globalT("decision")}:</span>
                         {["ALL", "STRONG BUY", "BUY", "WEAK BUY", "NO TRADE", "WEAK SELL", "SELL", "STRONG SELL"].map(df => {
                             let styleCls = "bg-transparent text-gray-400 hover:bg-white/5";
                             if (decisionFilter === df) {
@@ -1626,13 +943,20 @@ function TradingDecisionEngineTable({
                                     case "ALL": styleCls = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]"; break;
                                 }
                             }
-                            const labelAr: any = { "ALL": "الكل", "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" };
+                            
+                            const getDecLabel = (d: string) => {
+                                if (lang === "ar") return { "ALL": "الكل", "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" }[d] || d;
+                                if (lang === "ru") return { "ALL": "Все", "STRONG BUY": "СИЛЬНО ПОКУПАТЬ", "BUY": "ПОКУПАТЬ", "WEAK BUY": "СЛАБО ПОКУПАТЬ", "NO TRADE": "ВНЕ РЫНКА", "WEAK SELL": "СЛАБО ПРОДАВАТЬ", "SELL": "ПРОДАВАТЬ", "STRONG SELL": "СИЛЬНО ПРОДАВАТЬ" }[d] || d;
+                                if (lang === "tr") return { "ALL": "Tümü", "STRONG BUY": "GÜÇLÜ AL", "BUY": "AL", "WEAK BUY": "ZAYIF AL", "NO TRADE": "İŞLEM YOK", "WEAK SELL": "ZAYIF SAT", "SELL": "SAT", "STRONG SELL": "GÜÇLÜ SAT" }[d] || d;
+                                return d;
+                            };
+                            
                             const count = df === "ALL" ? rows.length : rows.filter(r => r.decision === df).length;
 
                             return (
                                 <button key={df} onClick={() => setDecisionFilter(df as any)}
                                     className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-1.5 ${styleCls} ${count === 0 ? "opacity-50" : ""}`}>
-                                    <span>{isRTL ? labelAr[df] : df}</span>
+                                    <span>{getDecLabel(df)}</span>
                                     <span className="bg-black/20 px-1.5 py-0.5 rounded text-[10px] ml-1">{count}</span>
                                 </button>
                             );
@@ -1669,24 +993,24 @@ function TradingDecisionEngineTable({
                                 <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.volatility === "Elevated" ? "#ff1744" : r.volatility === "Moderate" ? "#ffc400" : "#00e676" }}>{tv(r.volatility)}</td>
                                 <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.reversalRisk === "Low" ? "#00e676" : r.reversalRisk === "Moderate" ? "#ffc400" : "#ff1744" }}>{tv(r.reversalRisk)}</td>
                                 <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.confidence >= 70 ? "#00e5ff" : r.confidence >= 40 ? "#ffab00" : "#ff6e40" }}>
-                                    {isRTL && r.confStr === "High Confidence" ? "ثقة عالية" : isRTL && r.confStr === "Medium Confidence" ? "ثقة متوسطة" : isRTL ? "ثقة منخفضة" : r.confStr}
+                                    {lang === "en" ? r.confStr : r.confidence >= 70 ? t.aiHigh : r.confidence >= 40 ? t.aiMed : t.aiLow}
                                 </td>
                                 <td className="py-2.5 px-5 border-r border-b text-[13px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.marketPhase) }}>{tv(r.marketPhase)}</td>
                                 <td className="py-2.5 px-5 border-r border-b text-[13.5px] font-black tracking-wider" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                                    {r.decision === "STRONG BUY" && <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(16,185,129,0.4)] block text-center min-w-[90px] border border-emerald-500/40">{isRTL ? "شراء قوي" : "STRONG BUY"}</span>}
-                                    {r.decision === "BUY" && <span className="bg-lime-500/20 text-lime-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(132,204,22,0.2)] block text-center min-w-[90px] border border-lime-500/30">{isRTL ? "شراء" : "BUY"}</span>}
-                                    {r.decision === "WEAK BUY" && <span className="bg-yellow-500/15 text-yellow-500 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]">{isRTL ? "شراء ضعيف" : "WEAK BUY"}</span>}
-                                    {r.decision === "STRONG SELL" && <span className="bg-red-500/20 text-red-400 px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(239,68,68,0.4)] block text-center min-w-[90px] border border-red-500/40">{isRTL ? "بيع قوي" : "STRONG SELL"}</span>}
-                                    {r.decision === "SELL" && <span className="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(225,29,72,0.2)] block text-center min-w-[90px] border border-rose-500/30">{isRTL ? "بيع" : "SELL"}</span>}
-                                    {r.decision === "WEAK SELL" && <span className="bg-orange-500/15 text-orange-500 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]">{isRTL ? "بيع ضعيف" : "WEAK SELL"}</span>}
-                                    {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-400 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-slate-500/30">{isRTL ? "لا تداول" : "NO TRADE"}</span>}
+                                    {r.decision === "STRONG BUY" && <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(16,185,129,0.4)] block text-center min-w-[90px] border border-emerald-500/40">{globalT("strongBuyStr")}</span>}
+                                    {r.decision === "BUY" && <span className="bg-lime-500/20 text-lime-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(132,204,22,0.2)] block text-center min-w-[90px] border border-lime-500/30">{globalT("buyStr")}</span>}
+                                    {r.decision === "WEAK BUY" && <span className="bg-yellow-500/15 text-yellow-500 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]">{globalT("weakBuyStr")}</span>}
+                                    {r.decision === "STRONG SELL" && <span className="bg-red-500/20 text-red-400 px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(239,68,68,0.4)] block text-center min-w-[90px] border border-red-500/40">{globalT("strongSellStr")}</span>}
+                                    {r.decision === "SELL" && <span className="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-md shadow-[0_0_10px_rgba(225,29,72,0.2)] block text-center min-w-[90px] border border-rose-500/30">{globalT("sellStr")}</span>}
+                                    {r.decision === "WEAK SELL" && <span className="bg-orange-500/15 text-orange-500 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]">{globalT("weakSellStr")}</span>}
+                                    {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-400 px-3 py-1.5 rounded-md block text-center min-w-[90px] border border-slate-500/30">{globalT("noTradeStr")}</span>}
                                 </td>
                             </motion.tr>
                         ))}
                         {filteredRows.length === 0 && (
                             <tr>
                                 <td colSpan={10} className="py-8 text-center text-gray-500 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                                    {isRTL ? "لا يوجد بيانات لهذه التصفية" : "No symbols match this filter"}
+                                    {lang === "ar" ? "لا يوجد بيانات لهذه التصفية" : lang === "ru" ? "Нет данных по этому фильтру" : lang === "tr" ? "Bu filtreyle eşleşen veri yok" : "No symbols match this filter"}
                                 </td>
                             </tr>
                         )}
@@ -1701,15 +1025,50 @@ function TradingDecisionEngineTable({
 
 export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
 
-    const { language, toggleLanguage } = useLanguage();
-
+    const { language, setLanguageKey, t: globalT } = useLanguage();
     const isRTL = language === "ar";
+    const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const lang = isRTL ? "ar" : "en";
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setLangDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const languageOptions = [
+        { code: "ar", label: "العربية", flagUrl: "sa" },
+        { code: "en", label: "English", flagUrl: "gb" },
+        { code: "ru", label: "Русский", flagUrl: "ru" },
+        { code: "tr", label: "Türkçe", flagUrl: "tr" }
+    ];
+
+    const currentLangObj = languageOptions.find(l => l.code === language) || languageOptions[1];
+
+    const lang = language === "ar" ? "ar" : language === "ru" ? "ru" : language === "tr" ? "tr" : "en";
 
     const t = i18n[lang];
 
-    const tv = (v: string) => isRTL ? (trendAr[v] || v) : v;
+    const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : v;
+
+    const tvTab = (v: string) => {
+        switch(v) {
+            case "Vector Core": return t.vectorCore;
+            case "Delta Engine": return t.deltaEngine;
+            case "Pulse Matrix": return t.pulseMatrix;
+            case "Boundary Shell": return t.boundaryShell;
+            case "Power Field": return t.powerField;
+            case "Phase X Layer": return t.phaseXLayer;
+            case "Decision Engine": return t.decisionEngine;
+            default: return v;
+        }
+    };
+
     const [selectedCategory, setSelectedCategory] = useState<MarketCategory>("Forex");
 
     const [selectedSymbol, setSelectedSymbol] = useState("EURUSD");
@@ -1718,6 +1077,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const [selectedTab, setSelectedTab] = useState<AnalysisTab>("Vector Core");
     const [filterOpen, setFilterOpen] = useState(true);
     const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+    const [isNewsOpen, setIsNewsOpen] = useState(false);
 
     const [sources, setSources] = useState<Record<AnalysisTab, any[]>>(defaultAnalysisSources);
     const [uploadStatus, setUploadStatus] = useState<Record<AnalysisTab, boolean[]>>({
@@ -2059,9 +1419,51 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 ))}
                             </div>
 
-                            <button onClick={toggleLanguage} className="px-3 py-1.5 rounded-lg text-[11px] font-black tracking-widest text-cyan-400 hover:text-white hover:bg-white/10 transition-colors uppercase border border-cyan-500/20 bg-cyan-500/10 mr-2">
-                                {language === 'en' ? 'عربي' : 'EN'}
+                            <button onClick={() => setIsNewsOpen(!isNewsOpen)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-widest uppercase transition-colors mr-2 ${isNewsOpen ? "bg-red-500/10 text-red-500 border border-red-500/20" : "text-gray-400 hover:text-white border border-transparent hover:bg-white/10"}`}>
+                                <RadioTower className={`w-3.5 h-3.5 ${isNewsOpen ? "animate-pulse" : ""}`} />
+                                {lang === "ar" ? "أخر الأخبار" : lang === "ru" ? "НОВОСТИ" : lang === "tr" ? "HABERLER" : "NEWS"}
                             </button>
+
+                            <div className="relative mr-2" ref={dropdownRef}>
+                                <button
+                                    onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-widest text-cyan-400 hover:text-white hover:bg-white/10 transition-colors border border-cyan-500/20 bg-cyan-500/10 cursor-pointer"
+                                >
+                                    <img src={`https://flagcdn.com/${currentLangObj.flagUrl}.svg`} alt={currentLangObj.code} className="w-5 h-auto rounded-sm object-cover" />
+                                    <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${langDropdownOpen ? "rotate-180" : ""}`} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {langDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute top-full mt-2 w-36 rounded-xl shadow-2xl overflow-hidden z-[60] bg-gray-900 border border-white/10"
+                                            style={{ right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
+                                        >
+                                            <div className="flex flex-col py-1">
+                                                {languageOptions.map((lang) => (
+                                                    <button
+                                                        key={lang.code}
+                                                        onClick={() => {
+                                                            setLanguageKey(lang.code as any);
+                                                            setLangDropdownOpen(false);
+                                                        }}
+                                                        className={`flex items-center gap-2 px-3 py-2.5 text-xs transition-colors text-left ${
+                                                            language === lang.code ? "bg-white/10 text-white font-bold" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                                                        }`}
+                                                    >
+                                                        <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
+                                                        <span>{lang.label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
 
                             <button onClick={resetSources} className="p-1.5 rounded-lg hover:bg-white/5" title="Reset to Defaults">
                                 <RotateCcw className="w-3.5 h-3.5 text-gray-600" />
@@ -2073,6 +1475,21 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                     </div>
                 </div>
             </header>
+            
+            {/* ═ ═ ═  BREAKING NEWS BAR ═ ═_═  */}
+            <AnimatePresence>
+                {isNewsOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                        style={{ overflow: "hidden" }}
+                        className="px-5 w-full relative z-20 max-w-[1700px] mx-auto"
+                    >
+                        <BreakingNews selectedSymbol={selectedSymbol} selectedCategory={selectedCategory} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
             {/* ═══ BODY ══_═ */}
             <div className="relative z-10 max-w-[1700px] mx-auto px-5 -mt-2">
                 {/* BANNER with Gauge — F1 Racing Level */}
@@ -2219,18 +1636,13 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                         <div className="flex-1">
                                             <h3 className="text-xl font-black mb-4 flex items-center gap-3 tracking-wider uppercase" style={{ color: accent }}>
                                                 <Zap size={20} />
-                                                {isRTL ? "تحليل الذكاء الاصطناعي" : "AI MARKET INSIGHT"}
+                                                {t.aiTitle || "AI MARKET INSIGHT"}
                                             </h3>
-                                            <p className="text-gray-200 text-lg leading-relaxed font-medium" style={{ textShadow: "0 2px 4px rgba(0,0,0,0.5)" }} dir={isRTL ? "rtl" : "ltr"}>
-                                                {isRTL ? (
-                                                    <>
-                                                        تشير البيانات الحالية إلى اتجاه <span style={{ color: accent }}>{tv(data.dynamics.primaryTrend)}</span> مدعوماً بـ زخم <span style={{ color: accent }}>{tv(data.dynamics.momentumState)}</span> و انحياز <span style={{ color: accent }}>{tv(data.dynamics.structuralBias)}</span>. يتشكل هذا السلوك ضمن مرحلة <span style={{ color: accent }}>{tv(data.phase)}</span>، مع دخول السوق في حالة المرحلة السوقية <span style={{ color: accent }}>{tv(data.dynamics.marketPhase)}</span>. يظهر مستوى تذبذب <span style={{ color: accent }}>{tv(data.volatility)}</span>، بينما يتم تقييم مخاطر الانعكاس على أنها <span style={{ color: accent }}>{tv(data.risk)}</span> وتعكس درجة ثقة <span style={{ color: accent }}>{data.confidence >= 70 ? "عالية" : data.confidence >= 40 ? "متوسطة" : "منخفضة"}</span> وضوح الإشارة الكمية وتوافق العوامل الداعمة للحالة السوقية.
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        The current market state reflects a Primary Trend <span style={{ color: accent }}>{data.dynamics.primaryTrend}</span> supported by Momentum <span style={{ color: accent }}>{data.dynamics.momentumState}</span> and a Structural Bias <span style={{ color: accent }}>{data.dynamics.structuralBias}</span>. This behavior appears within a Phase <span style={{ color: accent }}>{data.phase}</span> while the Market Phase is characterized by <span style={{ color: accent }}>{data.dynamics.marketPhase}</span>. Volatility conditions remain <span style={{ color: accent }}>{data.volatility}</span> and Reversal Risk is assessed as <span style={{ color: accent }}>{data.risk}</span>. The Confidence <span style={{ color: accent }}>{data.confidence >= 70 ? "High Confidence" : data.confidence >= 40 ? "Medium Confidence" : "Low Confidence"}</span> level reflects strong alignment between the underlying quantitative factors.
-                                                    </>
-                                                )}
+                                            <p className="text-gray-200 text-lg leading-relaxed font-medium" style={{ textShadow: "0 2px 4px rgba(0,0,0,0.5)" }} dir={lang === "ar" ? "rtl" : "ltr"}>
+                                                {t.aiTextPart1} <span style={{ color: accent }}>{tv(data.dynamics.primaryTrend)}</span> {t.aiTextPart2} <span style={{ color: accent }}>{tv(data.dynamics.momentumState)}</span> {t.aiTextPart3} <span style={{ color: accent }}>{tv(data.dynamics.structuralBias)}</span>.
+                                                {" "}{t.aiTextPart4} <span style={{ color: accent }}>{tv(data.phase)}</span> {t.aiTextPart5} <span style={{ color: accent }}>{tv(data.dynamics.marketPhase)}</span>.
+                                                {" "}{t.aiTextPart6} <span style={{ color: accent }}>{tv(data.volatility)}</span> {t.aiTextPart7} <span style={{ color: accent }}>{tv(data.risk)}</span>.
+                                                {" "}{t.aiTextPart8} <span style={{ color: accent }}>{data.confidence >= 70 ? t.aiHigh : data.confidence >= 40 ? t.aiMed : t.aiLow}</span> {t.aiTextPart9}
                                             </p>
                                         </div>
                                     </div>
@@ -2262,7 +1674,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                     scale: [1, 1.015, 1]
                                 }}
                                 transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}>
-                                {isRTL ? (trendAr[data.marketState] || data.marketState) : data.marketState}
+                                {tv(data.marketState)}
                             </motion.h2>
 
                             {/* ═══ Top Cluster: Clocks + Currency Badge ═══ */}
@@ -2270,7 +1682,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 {/* LEFT CLOCK: Last Update */}
                                 <SciFiClock
                                     isLive={true}
-                                    label={isRTL ? "اخر ابديت" : "LAST UPDATE"}
+                                    label={lang === "ar" ? "اخر ابديت" : lang === "ru" ? "ПОСЛЕДНЕЕ ОБНОВЛЕНИЕ" : lang === "tr" ? "SON GÜNCELLEME" : "LAST UPDATE"}
                                     timeMs={lastSystemUpdate}
                                     isRTL={isRTL}
                                     mode="lastUpdate"
@@ -2305,10 +1717,9 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                     );
                                 })()}
 
-                                {/* RIGHT CLOCK: Current Time */}
                                 <SciFiClock
                                     isLive={true}
-                                    label={isRTL ? "الوقت الحالي" : "CURRENT TIME"}
+                                    label={globalT("currentTimeStr")}
                                     isRTL={isRTL}
                                     mode="currentTime"
                                 />
@@ -2416,7 +1827,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             }
                                         };
                                         const dColors = getDecisionColors(data.decision);
-                                        const decisionLabelAr = { "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" }[data.decision];
+                                        const decisionLabel = data.decision === "STRONG BUY" ? globalT("strongBuyStr") : data.decision === "BUY" ? globalT("buyStr") : data.decision === "WEAK BUY" ? globalT("weakBuyStr") : data.decision === "NO TRADE" ? globalT("noTradeStr") : data.decision === "WEAK SELL" ? globalT("weakSellStr") : data.decision === "SELL" ? globalT("sellStr") : data.decision === "STRONG SELL" ? globalT("strongSellStr") : data.decision;
 
                                         return (
                                             <motion.div className="w-full text-center px-4 py-2 rounded-xl relative overflow-hidden"
@@ -2426,11 +1837,11 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                 }}
                                                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                                                 <div className="text-[10px] tracking-widest uppercase mb-0.5 font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>
-                                                    {isRTL ? "القرار" : "DECISION"}
+                                                    {globalT("decision")}
                                                 </div>
                                                 <div className="text-[18px] font-black tracking-wider"
                                                     style={{ color: dColors.text }}>
-                                                    {isRTL && decisionLabelAr ? decisionLabelAr : data.decision}
+                                                    {decisionLabel}
                                                 </div>
                                                 {/* Decision Glow Pulse */}
                                                 {data.decision !== "NO TRADE" && (
@@ -2506,7 +1917,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                     animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
                                                     transition={{ duration: 2, repeat: Infinity }}>{cat.icon}</motion.span>
                                                 <div className="relative z-10">
-                                                    <div className="text-[12px] font-bold" style={{ color: isActive ? accent : "#6b7280" }}>{isRTL ? cat.nameAr : cat.name}</div>
+                                                    <div className="text-[12px] font-bold" style={{ color: isActive ? accent : "#6b7280" }}>{lang === "ar" ? cat.nameAr : lang === "ru" ? t[cat.name.toLowerCase() as keyof typeof t] : lang === "tr" ? t[cat.name.toLowerCase() as keyof typeof t] : cat.name}</div>
                                                 </div>
                                                 {isActive && (
                                                     <motion.div className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full"
@@ -2555,7 +1966,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
 
                                 if (!availableSymbols.length) return (
                                     <div className="text-gray-500 text-sm px-4 py-2 italic">
-                                        {isRTL ? "جاري تحميل البيانات..." : "Loading data or no symbols available in JSON..."}
+                                        {lang === "ar" ? "جاري تحميل البيانات..." : lang === "ru" ? "Загрузка данных или нет символов в JSON..." : lang === "tr" ? "Veriler yükleniyor veya JSON'da sembol yok..." : "Loading data or no symbols available in JSON..."}
                                     </div>
                                 );
 
@@ -2597,7 +2008,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             {/* Label + Mini Score */}
                                             <div className="relative z-10">
                                                 <div className="text-[12px] font-bold" style={{ color: isActive ? "#fff" : "#9ca3af" }}>
-                                                    {isRTL ? info.labelAr : info.label}
+                                                    {lang === "ar" ? info.labelAr : info.label}
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="text-[10px] font-mono" style={{ color: "#6b7280" }}>{sym}</span>
@@ -2659,7 +2070,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                         transition={{ duration: 2, repeat: Infinity }}>
                                         {analysisTabIcons[tab]}
                                     </motion.span>
-                                    <span className="relative z-10">{isRTL ? analysisTabsAr[tab] : tab}</span>
+                                    <span className="relative z-10">{tvTab(tab)}</span>
                                     {isActive && (
                                         <motion.div layoutId="tabGlow" className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full"
                                             style={{ background: `linear-gradient(90deg, transparent, ${accent}, ${accent}, transparent)` }}

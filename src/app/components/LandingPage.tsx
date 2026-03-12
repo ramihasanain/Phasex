@@ -1,14 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Logo } from "./Logo";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Gauge, Move, Target, Activity, Navigation, Zap, Shield, ArrowRight,
-  Users, BarChart3, Sparkles, ChevronLeft, ChevronRight,
-  Languages, Menu, X, Linkedin, Twitter, Mail,
-  Briefcase, TrendingUp, Brain, Eye, LineChart, Ban, BellOff, HeartOff
+  ArrowRight, Activity, TrendingUp, Shield, Zap, Globe, Cpu, ChevronRight, Menu, X, Play, Clock, BarChart2,
+  Lock, RefreshCw, Server, Send, LayoutTemplate, Smartphone, Languages, ChevronDown,
+  Gauge, Move, Target, Navigation, Users, BarChart3, Sparkles, ChevronLeft, Linkedin, Twitter, Mail,
+  Briefcase, Brain, Eye, LineChart, Ban, BellOff, HeartOff
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { TermsModal, TermsButton, CookiePolicyModal, CookieButton, LegalDisclaimerModal, LegalDisclaimerButton, ManifestoModal, ManifestoButton, PrivacyPolicyModal, PrivacyPolicyButton, RiskDisclosureModal, RiskDisclosureButton } from "./TermsAndConditions";
+import { BreakingNews } from "./BreakingNews";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -17,10 +18,12 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: LandingPageProps) {
-  const { language, toggleLanguage } = useLanguage();
+  const { language, setLanguageKey, t } = useLanguage();
   const isRTL = language === "ar";
   const [currentScreenshot, setCurrentScreenshot] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [termsOpen, setTermsOpen] = useState(false);
   const [cookieOpen, setCookieOpen] = useState(false);
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
@@ -28,15 +31,35 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [riskOpen, setRiskOpen] = useState(false);
 
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLangDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const languageOptions = [
+    { code: "ar", label: "العربية", flagUrl: "sa" },
+    { code: "en", label: "English", flagUrl: "gb" },
+    { code: "ru", label: "Русский", flagUrl: "ru" },
+    { code: "tr", label: "Türkçe", flagUrl: "tr" }
+  ];
+
+  const currentLangObj = languageOptions.find(l => l.code === language) || languageOptions[1];
+
   const accent = "#00e5a0";
   const accentG = "rgba(0,229,160,";
 
   const navLinks = [
-    { label: isRTL ? "الرئيسية" : "Home", href: "#home" },
-    { label: isRTL ? "ما هو PHASE X" : "What is PHASE X", href: "#what-is" },
-    { label: isRTL ? "المؤشرات" : "States", href: "#states" },
-    { label: isRTL ? "الوصول" : "Access", href: "#access" },
-    { label: isRTL ? "التحليل الهيكلي" : "Structural Dynamics", href: "#dynamics", action: onOpenDynamics },
+    { label: t("home") || (isRTL ? "الرئيسية" : "Home"), href: "#home" },
+    { label: t("whatIsPhaseX") || (isRTL ? "ما هو PHASE X" : "What is PHASE X"), href: "#what-is" },
+    { label: t("states") || (isRTL ? "المؤشرات" : "States"), href: "#states" },
+    { label: t("access") || (isRTL ? "الوصول" : "Access"), href: "#access" },
+    { label: t("structuralDynamics") || (isRTL ? "التحليل الهيكلي" : "Structural Dynamics"), href: "#dynamics", action: onOpenDynamics },
   ];
 
   const screenshots = [
@@ -48,11 +71,11 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
 
   const stateColors = ["#a855f7", "#448aff", "#00e676", "#ff9100", "#ff1744"];
   const states = [
-    { icon: Gauge, name: "PHASE STATE", nameAr: "حالة المرحلة", question: isRTL ? "أين يتجه السوق؟" : "Where is the market headed?", description: isRTL ? "يحدد ما إذا كان السوق في مرحلة شراء، مرحلة بيع، أو مرحلة محايدة" : "Identifies whether the market is in a Buy Phase, Sell Phase, or Neutral Phase.", color: stateColors[0] },
-    { icon: Move, name: "DISPLACEMENT STATE", nameAr: "حالة الإزاحة", question: isRTL ? "ما مدى بعد السوق عن التوازن؟" : "How far is the market from equilibrium?", description: isRTL ? "يكشف عن الاختلال المتراكم والحمل الداخلي للسوق" : "Reveals accumulated imbalance and internal market load.", color: stateColors[1] },
-    { icon: Target, name: "REFERENCE STATE", nameAr: "الحالة المرجعية", question: isRTL ? "أين يقف السوق بالنسبة لمرساته الداخلية؟" : "Where does the market stand relative to its internal anchor?", description: isRTL ? "يكشف نقاط التحول الهيكلية عن طريق إزالة السعر تماماً" : "Exposes structural turning points by removing price entirely.", color: stateColors[2] },
-    { icon: Activity, name: "OSCILLATION STATE", nameAr: "حالة التذبذب", question: isRTL ? "ما هو إيقاع الزخم؟" : "What is the rhythm of momentum?", description: isRTL ? "يعرض التذبذب كحالة سلوكية — وليس خطاً مسطحاً" : "Displays oscillation as a behavioral state — not a flat line.", color: stateColors[3] },
-    { icon: Navigation, name: "DIRECTION STATE", nameAr: "حالة الاتجاه", question: isRTL ? "هل الاتجاه يستمر أم ينكسر؟" : "Is direction holding or breaking?", description: isRTL ? "يجمع استمرارية الاتجاه في هياكل واضحة وقابلة للقراءة" : "Aggregates directional continuity into clear, readable structures.", color: stateColors[4] },
+    { icon: Gauge, name: t("statePhaseName"), nameAr: t("statePhaseNameAr"), question: t("statePhaseQuestion"), description: t("statePhaseDesc"), color: stateColors[0] },
+    { icon: Move, name: t("stateDisplacementName"), nameAr: t("stateDisplacementNameAr"), question: t("stateDisplacementQuestion"), description: t("stateDisplacementDesc"), color: stateColors[1] },
+    { icon: Target, name: t("stateReferenceName"), nameAr: t("stateReferenceNameAr"), question: t("stateReferenceQuestion"), description: t("stateReferenceDesc"), color: stateColors[2] },
+    { icon: Activity, name: t("stateOscillationName"), nameAr: t("stateOscillationNameAr"), question: t("stateOscillationQuestion"), description: t("stateOscillationDesc"), color: stateColors[3] },
+    { icon: Navigation, name: t("stateDirectionName"), nameAr: t("stateDirectionNameAr"), question: t("stateDirectionQuestion"), description: t("stateDirectionDesc"), color: stateColors[4] },
   ];
 
   // Starfield - distant twinkling stars
@@ -187,15 +210,57 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
             </nav>
 
             <div className="flex items-center gap-2">
-              <motion.button onClick={toggleLanguage} whileHover={{ scale: 1.1 }}
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-colors cursor-pointer hidden md:flex"
-                style={{ background: "rgba(255,255,255,0.03)" }}>
-                <Languages className="w-4 h-4" />
-              </motion.button>
+              {/* Language Dropdown */}
+              <div className="relative hidden md:block" ref={dropdownRef}>
+                <motion.button 
+                  onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer border border-white/5 hover:border-white/10"
+                  style={{ background: "rgba(255,255,255,0.03)" }}
+                >
+                  <img src={`https://flagcdn.com/${currentLangObj.flagUrl}.svg`} alt={currentLangObj.code} className="w-5 h-auto rounded-sm object-cover" />
+                  <span className="hidden lg:inline-block">{currentLangObj.label}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${langDropdownOpen ? "rotate-180" : ""}`} />
+                </motion.button>
+
+                <AnimatePresence>
+                  {langDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full mt-2 w-40 rounded-xl shadow-2xl border border-white/10 overflow-hidden"
+                      style={{ background: "rgba(10,14,23,0.95)", backdropFilter: "blur(12px)", right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
+                    >
+                      <div className="py-1 flex flex-col">
+                        {languageOptions.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => {
+                              setLanguageKey(lang.code as any);
+                              setLangDropdownOpen(false);
+                            }}
+                            className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left ${
+                              language === lang.code 
+                                ? "bg-white/10 text-white font-bold" 
+                                : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                            }`}
+                          >
+                            <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
+                            <span>{lang.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <motion.button onClick={onGetStarted} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 className="hidden md:flex px-5 py-2 rounded-lg text-sm font-bold tracking-wider cursor-pointer"
                 style={{ background: `linear-gradient(135deg, ${accent}, #00c890)`, color: "#060a10" }}>
-                {isRTL ? "دخول" : "Login"}
+                {t("loginBtn")}
               </motion.button>
               <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-white cursor-pointer">
@@ -215,7 +280,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                   ))}
                   <div className="pt-2 border-t border-white/5">
                     <button onClick={onGetStarted} className="w-full py-2.5 rounded-lg text-sm font-bold cursor-pointer" style={{ background: accent, color: "#060a10" }}>
-                      {isRTL ? "دخول" : "Login"}
+                      {t("loginBtn")}
                     </button>
                   </div>
                 </div>
@@ -225,8 +290,15 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
         </div>
       </header>
 
+      {/* ═══════════ GLOBAL BREAKING NEWS ═══════════ */}
+      <div className="relative z-40 bg-black/40 border-b border-white/5 py-2 overflow-hidden">
+        <div className="container mx-auto px-4 max-w-[1700px]">
+          <BreakingNews selectedSymbol="EURUSD" selectedCategory="All" />
+        </div>
+      </div>
+
       {/* ═══════════ HERO ═══════════ */}
-      <section id="home" className="relative overflow-hidden scroll-mt-16">
+      <section id="home" className="relative overflow-hidden scroll-mt-32">
         {/* Warp tunnel concentric rings */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           {[1, 2, 3, 4, 5].map(i => (
@@ -267,7 +339,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                 <Sparkles className="w-4 h-4" style={{ color: accent }} />
               </motion.div>
               <span className="text-sm font-bold" style={{ color: accent }}>
-                {isRTL ? "منصة إدراك السوق" : "Market Perception Platform"}
+                {t("marketPerceptionPlatform")}
               </span>
             </motion.div>
 
@@ -277,19 +349,19 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
               <span style={{ color: accent }}>PHASE X AI</span>
             </motion.h1>
 
-            <h2 className="text-2xl md:text-4xl mb-8 text-gray-500 font-light">{isRTL ? "السوق، أُعيدت كتابته" : "The Market, Rewritten"}</h2>
+            <h2 className="text-2xl md:text-4xl mb-8 text-gray-500 font-light">{t("theMarketRewritten")}</h2>
 
             <motion.div className="h-[2px] w-24 mx-auto mb-8" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }}
               animate={{ width: ["96px", "200px", "96px"] }} transition={{ duration: 2.5, repeat: Infinity }} />
 
             <div className="space-y-3 mb-10">
-              <p className="text-lg md:text-xl text-gray-400">{isRTL ? "طريقة جديدة لرؤية الأسواق المالية" : "A new way to see financial markets"}</p>
-              <p className="text-base md:text-lg text-gray-500">{isRTL ? "ليس كرسوم بيانية للأسعار، بل كحالات سوقية" : "not as price charts, but as market states."}</p>
+              <p className="text-lg md:text-xl text-gray-400">{t("newWayToSee")}</p>
+              <p className="text-base md:text-lg text-gray-500">{t("notAsCharts")}</p>
               <div className="pt-3">
-                <p className="text-base text-gray-500">{isRTL ? "لا تحلل السوق." : "You don't analyze the market."}</p>
+                <p className="text-base text-gray-500">{t("dontAnalyze")}</p>
                 <motion.p className="text-xl md:text-2xl font-bold mt-2" style={{ color: accent }}
                   animate={{ scale: [1, 1.04, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                  {isRTL ? "بل تدرك هيكله." : "You perceive its structure."}
+                  {t("perceiveStructure")}
                 </motion.p>
               </div>
             </div>
@@ -302,7 +374,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                 style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)" }}
                 animate={{ left: ["-100%", "200%"] }} transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
               <span className="relative z-10 flex items-center gap-2">
-                {isRTL ? "ادخل لمنصة PHASE X" : "Enter PHASE X Platform"}
+                {t("enterPlatform")}
                 <motion.span animate={{ x: [0, 5, 0] }} transition={{ duration: 1, repeat: Infinity }}><ArrowRight className="w-5 h-5" /></motion.span>
               </span>
             </motion.button>
@@ -313,22 +385,22 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ WHAT IS PHASE X ═══════════ */}
       <section id="what-is" className="py-20 scroll-mt-16 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle sub={isRTL ? "منصة إدراك السوق" : "PHASE X is a market perception platform."}>
-            {isRTL ? "ما هو PHASE X؟" : "What is PHASE X?"}
+          <SectionTitle sub={t("isPerceptionPlatform")}>
+            {t("whatIsPhaseX")}
           </SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-4xl mx-auto mb-10">
             <GlassCard className="p-10 text-center">
-              <p className="text-lg text-gray-300 leading-relaxed mb-4">{isRTL ? "بدلاً من الرسوم البيانية والمؤشرات والإشارات التقليدية، يعيد PHASE X بناء السوق إلى حالات سلوكية واضحة." : "Instead of traditional charts, indicators, and signals, PHASE X reconstructs the market into clear behavioral states."}</p>
-              <p className="text-base text-gray-500">{isRTL ? "كل حالة تجيب على سؤال أساسي حول السوق، بشكل موضوعي، مرئي، وبدون تفسير." : "Each state answers a fundamental question about the market, objectively, visually, and without interpretation."}</p>
+              <p className="text-lg text-gray-300 leading-relaxed mb-4">{t("insteadOfCharts")}</p>
+              <p className="text-base text-gray-500">{t("eachStateAnswers")}</p>
             </GlassCard>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
-              { icon: Ban, text: isRTL ? "لا تنبؤات" : "No predictions", color: "#ff1744" },
-              { icon: BellOff, text: isRTL ? "لا إشارات" : "No signals", color: "#ff9100" },
-              { icon: HeartOff, text: isRTL ? "لا ضوضاء عاطفية" : "No emotional noise", color: "#ff1744" }
+              { icon: Ban, text: t("noPredictions"), color: "#ff1744" },
+              { icon: BellOff, text: t("noSignals"), color: "#ff9100" },
+              { icon: HeartOff, text: t("noEmotionalNoise"), color: "#ff1744" }
             ].map((item, i) => {
               const Icon = item.icon;
               return (
@@ -350,7 +422,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ WHY PHASE X EXISTS ═══════════ */}
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle>{isRTL ? "لماذا يوجد PHASE X؟" : "Why PHASE X Exists?"}</SectionTitle>
+          <SectionTitle>{t("whyPhaseXExists")}</SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-5xl mx-auto mb-10">
             <GlassCard glow="#ff1744" className="p-8">
@@ -358,14 +430,14 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                 <div className="inline-flex w-14 h-14 rounded-xl items-center justify-center mb-3" style={{ background: "rgba(255,23,68,0.12)" }}>
                   <BarChart3 className="w-7 h-7" style={{ color: "#ff1744" }} />
                 </div>
-                <h3 className="text-2xl font-black text-white">{isRTL ? "لماذا تفشل الرسوم التقليدية؟" : "Why Traditional Charts Fail?"}</h3>
+                <h3 className="text-2xl font-black text-white">{t("whyChartsFail")}</h3>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { icon: TrendingUp, text: isRTL ? "الشموع اليابانية تجزئ السلوك المستمر" : "Candlesticks fragment continuous behavior" },
-                  { icon: Zap, text: isRTL ? "المؤشرات تتداخل وتتناقض" : "Indicators overlap and contradict" },
-                  { icon: Brain, text: isRTL ? "المتداولون مجبرون على التفسير بدلاً من الإدراك" : "Traders are forced to interpret instead of perceive" },
-                  { icon: Eye, text: isRTL ? "القرارات تصبح عاطفية، غير متسقة، ومتأخرة" : "Decisions become emotional, inconsistent, and late" }
+                  { icon: TrendingUp, text: t("candlesticksFragment") },
+                  { icon: Zap, text: t("indicatorsOverlap") },
+                  { icon: Brain, text: t("tradersInterpret") },
+                  { icon: Eye, text: t("decisionsEmotional") }
                 ].map((item, i) => {
                   const Icon = item.icon;
                   return (
@@ -385,8 +457,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
             <GlassCard glow={accent} className="p-10 text-center">
-              <p className="text-2xl font-black text-white mb-3">{isRTL ? "الأسواق معقدة." : "Markets are complex."}</p>
-              <p className="text-xl font-light" style={{ color: accent }}>{isRTL ? "لكن تمثيلها لا يجب أن يكون كذلك." : "Their representation shouldn't be."}</p>
+              <p className="text-2xl font-black text-white mb-3">{t("marketsComplex")}</p>
+              <p className="text-xl font-light" style={{ color: accent }}>{t("representationShouldntBe")}</p>
             </GlassCard>
           </motion.div>
         </div>
@@ -395,8 +467,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ FIVE STATES ═══════════ */}
       <section id="states" className="py-20 scroll-mt-16 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle sub={isRTL ? "سوق واحد. خمس حالات" : "One Market. Five States"}>
-            {isRTL ? "لغة سوق PHASE X" : "The PHASE X Market Language"}
+          <SectionTitle sub={t("oneMarketFiveStates")}>
+            {t("marketLanguage")}
           </SectionTitle>
 
           <div className="grid gap-4 max-w-5xl mx-auto">
@@ -428,7 +500,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                         <p className="text-base font-bold mb-3" style={{ color: state.color }}>{state.question}</p>
                         <p className="text-sm text-gray-400 leading-relaxed mb-4">{state.description}</p>
                         <button className="text-xs font-bold flex items-center gap-1.5 text-gray-500 hover:text-white transition-colors group cursor-pointer">
-                          {isRTL ? "اقرأ المزيد..." : "Read more..."}
+                          {t("readMore")}
                           <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                         </button>
                       </div>
@@ -442,7 +514,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto mt-10">
             <GlassCard glow="#a855f7" className="p-8 text-center">
               <p className="text-lg font-bold" style={{ color: "#a855f7" }}>
-                {isRTL ? "معاً، تشكل هذه الحالات نظام إدراك سوقي كامل" : "Together, these states form a complete market perception system."}
+                {t("togetherCompleteSystem")}
               </p>
             </GlassCard>
           </motion.div>
@@ -452,8 +524,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ DECISION ENGINE ═══════════ */}
       <section id="decision-engine" className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle sub={isRTL ? "Phase X Dynamic Trading Decision Engine" : "Phase X Dynamic Trading Decision Engine"}>
-            {isRTL ? "محرك اتخاذ القرار البنيوي" : "Structural Decision Engine"}
+          <SectionTitle sub={t("decisionEngineSub")}>
+            {t("structuralDecisionEngine")}
           </SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-4xl mx-auto">
@@ -467,25 +539,12 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
               </div>
 
               <div className="space-y-6 text-gray-300 text-lg leading-relaxed text-justify px-2 md:px-8">
-                <p>
-                  {isRTL
-                    ? "يعتمد نظام Phase X على نموذج تحليلي متعدد الطبقات يقوم بتقييم الحالة البنيوية للسوق من خلال مجموعة متكاملة من المؤشرات الهيكلية. يقوم هذا المحرك بتحليل الاتجاه الرئيسي للسعر، والانحياز البنيوي للسوق، وقوة الزخم، ومرحلة تطور السوق، ومستويات التقلب، ومخاطر الانعكاس المحتملة، إضافة إلى درجة الثقة الإحصائية في الإشارة الناتجة."
-                    : "The Phase X platform operates through a multi-layer analytical framework designed to evaluate the structural state of financial markets. The engine continuously assesses several core dimensions of market behavior, including the primary trend direction, structural bias, momentum strength, market phase development, volatility conditions, reversal risk dynamics, and the statistical confidence level of the generated signal."
-                  }
-                </p>
-                <p>
-                  {isRTL
-                    ? "يتم دمج هذه العوامل ضمن إطار ترجيحي ديناميكي يهدف إلى تحديد حالات السوق التي تظهر أعلى درجات الاتساق الداخلي بين مكونات الحركة السعرية. عند تحقق هذا الاتساق البنيوي، يقوم النظام بترشيح المشتق المالي كفرصة محتملة لاتخاذ قرار الشراء (BUY) أو البيع (SELL). أما في الحالات التي يظهر فيها تضارب بين العوامل الأساسية أو انخفاض في درجة الثقة، فإن النظام يقوم بتصنيف الحالة ضمن بيئة تداول غير مناسبة (NO TRADE)."
-                    : "These variables are integrated within a dynamic weighting architecture that identifies market states exhibiting the highest degree of internal structural alignment. When this alignment is achieved, the system flags the instrument as a potential BUY or SELL candidate. In contrast, when market variables display conflicting signals or insufficient confidence, the engine classifies the environment as NO TRADE."
-                  }
-                </p>
+                <p>{t("engineDesc1")}</p>
+                <p>{t("engineDesc2")}</p>
                 <div className="font-bold py-4 px-6 mt-6 rounded-xl relative overflow-hidden" style={{ background: "rgba(0, 229, 160, 0.05)", border: `1px solid ${accentG}0.2)` }}>
                   <div className={`absolute top-0 bottom-0 ${isRTL ? "right-0" : "left-0"} w-1.5`} style={{ background: accent }} />
                   <p className="relative z-10" style={{ color: "white" }}>
-                    {isRTL
-                      ? "يمثل هذا المحرك طبقة تحليلية متقدمة تهدف إلى توجيه المتداول نحو الأدوات المالية التي تظهر أعلى درجات التوافق بين الاتجاه والزخم والمخاطر، مما يساهم في تحسين جودة قرارات التداول وتقليل الاعتماد على التفسيرات العشوائية لحركة السوق."
-                      : "This structural decision engine serves as an advanced analytical layer designed to guide traders toward instruments where trend, momentum, and risk conditions converge, thereby enhancing decision quality and minimizing random or noise-driven signals."
-                    }
+                    {t("engineDesc3")}
                   </p>
                 </div>
               </div>
@@ -497,8 +556,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ SCREENSHOTS ═══════════ */}
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle sub={isRTL ? "واجهة احترافية مصممة لتجربة تداول مميزة" : "Professional interface designed for premium trading"}>
-            {isRTL ? "شاهد المنصة عن قرب" : "See the Platform Up Close"}
+          <SectionTitle sub={t("professionalInterface")}>
+            {t("seePlatformUpClose")}
           </SectionTitle>
 
           <div className="relative max-w-5xl mx-auto">
@@ -539,8 +598,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ HOW PHASE X IS DIFFERENT ═══════════ */}
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle sub={isRTL ? "ليست مؤشرات. ليست إشارات. حالات." : "Not Indicators. Not Signals. States."} color="#448aff">
-            {isRTL ? "كيف يختلف PHASE X" : "How PHASE X Is Different"}
+          <SectionTitle sub={t("notIndicatorsStates")} color="#448aff">
+            {t("howPhaseXIsDifferent")}
           </SectionTitle>
 
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-5 mb-10">
@@ -552,14 +611,14 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                     animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
                     <X className="w-8 h-8" style={{ color: "#ff1744" }} />
                   </motion.div>
-                  <h3 className="text-xl font-black" style={{ color: "#ff1744" }}>{isRTL ? "PHASE X لا يفعل" : "PHASE X Does Not"}</h3>
+                  <h3 className="text-xl font-black" style={{ color: "#ff1744" }}>{t("phaseXDoesNot")}</h3>
                 </div>
                 <div className="space-y-3">
                   {[
-                    { icon: Ban, text: isRTL ? "لا يخبرك بما يجب عليك فعله" : "Tell you what to do" },
-                    { icon: TrendingUp, text: isRTL ? "لا يعطي إشارات تداول" : "Give trading signals" },
-                    { icon: Brain, text: isRTL ? "لا يفرض تفسيرات" : "Force interpretations" },
-                    { icon: Target, text: isRTL ? "لا يتخذ قرارات نيابة عنك" : "Make decisions for you" }
+                    { icon: Ban, text: t("tellYouWhatToDo") },
+                    { icon: TrendingUp, text: t("giveTradingSignals") },
+                    { icon: Brain, text: t("forceInterpretations") },
+                    { icon: Target, text: t("makeDecisionsForYou") }
                   ].map((item, i) => {
                     const Icon = item.icon;
                     return (
@@ -585,14 +644,14 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                     transition={{ scale: { duration: 2, repeat: Infinity }, rotate: { duration: 20, repeat: Infinity, ease: "linear" } }}>
                     <Eye className="w-8 h-8" style={{ color: accent }} />
                   </motion.div>
-                  <h3 className="text-xl font-black" style={{ color: accent }}>{isRTL ? "PHASE X يفعل" : "PHASE X Does"}</h3>
+                  <h3 className="text-xl font-black" style={{ color: accent }}>{t("phaseXDoes")}</h3>
                 </div>
                 <div className="space-y-3">
                   {[
-                    { icon: Eye, text: isRTL ? "يُظهر لك ما يحدث" : "Show you what is happening", c: accent },
-                    { icon: Gauge, text: isRTL ? "يكشف حالات السوق الحقيقية" : "Reveal true market states", c: "#a855f7" },
-                    { icon: Shield, text: isRTL ? "يبقيك صانع القرار" : "Keep you the decision-maker", c: "#448aff" },
-                    { icon: Sparkles, text: isRTL ? "يزيل الضباب" : "Remove the fog", c: "#ffc400" }
+                    { icon: Eye, text: t("showWhatIsHappening"), c: accent },
+                    { icon: Gauge, text: t("revealTrueStates"), c: "#a855f7" },
+                    { icon: Shield, text: t("keepYouDecisionMaker"), c: "#448aff" },
+                    { icon: Sparkles, text: t("removeTheFog"), c: "#ffc400" }
                   ].map((item, i) => {
                     const Icon = item.icon;
                     return (
@@ -613,8 +672,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
             <GlassCard glow="#a855f7" className="p-10 text-center">
               <motion.div animate={{ scale: [1, 1.03, 1] }} transition={{ duration: 3, repeat: Infinity }}>
-                <p className="text-2xl font-black text-white mb-3">{isRTL ? "أنت تبقى صانع القرار" : "You remain the decision-maker"}</p>
-                <p className="text-lg font-light" style={{ color: "#a855f7" }}>{isRTL ? "PHASE X يزيل الضباب" : "PHASE X removes the fog"}</p>
+                <p className="text-2xl font-black text-white mb-3">{t("youRemainDecisionMaker")}</p>
+                <p className="text-lg font-light" style={{ color: "#a855f7" }}>{t("phaseXRemovesFog")}</p>
               </motion.div>
             </GlassCard>
           </motion.div>
@@ -624,17 +683,17 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ WHO IS IT FOR ═══════════ */}
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle sub={isRTL ? "مبني للمشاركين الجادين في السوق" : "Built for Serious Market Participants"}>
-            {isRTL ? "لمن PHASE X؟" : "Who PHASE X Is For"}
+          <SectionTitle sub={t("builtForSeriousParticipants")}>
+            {t("whoPhaseXIsFor")}
           </SectionTitle>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto mb-10">
             {[
-              { icon: Users, text: isRTL ? "المتداولون المحترفون" : "Professional traders" },
-              { icon: LineChart, text: isRTL ? "المحللون الكميون" : "Quantitative analysts" },
-              { icon: Briefcase, text: isRTL ? "مديرو المحافظ" : "Portfolio managers" },
-              { icon: Shield, text: isRTL ? "المؤسسات والمكاتب الخاصة" : "Institutions and proprietary desks" },
-              { icon: Eye, text: isRTL ? "المتداولون المستقلون الذين يسعون للوضوح" : "Independent traders seeking clarity" }
+              { icon: Users, text: t("forProTraders") },
+              { icon: LineChart, text: t("forQuantAnalysts") },
+              { icon: Briefcase, text: t("forPortfolioManagers") },
+              { icon: Shield, text: t("forInstitutions") },
+              { icon: Eye, text: t("forIndependentTraders") }
             ].map((item, i) => {
               const Icon = item.icon;
               return (
@@ -655,7 +714,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
             <div className="p-6 rounded-xl text-center" style={{ background: "rgba(255,196,0,0.05)", border: "1px solid rgba(255,196,0,0.15)" }}>
               <p className="text-sm font-bold" style={{ color: "#ffc400" }}>
-                {isRTL ? "PHASE X ليس مصمماً للمقامرين أو الباحثين عن الإشارات" : "PHASE X is not designed for gamblers or signal seekers"}
+                {t("notForGamblers")}
               </p>
             </div>
           </motion.div>
@@ -665,8 +724,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       {/* ═══════════ PLATFORM ACCESS ═══════════ */}
       <section id="access" className="py-20 scroll-mt-16 relative z-10">
         <div className="container mx-auto px-4">
-          <SectionTitle sub={isRTL ? "الوصول لمنصة PHASE X" : "Access the PHASE X Platform"} color="#a855f7">
-            {isRTL ? "الوصول للمنصة" : "Platform Access"}
+          <SectionTitle sub={t("accessPlatformSub")} color="#a855f7">
+            {t("platformAccess")}
           </SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-4xl mx-auto">
@@ -676,15 +735,15 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                   style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)", boxShadow: "0 10px 30px rgba(168,85,247,0.25)" }}>
                   <Shield className="w-8 h-8 text-white" />
                 </div>
-                <p className="text-base text-gray-400">{isRTL ? "PHASE X متاح من خلال منصة ويب آمنة" : "PHASE X is available through a secure web platform."}</p>
+                <p className="text-base text-gray-400">{t("secureWebPlatform")}</p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4 mb-8">
                 {[
-                  { icon: Users, text: isRTL ? "وصول حساب شخصي" : "Personal account access", c: "#a855f7" },
-                  { icon: BarChart3, text: isRTL ? "تغطية متعددة الأسواق" : "Multi-market coverage", c: "#448aff" },
-                  { icon: Activity, text: isRTL ? "تحليل متعدد الأطر الزمنية" : "Multi-timeframe analysis", c: accent },
-                  { icon: Zap, text: isRTL ? "تحديثات نظام مستمرة" : "Continuous system updates", c: "#ff6e40" }
+                  { icon: Users, text: t("personalAccountAccess"), c: "#a855f7" },
+                  { icon: BarChart3, text: t("multiMarketCoverage"), c: "#448aff" },
+                  { icon: Activity, text: t("multiTimeframeAnalysis"), c: accent },
+                  { icon: Zap, text: t("continuousSystemUpdates"), c: "#ff6e40" }
                 ].map((item, i) => {
                   const Icon = item.icon;
                   return (
@@ -709,7 +768,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                     style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)" }}
                     animate={{ left: ["-100%", "200%"] }} transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
                   <span className="relative z-10 flex items-center gap-2">
-                    {isRTL ? "دخول / طلب الوصول" : "Login / Request Access"}
+                    {t("loginRequestAccess")}
                     <ArrowRight className="w-5 h-5" />
                   </span>
                 </motion.button>
@@ -725,13 +784,13 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
             <GlassCard className="p-14 text-center space-y-8">
               <div className="space-y-3">
-                <p className="text-xl md:text-2xl text-gray-400">{isRTL ? "الأسواق لا تحتاج لمزيد من المؤشرات." : "Markets don't need more indicators."}</p>
-                <p className="text-2xl md:text-3xl font-black" style={{ color: accent }}>{isRTL ? "بل تحتاج لتمثيل أفضل." : "They need better representation."}</p>
+                <p className="text-xl md:text-2xl text-gray-400">{t("marketsDontNeedMoreIndicators")}</p>
+                <p className="text-2xl md:text-3xl font-black" style={{ color: accent }}>{t("needBetterRepresentation")}</p>
               </div>
               <div className="h-[1px] w-20 mx-auto" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
               <div className="space-y-3">
-                <p className="text-lg text-gray-500">{isRTL ? "PHASE X ليس ترقية." : "PHASE X is not an upgrade."}</p>
-                <p className="text-2xl md:text-3xl font-black" style={{ color: accent }}>{isRTL ? "بل هو إعادة كتابة" : "It is a rewrite"}</p>
+                <p className="text-lg text-gray-500">{t("notAnUpgrade")}</p>
+                <p className="text-2xl md:text-3xl font-black" style={{ color: accent }}>{t("isARewrite")}</p>
               </div>
             </GlassCard>
           </motion.div>
@@ -785,7 +844,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           {/* Bottom bar */}
           <div className="pt-5 text-center" style={{ borderTop: `1px solid rgba(255,255,255,0.04)` }}>
             <p className="text-[11px] text-gray-600">
-              © 2024 PHASE X AI. {isRTL ? "جميع الحقوق محفوظة" : "All rights reserved."} — Structural Market Intelligence Platform
+              © 2024 PHASE X AI. {t("allRightsReserved")} — Structural Market Intelligence Platform
             </p>
           </div>
         </div>

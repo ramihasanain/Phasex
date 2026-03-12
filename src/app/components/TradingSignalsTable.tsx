@@ -121,7 +121,7 @@ const normalizeSignal = (s: string): string => {
 
 /* ═══════════ Component ═══════════ */
 export function TradingSignalsTable() {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const isRTL = language === "ar";
     const tk = useThemeTokens();
 
@@ -325,7 +325,7 @@ export function TradingSignalsTable() {
                                 PHASE <span style={{ color: "#ef4444", textShadow: "0 0 12px rgba(239,68,68,0.4)" }}>X</span> Trading Dashboard
                             </h3>
                             <p className="text-xs mt-0.5" style={{ color: tk.textDim }}>
-                                {isRTL ? "جاري جلب إشارات التداول المباشرة..." : "Fetching live trading signals..."}
+                                {t("fetchSignals")}
                             </p>
                         </div>
                     </div>
@@ -340,7 +340,7 @@ export function TradingSignalsTable() {
                         </>
                     ) : (
                         <p className="text-sm" style={{ color: fetchError ? "#ef4444" : "#334155" }}>
-                            {fetchError ? `⚠️ ${fetchError}` : `⚡ ${isRTL ? 'لا توجد بيانات متاحة حالياً' : 'No data available currently'}`}
+                            {fetchError ? `⚠️ ${fetchError}` : `⚡ ${t("noData")}`}
                         </p>
                     )}
                 </div>
@@ -370,7 +370,7 @@ export function TradingSignalsTable() {
                             PHASE <span style={{ color: "#ef4444", textShadow: "0 0 12px rgba(239,68,68,0.4)" }}>X</span> Trading Dashboard
                         </h3>
                         <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-[11px]" style={{ color: tk.textDim }}>⚡ {allAssetNames.length} {isRTL ? "أصل" : "assets"}</span>
+                            <span className="text-[11px]" style={{ color: tk.textDim }}>⚡ {allAssetNames.length} {t("assetsStr")}</span>
                             <span className="text-[11px] font-bold" style={{ color: "#4ade80" }}>▲ {totalBuy}</span>
                             <span className="text-[11px] font-bold" style={{ color: "#f87171" }}>▼ {totalSell}</span>
                         </div>
@@ -385,13 +385,13 @@ export function TradingSignalsTable() {
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" style={{ boxShadow: "0 0 8px rgba(16,185,129,0.5)" }} />
                         )}
                         <span className="text-[10px] font-bold tracking-wide" style={{ color: "#10b981" }}>
-                            {isFetching ? (isRTL ? "جاري التحديث..." : "SYNCING...") : (isRTL ? "مباشر" : "LIVE")}
+                            {isFetching ? t("syncingStr") : t("live")}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <SciFiClock label={isRTL ? "آخر تحديث" : "LAST UPDATE"} timeMs={lastSystemUpdate} isLive={true} isRTL={isRTL} size="sm" />
-                        <SciFiClock label={isRTL ? "الوقت الحالي" : "CURRENT TIME"} mode="currentTime" isLive={true} isRTL={isRTL} size="sm" />
+                        <SciFiClock label={t("lastUpdateStr")} timeMs={lastSystemUpdate} isLive={true} isRTL={isRTL} size="sm" />
+                        <SciFiClock label={t("currentTimeStr")} mode="currentTime" isLive={true} isRTL={isRTL} size="sm" />
                     </div>
 
                     <div className="w-px h-5" style={{ background: "rgba(99,102,241,0.1)" }} />
@@ -400,13 +400,13 @@ export function TradingSignalsTable() {
                     <motion.button onClick={expandAll} whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-1 px-2.5 py-2 rounded-lg text-[11px] font-bold cursor-pointer"
                         style={{ color: "#818cf8", background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}
-                        title={isRTL ? "فتح الكل" : "Expand All"}>
+                        title={t("expandAllStr")}>
                         <Maximize2 className="w-3.5 h-3.5" />
                     </motion.button>
                     <motion.button onClick={collapseAll} whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-1 px-2.5 py-2 rounded-lg text-[11px] font-bold cursor-pointer"
                         style={{ color: "#818cf8", background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}
-                        title={isRTL ? "إغلاق الكل" : "Collapse All"}>
+                        title={t("collapseAllStr")}>
                         <Minimize2 className="w-3.5 h-3.5" />
                     </motion.button>
                 </div>
@@ -420,7 +420,7 @@ export function TradingSignalsTable() {
                 <div className="relative flex-shrink-0" style={{ width: 180 }}>
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "#475569" }} />
                     <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={isRTL ? "بحث..." : "Search..."}
+                        placeholder={t("searchAsset")}
                         className="w-full rounded-lg text-xs font-medium py-2 pl-8 pr-7 outline-none"
                         style={{ background: tk.inputBg, color: tk.inputText, border: "1px solid rgba(99,102,241,0.1)" }} />
                     {searchQuery && (
@@ -446,7 +446,7 @@ export function TradingSignalsTable() {
                                     border: active ? `1px solid ${f.color}25` : "1px solid transparent",
                                     boxShadow: active ? `0 0 8px ${f.color}10` : "none",
                                 }}>
-                                <span className="text-xs">{f.emoji}</span> {isRTL ? f.labelAr : f.label}
+                                <span className="text-xs">{f.emoji}</span> {f.key === "ALL" ? t("allAssetsStr") : t(f.key.toLowerCase())}
                             </motion.button>
                         );
                     })}
@@ -468,7 +468,7 @@ export function TradingSignalsTable() {
                                     border: active ? `1px solid ${f.color}25` : "1px solid transparent",
                                     boxShadow: active ? `0 0 8px ${f.color}10` : "none",
                                 }}>
-                                {isRTL ? f.labelAr : f.label}
+                                {f.key === "ALL" ? t("allAssetsStr") : t(f.key.toLowerCase())}
                             </motion.button>
                         );
                     })}
@@ -488,7 +488,7 @@ export function TradingSignalsTable() {
                             border: assetFilter !== "ALL" ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(255,255,255,0.05)",
                         }}>
                         {assetFilter !== "ALL" && <span className="text-sm">{getIcon(assetFilter)}</span>}
-                        {assetFilter !== "ALL" ? assetFilter : (isRTL ? "🎯 عملة" : "🎯 Asset")}
+                        {assetFilter !== "ALL" ? assetFilter : t("assetSingular")}
                         <ChevronDown className="w-3 h-3" />
                     </motion.button>
 
@@ -566,19 +566,19 @@ export function TradingSignalsTable() {
                 <table className="w-full" style={{ borderCollapse: "collapse" }}>
                     <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? "#080c15" : tk.surface }}>
                         <tr style={{ borderBottom: "1px solid rgba(99,102,241,0.08)" }}>
-                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: "#64748b" }}>{isRTL ? "الأصل" : "ASSET"}</th>
-                            <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: "#64748b" }}>{isRTL ? "الإجراء" : "ACTION"}</th>
-                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: "#64748b" }}>{isRTL ? "الوقت" : "TIME"}</th>
-                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#64748b" }}>{isRTL ? "السعر" : "PRICE"}</th>
+                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: "#64748b" }}>{t("assetCol")}</th>
+                            <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: "#64748b" }}>{t("actionStr")}</th>
+                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: "#64748b" }}>{t("timeStr")}</th>
+                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#64748b" }}>{t("priceStr")}</th>
                             <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#f87171" }}>SL</th>
                             <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#4ade80" }}>TP</th>
                             <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#94a3b8" }}>m.PRICE</th>
-                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#fbbf24" }}>{isRTL ? "الربح" : "PROFIT"}</th>
+                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#fbbf24" }}>{t("profitStr")}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredAssets.length === 0 ? (
-                            <tr><td colSpan={8} className="p-8 text-center text-sm" style={{ color: "#334155" }}>{isRTL ? "لا توجد نتائج" : "No results"}</td></tr>
+                            <tr><td colSpan={8} className="p-8 text-center text-sm" style={{ color: "#334155" }}>{t("noResults")}</td></tr>
                         ) : filteredAssets.map((asset) => {
                             const tfs = signalData[asset];
                             let tfKeys = Object.keys(tfs).sort(sortTF);

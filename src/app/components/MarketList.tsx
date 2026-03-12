@@ -177,7 +177,7 @@ export function MarketList({
           <div>
             <h2 className="text-sm font-bold" style={{ color: tk.textPrimary }}>{t("markets")}</h2>
             <span className="text-[10px]" style={{ color: tk.textMuted }}>
-              {symbolsLoading ? (isRTL ? "جاري التحميل..." : "Loading...") : `${assets.length} ${t("total")}`}
+              {symbolsLoading ? t("loadingMarkets") : `${assets.length} ${t("total")}`}
             </span>
           </div>
         </div>
@@ -210,7 +210,7 @@ export function MarketList({
                   }}>
                   <span className="text-[22px] leading-none">{vis.emoji}</span>
                   <span className="text-[10px] font-semibold" style={{ color: active ? vis.accent : tk.textMuted }}>
-                    {isRTL ? vis.labelAr : vis.labelEn}
+                    {t(m.code.toLowerCase())}
                   </span>
                   {active && <div className="w-1.5 h-1.5 rounded-full" style={{ background: vis.accent }} />}
                 </motion.button>
@@ -257,7 +257,7 @@ export function MarketList({
         {symbolsLoading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: currentVisual.accent }} />
-            <p className="text-xs" style={{ color: tk.textMuted }}>{isRTL ? "جاري تحميل العملات..." : "Loading symbols..."}</p>
+            <p className="text-xs" style={{ color: tk.textMuted }}>{t("loadingSymbols")}</p>
           </div>
         ) : (
           <AnimatePresence mode="popLayout">

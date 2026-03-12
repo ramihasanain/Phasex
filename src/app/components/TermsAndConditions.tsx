@@ -179,12 +179,160 @@ const termsAR = [
     { title: "18. التواصل", text: "للاستفسارات القانونية أو الدعم:\nphasexai@gmail.com" },
 ];
 
+const termsTR = [
+    {
+        title: "1. Tanımlar", items: [
+            "Platform / Web Sitesi: PHASEX web sitesi, uygulamaları, arayüzleri ve tüm ilgili analitik araçlar ve hizmetler.",
+            "Kullanıcı: Platforma erişen, kullanan veya hesap oluşturan herhangi bir birey.",
+            "İçerik: PHASEX tarafından sağlanan tüm veriler, grafikler, göstergeler, sınıflandırmalar, piyasa durumları, analitikler, metinler, görselleştirmeler veya çıktılar.",
+            "Abonelik: Özelliklere, analitiklere veya platform araçlarına erişim sağlayan ücretli veya ücretsiz herhangi bir plan.",
+        ]
+    },
+    { title: "2. Şartların Kabulü", text: "PHASEX'e erişerek veya kullanarak, bu Şartlar ve Koşulları okuduğunuzu, anladığınızı ve bunlara bağlı kalmayı kabul ettiğinizi onaylarsınız.\nBu şartların herhangi bir bölümünü kabul etmiyorsanız, platformu kullanmayı bırakmalısınız." },
+    {
+        title: "3. Hizmetin Doğası", text: "PHASEX, bilgilendirme, analitik ve eğitim amaçlı tasarlanmış nicel piyasa analiz araçları ve yapısal piyasa gösterimleri sunar.\nPHASEX finansal tavsiye, yatırım önerileri veya işlem sinyalleri sağlamaz.\nPlatformdaki hiçbir şey şu şekilde yorumlanmamalıdır:", items: [
+            "Finansal tavsiye",
+            "Yatırım tavsiyesi",
+            "Herhangi bir finansal enstrümanı alma veya satma teklifi",
+        ], after: "Kullanıcılar kendi işlem ve yatırım kararlarından tamamen sorumludur."
+    },
+    {
+        title: "4. Uygunluk", text: "Platformu kullanarak şunları onaylarsınız:", items: [
+            "Yargı alanınızdaki yasal yaşta olduğunuzu.",
+            "Bağlayıcı anlaşmalara girmek için yasal kapasiteye sahip olduğunuzu.",
+            "Platformu kullanımınızın geçerli yasa ve düzenlemelere uygun olduğunu.",
+        ]
+    },
+    {
+        title: "5. Hesap Güvenliği", text: "Kullanıcılar giriş kimlik bilgilerinin gizliliğini korumaktan sorumludur.\nPHASEX şunlardan kaynaklanan yetkisiz erişimlerden sorumlu değildir:", items: [
+            "Hesap paylaşımı",
+            "Zayıf şifreler",
+            "Giriş bilgilerinin güvenliğini sağlayamama",
+        ], after: "Kullanıcılar şüpheli etkinlik tespit edildiğinde platformu derhal bilgilendirmelidir."
+    },
+    {
+        title: "6. Hizmet Kullanılabilirliği", text: "PHASEX güvenilir bir hizmet sunmaya çalışır ancak kesintisiz kullanılabilirliği garanti etmez.\nPlatform şunları yaşayabilir:", items: [
+            "Bakım dönemleri",
+            "Teknik kesintiler",
+            "Sistem güncellemeleri",
+            "Veri gecikmeleri",
+        ], after: "PHASEX, hizmet kesintilerinden kaynaklanan kayıplardan sorumlu değildir."
+    },
+    {
+        title: "7. Veri Kaynakları", text: "Piyasa verileri ve analitikler üçüncü taraf veri sağlayıcılarına dayanabilir.\nVeri akışları, brokerler veya borsalar arasındaki farklılıklar nedeniyle:", items: [
+            "Fiyatlar farklılık gösterebilir",
+            "Veri zamanlaması değişebilir",
+            "Grafik yapıları diğer platformlarla tam olarak eşleşmeyebilir",
+        ], after: "PHASEX, üçüncü taraf verilerinin mutlak doğruluğunu garanti etmez."
+    },
+    {
+        title: "8. Fikri Mülkiyet", text: "PHASEX ile ilgili tüm fikri mülkiyet hakları platforma veya lisans verenlerine aittir, bunlara şunlar dahildir:", items: [
+            "Algoritmalar",
+            "Yapısal grafik modelleri",
+            "Arayüz tasarımı",
+            "Veritabanları",
+            "Marka unsurları",
+        ], after: "Kullanıcılar yazılı izin olmaksızın platformdan veri kopyalayamaz, dağıtamaz, tersine mühendislik yapamaz, satamaz veya çıkaramaz."
+    },
+    {
+        title: "9. Yasaklanmış Kullanım", text: "Kullanıcılar şunları yapamaz:", items: [
+            "PHASEX'i yasa dışı faaliyetler için kullanmak",
+            "Sistemi kesintiye uğratmaya veya hacklemeye çalışmak",
+            "Platform erişimini yeniden satmak",
+            "PHASEX çıktılarını garantili işlem sinyalleri olarak yanlış tanıtmak",
+        ], after: "İhlal, hesabın askıya alınmasına veya sonlandırılmasına neden olabilir."
+    },
+    { title: "10. Abonelikler ve Ödemeler", text: "Belirli özelliklere erişim ücretli bir abonelik gerektirebilir.\nAbonelik koşulları, fiyatlandırma ve özellikler platformda açıkça belirtilmiştir.\nPHASEX, uygun bildirimde bulunarak abonelik planlarını veya fiyatlandırmayı değiştirme hakkını saklı tutar." },
+    { title: "11. İade Politikası", text: "Abonelik ödemeleri, aksi açıkça belirtilmedikçe genel olarak iade edilmez.\nKullanıcılar ödemeyi tamamlamadan önce abonelik şartlarını gözden geçirmekten sorumludur." },
+    { title: "12. Garanti Reddi", text: "Platform \"olduğu gibi\" ve \"mevcut olduğu şekilde\" sağlanır.\nPHASEX şunlarla ilgili hiçbir garanti vermez:", items: ["Doğruluk", "Güvenilirlik", "Kesintisiz kullanılabilirlik", "İşlem kararları için uygunluk"] },
+    { title: "13. Sorumluluğun Sınırlandırılması", text: "Yasaların izin verdiği en geniş ölçüde, PHASEX şunlardan sorumlu olmayacaktır:", items: ["İşlem kayıpları", "Finansal zararlar", "Kar kaybı", "Dolaylı veya sonuçsal zararlar"], after: "platformun kullanımından kaynaklanan." },
+    { title: "14. Tazminat", text: "Kullanıcılar, platformun kötüye kullanılmasından veya bu şartların ihlalinden kaynaklanan talepler, zararlar veya yasal masraflar için PHASEX'i tazmin etmeyi ve zarar görmemesini sağlamayı kabul eder." },
+    { title: "15. Fesih", text: "PHASEX, platform kurallarını ihlal eden veya sistem bütünlüğünü tehdit eden hesapları askıya alma veya sonlandırma hakkını saklı tutar." },
+    { title: "16. Değişiklikler", text: "Bu Şartlar periyodik olarak güncellenebilir. Platformun kullanılmaya devam edilmesi, güncellenmiş şartların kabul edildiği anlamına gelir." },
+    { title: "17. Geçerli Yasa", text: "Bu Şartlar BAE yasalarına tabi olacaktır." },
+    { title: "18. İletişim", text: "Yasal sorular veya destek için:\nDestek E-postası: phasexai@gmail.com" },
+];
+
+const termsRU = [
+    {
+        title: "1. Определения", items: [
+            "Платформа / Веб-сайт: Веб-сайт PHASEX, приложения, интерфейсы и все связанные аналитические инструменты и услуги.",
+            "Пользователь: Любое физическое лицо, получающее доступ к платформе, использующее ее или создающее учетную запись.",
+            "Контент: Все данные, графики, индикаторы, классификации, состояния рынка, аналитика, текст, визуализации или результаты, предоставляемые PHASEX.",
+            "Подписка: Любой платный или бесплатный план, предоставляющий доступ к функциям, аналитике или инструментам платформы.",
+        ]
+    },
+    { title: "2. Принятие условий", text: "Осуществляя доступ к PHASEX или используя его, вы подтверждаете, что прочитали, поняли и согласны соблюдать настоящие Условия и положения.\nЕсли вы не согласны с какой-либо частью этих условий, вы должны прекратить использование платформы." },
+    {
+        title: "3. Характер услуги", text: "PHASEX предоставляет инструменты количественного анализа рынка и структурные представления рынка, предназначенные для информационных, аналитических и образовательных целей.\nPHASEX не предоставляет финансовых консультаций, инвестиционных рекомендаций или торговых сигналов.\nНичто на платформе не должно толковаться как:", items: [
+            "Финансовая консультация",
+            "Инвестиционная консультация",
+            "Предложение о покупке или продаже любого финансового инструмента",
+        ], after: "Пользователи несут полную ответственность за свои собственные торговые и инвестиционные решения."
+    },
+    {
+        title: "4. Право на использование", text: "Используя платформу, вы подтверждаете, что:", items: [
+            "Вы достигли совершеннолетия в вашей юрисдикции.",
+            "Вы обладаете дееспособностью для заключения обязательных соглашений.",
+            "Использование вами платформы соответствует применимым законам и правилам.",
+        ]
+    },
+    {
+        title: "5. Безопасность учетной записи", text: "Пользователи несут ответственность за сохранение конфиденциальности своих учетных данных для входа.\nPHASEX не несет ответственности за несанкционированный доступ в результате:", items: [
+            "Совместного использования учетной записи",
+            "Слабых паролей",
+            "Неспособности обезопасить информацию для входа",
+        ], after: "Пользователи должны немедленно уведомить платформу в случае обнаружения подозрительной активности."
+    },
+    {
+        title: "6. Доступность службы", text: "PHASEX стремится поддерживать надежное обслуживание, но не гарантирует бесперебойную доступность.\nНа платформе могут возникать:", items: [
+            "Периоды технического обслуживания",
+            "Технические перебои",
+            "Обновления системы",
+            "Задержки данных",
+        ], после: "PHASEX не несет ответственности за любые убытки, вызванные перебоями в обслуживании."
+    },
+    {
+        title: "7. Источники данных", text: "Рыночные данные и аналитика могут зависеть от сторонних поставщиков данных.\nИз-за различий между потоками данных, брокерами или биржами:", items: [
+            "Цены могут отличаться",
+            "Время поступления данных может варьироваться",
+            "Структуры графиков могут не полностью совпадать с другими платформами",
+        ], after: "PHASEX не гарантирует абсолютную точность данных сторонних поставщиков."
+    },
+    {
+        title: "8. Интеллектуальная собственность", text: "Все права на интеллектуальную собственность, связанные с PHASEX, принадлежат платформе или ее лицензиарам, включая:", items: [
+            "Алгоритмы",
+            "Структурные модели графиков",
+            "Дизайн интерфейса",
+            "Базы данных",
+            "Элементы бренда",
+        ], after: "Пользователи не могут копировать, распространять, реконструировать, перепродавать или извлекать данные с платформы без письменного разрешения."
+    },
+    {
+        title: "9. Запрещенное использование", text: "Пользователям запрещается:", items: [
+            "Использовать PHASEX для незаконной деятельности",
+            "Пытаться нарушить работу системы или взломать ее",
+            "Перепродавать доступ к платформе",
+            "Представлять результаты PHASEX как гарантированные торговые сигналы",
+        ], after: "Нарушение может привести к приостановке или удалению учетной записи."
+    },
+    { title: "10. Подписки и платежи", text: "Для доступа к некоторым функциям может потребоваться платная подписка.\nУсловия подписки, цены и функции четко описаны на платформе.\nPHASEX оставляет за собой право изменять планы подписки или цены с соответствующим уведомлением." },
+    { title: "11. Политика возврата средств", text: "Платежи за подписку, как правило, не подлежат возврату, если прямо не указано иное.\nПользователи несут ответственность за ознакомление с условиями подписки перед завершением платежа." },
+    { title: "12. Отказ от гарантий", text: "Платформа предоставляется \"как есть\" и \"по мере доступности\".\nPHASEX не дает никаких гарантий в отношении:", items: ["Точности", "Надежности", "Бесперебойной доступности", "Пригодности для принятия торговых решений"] },
+    { title: "13. Ограничение ответственности", text: "В максимальной степени, разрешенной законом, PHASEX не несет ответственности за:", items: ["Торговые убытки", "Финансовые убытки", "Упущенную выгоду", "Косвенный или последующий ущерб"], after: "возникшие в результате использования платформы." },
+    { title: "14. Возмещение ущерба", text: "Пользователи соглашаются возместить ущерб и оградить PHASEX от претензий, убытков или судебных издержек, возникших в результате ненадлежащего использования платформы или нарушения настоящих условий." },
+    { title: "15. Прекращение действия", text: "PHASEX оставляет за собой право приостановить или закрыть учетные записи, которые нарушают правила платформы или угрожают целостности системы." },
+    { title: "16. Поправки", text: "Настоящие Условия могут периодически обновляться. Продолжение использования платформы означает принятие обновленных условий." },
+    { title: "17. Применимое право", text: "Настоящие Условия регулируются законодательством ОАЭ." },
+    { title: "18. Контакты", text: "По правовым вопросам или вопросам поддержки:\nАдрес электронной почты службы поддержки: phasexai@gmail.com" },
+];
+
 export function TermsModal({ isOpen, onClose }: TermsModalProps) {
     const { language } = useLanguage();
     const isRTL = language === "ar";
     const accent = "#00e5a0";
     const accentG = "rgba(0,229,160,";
-    const terms = isRTL ? termsAR : termsEN;
+    const terms = language === "ar" ? termsAR : language === "ru" ? termsRU : language === "tr" ? termsTR : termsEN;
 
     return (
         <AnimatePresence>
@@ -229,7 +377,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {isRTL ? "الشروط والأحكام" : "Terms and Conditions"}
+                                        {language === "ar" ? "الشروط والأحكام" : language === "tr" ? "Şartlar ve Koşullar" : language === "ru" ? "Условия и положения" : "Terms and Conditions"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -282,7 +430,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
                             {/* Contact */}
                             <div className="text-center py-4" style={{ borderTop: `1px solid rgba(255,255,255,0.04)` }}>
                                 <p className="text-xs text-gray-500">
-                                    © 2024 PHASE X AI. {isRTL ? "جميع الحقوق محفوظة" : "All rights reserved."}
+                                    © 2024 PHASE X AI. {language === "ar" ? "جميع الحقوق محفوظة" : language === "tr" ? "Tüm hakları saklıdır." : language === "ru" ? "Все права защищены." : "All rights reserved."}
                                 </p>
                             </div>
                         </div>
@@ -301,8 +449,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
 
 // Export a simple button component for the footer
 export function TermsButton({ onClick }: { onClick: () => void }) {
-    const { language } = useLanguage();
-    const isRTL = language === "ar";
+    const { t } = useLanguage();
     const accent = "#00e5a0";
     const accentG = "rgba(0,229,160,";
 
@@ -319,7 +466,7 @@ export function TermsButton({ onClick }: { onClick: () => void }) {
             }}
         >
             <FileText className="w-3.5 h-3.5" />
-            {isRTL ? "الشروط والأحكام" : "Terms & Conditions"}
+            {t("termsAndConditions")}
         </motion.button>
     );
 }
@@ -370,12 +517,56 @@ const cookieAR = [
     { title: "التغييرات على هذه السياسة", text: "قد تقوم PHASEX بتحديث سياسة ملفات الارتباط حسب الحاجة لتعكس تحسينات المنصة أو المتطلبات القانونية." },
 ];
 
+const cookieTR = [
+    { title: "Çerezler Nedir", text: "Çerezler, bir web sitesini ziyaret ettiğinizde cihazınızda depolanan küçük metin dosyalarıdır. Web sitelerinin cihazınızı tanımasına ve kullanıcı deneyimini iyileştirmesine olanak tanır." },
+    {
+        title: "PHASEX Çerezleri Nasıl Kullanır", text: "PHASEX, çerezleri aşağıdakiler dahil çeşitli amaçlar için kullanır:", items: [
+            "Güvenli giriş oturumlarını sürdürmek",
+            "Web sitesi işlevselliğini artırmak",
+            "Kullanıcıların platformla nasıl etkileşimde bulunduğunu anlamak",
+            "Performans ve kararlılığı artırmak",
+        ]
+    },
+    {
+        title: "Kullandığımız Çerez Türleri", subsections: [
+            { sub: "Temel Çerezler", desc: "Hesap kimlik doğrulaması ve güvenlik dahil olmak üzere platformun temel çalışması için gereklidir." },
+            { sub: "Performans Çerezleri", desc: "İşlevselliği artırmak için web sitesi trafiğini ve platform kullanımını analiz etmeye yardımcı olur." },
+            { sub: "İşlevsel Çerezler", desc: "Platformun belirli kullanıcı tercihlerini hatırlamasını sağlar." },
+        ]
+    },
+    { title: "Çerezleri Yönetmek", text: "Çoğu web tarayıcısı, kullanıcıların tarayıcı ayarları aracılığıyla çerezleri kontrol etmesine veya devre dışı bırakmasına olanak tanır.\nBelirli çerezleri devre dışı bırakmak platformun işlevselliğini etkileyebilir." },
+    { title: "Üçüncü Taraf Çerezleri", text: "Analiz, barındırma veya altyapı desteği için kullanılan güvenilir üçüncü taraf hizmetleri tarafından bazı çerezler yerleştirilebilir." },
+    { title: "Bu Politikadaki Değişiklikler", text: "PHASEX, platform iyileştirmelerini veya yasal gereksinimleri yansıtmak için bu Çerez Politikasını gerektiğinde güncelleyebilir." },
+];
+
+const cookieRU = [
+    { title: "Что такое файлы cookie", text: "Файлы cookie — это небольшие текстовые файлы, сохраняемые на вашем устройстве при посещении веб-сайта. Они позволяют сайтам распознавать ваше устройство и улучшать пользовательский опыт." },
+    {
+        title: "Как PHASEX использует файлы cookie", text: "PHASEX использует файлы cookie для следующих целей:", items: [
+            "Поддержание безопасных сеансов входа",
+            "Улучшение функциональности веб-сайта",
+            "Понимание того, как пользователи взаимодействуют с платформой",
+            "Повышение производительности и стабильности",
+        ]
+    },
+    {
+        title: "Типы файлов cookie, которые мы используем", subsections: [
+            { sub: "Строго необходимые", desc: "Требуются для базовой работы платформы, включая аутентификацию аккаунта и безопасность." },
+            { sub: "Эксплуатационные", desc: "Помогают анализировать трафик веб-сайта и использование платформы для улучшения функциональности." },
+            { sub: "Функциональные", desc: "Позволяют платформе запоминать определенные предпочтения пользователя." },
+        ]
+    },
+    { title: "Управление файлами cookie", text: "Большинство веб-браузеров позволяют пользователям контролировать или отключать файлы cookie через настройки браузера.\nОтключение определенных файлов cookie может повлиять на функциональность платформы." },
+    { title: "Сторонние файлы cookie", text: "Некоторые файлы cookie могут размещаться надежными сторонними сервисами, используемыми для аналитики, хостинга или поддержки инфраструктуры." },
+    { title: "Изменения в данной политике", text: "PHASEX может обновлять данную Политику использования файлов cookie по мере необходимости для отражения улучшений платформы или юридических требований." },
+];
+
 export function CookiePolicyModal({ isOpen, onClose }: TermsModalProps) {
     const { language } = useLanguage();
     const isRTL = language === "ar";
     const accent = "#00e5a0";
     const accentG = "rgba(0,229,160,";
-    const sections = isRTL ? cookieAR : cookieEN;
+    const sections = language === "ar" ? cookieAR : language === "ru" ? cookieRU : language === "tr" ? cookieTR : cookieEN;
 
     return (
         <AnimatePresence>
@@ -416,7 +607,7 @@ export function CookiePolicyModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {isRTL ? "سياسة ملفات الارتباط" : "Cookie Policy"}
+                                        {language === "ar" ? "سياسة ملفات الارتباط" : language === "tr" ? "Çerez Politikası" : language === "ru" ? "Политика использования файлов cookie" : "Cookie Policy"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -474,7 +665,7 @@ export function CookiePolicyModal({ isOpen, onClose }: TermsModalProps) {
 
                             <div className="text-center py-4" style={{ borderTop: `1px solid rgba(255,255,255,0.04)` }}>
                                 <p className="text-xs text-gray-500">
-                                    © 2024 PHASE X AI. {isRTL ? "جميع الحقوق محفوظة" : "All rights reserved."}
+                                    © 2024 PHASE X AI. {language === "ar" ? "جميع الحقوق محفوظة" : language === "tr" ? "Tüm hakları saklıdır." : language === "ru" ? "Все права защищены." : "All rights reserved."}
                                 </p>
                             </div>
                         </div>
@@ -491,8 +682,7 @@ export function CookiePolicyModal({ isOpen, onClose }: TermsModalProps) {
 }
 
 export function CookieButton({ onClick }: { onClick: () => void }) {
-    const { language } = useLanguage();
-    const isRTL = language === "ar";
+    const { t } = useLanguage();
     const accent = "#00e5a0";
     const accentG = "rgba(0,229,160,";
 
@@ -509,7 +699,7 @@ export function CookieButton({ onClick }: { onClick: () => void }) {
             }}
         >
             <Cookie className="w-3.5 h-3.5" />
-            {isRTL ? "سياسة ملفات الارتباط" : "Cookie Policy"}
+            {t("cookiePolicy")}
         </motion.button>
     );
 }
@@ -547,12 +737,44 @@ const disclaimerAR = [
     { text: "الأداء السابق للأسواق لا يضمن النتائج المستقبلية." },
 ];
 
+const disclaimerTR = [
+    { text: "PHASEX tarafından sağlanan bilgiler, araçlar ve analitik temsiller yalnızca bilgilendirme ve eğitim amaçlıdır." },
+    { text: "PHASEX finansal, yatırım veya ticari danışmanlık hizmeti sunmaz." },
+    {
+        text: "Platformda görüntülenen hiçbir şey şu şekilde yorumlanmamalıdır:", items: [
+            "Yatırım tavsiyesi",
+            "Finansal enstrümanları alma veya satma önerisi",
+            "Gelecekteki piyasa performansının garantisi",
+        ]
+    },
+    { text: "Finansal piyasalar önemli riskler içerir ve kullanıcılar yatırım kararları ve finansal sonuçlarından tamamen kendileri sorumludur." },
+    { text: "PHASEX hiçbir piyasa verisinin, analizinin veya görsel temsillerin doğruluğunu, eksiksizliğini veya güvenilirliğini garanti etmez." },
+    { text: "Geçmiş piyasa davranışı gelecekteki sonuçları garanti etmez." },
+    { text: "Kullanıcılar PHASEX platformunu kullanarak, platform bilgilerine dayanarak alınan eylemler için tam sorumluluğu üstlendiklerini onaylar ve kabul eder." },
+];
+
+const disclaimerRU = [
+    { text: "Информация, инструменты и аналитические данные, предоставляемые PHASEX, предназначены исключительно для информационных и образовательных целей." },
+    { text: "PHASEX не предоставляет финансовых, инвестиционных или торговых консультаций." },
+    {
+        text: "Ничто из представленного на платформе не должно интерпретироваться как:", items: [
+            "Инвестиционный совет",
+            "Рекомендация покупать или продавать финансовые инструменты",
+            "Гарантия будущих результатов на рынке",
+        ]
+    },
+    { text: "Финансовые рынки сопряжены со значительными рисками, и пользователи несут полную ответственность за свои торговые решения и финансовые результаты." },
+    { text: "PHASEX не гарантирует точность, полноту или надежность рыночных данных, аналитики или визуальных представлений." },
+    { text: "Прошлое поведение рынка не гарантирует будущих результатов." },
+    { text: "Используя платформу PHASEX, пользователи признают и принимают на себя полную ответственность за любые действия, предпринятые на основе информации платформы." },
+];
+
 export function LegalDisclaimerModal({ isOpen, onClose }: TermsModalProps) {
     const { language } = useLanguage();
     const isRTL = language === "ar";
     const accent = "#ff6e40";
     const accentG = "rgba(255,110,64,";
-    const sections = isRTL ? disclaimerAR : disclaimerEN;
+    const sections = language === "ar" ? disclaimerAR : language === "ru" ? disclaimerRU : language === "tr" ? disclaimerTR : disclaimerEN;
 
     return (
         <AnimatePresence>
@@ -583,7 +805,7 @@ export function LegalDisclaimerModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {isRTL ? "إخلاء المسؤولية القانونية" : "Legal Disclaimer"}
+                                        {language === "ar" ? "إخلاء المسؤولية القانونية" : language === "tr" ? "Yasal Uyarı" : language === "ru" ? "Отказ от ответственности" : "Legal Disclaimer"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -599,7 +821,9 @@ export function LegalDisclaimerModal({ isOpen, onClose }: TermsModalProps) {
                             <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: `${accentG}0.06)`, border: `1px solid ${accentG}0.15)` }}>
                                 <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: accent }} />
                                 <p className="text-[13px] font-bold" style={{ color: accent }}>
-                                    {isRTL ? "⚠️ تحذير: الأسواق المالية تنطوي على مخاطر عالية. قد تخسر رأس مالك بالكامل."
+                                    {language === "ar" ? "⚠️ تحذير: الأسواق المالية تنطوي على مخاطر عالية. قد تخسر رأس مالك بالكامل."
+                                        : language === "tr" ? "⚠️ Uyarı: Finansal piyasalar önemli riskler içerir. Tüm sermayenizi kaybedebilirsiniz."
+                                        : language === "ru" ? "⚠️ Внимание: Финансовые рынки несут значительный риск. Вы можете потерять весь свой капитал."
                                         : "⚠️ Warning: Financial markets carry significant risk. You may lose your entire capital."}
                                 </p>
                             </div>
@@ -635,14 +859,13 @@ export function LegalDisclaimerModal({ isOpen, onClose }: TermsModalProps) {
 }
 
 export function LegalDisclaimerButton({ onClick }: { onClick: () => void }) {
-    const { language } = useLanguage();
-    const isRTL = language === "ar";
+    const { t } = useLanguage();
     return (
         <motion.button onClick={onClick} whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all"
             style={{ background: "rgba(255,110,64,0.06)", border: "1px solid rgba(255,110,64,0.15)", color: "#ff6e40" }}>
             <AlertTriangle className="w-3.5 h-3.5" />
-            {isRTL ? "إخلاء المسؤولية" : "Legal Disclaimer"}
+            {t("legalDisclaimer")}
         </motion.button>
     );
 }
@@ -778,12 +1001,140 @@ const manifestoAR = [
     },
 ];
 
+const manifestoTR = [
+    {
+        title: "Piyasa Gürültü Değildir", paragraphs: [
+            "Finansal piyasalar genellikle rastgelelik ve spekülasyonla yönlendirilen kaotik sistemler olarak tanımlanır.",
+            "Grafikler fiyat hareketleriyle durmaksızın yanıp söner, göstergeler dikkat çekmek için yarışır ve yatırımcılar çelişkili sinyaller arasında gezinmek zorunda kalır.",
+            "Ancak piyasalar gürültü değildir.", "Onlar sistemlerdir.",
+            "Yapı, baskı, ritim ve davranış döngüleri ile şekillenen sistemler.",
+            "Sorun hiçbir zaman piyasanın kendisi olmadı.", "Sorun her zaman onu gözlemleme şeklimizdeydi.",
+        ]
+    },
+    {
+        title: "Gösterge İstiflemesinin Başarısızlığı", paragraphs: [
+            "On yıllardır, piyasa analizi sürekli artan bir göstergeler koleksiyonuna dayandırıldı.",
+            "Osilatörler, hareketli ortalamalar, bantlar, kanallar, sinyallerin üzerine yığılan sinyaller.", "Her biri netlik vaat ediyor.",
+            "Ancak sonuç genellikle tam tersi oldu.",
+            "Daha fazla gösterge daha fazla yorumlama yaratır.", "Daha fazla yorumlama daha fazla kafa karışıklığı yaratır.",
+            "Karmaşıklık, içgörü ile karıştırıldı.", "PHASEX bu duruma meydan okumak için yaratıldı.",
+        ]
+    },
+    {
+        title: "Piyasalara Yapısal Bir Bakış", paragraphs: [
+            "Piyasalar anlık olarak rastgele hareket etmez.", "Yapısal durumlar yoluyla evrimleşirler.",
+            "Genişleme anları.", "Daralma anları.", "Yönlü baskı dönemleri.", "Osilasyon ve denge döngüleri.",
+            "PHASEX sinyalleri kovalamak yerine bu durumları gözlemler.",
+            "Fiyat hareketinin altında yatan yapıyı ortaya çıkarmak için tasarlanmış bir çerçeve aracılığıyla piyasa davranışını yeniden inşa eder.",
+        ]
+    },
+    {
+        title: "Göstergelerden Durumlara", paragraphs: [
+            "PHASEX, parçalanmış sinyalleri birleşik bir yapısal dille değiştirir.",
+            "Platform, piyasa davranışını farklı analitik durumlar aracılığıyla temsil eder:",
+        ], states: ["Faz Durumu", "Yer Değiştirme Durumu", "Referans Durumu", "Osilasyon Durumu", "Yön Durumu", "Zarf Durumu"],
+        after: ["Her durum piyasa dinamiklerinin farklı bir boyutunu yakalar.", "Birlikte, piyasaların nasıl evrimleştiğini gözlemlemek için tutarlı bir sistem oluştururlar."]
+    },
+    {
+        title: "Karmaşıklık Yerine Netlik", paragraphs: [
+            "Finansal piyasalar devasa veri akışları üretir, ancak içgörü nadiren daha fazla gürültü eklemekten gelir.",
+            "Gerçek anlayış yapıyı görmekten gelir.", "PHASEX basit bir felsefeyle inşa edildi:",
+        ], highlights: ["Gürültüyü azalt.", "Yapıyı ortaya çıkar.", "Davranışı gözlemle."],
+        after: ["PHASEX, fiyat hareketini yorumlanabilir durumlara dönüştürerek yatırımcıların ve analistlerin piyasaları geleneksel araçlarla nadiren elde edilen bir netlik düzeyinde gözlemlemesini sağlar."]
+    },
+    {
+        title: "Tahmin Değil. Gözlem.", paragraphs: [
+            "PHASEX geleceği tahmin etmeye çalışmaz.", "Şimdiki zamanı görünür kılmaya çalışır.",
+            "Yapı netleştiğinde, davranış anlaşılabilir hale gelir.",
+            "Ve davranış anlaşılabilir hale geldiğinde, kararlar daha bilinçli hale gelir.",
+        ]
+    },
+    {
+        title: "Piyasa Yapısı İçin Yeni Bir Dil", paragraphs: [
+            "Piyasalar uzun zamandır göstergelerin merceğinden görüldü.", "PHASEX farklı bir dil öneriyor.",
+            "Durumların, yapının ve davranışın dili.",
+            "Yatırımcıları sinyallere boğmak için değil, piyasayı olduğu gibi görmelerine yardımcı olmak için tasarlanmış bir dil.",
+        ]
+    },
+    {
+        title: "Vizyon", paragraphs: [
+            "PHASEX basit ama iddialı bir hedefle yaratıldı:",
+            "Finansal piyasaların görselleştirilme ve anlaşılma şeklini yeniden düşünmek.",
+            "Daha fazla gösterge aracılığıyla değil.", "Daha derin bir yapı aracılığıyla.",
+        ]
+    },
+];
+
+const manifestoRU = [
+    {
+        title: "Рынок — это не шум", paragraphs: [
+            "Финансовые рынки часто описывают как хаотичные системы, движимые случайностью и спекуляциями.",
+            "Графики бесконечно мигают изменениями цен, индикаторы соревнуются за внимание, а трейдеры вынуждены ориентироваться в ландшафте противоречивых сигналов.",
+            "Но рынки — это не шум.", "Это системы.",
+            "Системы, формируемые структурой, давлением, ритмом и поведенческими циклами.",
+            "Проблема никогда не была в самом рынке.", "Проблема всегда заключалась в том, как мы пытаемся его наблюдать.",
+        ]
+    },
+    {
+        title: "Провал накопления индикаторов", paragraphs: [
+            "На протяжении десятилетий анализ рынка опирался на постоянно растущую коллекцию индикаторов.",
+            "Осцилляторы, скользящие средние, ленты, каналы, сигналы, наслаивающиеся на сигналы.", "И каждый обещает ясность.",
+            "Но результат часто оказывался противоположным.",
+            "Больше индикаторов создает больше интерпретаций.", "Больше интерпретаций создает больше путаницы.",
+            "Сложность ошибочно принимается за понимание.", "PHASEX был создан, чтобы бросить вызов этому.",
+        ]
+    },
+    {
+        title: "Структурный взгляд на рынки", paragraphs: [
+            "Рынки не движутся случайным образом от тика к тику.", "Они развиваются через структурные состояния.",
+            "Моменты расширения.", "Моменты сжатия.", "Периоды направленного давления.", "Циклы колебаний и равновесия.",
+            "Вместо того чтобы гоняться за сигналами, PHASEX наблюдает за этими состояниями.",
+            "Он реконструирует поведение рынка через структуру, предназначенную для раскрытия базовой структуры движения цен.",
+        ]
+    },
+    {
+        title: "От индикаторов к состояниям", paragraphs: [
+            "PHASEX заменяет фрагментированные сигналы единым структурным языком.",
+            "Платформа представляет поведение рынка через различные аналитические состояния:",
+        ], states: ["Состояние фазы", "Состояние смещения", "Эталонное состояние", "Состояние колебаний", "Состояние направления", "Состояние огибающей"],
+        after: ["Каждое состояние фиксирует разное измерение динамики рынка.", "Вместе они образуют согласованную систему для наблюдения за эволюцией рынков."]
+    },
+    {
+        title: "Ясность важнее сложности", paragraphs: [
+            "Финансовые рынки генерируют огромные потоки данных, но понимание редко приходит от добавления большего количества шума.",
+            "Истинное понимание приходит от видения структуры.", "PHASEX был построен с простой философией:",
+        ], highlights: ["Уменьшить шум.", "Раскрыть структуру.", "Наблюдать поведение."],
+        after: ["Реконструируя движение цены в интерпретируемые состояния, PHASEX позволяет трейдерам и аналитикам наблюдать за рынками с уровнем ясности, редко достигаемым с помощью традиционных инструментов."]
+    },
+    {
+        title: "Не предсказание. Наблюдение.", paragraphs: [
+            "PHASEX не пытается предсказать будущее.", "Он стремится сделать видимым настоящее.",
+            "Когда структура становится ясной, поведение становится понятным.",
+            "А когда поведение становится понятным, решения становятся более обоснованными.",
+        ]
+    },
+    {
+        title: "Новый язык для структуры рынка", paragraphs: [
+            "Рынки долгое время рассматривались через призму индикаторов.", "PHASEX предлагает другой язык.",
+            "Язык состояний, структуры и поведения.",
+            "Язык, разработанный не для того, чтобы ошеломлять трейдеров сигналами, а для того, чтобы помочь им видеть рынок таким, каков он есть на самом деле.",
+        ]
+    },
+    {
+        title: "Видение", paragraphs: [
+            "PHASEX был создан с простой, но амбициозной целью:",
+            "Переосмыслить то, как визуализируются и понимаются финансовые рынки.",
+            "Не через увеличение количества индикаторов.", "А через более глубокую структуру.",
+        ]
+    },
+];
+
 export function ManifestoModal({ isOpen, onClose }: TermsModalProps) {
     const { language } = useLanguage();
     const isRTL = language === "ar";
     const accent = "#a855f7";
     const accentG = "rgba(168,85,247,";
-    const sections = isRTL ? manifestoAR : manifestoEN;
+    const sections = language === "ar" ? manifestoAR : language === "ru" ? manifestoRU : language === "tr" ? manifestoTR : manifestoEN;
 
     return (
         <AnimatePresence>
@@ -814,9 +1165,9 @@ export function ManifestoModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {isRTL ? "مانيفستو PHASEX" : "PHASEX Manifesto"}
+                                        {language === "ar" ? "مانيفستو PHASEX" : language === "tr" ? "PHASEX Bildirgesi" : language === "ru" ? "Манифест PHASEX" : "PHASEX Manifesto"}
                                     </h2>
-                                    <p className="text-[11px] text-gray-500 font-medium">{isRTL ? "انظر إلى السوق كنظام" : "See the market as a system"}</p>
+                                    <p className="text-[11px] text-gray-500 font-medium">{language === "ar" ? "انظر إلى السوق كنظام" : language === "tr" ? "Piyasayı bir sistem olarak görün" : language === "ru" ? "Рассматривайте рынок как систему" : "See the market as a system"}</p>
                                 </div>
                             </div>
                             <motion.button onClick={onClose} whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}
@@ -837,7 +1188,9 @@ export function ManifestoModal({ isOpen, onClose }: TermsModalProps) {
                                     {section.paragraphs.map((p, j) => (
                                         <p key={j} className={`text-[13px] leading-relaxed mb-1.5 ${p.startsWith("But ") || p.startsWith("They are systems") || p.startsWith("The problem") ||
                                             p.startsWith("لكن") || p.startsWith("إنه نظام") || p.startsWith("المشكلة") ||
-                                            p.startsWith("بل") || p.startsWith("Not ") || p.startsWith("PHASEX")
+                                            p.startsWith("بل") || p.startsWith("Not ") || p.startsWith("PHASEX") ||
+                                            p.startsWith("Ancak ") || p.startsWith("Onlar ") || p.startsWith("Sorun ") || 
+                                            p.startsWith("Но ") || p.startsWith("Это ") || p.startsWith("Проблема ") || p.startsWith("Не ") 
                                             ? "text-white font-bold" : "text-gray-400"
                                             }`}>{p}</p>
                                     ))}
@@ -872,7 +1225,7 @@ export function ManifestoModal({ isOpen, onClose }: TermsModalProps) {
                                     PHASEX
                                 </motion.p>
                                 <p className="text-sm text-gray-500 font-medium italic">
-                                    {isRTL ? "انظر إلى السوق كنظام." : "See the market as a system."}
+                                    {language === "ar" ? "انظر إلى السوق كنظام." : language === "tr" ? "Piyasayı bir sistem olarak görün." : language === "ru" ? "Рассматривайте рынок как систему." : "See the market as a system."}
                                 </p>
                             </div>
                         </div>
@@ -887,14 +1240,13 @@ export function ManifestoModal({ isOpen, onClose }: TermsModalProps) {
 }
 
 export function ManifestoButton({ onClick }: { onClick: () => void }) {
-    const { language } = useLanguage();
-    const isRTL = language === "ar";
+    const { t } = useLanguage();
     return (
         <motion.button onClick={onClick} whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all"
             style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.15)", color: "#a855f7" }}>
             <BookOpen className="w-3.5 h-3.5" />
-            {isRTL ? "مانيفستو PHASEX" : "Manifesto"}
+            {t("manifesto")}
         </motion.button>
     );
 }
@@ -980,12 +1332,92 @@ const privacyAR = [
     { title: "تحديثات السياسة", text: "قد يتم تعديل هذه السياسة من وقت لآخر. استمرار استخدام المنصة يعني الموافقة على التعديلات." },
 ];
 
+const privacyTR = [
+    { title: "Giriş", text: "PHASEX gizliliğinize saygı duyar ve kişisel verilerinizi korumaya kararlıdır. Bu Gizlilik Politikası, web sitemizi ve hizmetlerimizi kullandığınızda bilgileri nasıl topladığımızı, kullandığımızı, işlediğimizi ve koruduğumuzu açıklar.\nPHASEX platformuna erişerek veya onu kullanarak bu politikada açıklanan uygulamaları kabul etmiş olursunuz." },
+    {
+        title: "Topladığımız Bilgiler", subsections: [
+            { sub: "Kişisel Bilgiler", desc: "Sizi doğrudan tanımlayabilen bilgiler:", items: ["Ad", "E-posta adresi", "Hesap kimlik bilgileri", "Ödeme bilgileri (üçüncü taraf ödeme sağlayıcıları tarafından işlenir)"] },
+            { sub: "Teknik Bilgiler", desc: "PHASEX'e eriştiğinizde bazı teknik veriler otomatik olarak toplanabilir:", items: ["IP adresi", "Cihaz türü", "Tarayıcı türü", "İşletim sistemi", "Erişim zaman damgaları", "Platform içindeki kullanım etkinlikleri"] },
+            { sub: "Analitik Veriler", desc: "Platformun performansını, güvenliğini ve işlevselliğini geliştirmek için kullanım analitikleri toplayabiliriz." },
+        ]
+    },
+    {
+        title: "Bilgilerinizi Nasıl Kullanıyoruz", text: "Toplanan bilgileri aşağıdakiler dahil çeşitli amaçlar için kullanırız:", items: [
+            "Kullanıcı hesapları oluşturmak ve yönetmek",
+            "Platform özelliklerine erişim sağlamak",
+            "Sistem performansını ve kullanıcı deneyimini iyileştirmek",
+            "Dolandırıcılık veya yetkisiz etkinlikleri tespit etmek",
+            "Hizmet güncellemeleri veya destek yanıtları iletmek",
+        ], after: "PHASEX kişisel verileri üçüncü taraflara satmaz."
+    },
+    {
+        title: "Veri Paylaşımı", text: "Bilgileriniz yalnızca sınırlı durumlarda paylaşılabilir:", items: [
+            "Altyapı, barındırma veya ödemeleri destekleyen hizmet sağlayıcılarla",
+            "Geçerli yasa veya yasal yükümlülükler gerektirdiğinde",
+            "Platformun güvenliğini veya bütünlüğünü korumak için",
+        ]
+    },
+    { title: "Veri Güvenliği", text: "PHASEX, kullanıcı verilerini yetkisiz erişimden, kötüye kullanımdan veya ifşadan korumak için makul teknik ve organizasyonel önlemler uygular.\nAncak, hiçbir internet iletimi veya depolama sisteminin tamamen güvenli olduğu garanti edilemez." },
+    { title: "Veri Saklama", text: "Kişisel bilgiler yalnızca hizmet sağlamak, yasal yükümlülüklere uymak veya anlaşmazlıkları çözmek için gerekli olduğu sürece saklanır." },
+    {
+        title: "Kullanıcı Hakları", text: "Yargı alanınıza bağlı olarak şunlara hakkınız olabilir:", items: [
+            "Kişisel verilerinize erişmek",
+            "Yanlış verilerin düzeltilmesini talep etmek",
+            "Kişisel bilgilerin silinmesini talep etmek",
+            "Mümkün olduğunda onayı geri çekmek",
+        ], after: "Talepler, platformun destek iletişimi aracılığıyla gönderilebilir."
+    },
+    { title: "Üçüncü Taraf Hizmetleri", text: "PHASEX, üçüncü taraf araçlarını veya hizmetlerini entegre edebilir. Bu sağlayıcılar kendi gizlilik politikaları altında çalışırlar ve PHASEX uygulamalarından sorumlu değildir." },
+    { title: "Politika Güncellemeleri", text: "Bu Gizlilik Politikası periyodik olarak güncellenebilir. Güncellemelerden sonra platformun kullanılmaya devam edilmesi, revize edilen politikanın kabul edildiği anlamına gelir." },
+    { title: "İletişim", text: "Gizlilikle ilgili sorularınız için:\nDestek E-postası: phasexai@gmail.com" },
+];
+
+const privacyRU = [
+    { title: "Введение", text: "PHASEX уважает вашу конфиденциальность и стремится защищать ваши персональные данные. В настоящей Политике конфиденциальности объясняется, как мы собираем, используем, обрабатываем и защищаем информацию, когда вы используете наш веб-сайт и услуги.\nПолучая доступ к платформе PHASEX или используя ее, вы соглашаетесь с практикой, описанной в данной политике." },
+    {
+        title: "Информация, которую мы собираем", subsections: [
+            { sub: "Персональная информация", desc: "Информация, с помощью которой вас можно идентифицировать напрямую, например:", items: ["Имя", "Адрес электронной почты", "Учетные данные", "Платежная информация (обрабатывается сторонними поставщиками платежных услуг)"] },
+            { sub: "Техническая информация", desc: "При доступе к PHASEX некоторые технические данные могут собираться автоматически, включая:", items: ["IP-адрес", "Тип устройства", "Тип браузера", "Операционная система", "Временные метки доступа", "Активность использования платформы"] },
+            { sub: "Аналитические данные", desc: "Мы можем собирать аналитику использования для улучшения производительности, безопасности и функциональности платформы." },
+        ]
+    },
+    {
+        title: "Как мы используем вашу информацию", text: "Мы используем собранную информацию для следующих целей:", items: [
+            "Создание и управление учетными записями пользователей",
+            "Обеспечение доступа к функциям платформы",
+            "Улучшение производительности системы и пользовательского опыта",
+            "Распознавание мошенничества или несанкционированной активности",
+            "Информирование об обновлениях службы или ответы на запросы в службу поддержки",
+        ], after: "PHASEX не продает персональные данные третьим лицам."
+    },
+    {
+        title: "Обмен данными", text: "Ваша информация может быть передана только в ограниченных случаях:", items: [
+            "Поставщикам услуг, поддерживающим инфраструктуру, хостинг или платежи",
+            "Когда этого требует применимое законодательство или юридические обязательства",
+            "Для защиты безопасности или целостности платформы",
+        ]
+    },
+    { title: "Безопасность данных", text: "PHASEX принимает разумные технические и организационные меры для защиты пользовательских данных от несанкционированного доступа, ненадлежащего использования или раскрытия.\nОднако никакая система передачи или хранения данных в Интернете не может быть гарантированно полностью безопасной." },
+    { title: "Хранение данных", text: "Персональная информация хранится только до тех пор, пока это необходимо для предоставления услуг, соблюдения юридических обязательств или разрешения споров." },
+    {
+        title: "Мои права", text: "В зависимости от вашей юрисдикции вы можете иметь право на:", items: [
+            "Доступ к вашим персональным данным",
+            "Запрос на исправление неточных данных",
+            "Запрос на удаление персональной информации",
+            "Отзыв согласия, где это применимо",
+        ], after: "Запросы могут быть отправлены через контактную службу поддержки платформы."
+    },
+    { title: "Сторонние сервисы", text: "PHASEX может интегрировать сторонние инструменты или сервисы. Эти поставщики работают в соответствии со своими собственными политиками конфиденциальности, и PHASEX не несет ответственности за их действия." },
+    { title: "Обновления политики", text: "Настоящая Политика конфиденциальности может периодически обновляться. Продолжение использования платформы после обновлений означает принятие пересмотренной политики." },
+    { title: "Контактная информация", text: "По вопросам, связанным с конфиденциальностью:\nАдрес электронной почты службы поддержки: phasexai@gmail.com" },
+];
+
 export function PrivacyPolicyModal({ isOpen, onClose }: TermsModalProps) {
     const { language } = useLanguage();
     const isRTL = language === "ar";
     const accent = "#06b6d4";
     const accentG = "rgba(6,182,212,";
-    const sections = isRTL ? privacyAR : privacyEN;
+    const sections = language === "ar" ? privacyAR : language === "ru" ? privacyRU : language === "tr" ? privacyTR : privacyEN;
 
     return (
         <AnimatePresence>
@@ -1016,7 +1448,7 @@ export function PrivacyPolicyModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {isRTL ? "سياسة الخصوصية" : "Privacy Policy"}
+                                        {language === "ar" ? "سياسة الخصوصية" : language === "tr" ? "Gizlilik Politikası" : language === "ru" ? "Политика конфиденциальности" : "Privacy Policy"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -1089,14 +1521,13 @@ export function PrivacyPolicyModal({ isOpen, onClose }: TermsModalProps) {
 }
 
 export function PrivacyPolicyButton({ onClick }: { onClick: () => void }) {
-    const { language } = useLanguage();
-    const isRTL = language === "ar";
+    const { t } = useLanguage();
     return (
         <motion.button onClick={onClick} whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all"
             style={{ background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.15)", color: "#06b6d4" }}>
             <Eye className="w-3.5 h-3.5" />
-            {isRTL ? "سياسة الخصوصية" : "Privacy Policy"}
+            {t("privacyPolicy")}
         </motion.button>
     );
 }
@@ -1167,12 +1598,80 @@ const riskAR = [
     { title: "9. توصية عامة", text: "لا تتداول بأموال لا تستطيع تحمل خسارتها. إن لم تكن متأكدًا من مخاطر المنتجات المالية، استشر مختصًا مرخصًا.\nباستخدامك PHASEX، فإنك تقر بأنك قرأت هذا الإفصاح وفهمته وتقبلت المخاطر كاملة." },
 ];
 
+const riskTR = [
+    {
+        title: "1. İşlem Riski", text: "Finansal piyasalarda işlem yapmak önemli riskler içerir ve yatırılan sermayenin bir kısmının veya tamamının kaybedilmesiyle sonuçlanabilir.\nAşağıdakiler gibi finansal araçlar:", items: [
+            "Forex", "Endeksler", "Emtialar", "Hisseler", "Kripto paralar", "Vadeli İşlemler", "CFD'ler",
+        ], after: "yüksek derecede risk taşır."
+    },
+    { title: "2. Kaldıraç Riski", text: "Kaldıraç hem kârı hem de zararı büyütebilir.\nBelirli koşullar altında, zararlar finansal araca ve broker politikalarına bağlı olarak ilk yatırılan tutarı aşabilir." },
+    {
+        title: "3. Piyasa Dalgalanması", text: "Finansal piyasalar şunlardan kaynaklanan hızlı fiyat hareketleri yaşayabilir:", items: [
+            "Ekonomik haberler", "Siyasi olaylar", "Piyasa likidite değişiklikleri", "Kurumsal akışlar",
+        ], after: "Bu tür hareketler beklenmedik işlem sonuçlarına yol açabilir."
+    },
+    {
+        title: "4. Analitik Araçların Sınırlamaları", text: "PHASEX, yapısal piyasa durumları ve grafik modelleri de dahil olmak üzere nicel piyasa temsilleri ve analitik araçlar sunar.\nBu araçlar:", items: [
+            "Kârlı sonuçları garanti etmez",
+            "Piyasa davranışını kesin olarak tahmin etmez",
+            "İşlem kararları için tek temel olarak güvenilmemelidir.",
+        ]
+    },
+    {
+        title: "5. Teknik Riskler", text: "Şunlar gibi teknik sorunlar:", items: [
+            "İnternet kesintileri", "Sunucu arızaları", "Platform kesintileri", "Veri gecikmeleri",
+        ], after: "bilgilerin kullanılabilirliğini veya doğruluğunu etkileyebilir."
+    },
+    { title: "6. Veri Varyasyonları", text: "Piyasa fiyatları brokerler veya borsalar arasında farklılık gösterebilir.\nBu nedenle, PHASEX'te görüntülenen grafik formasyonları ve yapısal temsiller diğer işlem platformlarından farklı olabilir." },
+    {
+        title: "7. Kullanıcı Sorumluluğu", text: "Kullanıcılar şunlardan tamamen sorumludur:", items: [
+            "Risk yönetimi", "Pozisyon boyutlandırma", "Zarar durdurma yerleşimi", "Finansal kararlar",
+        ], after: "PHASEX, kullanıcıların işlem hesaplarını yönetmez veya kontrol etmez."
+    },
+    { title: "8. Kâr Garantisi Yok", text: "Geçmiş piyasa davranışı veya analitik temsiller gelecekteki performansı garanti etmez.\nHiçbir sistem, model veya analitik araç işlem riskini ortadan kaldıramaz." },
+    { title: "9. Onay", text: "PHASEX'i kullanarak, finansal piyasa işlemlerine ilişkin riskleri anladığınızı ve kabul ettiğinizi onaylarsınız." },
+];
+
+const riskRU = [
+    {
+        title: "1. Торговый риск", text: "Торговля на финансовых рынках сопряжена со значительным риском и может привести к потере части или всего инвестированного капитала.\nФинансовые инструменты, такие как:", items: [
+            "Форекс", "Индексы", "Сырьевые товары", "Акции", "Криптовалюты", "Фьючерсы", "CFD",
+        ], after: "несут в себе высокую степень риска."
+    },
+    { title: "2. Риск кредитного плеча", text: "Кредитное плечо может увеличить как прибыль, так и убытки.\nПри определенных условиях убытки могут превысить первоначальный депозит в зависимости от финансового инструмента и политики брокера." },
+    {
+        title: "3. Волатильность рынка", text: "На финансовых рынках могут происходить быстрые колебания цен, вызванные:", items: [
+            "Экономическими новостями", "Политическими событиями", "Изменением ликвидности рынка", "Институциональными потоками",
+        ], after: "Такие движения могут привести к неожиданным результатам торгов."
+    },
+    {
+        title: "4. Ограничения аналитических инструментов", text: "PHASEX предоставляет количественные представления рынка и аналитические инструменты, включая структурные состояния рынка и модели графиков.\nЭти инструменты:", items: [
+            "Не гарантируют прибыльных результатов",
+            "Не предсказывают поведение рынка с уверенностью",
+            "Не должны использоваться в качестве единственной основы для принятия торговых решений.",
+        ]
+    },
+    {
+        title: "5. Технические риски", text: "Технические проблемы, такие как:", items: [
+            "Перебои с интернетом", "Сбои серверов", "Перебои в работе платформы", "Задержки данных",
+        ], after: "могут повлиять на доступность или точность информации."
+    },
+    { title: "6. Вариации данных", text: "Рыночные цены могут отличаться у разных брокеров или бирж.\nПоэтому графические паттерны и структурные представления, отображаемые на PHASEX, могут отличаться от других торговых платформ." },
+    {
+        title: "7. Ответственность пользователя", text: "Пользователи несут полную ответственность за:", items: [
+            "Управление рисками", "Определение размера позиции", "Размещение стоп-лоссов", "Финансовые решения",
+        ], after: "PHASEX не управляет и не контролирует торговые счета пользователей."
+    },
+    { title: "8. Отсутствие гарантии прибыли", text: "Прошлое поведение рынка или аналитические представления не гарантируют результатов в будущем.\nНи одна система, модель или аналитический инструмент не могут устранить торговый риск." },
+    { title: "9. Подтверждение", text: "Используя PHASEX, вы подтверждаете, что понимаете и принимаете риски, связанные с торговлей на финансовых рынках." },
+];
+
 export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
     const { language } = useLanguage();
     const isRTL = language === "ar";
     const accent = "#ef4444";
     const accentG = "rgba(239,68,68,";
-    const sections = isRTL ? riskAR : riskEN;
+    const sections = language === "ar" ? riskAR : language === "ru" ? riskRU : language === "tr" ? riskTR : riskEN;
 
     return (
         <AnimatePresence>
@@ -1203,7 +1702,7 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {isRTL ? "إفصاح المخاطر" : "Risk Disclosure"}
+                                        {language === "ar" ? "إفصاح المخاطر" : language === "tr" ? "Risk Açıklaması" : language === "ru" ? "Уведомление о рисках" : "Risk Disclosure"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -1220,10 +1719,12 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
                                 <ShieldAlert className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: accent }} />
                                 <div>
                                     <p className="text-[13px] font-black mb-1" style={{ color: accent }}>
-                                        {isRTL ? "⚠️ تحذير مخاطر عالية" : "⚠️ HIGH RISK WARNING"}
+                                        {language === "ar" ? "⚠️ تحذير مخاطر عالية" : language === "tr" ? "⚠️ YÜKSEK RİSK UYARISI" : language === "ru" ? "⚠️ ПРЕДУПРЕЖДЕНИЕ О ВЫСОКОМ РИСКЕ" : "⚠️ HIGH RISK WARNING"}
                                     </p>
                                     <p className="text-[12px] text-gray-400">
-                                        {isRTL ? "التداول في الأسواق المالية ينطوي على مخاطر كبيرة. قد تخسر رأس مالك بالكامل."
+                                        {language === "ar" ? "التداول في الأسواق المالية ينطوي على مخاطر كبيرة. قد تخسر رأس مالك بالكامل."
+                                            : language === "tr" ? "Finansal piyasalarda işlem yapmak önemli riskler içerir. Yatırım yaptığınız tüm sermayeyi kaybedebilirsiniz."
+                                            : language === "ru" ? "Торговля на финансовых рынках сопряжена со значительным риском. Вы можете потерять весь инвестированный капитал."
                                             : "Trading financial markets involves significant risk. You may lose your entire invested capital."}
                                     </p>
                                 </div>
@@ -1256,7 +1757,7 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
                             ))}
                             <div className="text-center py-4" style={{ borderTop: `1px solid rgba(255,255,255,0.04)` }}>
                                 <p className="text-[11px] text-gray-600">PHASEX — Structural Market Intelligence Platform</p>
-                                <p className="text-xs text-gray-500 mt-1">© 2024 PHASE X AI. {isRTL ? "جميع الحقوق محفوظة" : "All rights reserved."}</p>
+                                <p className="text-xs text-gray-500 mt-1">© 2024 PHASE X AI. {language === "ar" ? "جميع الحقوق محفوظة" : language === "tr" ? "Tüm hakları saklıdır." : language === "ru" ? "Все права защищены." : "All rights reserved."}</p>
                             </div>
                         </div>
                         <motion.div className="absolute bottom-0 left-0 right-0 h-[1px]"
@@ -1270,14 +1771,13 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
 }
 
 export function RiskDisclosureButton({ onClick }: { onClick: () => void }) {
-    const { language } = useLanguage();
-    const isRTL = language === "ar";
+    const { t } = useLanguage();
     return (
         <motion.button onClick={onClick} whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all"
             style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>
             <ShieldAlert className="w-3.5 h-3.5" />
-            {isRTL ? "إفصاح المخاطر" : "Risk Disclosure"}
+            {t("riskDisclosure")}
         </motion.button>
     );
 }

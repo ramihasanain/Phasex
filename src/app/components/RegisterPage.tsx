@@ -26,7 +26,7 @@ interface RegisterPageProps {
 }
 
 export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const isRTL = language === "ar";
 
   const [step, setStep] = useState(1);
@@ -72,54 +72,54 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const subscriptionTypes = [
     {
       id: "monthly",
-      name: isRTL ? "شهري" : "Monthly",
+      name: t("monthly"),
       price: "$29",
-      period: isRTL ? "/شهر" : "/month",
+      period: t("perMonth"),
       color: "#448aff",
       colorG: "rgba(68,138,255,",
       icon: Zap,
       save: "",
       features: [
-        isRTL ? "5 مؤشرات فنية" : "5 Technical Indicators",
-        isRTL ? "جميع الأسواق" : "All Markets",
-        isRTL ? "دعم فني" : "Technical Support",
-        isRTL ? "تحديثات يومية" : "Daily Updates"
+        t("indicators5"),
+        t("allMarkets"),
+        t("techSupport"),
+        t("dailyUpdates")
       ]
     },
     {
       id: "quarterly",
-      name: isRTL ? "ربع سنوي" : "Quarterly",
+      name: t("quarterly"),
       price: "$69",
-      period: isRTL ? "/3 أشهر" : "/3 months",
+      period: t("per3Months"),
       color: accent,
       colorG: accentG,
       icon: Star,
       popular: true,
-      save: isRTL ? "وفّر 20%" : "Save 20%",
+      save: t("saveTxt") + " 20%",
       features: [
-        isRTL ? "كل مميزات الشهري" : "All Monthly Features",
-        isRTL ? "دعم أولوية" : "Priority Support",
-        isRTL ? "تحليلات متقدمة" : "Advanced Analytics",
-        isRTL ? "جلسات تدريبية" : "Training Sessions",
-        isRTL ? "إشعارات فورية" : "Instant Alerts"
+        t("allMonthly"),
+        t("prioritySupport"),
+        t("advAnalytics"),
+        t("trainingSess"),
+        t("instantAlerts")
       ]
     },
     {
       id: "annual",
-      name: isRTL ? "سنوي" : "Annual",
+      name: t("annual"),
       price: "$199",
-      period: isRTL ? "/سنة" : "/year",
+      period: t("perYear"),
       color: "#ffc400",
       colorG: "rgba(255,196,0,",
       icon: Trophy,
-      save: isRTL ? "وفّر 43%" : "Save 43%",
+      save: t("saveTxt") + " 43%",
       features: [
-        isRTL ? "كل المميزات السابقة" : "All Previous Features",
-        isRTL ? "دعم VIP 24/7" : "VIP Support 24/7",
-        isRTL ? "استراتيجيات حصرية" : "Exclusive Strategies",
-        isRTL ? "استشارات شخصية" : "Personal Consultations",
-        isRTL ? "وصول مبكر للمزايا" : "Early Access to Features",
-        isRTL ? "تقارير مخصصة" : "Custom Reports"
+        t("allPrev"),
+        t("vipSupport"),
+        t("exclStrategies"),
+        t("personalConsult"),
+        t("earlyAccess"),
+        t("customReports")
       ]
     }
   ];
@@ -127,28 +127,28 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const stepColors = ["#448aff", accent, "#ffc400"];
 
   const steps = [
-    { id: 1, title: isRTL ? "المعلومات الشخصية" : "Personal Info", icon: User },
-    { id: 2, title: isRTL ? "معلومات الحساب" : "Account Details", icon: Mail },
-    { id: 3, title: isRTL ? "اختر خطتك" : "Choose Plan", icon: Crown },
+    { id: 1, title: t("personalInfo"), icon: User },
+    { id: 2, title: t("accountDetails"), icon: Mail },
+    { id: 3, title: t("choosePlan"), icon: Crown },
   ];
 
   const handleNext = () => {
     if (step === 1) {
       if (!formData.firstName || !formData.lastName) {
-        alert(isRTL ? "الرجاء إدخال الاسم الكامل" : "Please enter your full name");
+        alert(t("errFullName"));
         return;
       }
     } else if (step === 2) {
       if (!formData.email || !formData.password || !formData.confirmPassword || !formData.country) {
-        alert(isRTL ? "الرجاء إكمال جميع الحقول" : "Please complete all fields");
+        alert(t("errCompleteFields"));
         return;
       }
       if (formData.password !== formData.confirmPassword) {
-        alert(isRTL ? "كلمتا المرور غير متطابقتين" : "Passwords don't match");
+        alert(t("errPassMatch"));
         return;
       }
       if (formData.password.length < 6) {
-        alert(isRTL ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+        alert(t("errPassLen"));
         return;
       }
     }
@@ -157,10 +157,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
   const handleSubmit = () => {
     const selectedPlan = subscriptionTypes.find(s => s.id === formData.subscriptionType);
-    alert(isRTL
-      ? `🎉 مرحباً ${formData.firstName}! تم إنشاء حسابك بنجاح!\nاشتراكك: ${selectedPlan?.name} - ${selectedPlan?.price}`
-      : `🎉 Welcome ${formData.firstName}! Your account has been created successfully!\nSubscription: ${selectedPlan?.name} - ${selectedPlan?.price}`
-    );
+    alert(`🎉 ${t("alertWelcome")} ${formData.firstName}! ${t("alertAccCreated")}\n${t("alertSubMsg")} ${selectedPlan?.name} - ${selectedPlan?.price}`);
     onRegister();
   };
 
@@ -194,7 +191,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4"
-      dir={isRTL ? "rtl" : "ltr"}
+      dir="auto"
       style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* Ambient BG */}
@@ -257,10 +254,10 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
             <motion.h1 className="text-2xl font-black mb-1" style={{ color: currentColor }}
               animate={{ textShadow: [`0 0 15px ${currentColor}40`, `0 0 30px ${currentColor}60`, `0 0 15px ${currentColor}40`] }}
               transition={{ duration: 2.5, repeat: Infinity }}>
-              {isRTL ? "انضم إلى PHASE X" : "Join PHASE X"}
+              {t("joinTitle")}
             </motion.h1>
             <p className="text-gray-500 text-xs font-medium tracking-wide">
-              {isRTL ? "أكمل البيانات وابدأ رحلتك" : "Complete your details and start your journey"}
+              {t("joinSub")}
             </p>
           </div>
 
@@ -328,14 +325,14 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       transition={{ duration: 2, repeat: Infinity }}>
                       <User className="w-4 h-4" style={{ color: stepColors[0] }} />
                       <span className="text-sm font-bold" style={{ color: stepColors[0] }}>
-                        {isRTL ? "من أنت؟" : "Who are you?"}
+                        {t("whoAreYou")}
                       </span>
                     </motion.div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    {renderInput("firstName", "text", isRTL ? "الاسم الأول" : "First Name", formData.firstName, v => setFormData({ ...formData, firstName: v }), <User className="w-4 h-4" />)}
-                    {renderInput("lastName", "text", isRTL ? "الاسم الأخير" : "Last Name", formData.lastName, v => setFormData({ ...formData, lastName: v }), <User className="w-4 h-4" />)}
+                    {renderInput("firstName", "text", t("firstName"), formData.firstName, v => setFormData({ ...formData, firstName: v }), <User className="w-4 h-4" />)}
+                    {renderInput("lastName", "text", t("lastName"), formData.lastName, v => setFormData({ ...formData, lastName: v }), <User className="w-4 h-4" />)}
                   </div>
 
                   <motion.div className="p-4 rounded-xl" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -346,8 +343,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                         <Sparkles className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold" style={{ color: stepColors[0] }}>{isRTL ? "مرحباً بك!" : "Welcome!"}</p>
-                        <p className="text-xs text-gray-500">{isRTL ? "أنت على بُعد خطوات من الانطلاق" : "You're steps away from starting"}</p>
+                        <p className="text-sm font-bold" style={{ color: stepColors[0] }}>{t("welcomeTitle")}</p>
+                        <p className="text-xs text-gray-500">{t("welcomeSub")}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -364,16 +361,16 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       transition={{ duration: 2, repeat: Infinity }}>
                       <Lock className="w-4 h-4" style={{ color: accent }} />
                       <span className="text-sm font-bold" style={{ color: accent }}>
-                        {isRTL ? "احمِ حسابك" : "Secure your account"}
+                        {t("secureAcc")}
                       </span>
                     </motion.div>
                   </div>
 
-                  {renderInput("email", "email", isRTL ? "البريد الإلكتروني" : "Email", formData.email, v => setFormData({ ...formData, email: v }), <Mail className="w-4 h-4" />)}
+                  {renderInput("email", "email", t("emailLabel"), formData.email, v => setFormData({ ...formData, email: v }), <Mail className="w-4 h-4" />)}
 
                   <div className="grid grid-cols-2 gap-3">
-                    {renderInput("password", "password", isRTL ? "كلمة المرور" : "Password", formData.password, v => setFormData({ ...formData, password: v }), <Lock className="w-4 h-4" />)}
-                    {renderInput("confirmPassword", "password", isRTL ? "تأكيد" : "Confirm", formData.confirmPassword, v => setFormData({ ...formData, confirmPassword: v }), <Lock className="w-4 h-4" />)}
+                    {renderInput("password", "password", t("passwordLabel"), formData.password, v => setFormData({ ...formData, password: v }), <Lock className="w-4 h-4" />)}
+                    {renderInput("confirmPassword", "password", t("confirmPass"), formData.confirmPassword, v => setFormData({ ...formData, confirmPassword: v }), <Lock className="w-4 h-4" />)}
                   </div>
 
                   <div className="relative">
@@ -384,7 +381,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       onFocus={() => setFocused("country")} onBlur={() => setFocused(null)}
                       className="w-full bg-[rgba(255,255,255,0.03)] text-white rounded-xl py-3.5 px-4 text-sm font-medium outline-none appearance-none cursor-pointer"
                       style={{ paddingLeft: isRTL ? "16px" : "44px", paddingRight: isRTL ? "44px" : "16px" }}>
-                      <option value="" className="bg-[#0a0e18]">{isRTL ? "اختر البلد" : "Select Country"}</option>
+                      <option value="" className="bg-[#0a0e18]">{t("selectCountry")}</option>
                       {countries.map(c => <option key={c.value} value={c.value} className="bg-[#0a0e18]">{c.label}</option>)}
                     </select>
                     <MapPin className={`absolute ${isRTL ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 w-4 h-4`}
@@ -399,8 +396,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                         <Lock className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold" style={{ color: accent }}>{isRTL ? "بياناتك آمنة!" : "Your data is safe!"}</p>
-                        <p className="text-xs text-gray-500">{isRTL ? "نستخدم أعلى معايير التشفير" : "We use top encryption standards"}</p>
+                        <p className="text-sm font-bold" style={{ color: accent }}>{t("dataSafe")}</p>
+                        <p className="text-xs text-gray-500">{t("dataSafeSub")}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -417,7 +414,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       transition={{ duration: 2, repeat: Infinity }}>
                       <Crown className="w-4 h-4" style={{ color: stepColors[2] }} />
                       <span className="text-sm font-bold" style={{ color: stepColors[2] }}>
-                        {isRTL ? "اختر خطتك المثالية" : "Choose your perfect plan"}
+                        {t("choosePerfect")}
                       </span>
                     </motion.div>
                   </div>
@@ -445,7 +442,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                               <div className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-black"
                                 style={{ background: `linear-gradient(90deg, ${accent}, #00c890)`, boxShadow: `0 0 15px ${accent}50` }}>
                                 <Star className="w-3 h-3" />
-                                {isRTL ? "الأفضل" : "Best Choice"}
+                                {t("bestChoice")}
                               </div>
                             </div>
                           )}
@@ -507,8 +504,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                         <Gift className="w-5 h-5 text-black" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold" style={{ color: stepColors[2] }}>{isRTL ? "عرض خاص!" : "Special Offer!"}</p>
-                        <p className="text-xs text-gray-500">{isRTL ? "جميع الخطط تشمل 7 أيام تجربة مجانية" : "All plans include 7-day free trial"}</p>
+                        <p className="text-sm font-bold" style={{ color: stepColors[2] }}>{t("specOffer")}</p>
+                        <p className="text-xs text-gray-500">{t("trial7Days")}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -524,8 +521,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                   style={{ background: "rgba(255,255,255,0.03)", color: "#9ca3af", border: "1px solid rgba(255,255,255,0.08)" }}
                   whileHover={{ background: "rgba(255,255,255,0.06)", scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}>
-                  <ArrowLeft className="w-4 h-4" />
-                  {isRTL ? "رجوع" : "Back"}
+                  <ArrowLeft className={`w-4 h-4 transition-transform ${isRTL ? "rotate-180" : ""}`} />
+                  {t("backBtn")}
                 </motion.button>
               )}
 
@@ -535,7 +532,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                   style={{ background: "rgba(255,255,255,0.03)", color: "#9ca3af", border: "1px solid rgba(255,255,255,0.08)" }}
                   whileHover={{ background: "rgba(255,255,255,0.06)", scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}>
-                  {isRTL ? "لديك حساب؟" : "Have account?"}
+                  {t("haveAccount")}
                 </motion.button>
               )}
 
@@ -549,8 +546,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                     style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)" }}
                     animate={{ left: ["-100%", "200%"] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
-                  {isRTL ? "التالي" : "Next"}
-                  <ArrowRight className="w-4 h-4" />
+                  {t("nextBtn")}
+                  <ArrowRight className={`w-4 h-4 transition-transform ${isRTL ? "rotate-180" : ""}`} />
                 </motion.button>
               ) : (
                 <motion.button type="button" onClick={handleSubmit}
@@ -562,8 +559,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                     style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)" }}
                     animate={{ left: ["-100%", "200%"] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
-                  <Rocket className="w-4 h-4" />
-                  {isRTL ? "ابدأ الآن!" : "Start Now!"}
+                  <Rocket className={`w-4 h-4 transition-transform ${isRTL ? "scale-x-[-1]" : ""}`} />
+                  {t("startNow")}
                 </motion.button>
               )}
             </div>
@@ -580,9 +577,9 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
           className="mt-5 grid grid-cols-3 gap-3">
           {[
-            { icon: Rocket, text: "10,000+", label: isRTL ? "متداول" : "Traders" },
-            { icon: Star, text: "4.9/5", label: isRTL ? "تقييم" : "Rating" },
-            { icon: Trophy, text: "50+", label: isRTL ? "سوق" : "Markets" }
+            { icon: Rocket, text: "10,000+", label: t("tradersStat") },
+            { icon: Star, text: "4.9/5", label: t("ratingStat") },
+            { icon: Trophy, text: "50+", label: t("marketsStat") }
           ].map((stat, i) => {
             const Icon = stat.icon;
             return (
