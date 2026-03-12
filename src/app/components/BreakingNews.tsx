@@ -218,35 +218,49 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                 fxstreetPromise, forexlivePromise, cnbcTopPromise, investingCryptoPromise, wsjMarketsPromise
             ]);
             
-            // Merge & sort by date descending (newest first)
-            const combined = [
-                ...ffEvents, ...cryptoEvents, ...commoditiesEvents, ...indicesEvents, ...coindeskEvents, ...tradFiEvents, ...yahooEvents,
+            // Merge & sort news articles (newest first)
+            const newsCombined = [
+                ...cryptoEvents, ...commoditiesEvents, ...indicesEvents, ...coindeskEvents, ...tradFiEvents, ...yahooEvents,
                 ...ftEvents, ...seekingAlphaEvents, ...marketWatchEvents, ...theBlockEvents, ...decryptEvents,
                 ...fxstreetEvents, ...forexliveEvents, ...cnbcTopEvents, ...investingCryptoEvents, ...wsjMarketsEvents
             ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             
-            // Limit to top 200 freshest items total
-            const sliced = combined.slice(0, 200);
+            // Limit news to top 150 freshest items
+            const slicedNews = newsCombined.slice(0, 150);
 
-            // Turn raw FFCalendarEvents into full NewsEvents with IDs and Tags
-            const finalizedEvents: NewsEvent[] = sliced.map((e, index) => {
+            // Important: Re-add ForexFactory events and sort the final combined list
+            // This ensures ForexFactory (Economic Calendar) events are never pushed out by high-volume news
+            const combined = [...ffEvents, ...slicedNews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            // Turn raw events into full NewsEvents with IDs and Tags
+            const finalizedEvents: NewsEvent[] = combined.map((e, index) => {
                 const combinedText = `${e.title} ${e.body || ''}`;
                 const matchedTags = extractTagsFromText(combinedText);
                 
+                // Inject country as a tag if it exists (e.g. USD, EUR)
+                if (e.country && !matchedTags.includes(e.country)) {
+                    matchedTags.push(e.country);
+                }
+                
+                // Add a special tag for ForexFactory calendar events
+                if (e.provider === "ForexFactory") {
+                    matchedTags.push("أجندة اقتصادية");
+                }
+                
                 return {
-                    id: `news-${e.source}-${index}-${Date.now()}`,
-                    title: e.title,
-                    body: e.body,
-                    date: e.date,
-                    url: e.url,
-                    impact: e.impact,
-                    source: e.source || "general",
-                    country: e.country,
-                    forecast: e.forecast,
-                    previous: e.previous,
-                    imageurl: e.imageurl,
-                    provider: e.provider || (e.source === "forex" ? "ForexFactory" : "News Hub"),
-                    matchedTags: matchedTags
+                     id: `news-${e.source}-${index}-${Date.now()}`,
+                     title: e.title,
+                     body: e.body,
+                     date: e.date,
+                     url: e.url,
+                     impact: e.impact,
+                     source: e.source || "general",
+                     country: e.country,
+                     forecast: e.forecast,
+                     previous: e.previous,
+                     imageurl: e.imageurl,
+                     provider: e.provider || (e.source === "forex" ? "ForexFactory" : "News Hub"),
+                     matchedTags: matchedTags
                 };
             });
             
