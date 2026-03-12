@@ -76,9 +76,10 @@ interface BreakingNewsModalProps {
     events: NewsEvent[]; // Update to global NewsEvent
     selectedSymbol: string;
     selectedCategory?: string;
+    providerStatuses: Record<string, "loading" | "ok" | "error" | "empty">;
 }
 
-export function BreakingNewsModal({ isOpen, onClose, events, selectedSymbol, selectedCategory }: BreakingNewsModalProps) {
+export function BreakingNewsModal({ isOpen, onClose, events, selectedSymbol, selectedCategory, providerStatuses }: BreakingNewsModalProps) {
     const { language, t } = useLanguage();
     const isRTL = language === "ar";
 
@@ -86,14 +87,10 @@ export function BreakingNewsModal({ isOpen, onClose, events, selectedSymbol, sel
     const [searchQuery, setSearchQuery] = useState("");
     const [visibleCount, setVisibleCount] = useState(20);
 
-    // Extract unique providers for the filter
-    const uniqueProviders = useMemo(() => {
-        const providers = new Set<string>();
-        events.forEach(e => {
-            if (e.provider) providers.add(e.provider);
-        });
-        return Array.from(providers).sort();
-    }, [events]);
+    // All providers sorted alphabetically
+    const allProviders = useMemo(() => {
+        return Object.keys(providerStatuses).sort();
+    }, [providerStatuses]);
 
     // Extract unique tags for the filter
     const uniqueTags = useMemo(() => {
@@ -230,7 +227,7 @@ export function BreakingNewsModal({ isOpen, onClose, events, selectedSymbol, sel
                             </div>
                         )}
 
-                        {uniqueProviders.length > 0 && (
+                        {allProviders.length > 0 && (
                             <div className="flex flex-wrap items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <Globe className="w-4 h-4 text-emerald-400" />
@@ -248,16 +245,19 @@ export function BreakingNewsModal({ isOpen, onClose, events, selectedSymbol, sel
                                     >
                                         {isRTL ? "الكل" : "All"}
                                     </button>
-                                    {uniqueProviders.map(provider => (
+                                    {allProviders.map(provider => (
                                         <button
                                             key={provider}
                                             onClick={() => setProviderFilter(provider)}
-                                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all border ${providerFilter === provider
+                                            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all border ${providerFilter === provider
                                                 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
                                                 : "bg-black/40 text-gray-400 border-white/5 hover:bg-white/5 hover:text-white"
-                                                }`}
+                                                } ${providerStatuses[provider] === "error" ? "opacity-60" : ""}`}
                                         >
                                             {provider}
+                                            {providerStatuses[provider] === "loading" && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_5px_rgba(59,130,246,0.5)]" title="Loading..." />}
+                                            {providerStatuses[provider] === "error" && <span className="text-[10px] text-red-500 font-normal whitespace-nowrap">({isRTL ? "خلل من المصدر" : "Error"})</span>}
+                                            {providerStatuses[provider] === "empty" && <span className="text-[10px] text-gray-500 font-normal whitespace-nowrap">({isRTL ? "لا أخبار" : "No News"})</span>}
                                         </button>
                                     ))}
                                 </div>

@@ -33,8 +33,29 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
     const { language, t } = useLanguage();
     const isRTL = language === "ar";
     
+    const initialProviders: Record<string, "loading" | "ok" | "error" | "empty"> = {
+        "ForexFactory": "loading",
+        "Crypto News": "loading",
+        "Global Market News": "loading",
+        "Business News": "loading",
+        "CoinDesk": "loading",
+        "Market Feed": "loading",
+        "Yahoo Finance": "loading",
+        "Financial Times": "loading",
+        "Seeking Alpha": "loading",
+        "MarketWatch": "loading",
+        "The Block": "loading",
+        "Decrypt": "loading",
+        "FXStreet": "loading",
+        "ForexLive": "loading",
+        "CNBC": "loading",
+        "Investing.com": "loading",
+        "Wall Street Journal": "loading"
+    };
+
     // Switch state from local FFCalendarEvent to the global NewsEvent
     const [events, setEvents] = useState<NewsEvent[]>([]);
+    const [providerStatuses, setProviderStatuses] = useState(initialProviders);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -48,10 +69,21 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
             const fetchRSS = async (url: string, sourceCategory: "forex" | "crypto" | "commodities" | "indices" | "general", providerName: string): Promise<FFCalendarEvent[]> => {
                 try {
                     const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`);
-                    if (!res.ok) return [];
+                    if (!res.ok) {
+                        setProviderStatuses(prev => ({ ...prev, [providerName]: "error" }));
+                        return [];
+                    }
                     const data = await res.json();
-                    if (data.status !== 'ok' || !data.items) return [];
-                    return data.items.slice(0, 15).map((item: any) => ({
+                    if (data.status !== 'ok' || !data.items) {
+                        setProviderStatuses(prev => ({ ...prev, [providerName]: "error" }));
+                        return [];
+                    }
+                    if (data.items.length === 0) {
+                        setProviderStatuses(prev => ({ ...prev, [providerName]: "empty" }));
+                        return [];
+                    }
+                    setProviderStatuses(prev => ({ ...prev, [providerName]: "ok" }));
+                    return data.items.slice(0, 50).map((item: any) => ({
                         title: item.title,
                         date: item.pubDate,
                         impact: "Normal",
@@ -62,6 +94,7 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                     }));
                 } catch (e) {
                     console.error(`${providerName} RSS error:`, e);
+                    setProviderStatuses(prev => ({ ...prev, [providerName]: "error" }));
                     return [];
                 }
             };
@@ -73,6 +106,11 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                     return res.json();
                 })
                 .then((data: FFCalendarEvent[]) => {
+                    if (!data || data.length === 0) {
+                        setProviderStatuses(prev => ({ ...prev, "ForexFactory": "empty" }));
+                        return [];
+                    }
+                    setProviderStatuses(prev => ({ ...prev, "ForexFactory": "ok" }));
                     const now = new Date();
                     return data.filter(e => {
                         const eventDate = new Date(e.date);
@@ -81,6 +119,7 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                 })
                 .catch(err => {
                     console.error("Forex API error:", err);
+                    setProviderStatuses(prev => ({ ...prev, "ForexFactory": "error" }));
                     return [] as FFCalendarEvent[];
                 });
 
@@ -88,8 +127,12 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
             const cryptoPromise = fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN")
                 .then(res => res.ok ? res.json() : null)
                 .then((json: any) => {
-                    if (!json || !json.Data) return [];
-                    return json.Data.slice(0, 15).map((item: any): FFCalendarEvent => ({
+                    if (!json || !json.Data || json.Data.length === 0) {
+                        setProviderStatuses(prev => ({ ...prev, "Crypto News": "empty" }));
+                        return [];
+                    }
+                    setProviderStatuses(prev => ({ ...prev, "Crypto News": "ok" }));
+                    return json.Data.slice(0, 50).map((item: any): FFCalendarEvent => ({
                         title: item.title,
                         country: item.categories.split('|').find((t: string) => t === 'BTC' || t === 'ETH' || t === 'SOL') || "CRYPTO",
                         date: new Date(item.published_on * 1000).toISOString(),
@@ -100,14 +143,21 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                         imageurl: item.imageurl,
                         provider: item.source_info?.name || "Crypto News"
                     }));
-                }).catch(() => [] as FFCalendarEvent[]);
+                }).catch(() => {
+                    setProviderStatuses(prev => ({ ...prev, "Crypto News": "error" }));
+                    return [] as FFCalendarEvent[];
+                });
 
             // 3. Commodities & Macro Economy (CryptoCompare API)
             const commoditiesPromise = fetch("https://min-api.cryptocompare.com/data/v2/news/?categories=Commodities,Macro&lang=EN")
                 .then(res => res.ok ? res.json() : null)
                 .then((json: any) => {
-                    if (!json || !json.Data) return [];
-                    return json.Data.slice(0, 15).map((item: any): FFCalendarEvent => ({
+                    if (!json || !json.Data || json.Data.length === 0) {
+                        setProviderStatuses(prev => ({ ...prev, "Global Market News": "empty" }));
+                        return [];
+                    }
+                    setProviderStatuses(prev => ({ ...prev, "Global Market News": "ok" }));
+                    return json.Data.slice(0, 50).map((item: any): FFCalendarEvent => ({
                         title: item.title,
                         country: "COMMODITY",
                         date: new Date(item.published_on * 1000).toISOString(),
@@ -118,14 +168,21 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                         imageurl: item.imageurl,
                         provider: item.source_info?.name || "Global Market News"
                     }));
-                }).catch(() => [] as FFCalendarEvent[]);
+                }).catch(() => {
+                    setProviderStatuses(prev => ({ ...prev, "Global Market News": "error" }));
+                    return [] as FFCalendarEvent[];
+                });
 
             // 4. Indices, Traditional Markets & Business (CryptoCompare API)
             const indicesPromise = fetch("https://min-api.cryptocompare.com/data/v2/news/?categories=Market,Business,Fiat&lang=EN")
                 .then(res => res.ok ? res.json() : null)
                 .then((json: any) => {
-                    if (!json || !json.Data) return [];
-                    return json.Data.slice(0, 15).map((item: any): FFCalendarEvent => ({
+                    if (!json || !json.Data || json.Data.length === 0) {
+                        setProviderStatuses(prev => ({ ...prev, "Business News": "empty" }));
+                        return [];
+                    }
+                    setProviderStatuses(prev => ({ ...prev, "Business News": "ok" }));
+                    return json.Data.slice(0, 50).map((item: any): FFCalendarEvent => ({
                         title: item.title,
                         country: "INDEX",
                         date: new Date(item.published_on * 1000).toISOString(),
@@ -136,14 +193,21 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                         imageurl: item.imageurl,
                         provider: item.source_info?.name || "Business News"
                     }));
-                }).catch(() => [] as FFCalendarEvent[]);
+                }).catch(() => {
+                    setProviderStatuses(prev => ({ ...prev, "Business News": "error" }));
+                    return [] as FFCalendarEvent[];
+                });
 
             // 5. CoinDesk (CryptoCompare Specific Source)
             const coindeskPromise = fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN&feeds=coindesk")
                 .then(res => res.ok ? res.json() : null)
                 .then((json: any) => {
-                    if (!json || !json.Data) return [];
-                    return json.Data.slice(0, 10).map((item: any): FFCalendarEvent => ({
+                    if (!json || !json.Data || json.Data.length === 0) {
+                        setProviderStatuses(prev => ({ ...prev, "CoinDesk": "empty" }));
+                        return [];
+                    }
+                    setProviderStatuses(prev => ({ ...prev, "CoinDesk": "ok" }));
+                    return json.Data.slice(0, 50).map((item: any): FFCalendarEvent => ({
                         title: item.title,
                         country: "CRYPTO",
                         date: new Date(item.published_on * 1000).toISOString(),
@@ -154,14 +218,21 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                         imageurl: item.imageurl,
                         provider: "CoinDesk"
                     }));
-                }).catch(() => [] as FFCalendarEvent[]);
+                }).catch(() => {
+                    setProviderStatuses(prev => ({ ...prev, "CoinDesk": "error" }));
+                    return [] as FFCalendarEvent[];
+                });
 
             // 6. Bloomberg/Reuters/WSJ Equivalents (CryptoCompare Traditional Finance Sources)
             const tradFiPromise = fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN&feeds=cryptoglobe,dailyhodl") // Using reliable feeds as proxy for general market news
                 .then(res => res.ok ? res.json() : null)
                 .then((json: any) => {
-                    if (!json || !json.Data) return [];
-                    return json.Data.slice(0, 10).map((item: any): FFCalendarEvent => ({
+                    if (!json || !json.Data || json.Data.length === 0) {
+                        setProviderStatuses(prev => ({ ...prev, "Market Feed": "empty" }));
+                        return [];
+                    }
+                    setProviderStatuses(prev => ({ ...prev, "Market Feed": "ok" }));
+                    return json.Data.slice(0, 50).map((item: any): FFCalendarEvent => ({
                         title: item.title,
                         country: "MARKETS",
                         date: new Date(item.published_on * 1000).toISOString(),
@@ -172,7 +243,10 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                         imageurl: item.imageurl,
                         provider: item.source_info?.name || "Market Feed"
                     }));
-                }).catch(() => [] as FFCalendarEvent[]);
+                }).catch(() => {
+                    setProviderStatuses(prev => ({ ...prev, "Market Feed": "error" }));
+                    return [] as FFCalendarEvent[];
+                });
 
             // 7. Yahoo Finance (RSS - General)
             const yahooPromise = fetchRSS("https://finance.yahoo.com/news/rssindex", "general", "Yahoo Finance");
@@ -225,8 +299,8 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                 ...fxstreetEvents, ...forexliveEvents, ...cnbcTopEvents, ...investingCryptoEvents, ...wsjMarketsEvents
             ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             
-            // Limit news to top 150 freshest items
-            const slicedNews = newsCombined.slice(0, 150);
+            // Limit news to top 1000 freshest items
+            const slicedNews = newsCombined.slice(0, 1000);
 
             // Important: Re-add ForexFactory events and sort the final combined list
             // This ensures ForexFactory (Economic Calendar) events are never pushed out by high-volume news
@@ -423,6 +497,7 @@ export function BreakingNews({ selectedSymbol, selectedCategory }: BreakingNewsP
                 events={events as any}           // Passing the raw unfiltered events down to the modal
                 selectedSymbol={selectedSymbol}
                 selectedCategory={selectedCategory}
+                providerStatuses={providerStatuses}
             />
         </div>
     );
