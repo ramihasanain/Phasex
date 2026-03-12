@@ -212,7 +212,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
             <div className="flex items-center gap-2">
               {/* Language Dropdown */}
               <div className="relative hidden md:block" ref={dropdownRef}>
-                <motion.button 
+                <motion.button
                   onClick={() => setLangDropdownOpen(!langDropdownOpen)}
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer border border-white/5 hover:border-white/10"
@@ -241,11 +241,10 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                               setLanguageKey(lang.code as any);
                               setLangDropdownOpen(false);
                             }}
-                            className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left ${
-                              language === lang.code 
-                                ? "bg-white/10 text-white font-bold" 
+                            className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left ${language === lang.code
+                                ? "bg-white/10 text-white font-bold"
                                 : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
-                            }`}
+                              }`}
                           >
                             <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
                             <span>{lang.label}</span>
