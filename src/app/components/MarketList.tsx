@@ -46,6 +46,7 @@ const flashStyles = `
 
 /* ─── Market Tab Config (visual only — keys come from API) ─── */
 const MARKET_VISUALS: Record<string, { labelAr: string; labelEn: string; accent: string; emoji: string }> = {
+  ALL: { labelAr: "الكل", labelEn: "All", accent: "#0ea5e9", emoji: "🌐" },
   FOREX: { labelAr: "فوركس", labelEn: "Forex", accent: "#3b82f6", emoji: "💱" },
   COMMODITY: { labelAr: "سلع", labelEn: "Commodities", accent: "#f97316", emoji: "🛢️" },
   INDEX: { labelAr: "مؤشرات", labelEn: "Indices", accent: "#a855f7", emoji: "📊" },

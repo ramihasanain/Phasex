@@ -9,6 +9,7 @@ import { SciFiClock } from "./SciFiClock";
 import { BreakingNews } from "./BreakingNews";
 import { PhaseXBotIcon } from "./phase-x/PhaseXBotIcon";
 import { Panel, ScanLine, SignalCell, SupercarGauge } from "./phase-x/UIComponents";
+import { getAIMarketInsightText } from "./phase-x/aiMarketInsightLogic";
 
 interface PhaseXDynamicsPageProps {
     onBack: () => void;
@@ -1639,10 +1640,17 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                 {t.aiTitle || "AI MARKET INSIGHT"}
                                             </h3>
                                             <p className="text-gray-200 text-lg leading-relaxed font-medium" style={{ textShadow: "0 2px 4px rgba(0,0,0,0.5)" }} dir={lang === "ar" ? "rtl" : "ltr"}>
-                                                {t.aiTextPart1} <span style={{ color: accent }}>{tv(data.dynamics.primaryTrend)}</span> {t.aiTextPart2} <span style={{ color: accent }}>{tv(data.dynamics.momentumState)}</span> {t.aiTextPart3} <span style={{ color: accent }}>{tv(data.dynamics.structuralBias)}</span>.
-                                                {" "}{t.aiTextPart4} <span style={{ color: accent }}>{tv(data.phase)}</span> {t.aiTextPart5} <span style={{ color: accent }}>{tv(data.dynamics.marketPhase)}</span>.
-                                                {" "}{t.aiTextPart6} <span style={{ color: accent }}>{tv(data.volatility)}</span> {t.aiTextPart7} <span style={{ color: accent }}>{tv(data.risk)}</span>.
-                                                {" "}{t.aiTextPart8} <span style={{ color: accent }}>{data.confidence >= 70 ? t.aiHigh : data.confidence >= 40 ? t.aiMed : t.aiLow}</span> {t.aiTextPart9}
+                                                {getAIMarketInsightText(
+                                                    {
+                                                        decision: data.decision || "NO TRADE",
+                                                        primaryTrend: data.dynamics.primaryTrend,
+                                                        structuralBias: data.dynamics.structuralBias,
+                                                        momentumState: data.dynamics.momentumState,
+                                                        volatility: data.volatility,
+                                                        reversalRisk: data.dynamics.reversalRisk || "LOW",
+                                                    },
+                                                    lang as any
+                                                )}
                                             </p>
                                         </div>
                                     </div>

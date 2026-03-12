@@ -153,12 +153,13 @@ export function useMarketsAPI(): UseMarketsAPIResult {
                 if (cancelled) return;
 
                 const apiMarkets: MarketInfo[] = json.markets || [];
-                setMarkets(apiMarkets);
+                const marketsWithAll = [{ id: -1, code: "ALL" }, ...apiMarkets];
+                setMarkets(marketsWithAll);
                 setMarketsError(null);
 
                 // Auto-select default market (FOREX if available, otherwise first)
-                if (apiMarkets.length > 0) {
-                    const defaultMarket = apiMarkets.find((m) => m.code === "FOREX") || apiMarkets[0];
+                if (marketsWithAll.length > 0) {
+                    const defaultMarket = marketsWithAll.find((m) => m.code === "FOREX") || marketsWithAll[0];
                     setSelectedMarket(defaultMarket);
                 }
             } catch (err: any) {
@@ -206,7 +207,9 @@ export function useMarketsAPI(): UseMarketsAPIResult {
     const filteredAssets: MarketAsset[] = (() => {
         if (!selectedMarket || allSymbols.length === 0) return [];
 
-        const matched = allSymbols.filter((sym) => sym.market_id === selectedMarket.id);
+        const matched = selectedMarket.code === "ALL" 
+            ? allSymbols 
+            : allSymbols.filter((sym) => sym.market_id === selectedMarket.id);
 
         return matched
             .map((sym) => {

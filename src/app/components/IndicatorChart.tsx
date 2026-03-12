@@ -652,6 +652,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               <YAxis
                 stroke={textColor}
                 tick={{ fontSize: 10 }}
+                tickFormatter={(val: number) => val.toFixed(4)}
                 domain={[
                   (dataMin: number) => (dataMin - (dataMin * 0.05)) + yOffset,
                   (dataMax: number) => (dataMax + (dataMax * 0.05)) + yOffset,
@@ -670,6 +671,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               <YAxis
                 stroke={textColor}
                 tick={{ fontSize: 10 }}
+                tickFormatter={(val: number) => val.toFixed(4)}
                 domain={[
                   (dataMin: number) => (dataMin - (dataMin * 0.05)) + yOffset,
                   (dataMax: number) => (dataMax + (dataMax * 0.05)) + yOffset,
@@ -696,6 +698,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               <YAxis
                 stroke={textColor}
                 tick={{ fontSize: 10 }}
+                tickFormatter={(val: number) => val.toFixed(4)}
                 domain={[
                   (dataMin: number) => (dataMin - (dataMin * 0.05)) + yOffset,
                   (dataMax: number) => (dataMax + (dataMax * 0.05)) + yOffset,
@@ -732,19 +735,60 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         style={{ background: tk.surface, border: `1px solid ${tk.border} ` }}>
 
         {/* ─── Header ─── */}
-        <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
-          <div className="flex items-center gap-3">
+        <div className="px-4 py-3 flex items-center justify-between relative" style={{ borderBottom: `1px solid ${tk.border} ` }}>
+          <div className="flex items-center gap-3 relative z-10 w-1/3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: `${indicator.color} 15`, border: `1px solid ${indicator.color} 20` }}>
               <Activity className="w-4 h-4" style={{ color: indicator.color }} />
             </div>
             <div>
-              <span className="text-[13px] font-bold" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
+              <span className="text-[13px] font-bold tracking-widest uppercase" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
               <span className="text-[11px] mx-2" style={{ color: tk.textMuted }}>•</span>
               <span className="text-[11px]" style={{ color: tk.textMuted }}>{currency.symbol}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          
+          {/* Centered Animated Symbol (Absolute) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none">
+             <motion.div 
+                className="flex items-center justify-center gap-3 px-6 py-1.5 rounded-full"
+                initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                key={currency.symbol}
+                style={{ 
+                  background: `linear-gradient(180deg, ${tk.surfaceHover} 0%, transparent 100%)`,
+                  border: `1px solid ${tk.border}`,
+                  boxShadow: `0 4px 20px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05)`
+                }}
+             >
+               <motion.div 
+                  className="absolute inset-0 rounded-full z-0 opacity-20"
+                  style={{ background: `radial-gradient(circle at 50% 50%, ${tk.textPrimary} 0%, transparent 70%)` }}
+                  animate={{ opacity: [0.1, 0.3, 0.1], scale: [0.9, 1.1, 0.9] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+               />
+               <motion.h2 
+                  className="text-2xl font-black relative z-10 tracking-[0.15em] uppercase"
+                  style={{ color: tk.textPrimary }}
+                  animate={{ 
+                     textShadow: [
+                       `0 0 10px rgba(255,255,255,0.1)`, 
+                       `0 0 20px rgba(255,255,255,0.3)`, 
+                       `0 0 10px rgba(255,255,255,0.1)`
+                     ] 
+                  }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+               >
+                  {currency.symbol}
+               </motion.h2>
+               <div className="flex flex-col gap-1 items-center relative z-10">
+                   <motion.div className="w-1.5 h-1.5 rounded-full bg-emerald-500" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }} />
+                   <motion.div className="w-1 h-1 rounded-full bg-emerald-500/50" animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} />
+               </div>
+             </motion.div>
+          </div>
+
+          <div className="flex items-center gap-2 relative z-10 w-1/3 justify-end">
             {/* Price */}
             <div className="flex items-center gap-2 px-3 py-1 rounded-lg" style={{ background: tk.surfaceHover }}>
               <span className="text-[13px] font-bold tabular-nums" style={{ color: tk.textPrimary }}>{currency.price.toFixed(decimals)}</span>
@@ -756,16 +800,18 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             </div>
             {/* View Buttons */}
             <div className="flex items-center gap-1 ml-1">
-              <button onClick={() => { setShowDirections(true); setShowTable(false); }} title="Phase X State Candles Directions"
-                className={`w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
-                style={{
-                  background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)",
-                  color: showDirections ? "#10b981" : "#0ea5e9",
-                  border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
-                  boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
-                }}>
-                <ListOrdered className="w-4 h-4" />
-              </button>
+              {indicator.id === "phase" && (
+                <button onClick={() => { setShowDirections(true); setShowTable(false); }} title="Phase X State Candles Directions"
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
+                  style={{
+                    background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)",
+                    color: showDirections ? "#10b981" : "#0ea5e9",
+                    border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
+                    boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
+                  }}>
+                  <ListOrdered className="w-4 h-4" />
+                </button>
+              )}
               
               {[
                 { icon: Table, active: showTable && !showDirections, onClick: () => { setShowTable(true); setShowDirections(false); }, title: "Table" },
@@ -1118,17 +1164,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   </div>
                   {/* Toolbar buttons */}
                   <div className="flex items-center gap-1">
-                    <button onClick={() => { setShowDirections(!showDirections); setShowTable(false); }}
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
-                      style={{ 
-                        background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)", 
-                        color: showDirections ? "#10b981" : "#0ea5e9",
-                        border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
-                        boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
-                      }}
-                      title="Phase X State Candles Directions">
-                      <ListOrdered className="w-5 h-5" />
-                    </button>
+                    {indicator.id === "phase" && (
+                      <button onClick={() => { setShowDirections(!showDirections); setShowTable(false); }}
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
+                        style={{ 
+                          background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)", 
+                          color: showDirections ? "#10b981" : "#0ea5e9",
+                          border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
+                          boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
+                        }}
+                        title="Phase X State Candles Directions">
+                        <ListOrdered className="w-5 h-5" />
+                      </button>
+                    )}
                     <button onClick={() => { setShowTable(!showTable); setShowDirections(false); }}
                       className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer"
                       style={{ background: showTable ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)", color: showTable ? "#e2e8f0" : "#64748b" }}
@@ -1365,10 +1413,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   )}
                 </div>
               </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
       </AnimatePresence>
+
       <AnimatePresence>
         {showInfoPopup && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

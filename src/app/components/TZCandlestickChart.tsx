@@ -224,7 +224,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
                 fontSize="10"
                 fontFamily="monospace"
               >
-                {tick.toFixed(2)}
+                {tick.toFixed(4)}
               </text>
             </g>
           ))}
@@ -282,7 +282,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
                 fontFamily="monospace"
                 textAnchor="middle"
               >
-                {candlestickData[hoveredIndex].close.toFixed(2)}
+                {candlestickData[hoveredIndex].close.toFixed(4)}
               </text>
             </>
           )}
@@ -489,7 +489,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
                       fontFamily="monospace"
                       textAnchor="middle"
                       fontWeight="bold">
-                      {displayLivePrice.toFixed(2)}
+                      {displayLivePrice.toFixed(4)}
                     </text>
 
                     {/* === LIVE Beacon === */}

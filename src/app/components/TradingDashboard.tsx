@@ -503,7 +503,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
 
         {/* ── RIGHT: Ads ── */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
-          className="w-72 flex-shrink-0 hidden xl:block sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
+          className="w-64 ml-4 flex-shrink-0 hidden xl:block sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
           <AdSpace />
         </motion.div>
       </div>
