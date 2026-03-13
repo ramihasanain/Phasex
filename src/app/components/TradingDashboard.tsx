@@ -16,7 +16,15 @@ import { useLivePrices } from "../hooks/useLivePrices";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { useMarketsAPI } from "../hooks/useMarketsAPI";
+import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
+import { useDirectionStateAPI } from "../hooks/useDirectionStateAPI";
+import { useOscillationStateAPI } from "../hooks/useOscillationStateAPI";
+import { useDisplacementStateAPI } from "../hooks/useDisplacementStateAPI";
+import { useReferenceStateAPI } from "../hooks/useReferenceStateAPI";
 import { BreakingNews } from "./BreakingNews";
+import { AIChatBot } from "./AIChatBot";
+import { AITradeSignalWidget } from "./AITradeSignalWidget";
+import { Bot, Sparkles } from "lucide-react";
 
 /* ─── Types ─── */
 interface TradingDashboardProps {
@@ -199,8 +207,10 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [liveChartData, setLiveChartData] = useState<any[]>([]);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(false);
   const [timeframe, setTimeframe] = useState<number>(15);
   const [mtfEnabled, setMtfEnabled] = useState(false);
@@ -301,6 +311,67 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
       }
     }
   }, [selectedAsset, liveAssets, selectedIndicator, timeframe, symbolsLoading]);
+
+  // Fetch Live State API data for the AI context
+  const formatTfStr = (tf: number) => tf >= 1440 ? `D${tf / 1440}` : tf >= 60 ? `H${tf / 60}` : `M${tf}`;
+  const aiTf1 = mtfEnabled ? formatTfStr(mtfLargeTimeframe) : formatTfStr(timeframe >= 60 ? timeframe : 60);
+  const aiTf2 = mtfEnabled ? formatTfStr(mtfSmallTimeframe) : formatTfStr(timeframe);
+
+  const { candles: phaseCandles } = usePhaseStateAPI(selectedAsset?.symbol, aiTf1, aiTf2, true);
+  const { candles: dirCandles } = useDirectionStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
+  const { candles: oscCandles } = useOscillationStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
+  const { candles: dispCandles } = useDisplacementStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
+  const { candles: refCandles } = useReferenceStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
+
+  // Generate dynamic market context for the AI
+  const aiMarketContext = useMemo(() => {
+    if (!selectedAsset) return "No asset selected.";
+    const liveMatch = liveAssets.find(a => a.id === selectedAsset.id);
+    const p = liveMatch ? liveMatch.price : selectedAsset.price;
+    const c = liveMatch ? liveMatch.changePercent : selectedAsset.changePercent;
+    
+    // Get the latest reading from each state indicator
+    const currentPhase = phaseCandles.length > 0 ? phaseCandles[phaseCandles.length - 1].value : 'No Data';
+    const currentDir = dirCandles.length > 0 ? dirCandles[dirCandles.length - 1].value : 'No Data';
+    const currentOsc = oscCandles.length > 0 ? oscCandles[oscCandles.length - 1].value : 'No Data';
+    const currentDisp = dispCandles.length > 0 ? dispCandles[dispCandles.length - 1].value : 'No Data';
+    const currentRef = refCandles.length > 0 ? refCandles[refCandles.length - 1].value : 'No Data';
+
+    const activeTfStr = mtfEnabled ? `${formatTfStr(mtfLargeTimeframe)} -> ${formatTfStr(mtfSmallTimeframe)} (MTF)` : formatTfStr(timeframe);
+
+    // Extract recent OHLC data from the live chart table (last 15 candles)
+    const renderData = liveChartData.length > 0 ? liveChartData : chartData;
+    const recentCandles = renderData.slice(-100).map(c => {
+      const oStr = c.open !== undefined ? c.open.toFixed(4) : (c.value ? c.value.toFixed(4) : "N/A");
+      const hStr = c.high !== undefined ? c.high.toFixed(4) : (c.value ? c.value.toFixed(4) : "N/A");
+      const lStr = c.low !== undefined ? c.low.toFixed(4) : (c.value ? c.value.toFixed(4) : "N/A");
+      const cStr = c.close !== undefined ? c.close.toFixed(4) : (c.value ? c.value.toFixed(4) : "N/A");
+      const timeStr = (c.fullTime || c.time || "").replace(/\n/g, ' ');
+      return `[${timeStr}] O: ${oStr}, H: ${hStr}, L: ${lStr}, C: ${cStr}`;
+    }).join('\n    ');
+
+    return `
+    Asset: ${selectedAsset.symbol} (${selectedAsset.name})
+    Current Price: ${p}
+    Change (24h): ${c}%
+    Active Timeframe Focus: ${activeTfStr}
+    Current Selected Indicator Focus: ${selectedIndicator?.nameEn || 'None'}
+    
+    ### Current Active Live Indicators Readings (Very Important to use these): 
+    - Phase X State: ${currentPhase}
+    - Direction State: ${currentDir}
+    - Oscillation State: ${currentOsc}
+    - Displacement State: ${currentDisp}
+    - Reference State: ${currentRef}
+    
+    ### Recent Price Action (OHLC Data - Oldest to Newest):
+    ${recentCandles || "No Recent OHLC Data Available"}
+    
+    ### Task: A value like "1" or "0" often signifies "Up" or "Down" depending on the indicator logic. A value of "No Data" means the AI cannot confidently answer related to that indicator.
+    `.trim();
+  }, [selectedAsset, liveAssets, timeframe, selectedIndicator, phaseCandles, dirCandles, oscCandles, dispCandles, refCandles,
+    liveChartData,
+  mtfEnabled, mtfLargeTimeframe, mtfSmallTimeframe, chartData]);
 
   return (
     <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ background: tk.bg, fontFamily: "'Inter', system-ui, sans-serif", transition: "background 0.3s" }}>
@@ -493,6 +564,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                 mtfEnabled={mtfEnabled} mtfSmallTimeframe={mtfSmallTimeframe} mtfLargeTimeframe={mtfLargeTimeframe}
                 onMtfEnabledChange={setMtfEnabled} onMtfSmallTimeframeChange={setMtfSmallTimeframe} onMtfLargeTimeframeChange={setMtfLargeTimeframe}
                 generateCandlesFromReal={generateCandlesFromReal}
+                onLiveChartData={setLiveChartData}
               />
             </AnimatePresence>
           </div>
@@ -501,14 +573,62 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
           <TradingSignalsTable />
         </div>
 
-        {/* ── RIGHT: Ads ── */}
+        {/* ── RIGHT: AI Scanner & Ads ── */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
-          className="w-64 ml-4 flex-shrink-0 hidden xl:block sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
+          className="w-64 ml-4 flex-shrink-0 hidden xl:flex flex-col gap-4 sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
+          {/* Sci-Fi AI Trader Scanner */}
+          <AITradeSignalWidget 
+            marketContext={aiMarketContext} 
+            assetSymbol={selectedAsset?.symbol} 
+            timeframe={timeframe} 
+            mtfEnabled={mtfEnabled}
+            mtfSmallTimeframe={mtfSmallTimeframe}
+            mtfLargeTimeframe={mtfLargeTimeframe}
+            indicatorName={selectedIndicator?.nameEn}
+          />
+          
           <AdSpace />
         </motion.div>
       </div>
 
       <SubscriptionPanel isOpen={isSubscriptionOpen} onClose={() => setIsSubscriptionOpen(false)} />
+      
+      {/* ═══ AI ChatBot Floating Button & Widget ═══ */}
+      <AnimatePresence>
+        {!isChatOpen && (
+          <motion.button
+             initial={{ scale: 0, opacity: 0 }}
+             animate={{ scale: 1, opacity: 1 }}
+             exit={{ scale: 0, opacity: 0 }}
+             onClick={() => setIsChatOpen(true)}
+             whileHover={{ scale: 1.05 }}
+             whileTap={{ scale: 0.95 }}
+             className="fixed bottom-6 z-40 rounded-full flex items-center justify-center cursor-pointer shadow-2xl"
+             style={{
+                width: 56, height: 56,
+                right: isRTL ? 'auto' : '24px', left: isRTL ? '24px' : 'auto',
+                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                border: '2px solid rgba(255,255,255,0.1)'
+             }}
+          >
+             <Bot className="w-7 h-7 text-white" />
+             <motion.div 
+               className="absolute -top-1 -right-1"
+               animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+               transition={{ duration: 2, repeat: Infinity }}
+             >
+                <Sparkles className="w-4 h-4 text-emerald-300" />
+             </motion.div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AIChatBot 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        marketContext={aiMarketContext}
+        assetSymbol={selectedAsset?.symbol}
+      />
     </div>
   );
 }

@@ -36,7 +36,7 @@ export function AdSpace() {
   ];
 
   return (
-    <div className="h-full flex flex-col gap-3">
+    <div className="flex-1 min-h-0 flex flex-col gap-3">
       {ads.map((ad, i) => (
         <motion.div key={i}
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.12 }}

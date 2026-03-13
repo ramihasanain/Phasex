@@ -39,6 +39,7 @@ interface IndicatorChartProps {
   onMtfLargeTimeframeChange?: (timeframe: number) => void;
   phaseStateData?: PhaseStateDataMap;
   generateCandlesFromReal?: (real: PhaseCandle, count?: number) => any[];
+  onLiveChartData?: (data: any[]) => void;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -273,7 +274,12 @@ function CandleLimitSelector({ value, onChange, isRTL, tk, color, compact = fals
   );
 }
 
-export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange, phaseStateData, generateCandlesFromReal }: IndicatorChartProps) {
+export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange,  onMtfSmallTimeframeChange,
+  onMtfLargeTimeframeChange,
+  phaseStateData,
+  generateCandlesFromReal,
+  onLiveChartData,
+}: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [candleLimit, setCandleLimit] = useState<number | "Auto">("Auto");
@@ -309,8 +315,43 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [mainTF, setMainTF] = useState("H1");
   const [subTF, setSubTF] = useState("M5");
 
-  // Live API data for Phase State
+  const tfStringToNum = (tf: string) => {
+    if (tf.startsWith("M")) return parseInt(tf.replace("M", ""));
+    if (tf.startsWith("H")) return parseInt(tf.replace("H", "")) * 60;
+    if (tf.startsWith("D")) return parseInt(tf.replace("D", "")) * 1440;
+    return 15;
+  };
+
+  const handleMainTFChange = (m: string) => {
+    setMainTF(m);
+    const newSub = phaseMainTFs[m][0];
+    setSubTF(newSub);
+    onMtfEnabledChange?.(true);
+    onMtfLargeTimeframeChange?.(tfStringToNum(m));
+    onMtfSmallTimeframeChange?.(tfStringToNum(newSub));
+  };
+
+  const handleSubTFChange = (s: string) => {
+    setSubTF(s);
+    onMtfEnabledChange?.(true);
+    onMtfLargeTimeframeChange?.(tfStringToNum(mainTF));
+    onMtfSmallTimeframeChange?.(tfStringToNum(s));
+  };
+
   const isPhaseIndicator = indicator?.id === "phase";
+
+  // When switching to Phase indicator, ensure TradingDashboard MTF is instantly enabled with defaults
+  useEffect(() => {
+    if (isPhaseIndicator) {
+      onMtfEnabledChange?.(true);
+      onMtfLargeTimeframeChange?.(tfStringToNum(mainTF));
+      onMtfSmallTimeframeChange?.(tfStringToNum(subTF));
+    } else {
+      onMtfEnabledChange?.(false);
+    }
+  }, [isPhaseIndicator]); // Only run when toggling indicators
+
+  // Live API data for Phase State
   const { candles: apiCandles, loading: apiLoading, error: apiError } = usePhaseStateAPI(
     currency?.symbol,
     mainTF,
@@ -450,7 +491,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const dataLenRef = useRef(effectiveData.length);
   useEffect(() => { viewWindowRef.current = viewWindow; }, [viewWindow]);
   useEffect(() => { startIndexRef.current = startIndex; }, [startIndex]);
-  useEffect(() => { dataLenRef.current = effectiveData.length; }, [effectiveData.length]);
+  useEffect(() => { 
+    dataLenRef.current = effectiveData.length; 
+    if (onLiveChartData) onLiveChartData(effectiveData);
+  }, [effectiveData, onLiveChartData]);
 
   const zoomIn = useCallback(() => {
     setCandleLimit("Auto");
@@ -831,7 +875,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
           {/* Timeframes */}
           {indicator.id === "phase" ? (
-            <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} compact />
+            <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={handleMainTFChange} onSubTFChange={handleSubTFChange} color={indicator.color} isRTL={isRTL} compact />
           ) : (
             <div className="flex items-center gap-0.5 overflow-x-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               <Clock className="w-3.5 h-3.5 mr-1 flex-shrink-0" style={{ color: "#475569" }} />
@@ -1202,7 +1246,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               {/* Fullscreen Timeframe + Navigation */}
               <div className="px-6 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
                 {indicator.id === "phase" ? (
-                  <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={(m) => { setMainTF(m); setSubTF(phaseMainTFs[m][0]); }} onSubTFChange={setSubTF} color={indicator.color} isRTL={isRTL} />
+                  <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={handleMainTFChange} onSubTFChange={handleSubTFChange} color={indicator.color} isRTL={isRTL} />
                 ) : (
                   <div className="flex items-center gap-0.5 overflow-x-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
                     <Clock className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" style={{ color: "#475569" }} />
