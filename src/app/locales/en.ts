@@ -6,6 +6,7 @@ export const en = {
     referenceState: "REFERENCE STATE",
     oscillationState: "OSCILLATION STATE",
     directionState: "DIRECTION STATE",
+    envelopState: "ENVELOP STATE",
 
     // Landing Page - Hero & Features
     theMarketRewritten: "The Market, Rewritten",

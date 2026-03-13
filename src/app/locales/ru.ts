@@ -6,6 +6,7 @@ export const ru = {
     referenceState: "ЭТАЛОННОЕ СОСТОЯНИЕ",
     oscillationState: "СОСТОЯНИЕ КОЛЕБАНИЙ",
     directionState: "СОСТОЯНИЕ НАПРАВЛЕНИЯ",
+    envelopState: "СОСТОЯНИЕ ОГИБАЮЩЕЙ",
 
     // Landing Page - Hero & Features
     theMarketRewritten: "Рынок, переписанный заново",

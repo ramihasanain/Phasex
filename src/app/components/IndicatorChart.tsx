@@ -9,6 +9,7 @@ import { useDirectionStateAPI } from "../hooks/useDirectionStateAPI";
 import { useOscillationStateAPI } from "../hooks/useOscillationStateAPI";
 import { useDisplacementStateAPI } from "../hooks/useDisplacementStateAPI";
 import { useReferenceStateAPI } from "../hooks/useReferenceStateAPI";
+import { useEnvelopStateAPI } from "../hooks/useEnvelopStateAPI";
 import { TZCandlestickChart } from "./TZCandlestickChart";
 import { DrawingToolbar, DrawingTool } from "./DrawingToolbar";
 import { DrawingCanvas } from "./DrawingCanvas";
@@ -387,6 +388,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     !!isReferenceIndicator
   );
 
+  const isEnvelopIndicator = indicator?.id === "envelop";
+  const { candles: envCandles, loading: envLoading, error: envError } = useEnvelopStateAPI(
+    currency?.symbol,
+    timeframe,
+    !!isEnvelopIndicator
+  );
+
   // Drawing tools — only for fullscreen
   const [selectedTool, setSelectedTool] = useState<DrawingTool>("cursor");
   const [magnetEnabled, setMagnetEnabled] = useState(false);
@@ -463,9 +471,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       }
       return [];
     }
+    if (isEnvelopIndicator) {
+      if (envCandles.length > 0) {
+        return envCandles;
+      }
+      return [];
+    }
     // Non-phase indicators: use chart data
     return data;
-  }, [isPhaseIndicator, apiCandles, mainTF, subTF, currency?.symbol, phaseStateData, data, isDirectionIndicator, dirCandles, isOscillationIndicator, oscCandles, isDisplacementIndicator, dispCandles, isReferenceIndicator, refCandles]);
+  }, [isPhaseIndicator, apiCandles, mainTF, subTF, currency?.symbol, phaseStateData, data, isDirectionIndicator, dirCandles, isOscillationIndicator, oscCandles, isDisplacementIndicator, dispCandles, isReferenceIndicator, refCandles, isEnvelopIndicator, envCandles]);
 
   useEffect(() => { setStartIndex(Math.max(0, effectiveData.length - viewWindow)); }, [effectiveData.length]);
 
@@ -642,9 +656,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
   const renderChart = (height: number) => {
     // Show loading / error / empty state for Phase State when no data
-    if ((isPhaseIndicator && effectiveData.length === 0) || (isDirectionIndicator && effectiveData.length === 0) || (isOscillationIndicator && effectiveData.length === 0) || (isDisplacementIndicator && effectiveData.length === 0) || (isReferenceIndicator && effectiveData.length === 0)) {
-      const isLoading = isPhaseIndicator ? apiLoading : (isDirectionIndicator ? dirLoading : isOscillationIndicator ? oscLoading : isDisplacementIndicator ? dispLoading : refLoading);
-      const errorMsg = isPhaseIndicator ? apiError : (isDirectionIndicator ? dirError : isOscillationIndicator ? oscError : isDisplacementIndicator ? dispError : refError);
+    if ((isPhaseIndicator && effectiveData.length === 0) || (isDirectionIndicator && effectiveData.length === 0) || (isOscillationIndicator && effectiveData.length === 0) || (isDisplacementIndicator && effectiveData.length === 0) || (isReferenceIndicator && effectiveData.length === 0) || (isEnvelopIndicator && effectiveData.length === 0)) {
+      const isLoading = isPhaseIndicator ? apiLoading : (isDirectionIndicator ? dirLoading : isOscillationIndicator ? oscLoading : isDisplacementIndicator ? dispLoading : isReferenceIndicator ? refLoading : envLoading);
+      const errorMsg = isPhaseIndicator ? apiError : (isDirectionIndicator ? dirError : isOscillationIndicator ? oscError : isDisplacementIndicator ? dispError : isReferenceIndicator ? refError : envError);
       return (
         <div className="flex items-center justify-center rounded-lg" style={{ height, background: tk.surface, border: `1px solid ${tk.border} ` }}>
           <div className="text-center">
@@ -674,7 +688,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         ? (isRTL ? `${currency?.symbol} - التذبذب (${timeframe}د)` : `${currency?.symbol} - Oscillation (M${timeframe})`)
                         : isDisplacementIndicator
                           ? (isRTL ? `${currency?.symbol} - الإزاحة (${timeframe}د)` : `${currency?.symbol} - Displacement (M${timeframe})`)
-                          : (isRTL ? `${currency?.symbol} - المرجع (${timeframe}د)` : `${currency?.symbol} - Reference (M${timeframe})`)
+                          : isReferenceIndicator
+                            ? (isRTL ? `${currency?.symbol} - المرجع (${timeframe}د)` : `${currency?.symbol} - Reference (M${timeframe})`)
+                            : (isRTL ? `${currency?.symbol} - الغلاف (${timeframe}د)` : `${currency?.symbol} - Envelop (M${timeframe})`)
                   }
                 </p>
               </>
@@ -933,7 +949,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           style={{ cursor: isDragging ? "grabbing" : "crosshair" }}>
 
           {/* API Loading overlay */}
-          {((isPhaseIndicator && apiLoading) || (isDirectionIndicator && dirLoading) || (isOscillationIndicator && oscLoading) || (isDisplacementIndicator && dispLoading) || (isReferenceIndicator && refLoading)) && (
+          {((isPhaseIndicator && apiLoading) || (isDirectionIndicator && dirLoading) || (isOscillationIndicator && oscLoading) || (isDisplacementIndicator && dispLoading) || (isReferenceIndicator && refLoading) || (isEnvelopIndicator && envLoading)) && (
             <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(17,21,32,0.8)" }}>
               <div className="flex flex-col items-center gap-3">
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}

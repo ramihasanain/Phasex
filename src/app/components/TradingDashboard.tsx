@@ -18,6 +18,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useMarketsAPI } from "../hooks/useMarketsAPI";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { useDirectionStateAPI } from "../hooks/useDirectionStateAPI";
+import { useEnvelopStateAPI } from "../hooks/useEnvelopStateAPI";
 import { useOscillationStateAPI } from "../hooks/useOscillationStateAPI";
 import { useDisplacementStateAPI } from "../hooks/useDisplacementStateAPI";
 import { useReferenceStateAPI } from "../hooks/useReferenceStateAPI";
@@ -41,8 +42,9 @@ const indicators: Indicator[] = [
   { id: "reference", name: "حالة المرجع", nameEn: "REFERENCE STATE", type: "tz", color: "#34d399", icon: "Target" },
   { id: "oscillation", name: "حالة التذبذب", nameEn: "OSCILLATION STATE", type: "tz", color: "#fbbf24", icon: "Activity" },
   { id: "direction", name: "حالة الاتجاه", nameEn: "DIRECTION STATE", type: "tz", color: "#f87171", icon: "Navigation" },
+  { id: "envelop", name: "حالة الغلاف", nameEn: "ENVELOP STATE", type: "tz", color: "#f472b6", icon: "Layers" },
 ];
-const indicatorIcons: Record<string, any> = { Gauge, Move, Target, Activity, Navigation };
+const indicatorIcons: Record<string, any> = { Gauge, Move, Target, Activity, Navigation, Layers };
 
 /* ─── Chart Data Generator ─── */
 function generateChartData(asset: Asset, indicator: Indicator, timeframe: number) {
@@ -67,6 +69,7 @@ function generateChartData(asset: Asset, indicator: Indicator, timeframe: number
       case "reference": value = base + Math.sin(i / 30) * base * 0.008 + (Math.random() - 0.5) * base * 0.002; break;
       case "oscillation": value = Math.max(-100, Math.min(100, Math.sin(i / 18) * 70 + (Math.random() - 0.5) * 20)); break;
       case "direction": value = Math.cos(i / 12) * 50 + (Math.random() - 0.5) * 25; break;
+      case "envelop": value = Math.sin(i / 10) * 40 + (Math.random() - 0.5) * 15; break;
       default: { const v = timeframe === 5 ? 0.003 : timeframe === 15 ? 0.005 : 0.008; value = base + Math.sin(i / 15) * base * v * 2 + (Math.random() - 0.5) * base * v; }
     }
     data.push({ time: displayTime, fullTime: fullDate, timestamp: t.getTime(), value: +value.toFixed(4) });
@@ -322,6 +325,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const { candles: oscCandles } = useOscillationStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
   const { candles: dispCandles } = useDisplacementStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
   const { candles: refCandles } = useReferenceStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
+  const { candles: envCandles } = useEnvelopStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
 
   // Generate dynamic market context for the AI
   const aiMarketContext = useMemo(() => {
@@ -336,6 +340,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
     const currentOsc = oscCandles.length > 0 ? oscCandles[oscCandles.length - 1].value : 'No Data';
     const currentDisp = dispCandles.length > 0 ? dispCandles[dispCandles.length - 1].value : 'No Data';
     const currentRef = refCandles.length > 0 ? refCandles[refCandles.length - 1].value : 'No Data';
+    const currentEnv = envCandles.length > 0 ? envCandles[envCandles.length - 1].value : 'No Data';
 
     const activeTfStr = mtfEnabled ? `${formatTfStr(mtfLargeTimeframe)} -> ${formatTfStr(mtfSmallTimeframe)} (MTF)` : formatTfStr(timeframe);
 
@@ -363,13 +368,14 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
     - Oscillation State: ${currentOsc}
     - Displacement State: ${currentDisp}
     - Reference State: ${currentRef}
+    - Envelop State: ${currentEnv}
     
     ### Recent Price Action (OHLC Data - Oldest to Newest):
     ${recentCandles || "No Recent OHLC Data Available"}
     
     ### Task: A value like "1" or "0" often signifies "Up" or "Down" depending on the indicator logic. A value of "No Data" means the AI cannot confidently answer related to that indicator.
     `.trim();
-  }, [selectedAsset, liveAssets, timeframe, selectedIndicator, phaseCandles, dirCandles, oscCandles, dispCandles, refCandles,
+  }, [selectedAsset, liveAssets, timeframe, selectedIndicator, phaseCandles, dirCandles, oscCandles, dispCandles, refCandles, envCandles,
     liveChartData,
   mtfEnabled, mtfLargeTimeframe, mtfSmallTimeframe, chartData]);
 

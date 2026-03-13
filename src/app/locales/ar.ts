@@ -6,6 +6,7 @@ export const ar = {
     referenceState: "الحالة المرجعية",
     oscillationState: "حالة التذبذب",
     directionState: "حالة الاتجاه",
+    envelopState: "حالة الغلاف",
 
     // Landing Page - Hero & Features
     theMarketRewritten: "السوق، أُعيدت كتابته",

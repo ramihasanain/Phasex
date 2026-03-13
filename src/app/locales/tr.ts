@@ -6,6 +6,7 @@ export const tr = {
     referenceState: "REFERANS DURUMU",
     oscillationState: "SALINIM DURUMU",
     directionState: "YÖN DURUMU",
+    envelopState: "ZARF DURUMU",
 
     // Landing Page - Hero & Features
     theMarketRewritten: "Piyasa, Yeniden Yazıldı",
