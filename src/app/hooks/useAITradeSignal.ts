@@ -59,8 +59,12 @@ export function useAITradeSignal(
     setSignal(null);
 
     try {
-      // Using the API key directly in frontend since this is a Vite project
-      const API_KEY = "AIzaSyBa90oU4AOoYA_dINnNhZwfeFPJsq0lF7g";
+      // Safely pulling the API key from environment variables
+      const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      if (!API_KEY) {
+        throw new Error("API Key is missing. Please add VITE_GEMINI_API_KEY to your .env file.");
+      }
       
       const fullPrompt = `
 You are an elite, highly logical AI quantitative trading algorithm named "PHASE-X CORE".
