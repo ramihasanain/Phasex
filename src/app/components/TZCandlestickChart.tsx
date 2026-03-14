@@ -18,6 +18,7 @@ interface TZCandlestickChartProps {
   height?: number;
   livePrice?: number; // Real-time price from WebSocket
   priceOffset?: number; // Manual vertical pane offset
+  showRightPadding?: boolean; // Show empty space after last candle
 }
 
 // Seeded random for consistent candles (no re-randomization on re-render)
@@ -49,7 +50,7 @@ function generateOHLCFromValue(value: number, index: number) {
   return { open, high, low, close };
 }
 
-export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data, height = 400, livePrice, priceOffset = 0 }: TZCandlestickChartProps) {
+export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data, height = 400, livePrice, priceOffset = 0, showRightPadding = false }: TZCandlestickChartProps) {
   const { language } = useLanguage();
   const tk = useThemeTokens();
   const isDark = tk.isDark;
@@ -135,9 +136,11 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
     return innerHeight - ((val - minY) / (maxY - minY)) * innerHeight;
   }, [innerHeight, minY, maxY]);
 
-  // X positioning
-  const candleWidth = Math.max(Math.min(innerWidth / candlestickData.length * 0.7, 14), 3);
-  const gap = innerWidth / candlestickData.length;
+  // X positioning — only reserve right padding when scrolled to the end
+  const rightPaddingRatio = showRightPadding ? 0.25 : 0;
+  const dataWidth = innerWidth * (1 - rightPaddingRatio);
+  const candleWidth = Math.max(Math.min(dataWidth / candlestickData.length * 0.7, 14), 3);
+  const gap = candlestickData.length > 0 ? dataWidth / candlestickData.length : innerWidth;
 
   // Grid lines
   const yTicks = useMemo(() => {

@@ -570,7 +570,28 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     setYOffset(dragStartYOffset + moveY);
   };
   const onUp = () => setIsDragging(false);
-  const onWheel = (e: React.WheelEvent) => { e.preventDefault(); if (e.deltaY > 0) zoomOut(); else zoomIn(); };
+
+  // Native wheel listener on chart: pan left/right & prevent page scroll
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY > 0) {
+        // scroll down → pan right
+        setCandleLimit("Auto");
+        setYOffset(0);
+        setStartIndex((p) => Math.min(effectiveData.length - viewWindow, p + Math.max(3, Math.round(viewWindow / 5))));
+      } else {
+        // scroll up → pan left
+        setCandleLimit("Auto");
+        setYOffset(0);
+        setStartIndex((p) => Math.max(0, p - Math.max(3, Math.round(viewWindow / 5))));
+      }
+    };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, [effectiveData.length, viewWindow]);
 
   // Keyboard Nav
   useEffect(() => {
@@ -756,6 +777,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
             height={height}
             livePrice={currency.price}
             priceOffset={yOffset}
+            showRightPadding={startIndex + viewWindow >= effectiveData.length}
           />);
       default:
         return (
@@ -964,7 +986,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
         {/* ─── Chart Area (NO drawing tools in small view) ─── */}
         <div ref={chartRef} className="flex-1 relative min-h-0"
-          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onWheel={onWheel}
+          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
           onDoubleClick={() => setYOffset(0)}
           style={{ cursor: isDragging ? "grabbing" : "crosshair" }}>
 
