@@ -1596,38 +1596,54 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                         borderRadius: "16px",
                     }}>
                         {/* ════  AI FLOATING BOT  ════ */}
-                        <div className={`absolute top-[45%] -translate-y-1/2 ${isRTL ? "right-8" : "left-8"} z-50`}>
+                        <div className={`absolute top-[45%] -translate-y-1/2 ${isRTL ? "right-8" : "left-8"} z-50 flex flex-col items-center gap-1.5`}>
                             {/* Outer attention ring */}
-                            <motion.div className="absolute inset-0 rounded-full"
-                                style={{ border: `2px solid ${accent}` }}
-                                animate={{ scale: [1, 1.8], opacity: [0.8, 0] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }} />
-                            {/* Second attention ring */}
-                            <motion.div className="absolute inset-0 rounded-full"
-                                style={{ border: `1px solid ${accent}` }}
-                                animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 1 }} />
-                            
-                            <motion.button
-                                onClick={() => setIsAiPanelOpen(true)}
-                                className="w-14 h-14 rounded-full flex items-center justify-center relative overflow-hidden group hover:scale-110 transition-transform cursor-pointer"
+                            <div className="relative">
+                                <motion.div className="absolute inset-0 rounded-full"
+                                    style={{ border: `2px solid ${accent}` }}
+                                    animate={{ scale: [1, 1.8], opacity: [0.8, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }} />
+                                {/* Second attention ring */}
+                                <motion.div className="absolute inset-0 rounded-full"
+                                    style={{ border: `1px solid ${accent}` }}
+                                    animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 1 }} />
+                                
+                                <motion.button
+                                    onClick={() => setIsAiPanelOpen(true)}
+                                    className="w-14 h-14 rounded-full flex items-center justify-center relative overflow-hidden group hover:scale-110 transition-transform cursor-pointer"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${accent}40 0%, rgba(0,0,0,0.6) 100%)`,
+                                        border: `1.5px solid ${accent}80`,
+                                        boxShadow: `0 0 25px ${accentG}0.5), inset 0 0 15px ${accentG}0.4)`
+                                    }}
+                                    animate={{ y: [0, -6, 0], boxShadow: [`0 0 20px ${accentG}0.4)`, `0 0 40px ${accentG}0.8)`, `0 0 20px ${accentG}0.4)`] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    <motion.div className="absolute inset-0 pointer-events-none"
+                                        style={{ background: `radial-gradient(circle at 50% 50%, ${accent}60 0%, transparent 70%)` }}
+                                        animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.8, 1.3, 0.8] }}
+                                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
+                                    {/* Robot Icon */}
+                                    <motion.div animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+                                        <PhaseXBotIcon size={28} color="#fff" className="relative z-10" style={{ filter: `drop-shadow(0 0 10px ${accent})` }} />
+                                    </motion.div>
+                                </motion.button>
+                            </div>
+                            {/* Label: Click for Description */}
+                            <motion.span
+                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                                className="text-[8px] font-bold tracking-wide whitespace-nowrap px-2 py-0.5 rounded-md text-center"
                                 style={{
-                                    background: `linear-gradient(135deg, ${accent}40 0%, rgba(0,0,0,0.6) 100%)`,
-                                    border: `1.5px solid ${accent}80`,
-                                    boxShadow: `0 0 25px ${accentG}0.5), inset 0 0 15px ${accentG}0.4)`
+                                    color: accent,
+                                    background: `${accentG}0.08)`,
+                                    border: `1px solid ${accentG}0.15)`,
+                                    textShadow: `0 0 8px ${accentG}0.4)`,
                                 }}
-                                animate={{ y: [0, -6, 0], boxShadow: [`0 0 20px ${accentG}0.4)`, `0 0 40px ${accentG}0.8)`, `0 0 20px ${accentG}0.4)`] }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                             >
-                                <motion.div className="absolute inset-0 pointer-events-none"
-                                    style={{ background: `radial-gradient(circle at 50% 50%, ${accent}60 0%, transparent 70%)` }}
-                                    animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.8, 1.3, 0.8] }}
-                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
-                                {/* Robot Icon */}
-                                <motion.div animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
-                                    <PhaseXBotIcon size={28} color="#fff" className="relative z-10" style={{ filter: `drop-shadow(0 0 10px ${accent})` }} />
-                                </motion.div>
-                            </motion.button>
+                                {globalT("clickForDescription")}
+                            </motion.span>
                         </div>
 
                         {/* ════  AI INSIGHT PANEL OVERLAY  ════ */}

@@ -29,7 +29,7 @@ export const tr = {
     decisionsEmotional: "Kararlar duygusal, tutarsız ve geç olur",
     marketsComplex: "Piyasalar karmaşıktır.",
     representationShouldntBe: "Ancak temsilleri böyle olmamalıdır.",
-    oneMarketFiveStates: "Tek Piyasa. Beş Durum",
+    oneMarketFiveStates: "Tek Piyasa. Çoklu Durum",
     marketLanguage: "PHASE X Piyasa Dili",
     readMore: "Daha fazla oku...",
 
@@ -488,5 +488,6 @@ export const tr = {
     billingCycle: "Fatura Döngüsü",
     nextPaymentDue: "Sonraki ödeme 14 gün içinde.",
     aiMarketInsight: "YZ PIYASA GÖRÜSÜ",
-    userProfile: "Kullanıcı Profili"
+    userProfile: "Kullanıcı Profili",
+    clickForDescription: "Açıklama İçin Tıkla"
 };

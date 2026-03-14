@@ -29,7 +29,7 @@ export const en = {
     decisionsEmotional: "Decisions become emotional, inconsistent, and late",
     marketsComplex: "Markets are complex.",
     representationShouldntBe: "Their representation shouldn't be.",
-    oneMarketFiveStates: "One Market. Five States",
+    oneMarketFiveStates: "One Market. Multi States",
     marketLanguage: "The PHASE X Market Language",
     readMore: "Read more...",
 
@@ -506,5 +506,6 @@ export const en = {
     billingCycle: "Billing Cycle",
     nextPaymentDue: "Next payment due in 14 days.",
     aiMarketInsight: "AI MARKET INSIGHT",
-    userProfile: "User Profile"
+    userProfile: "User Profile",
+    clickForDescription: "Click for Description"
 };

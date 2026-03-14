@@ -29,7 +29,7 @@ export const fr = {
     decisionsEmotional: "Les décisions deviennent émotionnelles, incohérentes et tardives",
     marketsComplex: "Les marchés sont complexes.",
     representationShouldntBe: "Leur représentation ne devrait pas l'être.",
-    oneMarketFiveStates: "Un Marché. Cinq États",
+    oneMarketFiveStates: "Un Marché. Multi États",
     marketLanguage: "Le langage de marché PHASE X",
     readMore: "Lire plus...",
 
@@ -496,5 +496,6 @@ export const fr = {
     billingCycle: "Cycle de Facturation",
     nextPaymentDue: "Prochain paiement dans 14 jours.",
     aiMarketInsight: "APERÇU DU MARCHÉ IA",
-    userProfile: "Profil Utilisateur"
+    userProfile: "Profil Utilisateur",
+    clickForDescription: "Cliquez pour la description"
 };

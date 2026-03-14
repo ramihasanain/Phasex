@@ -29,7 +29,7 @@ export const ar = {
     decisionsEmotional: "القرارات تصبح عاطفية، غير متسقة، ومتأخرة",
     marketsComplex: "الأسواق معقدة.",
     representationShouldntBe: "لكن تمثيلها لا يجب أن يكون كذلك.",
-    oneMarketFiveStates: "سوق واحد. خمس حالات",
+    oneMarketFiveStates: "سوق واحد. حالات متعددة",
     marketLanguage: "لغة سوق PHASE X",
     readMore: "اقرأ المزيد...",
 
@@ -506,5 +506,6 @@ export const ar = {
     billingCycle: "دورة الفوترة",
     nextPaymentDue: "الدفعة التالية مستحقة خلال 14 يوم.",
     aiMarketInsight: "نظرة سوق الذكاء الاصطناعي",
-    userProfile: "الملف الشخصي"
+    userProfile: "الملف الشخصي",
+    clickForDescription: "اضغط للوصف"
 };

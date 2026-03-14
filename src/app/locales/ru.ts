@@ -29,7 +29,7 @@ export const ru = {
     decisionsEmotional: "Решения становятся эмоциональными, непоследовательными и запоздалыми",
     marketsComplex: "Рынки сложны.",
     representationShouldntBe: "Но их представление не должно быть таким.",
-    oneMarketFiveStates: "Один рынок. Пять состояний",
+    oneMarketFiveStates: "Один рынок. Множество состояний",
     marketLanguage: "Язык рынка PHASE X",
     readMore: "Подробнее...",
 
@@ -486,5 +486,6 @@ export const ru = {
     billingCycle: "Цикл оплаты",
     nextPaymentDue: "Следующий платеж через 14 дней.",
     aiMarketInsight: "ОБЗОР РЫНКА ОТ ИИ",
-    userProfile: "Профиль Пользователя"
+    userProfile: "Профиль Пользователя",
+    clickForDescription: "Нажмите для описания"
 };
