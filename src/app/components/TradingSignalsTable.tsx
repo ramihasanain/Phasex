@@ -335,7 +335,7 @@ export function TradingSignalsTable() {
                         <>
                             <div className="w-8 h-8 rounded-full border-2 border-t-indigo-500 border-indigo-500/20 animate-spin" />
                             <p className="text-sm font-medium" style={{ color: tk.textDim }}>
-                                {isRTL ? "جاري تحميل بيانات المنصة..." : "Loading platform data..."}
+                                {language === "ar" ? "جاري تحميل بيانات المنصة..." : language === "ru" ? "Загрузка данных платформы..." : language === "tr" ? "Platform verileri yükleniyor..." : language === "fr" ? "Chargement des données de la plateforme..." : language === "es" ? "Cargando datos de la plataforma..." : "Loading platform data..."}
                             </p>
                         </>
                     ) : (
@@ -350,13 +350,15 @@ export function TradingSignalsTable() {
 
     /* ─── DATA STATE ─── */
     return (
-        <div className="flex-shrink-0 mt-3 rounded-2xl overflow-hidden relative" style={{
-            background: tk.isDark ? "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)" : `linear-gradient(135deg, ${tk.surface} 0%, ${tk.surfaceElevated} 50%, ${tk.surface} 100%)`,
-            border: "1px solid rgba(99,102,241,0.1)", boxShadow: "0 0 40px rgba(99,102,241,0.04)",
-        }}>
-            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
-                background: "linear-gradient(90deg, transparent 0%, #6366f1 20%, #ef4444 50%, #6366f1 80%, transparent 100%)", opacity: 0.6,
-            }} />
+        <div className="flex justify-center w-full mt-3 flex-shrink-0">
+            <div className="rounded-2xl overflow-hidden relative" style={{
+                background: tk.isDark ? "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)" : `linear-gradient(135deg, ${tk.surface} 0%, ${tk.surfaceElevated} 50%, ${tk.surface} 100%)`,
+                border: "1px solid rgba(99,102,241,0.1)", boxShadow: "0 0 40px rgba(99,102,241,0.04)",
+                width: "90%", maxWidth: "1200px"
+            }}>
+                <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
+                    background: "linear-gradient(90deg, transparent 0%, #6366f1 20%, #ef4444 50%, #6366f1 80%, transparent 100%)", opacity: 0.6,
+                }} />
 
             {/* ═══ HEADER ═══ */}
             <div className="px-6 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(99,102,241,0.08)" }}>
@@ -501,7 +503,7 @@ export function TradingSignalsTable() {
                                 <button onClick={() => { setAssetFilter("ALL"); setShowAssetDropdown(false); }}
                                     className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold cursor-pointer hover:bg-white/5 transition-colors"
                                     style={{ color: assetFilter === "ALL" ? "#818cf8" : "#94a3b8", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
-                                    🌐 {isRTL ? "الكل" : "All Assets"}
+                                    🌐 {language === "ar" ? "الكل" : language === "ru" ? "Все активы" : language === "tr" ? "Tüm Varlıklar" : language === "fr" ? "Tous les Actifs" : language === "es" ? "Todos los Activos" : "All Assets"}
                                 </button>
                                 {dropdownAssets.map((a) => (
                                     <button key={a} onClick={() => { setAssetFilter(a); setShowAssetDropdown(false); }}
@@ -531,7 +533,7 @@ export function TradingSignalsTable() {
                             background: tfFilter === "ALL" ? "rgba(99,102,241,0.12)" : "transparent",
                             border: tfFilter === "ALL" ? "1px solid rgba(99,102,241,0.2)" : "1px solid transparent",
                         }}>
-                        {isRTL ? "الكل" : "All"}
+                        {language === "ar" ? "الكل" : language === "ru" ? "Все" : language === "tr" ? "Tümü" : language === "fr" ? "Tout" : language === "es" ? "Todo" : "All"}
                     </motion.button>
                     {allTimeframes.map((tf) => {
                         const active = tfFilter === tf;
@@ -706,6 +708,7 @@ export function TradingSignalsTable() {
                     </tbody>
                 </table>
             </div>
+        </div>
         </div>
     );
 }

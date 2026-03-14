@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+/// <reference types="vite/client" />
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export interface TradeSignalResponse {
   assetSymbol: string;
@@ -66,6 +67,8 @@ export function useAITradeSignal(
         throw new Error("API Key is missing. Please add VITE_GEMINI_API_KEY to your .env file.");
       }
       
+      const langName = { ar: 'Arabic', ru: 'Russian', tr: 'Turkish', fr: 'French', es: 'Spanish' }[language] || 'English';
+
       const fullPrompt = `
 You are an elite, highly logical AI quantitative trading algorithm named "PHASE-X CORE".
 Your sole purpose is to analyze the provided live market data and emit a strict trading signal.
@@ -79,7 +82,7 @@ ${marketContext}
 2. Determine the most logical market action globally: BUY, SELL, or HOLD.
 3. Be ruthless and precise. Do not use conversational language. 
 4. Include a "risks" section evaluating potential pitfalls, market context risks, or conflicting indicator signals.
-5. You MUST write your analysis, reasoning, and risks in the ${language === 'ar' ? 'Arabic' : 'English'} language. Do NOT change the JSON keys.
+5. You MUST write your analysis, reasoning, and risks in the ${langName} language. Do NOT change the JSON keys.
 6. Output your analysis STRICTLY in the following JSON format ONLY. 
 Do NOT wrap it in markdown block quotes. Just the raw JSON object.
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type Language = "ar" | "en" | "ru" | "tr";
+type Language = "ar" | "en" | "ru" | "tr" | "fr" | "es";
 
 interface LanguageContextType {
   language: Language;
@@ -13,12 +13,16 @@ import { ar } from "../locales/ar";
 import { en } from "../locales/en";
 import { ru } from "../locales/ru";
 import { tr } from "../locales/tr";
+import { fr } from "../locales/fr";
+import { es } from "../locales/es";
 
 const translations = {
   ar,
   en,
   ru,
   tr,
+  fr,
+  es,
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

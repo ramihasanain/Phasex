@@ -25,6 +25,8 @@ import { useReferenceStateAPI } from "../hooks/useReferenceStateAPI";
 import { BreakingNews } from "./BreakingNews";
 import { AIChatBot } from "./AIChatBot";
 import { AITradeSignalWidget } from "./AITradeSignalWidget";
+import { UserProfile } from "./UserProfile";
+import { useAuth } from "../contexts/AuthContext";
 import { Bot, Sparkles } from "lucide-react";
 
 /* ─── Types ─── */
@@ -172,6 +174,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [chartLayout, setChartLayout] = useState<"single" | "split" | "quad">("single");
   const { toggleTheme } = useTheme();
   const tk = useThemeTokens();
+  const { subscriptionStatus, subscriptionPlan } = useAuth();
   const { language, setLanguageKey, t } = useLanguage();
   const isRTL = language === "ar";
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -192,7 +195,9 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
     { code: "ar", label: "العربية", flagUrl: "sa" },
     { code: "en", label: "English", flagUrl: "gb" },
     { code: "ru", label: "Русский", flagUrl: "ru" },
-    { code: "tr", label: "Türkçe", flagUrl: "tr" }
+    { code: "tr", label: "Türkçe", flagUrl: "tr" },
+    { code: "fr", label: "Français", flagUrl: "fr" },
+    { code: "es", label: "Español", flagUrl: "es" }
   ];
 
   const currentLangObj = languageOptions.find(l => l.code === language) || languageOptions[1];
@@ -214,13 +219,22 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(false);
   const [timeframe, setTimeframe] = useState<number>(15);
   const [mtfEnabled, setMtfEnabled] = useState(false);
   const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<number>(5);
   const [mtfLargeTimeframe, setMtfLargeTimeframe] = useState<number>(240);
+  const hasOpenedModalRef = useRef(false);
 
-  const subInfo = { isActive: true, daysRemaining: 3 };
+  useEffect(() => {
+    if (subscriptionStatus === 'none' && !hasOpenedModalRef.current) {
+        setIsSubscriptionOpen(true);
+        hasOpenedModalRef.current = true;
+    }
+  }, [subscriptionStatus]);
+
+  const subInfo = { isActive: subscriptionStatus === 'active', daysRemaining: subscriptionStatus === 'active' ? 14 : 0 };
 
   // Live WebSocket prices
   const { prices: livePrices, initialPrices, connected: wsConnected } = useLivePrices();
@@ -417,6 +431,12 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
               {t("breakingNews")}
             </motion.button>
 
+            <motion.button onClick={() => setIsProfileOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
+              style={{ color: tk.buttonGhostText, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
+              <User className="w-3.5 h-3.5" /> {t("userProfile") || "Profile"}
+            </motion.button>
+
             <motion.button onClick={onLogout} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
               style={{ color: tk.buttonGhostText, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
@@ -480,11 +500,11 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             </div>
 
             <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer"
-              style={{ color: tk.warning, background: tk.warningBg, border: `1px solid ${tk.isDark ? 'rgba(251,191,36,0.15)' : 'rgba(217,119,6,0.15)'}` }}>
-              <Crown className="w-3.5 h-3.5" />
-              <span>{t("subscription")}</span>
-              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md" style={{ background: tk.warningBg }}>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-black cursor-pointer transition-all hover:bg-[#facc15]/10"
+              style={{ color: "#facc15", background: "#10141d", border: `1px solid rgba(250,204,21,0.3)`, boxShadow: `0 0 15px rgba(250,204,21,0.05)` }}>
+              <Crown className="w-4 h-4" />
+              <span className="tracking-wide">{t("subscription")}</span>
+              <span className="text-[11px] font-black px-2 py-0.5 rounded-lg ml-1" style={{ background: "rgba(250,204,21,0.15)", color: "#facc15" }}>
                 {subInfo.daysRemaining} {t("daysRemaining")}
               </span>
             </motion.button>
@@ -530,28 +550,28 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
         {/* ── CENTER: Indicators + Chart + Signals ── */}
         <div className="flex-1 flex flex-col gap-3 min-w-0 px-0">
 
-          {/* Indicator Ribbon */}
-          <div className="rounded-xl overflow-hidden" style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
-            <div className="flex items-center gap-1 p-2">
+          {/* Indicator Ribbon (Compact & Horizontal) */}
+          <div className="rounded-xl overflow-hidden mb-1 flex-shrink-0" style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
+            <div className="flex items-center p-1 gap-1 overflow-x-auto hide-scrollbar">
               {indicators.map((ind) => {
                 const Icon = indicatorIcons[ind.icon];
                 const active = selectedIndicator?.id === ind.id;
                 return (
                   <motion.button key={ind.id} onClick={() => pickIndicator(ind)}
                     whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                    className="flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg cursor-pointer transition-all"
+                    className="flex-shrink-0 flex flex-row items-center justify-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-all"
                     style={{
-                      background: active ? `${ind.color}10` : "transparent",
-                      border: active ? `1px solid ${ind.color}30` : "1px solid transparent",
+                      background: active ? `${ind.color}15` : "transparent",
+                      border: active ? `1px solid ${ind.color}40` : "1px solid transparent",
+                      minWidth: "140px"
                     }}>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+                    <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{
                       background: active ? `linear-gradient(135deg, ${ind.color}, ${ind.color}88)` : tk.surfaceHover,
-                      boxShadow: active ? `0 4px 20px ${ind.color}25` : "none",
+                      boxShadow: active ? `0 2px 10px ${ind.color}30` : "none",
                     }}>
-                      <Icon className="w-5 h-5" style={{ color: active ? "#fff" : tk.textDim }} />
+                      <Icon className="w-3 h-3" style={{ color: active ? "#fff" : tk.textDim }} />
                     </div>
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: ind.color, opacity: active ? 1 : 0.25 }} />
-                    <span className="text-[10px] font-bold leading-tight text-center" style={{ color: active ? ind.color : tk.textMuted }}>
+                    <span className="text-[10px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: active ? ind.color : tk.textMuted }}>
                       {t((ind.id + "State") as any)}
                     </span>
                   </motion.button>
@@ -575,8 +595,12 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             </AnimatePresence>
           </div>
 
-          {/* ═══ SIGNALS TABLE (same width as chart) ═══ */}
-          <TradingSignalsTable />
+          {/* ═══ SIGNALS TABLE (Centered and Resized) ═══ */}
+          <div className="flex justify-center w-full">
+            <div className="w-full max-w-[1000px]">
+               <TradingSignalsTable />
+            </div>
+          </div>
         </div>
 
         {/* ── RIGHT: AI Scanner & Ads ── */}
@@ -635,6 +659,12 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
         marketContext={aiMarketContext}
         assetSymbol={selectedAsset?.symbol}
       />
+
+      <AnimatePresence>
+        {isProfileOpen && (
+          <UserProfile onClose={() => setIsProfileOpen(false)} onTopUp={() => { setIsProfileOpen(false); setIsSubscriptionOpen(true); }} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

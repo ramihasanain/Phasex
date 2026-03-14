@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, X, Bot, User, Sparkles, Loader2, Maximize2, Minimize2, Trash2 } from 'lucide-react';
+import { Send, X, Bot, User, Sparkles, Loader2, Maximize2, Minimize2, Trash2, Zap, Coins } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useThemeTokens } from '../hooks/useThemeTokens';
+import { useAuth } from '../contexts/AuthContext';
 import { useAIChat } from '../hooks/useAIChat';
 
 interface AIChatBotProps {
@@ -68,6 +69,8 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { messages, isLoading, error, sendMessage, clearChat } = useAIChat();
+  const { aiTokens, consumeTokens } = useAuth();
+  const [tokenError, setTokenError] = useState(false);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -86,6 +89,13 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputVal.trim() || isLoading) return;
+    
+    setTokenError(false);
+    if (!consumeTokens(2)) {
+      setTokenError(true);
+      return;
+    }
+    
     sendMessage(inputVal, marketContext);
     setInputVal('');
   };
@@ -141,12 +151,15 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
                 />
               </div>
               <div>
-                <h3 className="text-sm font-black tracking-wide" style={{ color: tk.textPrimary }}>
+                <h3 className="text-sm font-black tracking-wide flex items-center gap-2" style={{ color: tk.textPrimary }}>
                   Phase X AI <span style={{ color: '#a855f7' }}>Analytics</span>
                 </h3>
-                <p className="text-[11px] font-medium" style={{ color: tk.textDim }}>
-                  {assetSymbol ? `${isRTL ? 'يحلل' : 'Analyzing'} ${assetSymbol}` : (isRTL ? 'محلل السوق الذكي' : 'Smart Market Analyst')}
-                </p>
+                <div className="flex items-center gap-2 whitespace-nowrap mt-1 text-[11px] font-medium" style={{ color: tk.textDim }}>
+                  {assetSymbol ? `${isRTL ? 'يحلل' : 'Analyzing'} ${assetSymbol}` : (isRTL ? 'محلل السوق' : 'Smart Market Analyst')}
+                  <span className="flex items-center gap-1 bg-fuchsia-900/40 text-fuchsia-400 px-1.5 py-0.5 rounded border border-fuchsia-800/50">
+                    <Zap size={10} /> {aiTokens}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -271,6 +284,13 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
             {error && (
               <div className="text-center p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
                 {error}
+              </div>
+            )}
+
+            {tokenError && (
+              <div className="flex items-center justify-center gap-2 text-center p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold my-2">
+                <Coins className="w-4 h-4" />
+                {language === "ar" ? "رصيد التوكن غير كافٍ. يرجى الشحن من خلال ملفك الشخصي." : language === "fr" ? "Jetons IA insuffisants. Veuillez recharger dans votre profil." : language === "es" ? "Tokens de IA insuficientes. Por favor recarga en tu perfil." : language === "ru" ? "Недостаточно ИИ токенов. Пожалуйста, пополните счет в вашем профиле." : language === "tr" ? "Yetersiz YZ Jetonu. Lütfen profilinizden yükleme yapın." : "Insufficient AI Tokens. Please top up in your profile."}
               </div>
             )}
             

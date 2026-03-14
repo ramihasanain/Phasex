@@ -16,7 +16,8 @@ import {
   Zap,
   Trophy,
   Gift,
-  Check
+  Check,
+  ChevronDown
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -40,6 +41,18 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
     country: "",
     subscriptionType: "quarterly"
   });
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+
+  const languageOptions = [
+    { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png" },
+    { code: "ar", label: "العربية", flag: "https://flagcdn.com/w40/sa.png" },
+    { code: "ru", label: "Русский", flag: "https://flagcdn.com/w40/ru.png" },
+    { code: "tr", label: "Türkçe", flag: "https://flagcdn.com/w40/tr.png" },
+    { code: "fr", label: "Français", flag: "https://flagcdn.com/w40/fr.png" },
+    { code: "es", label: "Español", flag: "https://flagcdn.com/w40/es.png" },
+  ];
+  const currentLangObj = languageOptions.find((l) => l.code === language) || languageOptions[0];
+  const { setLanguageKey } = useLanguage();
 
   const accent = "#00e5a0";
   const accentG = "rgba(0,229,160,";
@@ -204,6 +217,55 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
           style={{ bottom: "-15%", right: "-5%", background: `radial-gradient(circle, ${currentColor}10 0%, transparent 70%)`, filter: "blur(50px)" }}
           animate={{ scale: [1.2, 1, 1.2] }}
           transition={{ duration: 10, repeat: Infinity }} />
+      </div>
+
+      {/* Language Switcher */}
+      <div className="absolute top-6 right-6 z-50">
+        <div className="relative">
+          <motion.button
+            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer backdrop-blur-md"
+            style={{
+              background: "rgba(14,20,33,0.7)",
+              border: `1px solid ${accentG}0.3)`,
+              color: "#fff",
+              boxShadow: `0 4px 20px ${accentG}0.1)`
+            }}
+          >
+            <img src={currentLangObj.flag} alt={currentLangObj.label} className="w-5 h-5 rounded-full object-cover border border-white/20" />
+            <span className="hidden sm:block">{currentLangObj.label}</span>
+            <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+          </motion.button>
+          
+          {langDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden backdrop-blur-xl"
+              style={{
+                background: "rgba(14,20,33,0.9)",
+                border: `1px solid ${accentG}0.2)`,
+                boxShadow: `0 10px 40px ${accentG}0.15)`
+              }}>
+              {languageOptions.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    if(setLanguageKey) setLanguageKey(lang.code as any);
+                    setLangDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors cursor-pointer"
+                  style={{
+                    background: language === lang.code ? "rgba(255,255,255,0.05)" : "transparent",
+                    color: language === lang.code ? accent : "#e2e8f0"
+                  }}
+                >
+                  <img src={lang.flag} alt={lang.label} className="w-5 h-5 rounded-full object-cover" />
+                  <span className="text-sm font-bold">{lang.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Particles */}

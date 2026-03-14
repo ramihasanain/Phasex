@@ -486,11 +486,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const displayedData = useMemo(() => {
     const rawSlice = effectiveData.slice(startIndex, startIndex + viewWindow);
     if (rawSlice.length > 0 && startIndex + rawSlice.length >= effectiveData.length) {
-      const lastIdx = rawSlice.length - 1;
-      rawSlice[lastIdx] = { ...rawSlice[lastIdx], isLiveIndicator: true };
+      const isExcludedTarget = isDisplacementIndicator || isReferenceIndicator || isOscillationIndicator || isEnvelopIndicator;
+      if (!isExcludedTarget) {
+        const lastIdx = rawSlice.length - 1;
+        rawSlice[lastIdx] = { ...rawSlice[lastIdx], isLiveIndicator: true };
+      }
     }
     return rawSlice;
-  }, [effectiveData, startIndex, viewWindow]);
+  }, [effectiveData, startIndex, viewWindow, isDisplacementIndicator, isReferenceIndicator, isOscillationIndicator, isEnvelopIndicator]);
 
   // Memoize price range for DrawingCanvas to prevent re-renders from WebSocket updates
   const drawingPriceRange = useMemo(() => {

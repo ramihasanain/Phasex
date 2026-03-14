@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from "motion/react";
 import { X, Shield, FileText, Cookie, AlertTriangle, BookOpen, Eye, ShieldAlert } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { termsFR, privacyFR, cookieFR, disclaimerFR, riskFR, manifestoFR } from "../locales/legal_fr";
+import { termsES, privacyES, cookieES, disclaimerES, riskES, manifestoES } from "../locales/legal_es";
 
 interface TermsModalProps {
     isOpen: boolean;
@@ -332,7 +334,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
     const isRTL = language === "ar";
     const accent = "#00e5a0";
     const accentG = "rgba(0,229,160,";
-    const terms = language === "ar" ? termsAR : language === "ru" ? termsRU : language === "tr" ? termsTR : termsEN;
+    const terms = language === "ar" ? termsAR : language === "ru" ? termsRU : language === "tr" ? termsTR : language === "fr" ? termsFR : language === "es" ? termsES : termsEN;
 
     return (
         <AnimatePresence>
@@ -377,7 +379,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {language === "ar" ? "الشروط والأحكام" : language === "tr" ? "Şartlar ve Koşullar" : language === "ru" ? "Условия и положения" : "Terms and Conditions"}
+                                        {language === "ar" ? "الشروط والأحكام" : language === "tr" ? "Şartlar ve Koşullar" : language === "ru" ? "Условия и положения" : language === "fr" ? "Termes et Conditions" : language === "es" ? "Términos y Condiciones" : "Terms and Conditions"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -566,7 +568,7 @@ export function CookiePolicyModal({ isOpen, onClose }: TermsModalProps) {
     const isRTL = language === "ar";
     const accent = "#00e5a0";
     const accentG = "rgba(0,229,160,";
-    const sections = language === "ar" ? cookieAR : language === "ru" ? cookieRU : language === "tr" ? cookieTR : cookieEN;
+    const sections = language === "ar" ? cookieAR : language === "ru" ? cookieRU : language === "tr" ? cookieTR : language === "fr" ? cookieFR : language === "es" ? cookieES : cookieEN;
 
     return (
         <AnimatePresence>
@@ -607,7 +609,7 @@ export function CookiePolicyModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {language === "ar" ? "سياسة ملفات الارتباط" : language === "tr" ? "Çerez Politikası" : language === "ru" ? "Политика использования файлов cookie" : "Cookie Policy"}
+                                        {language === "ar" ? "سياسة ملفات الارتباط" : language === "tr" ? "Çerez Politikası" : language === "ru" ? "Политика использования файлов cookie" : language === "fr" ? "Politique des Cookies" : language === "es" ? "Política de Cookies" : "Cookie Policy"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -774,7 +776,7 @@ export function LegalDisclaimerModal({ isOpen, onClose }: TermsModalProps) {
     const isRTL = language === "ar";
     const accent = "#ff6e40";
     const accentG = "rgba(255,110,64,";
-    const sections = language === "ar" ? disclaimerAR : language === "ru" ? disclaimerRU : language === "tr" ? disclaimerTR : disclaimerEN;
+    const sections = language === "ar" ? disclaimerAR : language === "ru" ? disclaimerRU : language === "tr" ? disclaimerTR : language === "fr" ? disclaimerFR : language === "es" ? disclaimerES : disclaimerEN;
 
     return (
         <AnimatePresence>
@@ -805,7 +807,7 @@ export function LegalDisclaimerModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {language === "ar" ? "إخلاء المسؤولية القانونية" : language === "tr" ? "Yasal Uyarı" : language === "ru" ? "Отказ от ответственности" : "Legal Disclaimer"}
+                                        {language === "ar" ? "إخلاء المسؤولية القانونية" : language === "tr" ? "Yasal Uyarı" : language === "ru" ? "Отказ от ответственности" : language === "fr" ? "Avertissement Légal" : language === "es" ? "Aviso Legal" : "Legal Disclaimer"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -824,6 +826,8 @@ export function LegalDisclaimerModal({ isOpen, onClose }: TermsModalProps) {
                                     {language === "ar" ? "⚠️ تحذير: الأسواق المالية تنطوي على مخاطر عالية. قد تخسر رأس مالك بالكامل."
                                         : language === "tr" ? "⚠️ Uyarı: Finansal piyasalar önemli riskler içerir. Tüm sermayenizi kaybedebilirsiniz."
                                         : language === "ru" ? "⚠️ Внимание: Финансовые рынки несут значительный риск. Вы можете потерять весь свой капитал."
+                                        : language === "fr" ? "⚠️ Avertissement : Les marchés financiers comportent des risques importants. Vous pouvez perdre tout votre capital."
+                                        : language === "es" ? "⚠️ Advertencia: Los mercados financieros conllevan un riesgo significativo. Puede perder todo su capital."
                                         : "⚠️ Warning: Financial markets carry significant risk. You may lose your entire capital."}
                                 </p>
                             </div>
@@ -1134,7 +1138,7 @@ export function ManifestoModal({ isOpen, onClose }: TermsModalProps) {
     const isRTL = language === "ar";
     const accent = "#a855f7";
     const accentG = "rgba(168,85,247,";
-    const sections = language === "ar" ? manifestoAR : language === "ru" ? manifestoRU : language === "tr" ? manifestoTR : manifestoEN;
+    const sections = language === "ar" ? manifestoAR : language === "ru" ? manifestoRU : language === "tr" ? manifestoTR : language === "fr" ? manifestoFR : language === "es" ? manifestoES : manifestoEN;
 
     return (
         <AnimatePresence>
@@ -1165,7 +1169,7 @@ export function ManifestoModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {language === "ar" ? "مانيفستو PHASEX" : language === "tr" ? "PHASEX Bildirgesi" : language === "ru" ? "Манифест PHASEX" : "PHASEX Manifesto"}
+                                        {language === "ar" ? "مانيفستو PHASEX" : language === "tr" ? "PHASEX Bildirgesi" : language === "ru" ? "Манифест PHASEX" : language === "fr" ? "Manifeste PHASEX" : language === "es" ? "Manifiesto PHASEX" : "PHASEX Manifesto"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">{language === "ar" ? "انظر إلى السوق كنظام" : language === "tr" ? "Piyasayı bir sistem olarak görün" : language === "ru" ? "Рассматривайте рынок как систему" : "See the market as a system"}</p>
                                 </div>
@@ -1417,7 +1421,7 @@ export function PrivacyPolicyModal({ isOpen, onClose }: TermsModalProps) {
     const isRTL = language === "ar";
     const accent = "#06b6d4";
     const accentG = "rgba(6,182,212,";
-    const sections = language === "ar" ? privacyAR : language === "ru" ? privacyRU : language === "tr" ? privacyTR : privacyEN;
+    const sections = language === "ar" ? privacyAR : language === "ru" ? privacyRU : language === "tr" ? privacyTR : language === "fr" ? privacyFR : language === "es" ? privacyES : privacyEN;
 
     return (
         <AnimatePresence>
@@ -1448,7 +1452,7 @@ export function PrivacyPolicyModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {language === "ar" ? "سياسة الخصوصية" : language === "tr" ? "Gizlilik Politikası" : language === "ru" ? "Политика конфиденциальности" : "Privacy Policy"}
+                                        {language === "ar" ? "سياسة الخصوصية" : language === "tr" ? "Gizlilik Politikası" : language === "ru" ? "Политика конфиденциальности" : language === "fr" ? "Politique de Confidentialité" : language === "es" ? "Política de Privacidad" : "Privacy Policy"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -1671,7 +1675,7 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
     const isRTL = language === "ar";
     const accent = "#ef4444";
     const accentG = "rgba(239,68,68,";
-    const sections = language === "ar" ? riskAR : language === "ru" ? riskRU : language === "tr" ? riskTR : riskEN;
+    const sections = language === "ar" ? riskAR : language === "ru" ? riskRU : language === "tr" ? riskTR : language === "fr" ? riskFR : language === "es" ? riskES : riskEN;
 
     return (
         <AnimatePresence>
@@ -1702,7 +1706,7 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black text-white">
-                                        {language === "ar" ? "إفصاح المخاطر" : language === "tr" ? "Risk Açıklaması" : language === "ru" ? "Уведомление о рисках" : "Risk Disclosure"}
+                                        {language === "ar" ? "إفصاح المخاطر" : language === "tr" ? "Risk Açıklaması" : language === "ru" ? "Уведомление о рисках" : language === "fr" ? "Divulgation des Risques" : language === "es" ? "Divulgación de Riesgos" : "Risk Disclosure"}
                                     </h2>
                                     <p className="text-[11px] text-gray-500 font-medium">PHASEX Platform</p>
                                 </div>
@@ -1719,12 +1723,14 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
                                 <ShieldAlert className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: accent }} />
                                 <div>
                                     <p className="text-[13px] font-black mb-1" style={{ color: accent }}>
-                                        {language === "ar" ? "⚠️ تحذير مخاطر عالية" : language === "tr" ? "⚠️ YÜKSEK RİSK UYARISI" : language === "ru" ? "⚠️ ПРЕДУПРЕЖДЕНИЕ О ВЫСОКОМ РИСКЕ" : "⚠️ HIGH RISK WARNING"}
+                                        {language === "ar" ? "⚠️ تحذير مخاطر عالية" : language === "tr" ? "⚠️ YÜKSEK RİSK UYARISI" : language === "ru" ? "⚠️ ПРЕДУПРЕЖДЕНИЕ О ВЫСОКОМ РИСКЕ" : language === "fr" ? "⚠️ AVERTISSEMENT DE MÀ DANGER" : language === "es" ? "⚠️ ADVERTENCIA DE ALTO RIESGO" : "⚠️ HIGH RISK WARNING"}
                                     </p>
                                     <p className="text-[12px] text-gray-400">
                                         {language === "ar" ? "التداول في الأسواق المالية ينطوي على مخاطر كبيرة. قد تخسر رأس مالك بالكامل."
                                             : language === "tr" ? "Finansal piyasalarda işlem yapmak önemli riskler içerir. Yatırım yaptığınız tüm sermayeyi kaybedebilirsiniz."
                                             : language === "ru" ? "Торговля на финансовых рынках сопряжена со значительным риском. Вы можете потерять весь инвестированный капитал."
+                                            : language === "fr" ? "Le trading sur les marchés financiers implique un risque très élevé. Vous pouvez perdre tout votre capital investi."
+                                            : language === "es" ? "Operar en los mercados financieros implica un riesgo significativo. Puede perder todo su capital."
                                             : "Trading financial markets involves significant risk. You may lose your entire invested capital."}
                                     </p>
                                 </div>
@@ -1735,14 +1741,14 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
                                     style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
                                     <h3 className="text-sm font-black mb-3 flex items-center gap-2" style={{ color: accent }}>
                                         <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-                                        {section.title}
+                                        {(section as any).title}
                                     </h3>
                                     {section.text && (
                                         <p className="text-[13px] text-gray-400 leading-relaxed mb-2 whitespace-pre-line">{section.text}</p>
                                     )}
-                                    {section.items && (
+                                    {(section as any).items && (
                                         <ul className={`space-y-1.5 ${isRTL ? "pr-4" : "pl-4"}`}>
-                                            {section.items.map((item, j) => (
+                                            {(section as any).items.map((item: string, j: number) => (
                                                 <li key={j} className="text-[13px] text-gray-400 leading-relaxed flex items-start gap-2">
                                                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: accent, opacity: 0.5 }} />
                                                     {item}
@@ -1757,7 +1763,7 @@ export function RiskDisclosureModal({ isOpen, onClose }: TermsModalProps) {
                             ))}
                             <div className="text-center py-4" style={{ borderTop: `1px solid rgba(255,255,255,0.04)` }}>
                                 <p className="text-[11px] text-gray-600">PHASEX — Structural Market Intelligence Platform</p>
-                                <p className="text-xs text-gray-500 mt-1">© 2024 PHASE X AI. {language === "ar" ? "جميع الحقوق محفوظة" : language === "tr" ? "Tüm hakları saklıdır." : language === "ru" ? "Все права защищены." : "All rights reserved."}</p>
+                                <p className="text-xs text-gray-500 mt-1">© 2024 PHASE X AI. {language === "ar" ? "جميع الحقوق محفوظة" : language === "tr" ? "Tüm hakları saklıdır." : language === "ru" ? "Все права защищены." : language === "fr" ? "Tous droits réservés." : language === "es" ? "Todos los derechos reservados." : "All rights reserved."}</p>
                             </div>
                         </div>
                         <motion.div className="absolute bottom-0 left-0 right-0 h-[1px]"

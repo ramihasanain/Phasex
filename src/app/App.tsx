@@ -2,47 +2,60 @@ import { useState } from "react";
 import { LandingPage } from "./components/LandingPage";
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
-import { TradingDashboard } from "./components/TradingDashboard";
 import { PhaseXDynamicsPage } from "./components/PhaseXDynamicsPage";
+import { TradingDashboard } from "./components/TradingDashboard";
+import { SubscriptionOnboarding } from "./components/SubscriptionOnboarding";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
-export default function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState<"landing" | "login" | "register" | "dashboard" | "phasex-dynamics">("landing");
   const [lastMainPage, setLastMainPage] = useState<"landing" | "dashboard">("landing");
+  const { subscriptionStatus } = useAuth();
 
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        {currentPage === "landing" && (
-          <LandingPage
-            onGetStarted={() => setCurrentPage("login")}
-            onRegister={() => setCurrentPage("register")}
-            onOpenDynamics={() => { setLastMainPage("landing"); setCurrentPage("phasex-dynamics"); }}
-          />
-        )}
-        {currentPage === "login" && (
-          <LoginPage
-            onLogin={() => setCurrentPage("dashboard")}
-            onRegister={() => setCurrentPage("register")}
-          />
-        )}
-        {currentPage === "register" && (
-          <RegisterPage
-            onRegister={() => setCurrentPage("dashboard")}
-            onBackToLogin={() => setCurrentPage("login")}
-          />
-        )}
-        {currentPage === "dashboard" && (
-          <TradingDashboard
-            onLogout={() => setCurrentPage("landing")}
-            onOpenDynamics={() => { setLastMainPage("dashboard"); setCurrentPage("phasex-dynamics"); }}
-          />
-        )}
-        {currentPage === "phasex-dynamics" && (
-          <PhaseXDynamicsPage onBack={() => setCurrentPage(lastMainPage)} />
-        )}
-      </LanguageProvider>
-    </ThemeProvider>
+    <>
+      {currentPage === "landing" && (
+        <LandingPage
+          onGetStarted={() => setCurrentPage("login")}
+          onRegister={() => setCurrentPage("register")}
+          onOpenDynamics={() => { setLastMainPage("landing"); setCurrentPage("phasex-dynamics"); }}
+        />
+      )}
+      {currentPage === "login" && (
+        <LoginPage
+          onLogin={() => setCurrentPage("dashboard")}
+          onRegister={() => setCurrentPage("register")}
+        />
+      )}
+      {currentPage === "register" && (
+        <RegisterPage
+          onRegister={() => setCurrentPage("dashboard")}
+          onBackToLogin={() => setCurrentPage("login")}
+        />
+      )}
+      {currentPage === "dashboard" && (
+        <TradingDashboard
+          onLogout={() => setCurrentPage("landing")}
+          onOpenDynamics={() => { setLastMainPage("dashboard"); setCurrentPage("phasex-dynamics"); }}
+        />
+      )}
+      {currentPage === "phasex-dynamics" && (
+        <PhaseXDynamicsPage onBack={() => setCurrentPage(lastMainPage)} />
+      )}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AppContent />
+        </LanguageProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
