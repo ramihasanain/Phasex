@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, X, Bot, User, Sparkles, Loader2, Maximize2, Minimize2, Trash2, Zap, Coins } from 'lucide-react';
+import { Send, X, Bot, User, Sparkles, Loader2, Maximize2, Minimize2, Trash2, Zap, Coins, Cpu } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useThemeTokens } from '../hooks/useThemeTokens';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,57 +9,42 @@ import { useAIChat } from '../hooks/useAIChat';
 interface AIChatBotProps {
   isOpen: boolean;
   onClose: () => void;
-  // Context to send to AI
   marketContext: string;
   assetSymbol?: string;
 }
 
-// Helper to parse basic markdown since react-markdown is not installed
 const renderMarkdown = (text: string) => {
   if (!text) return null;
   const lines = text.split('\n');
   return lines.map((line, idx) => {
-    // Check for headers
-    if (line.startsWith('### ')) {
-      return <h4 key={idx} className="font-bold text-[15px] mb-2 mt-3" style={{ color: '#fff' }}>{parseInline(line.slice(4))}</h4>;
-    }
-    if (line.startsWith('## ')) {
-      return <h3 key={idx} className="font-bold text-[16px] mb-2 mt-3" style={{ color: '#fff' }}>{parseInline(line.slice(3))}</h3>;
-    }
-    if (line.startsWith('# ')) {
-      return <h2 key={idx} className="font-bold text-[17px] mb-2 mt-4" style={{ color: '#fff' }}>{parseInline(line.slice(2))}</h2>;
-    }
-    // Check for lists
+    if (line.startsWith('### ')) return <h4 key={idx} className="font-black text-[14px] mb-2 mt-3 text-white">{parseInline(line.slice(4))}</h4>;
+    if (line.startsWith('## ')) return <h3 key={idx} className="font-black text-[15px] mb-2 mt-3 text-white">{parseInline(line.slice(3))}</h3>;
+    if (line.startsWith('# ')) return <h2 key={idx} className="font-black text-[16px] mb-2 mt-4 text-white">{parseInline(line.slice(2))}</h2>;
     if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
       return (
         <div key={idx} className="flex gap-2 mb-1.5 ml-2 mr-2">
-          <span className="text-[14px]">•</span>
+          <span className="text-indigo-400 text-[13px]">▹</span>
           <span className="flex-1 leading-relaxed">{parseInline(line.trim().slice(2))}</span>
         </div>
       );
     }
-    // Empty line
-    if (line.trim() === '') {
-      return <div key={idx} className="h-2"></div>;
-    }
-    // Normal paragraph
+    if (line.trim() === '') return <div key={idx} className="h-2" />;
     return <p key={idx} className="mb-2 last:mb-0 leading-relaxed">{parseInline(line)}</p>;
   });
 };
 
 const parseInline = (text: string) => {
-  // Very simple regex to find **bold** text
   const parts = text.split(/(\*\*.*?\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="font-bold" style={{ color: '#f8fafc' }}>{part.slice(2, -2)}</strong>;
+      return <strong key={i} className="font-black text-white">{part.slice(2, -2)}</strong>;
     }
     return <span key={i}>{part}</span>;
   });
 };
 
 export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AIChatBotProps) {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const isRTL = language === 'ar';
   const tk = useThemeTokens();
   
@@ -72,14 +57,12 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
   const { aiTokens, consumeTokens } = useAuth();
   const [tokenError, setTokenError] = useState(false);
 
-  // Auto-scroll to bottom of chat
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -89,23 +72,18 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputVal.trim() || isLoading) return;
-    
     setTokenError(false);
-    if (!consumeTokens(2)) {
-      setTokenError(true);
-      return;
-    }
-    
+    if (!consumeTokens(2)) { setTokenError(true); return; }
     sendMessage(inputVal, marketContext);
     setInputVal('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
   };
+
+  const accentRgb = '99,102,241';
+  const accentColor = '#818cf8';
 
   return (
     <AnimatePresence>
@@ -115,115 +93,125 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed z-50 flex flex-col shadow-2xl overflow-hidden pointer-events-auto"
+          className="fixed z-50 flex flex-col overflow-hidden pointer-events-auto"
           style={{
-            bottom: isExpanded ? '24px' : '24px',
+            bottom: '24px',
             right: isRTL ? 'auto' : '24px',
             left: isRTL ? '24px' : 'auto',
             width: isExpanded ? Math.min(600, window.innerWidth - 48) : 380,
             height: isExpanded ? Math.min(800, window.innerHeight - 100) : 550,
-            background: tk.isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${tk.border}`,
+            background: `radial-gradient(ellipse at 50% 0%, rgba(${accentRgb},0.06) 0%, rgba(6,10,16,0.97) 60%)`,
+            backdropFilter: 'blur(24px)',
+            border: `1px solid rgba(${accentRgb},0.15)`,
             borderRadius: '24px',
+            boxShadow: `0 25px 80px rgba(0,0,0,0.6), 0 0 40px rgba(${accentRgb},0.08), inset 0 1px 0 rgba(255,255,255,0.03)`,
             transformOrigin: isRTL ? 'bottom left' : 'bottom right'
           }}
         >
+          {/* Top LED strip */}
+          <motion.div className="absolute top-0 left-0 right-0 h-[2px] z-30"
+            style={{ background: `linear-gradient(90deg, transparent 5%, ${accentColor} 30%, #a855f7 50%, ${accentColor} 70%, transparent 95%)` }}
+            animate={{ opacity: [0.3, 0.9, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity }} />
+
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b relative" style={{ borderColor: tk.border }}>
-            {/* Glowing Accent */}
-            <div className="absolute top-0 left-0 right-0 h-1" style={{ 
-              background: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899)',
-              opacity: 0.8 
-            }} />
+          <div className="flex items-center justify-between px-5 py-4 relative overflow-hidden"
+            style={{ borderBottom: `1px solid rgba(${accentRgb},0.1)`, background: `linear-gradient(180deg, rgba(${accentRgb},0.04) 0%, transparent 100%)` }}>
             
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center relative" style={{ 
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2))',
-                border: '1px solid rgba(99,102,241,0.3)'
-              }}>
-                <Sparkles className="w-5 h-5" style={{ color: '#818cf8' }} />
+            {/* Animated scan */}
+            <motion.div className="absolute inset-0 w-1/3"
+              style={{ background: `linear-gradient(90deg, transparent, rgba(${accentRgb},0.06), transparent)` }}
+              animate={{ x: ['-200%', '500%'] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }} />
+
+            <div className="flex items-center gap-3 relative z-10">
+              <motion.div className="w-10 h-10 rounded-xl flex items-center justify-center relative"
+                style={{ background: `linear-gradient(135deg, rgba(${accentRgb},0.15), rgba(168,85,247,0.15))`, border: `1px solid rgba(${accentRgb},0.25)` }}
+                animate={{ boxShadow: [`0 0 10px rgba(${accentRgb},0.1)`, `0 0 25px rgba(${accentRgb},0.2)`, `0 0 10px rgba(${accentRgb},0.1)`] }}
+                transition={{ duration: 2.5, repeat: Infinity }}>
+                <Sparkles className="w-5 h-5" style={{ color: accentColor }} />
                 <motion.div 
-                   className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2"
-                   style={{ borderColor: tk.surface }}
-                   animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+                   className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2"
+                   style={{ background: '#34d399', borderColor: 'rgba(6,10,16,0.9)' }}
+                   animate={{ scale: [1, 1.3, 1] }}
                    transition={{ duration: 2, repeat: Infinity }}
                 />
-              </div>
+              </motion.div>
               <div>
-                <h3 className="text-sm font-black tracking-wide flex items-center gap-2" style={{ color: tk.textPrimary }}>
-                  Phase X AI <span style={{ color: '#a855f7' }}>Analytics</span>
-                </h3>
-                <div className="flex items-center gap-2 whitespace-nowrap mt-1 text-[11px] font-medium" style={{ color: tk.textDim }}>
-                  {assetSymbol ? `${isRTL ? 'يحلل' : 'Analyzing'} ${assetSymbol}` : (isRTL ? 'محلل السوق' : 'Smart Market Analyst')}
-                  <span className="flex items-center gap-1 bg-fuchsia-900/40 text-fuchsia-400 px-1.5 py-0.5 rounded border border-fuchsia-800/50">
-                    <Zap size={10} /> {aiTokens}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black tracking-[0.15em]" style={{ color: accentColor }}>PHASE-X</span>
+                  <span className="text-[11px] font-black tracking-[0.15em] text-purple-400">AI</span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[9px] text-gray-500 font-bold tracking-wider">
+                    {assetSymbol ? `${isRTL ? 'يحلل' : 'Analyzing'} ${assetSymbol}` : (isRTL ? 'محلل السوق' : 'Smart Market Analyst')}
+                  </span>
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black"
+                    style={{ background: `rgba(${accentRgb},0.08)`, border: `1px solid rgba(${accentRgb},0.2)`, color: accentColor }}>
+                    <Zap size={8} /> {aiTokens}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 relative z-10">
               {messages.length > 0 && (
-                <button onClick={clearChat} className="p-2 rounded-lg hover:bg-red-500/10 transition-colors" title={isRTL ? "مسح المحادثة" : "Clear Chat"}>
-                  <Trash2 className="w-4 h-4 text-red-400" />
+                <button onClick={clearChat} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                  style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}
+                  title={isRTL ? "مسح المحادثة" : "Clear Chat"}>
+                  <Trash2 className="w-3.5 h-3.5 text-red-400/60" />
                 </button>
               )}
-              <button 
-                onClick={() => setIsExpanded(!isExpanded)} 
-                className="p-2 rounded-lg transition-colors cursor-pointer"
-                style={{ color: tk.textMuted }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              <button onClick={() => setIsExpanded(!isExpanded)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                style={{ background: `rgba(${accentRgb},0.05)`, border: `1px solid rgba(${accentRgb},0.15)` }}>
+                {isExpanded ? <Minimize2 className="w-3.5 h-3.5" style={{ color: accentColor }} /> : <Maximize2 className="w-3.5 h-3.5" style={{ color: accentColor }} />}
               </button>
-              <button 
-                onClick={onClose} 
-                className="p-2 rounded-lg transition-colors cursor-pointer"
-                style={{ color: tk.textMuted }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <X className="w-4 h-4" />
+              <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <X className="w-3.5 h-3.5 text-red-400/60" />
               </button>
             </div>
           </div>
 
           {/* Chat Messages Area */}
-          <div className="flex-1 overflow-y-auto p-5 pb-2 flex flex-col gap-6" style={{
-            scrollBehavior: 'smooth'
-          }}>
+          <div className="flex-1 overflow-y-auto p-5 pb-2 flex flex-col gap-5" style={{ scrollBehavior: 'smooth' }}>
             {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center px-4 opacity-70">
-                <Bot className="w-16 h-16 mb-4" style={{ color: '#6366f1' }} />
-                <h4 className="text-lg font-bold mb-2" style={{ color: tk.textPrimary }}>
+              <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                {/* Animated icon */}
+                <motion.div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-5 relative"
+                  style={{ background: `linear-gradient(135deg, rgba(${accentRgb},0.08), rgba(168,85,247,0.08))`, border: `1px solid rgba(${accentRgb},0.15)` }}
+                  animate={{ boxShadow: [`0 0 0 rgba(${accentRgb},0)`, `0 0 40px rgba(${accentRgb},0.15)`, `0 0 0 rgba(${accentRgb},0)`] }}
+                  transition={{ duration: 3, repeat: Infinity }}>
+                  <Bot className="w-10 h-10" style={{ color: accentColor, opacity: 0.7 }} />
+                </motion.div>
+                <h4 className="text-base font-black mb-2 text-white">
                   {isRTL ? 'كيف يمكنني مساعدتك؟' : 'How can I assist you?'}
                 </h4>
-                <p className="text-sm leading-relaxed" style={{ color: tk.textMuted }}>
+                <p className="text-[11px] leading-relaxed text-gray-500 max-w-[250px] mb-6">
                   {isRTL 
-                    ? `أنا هنا لتحليل حالة السوق الحالية لـ ${assetSymbol || 'العملة المختارة'}. اسألني عن الاتجاهات، أو الإزاحة، أو اطلب نصيحة عامة.`
-                    : `I am here to analyze the current market state for ${assetSymbol || 'the selected asset'}. Ask me about trends, displacement, or for general advice.`
+                    ? `أنا هنا لتحليل حالة السوق الحالية لـ ${assetSymbol || 'العملة المختارة'}. اسألني عن الاتجاهات أو اطلب نصيحة.`
+                    : `I am here to analyze the current market state for ${assetSymbol || 'the selected asset'}. Ask me about trends or for advice.`
                   }
                 </p>
-                <div className="mt-6 flex flex-col gap-2 w-full max-w-[280px]">
-                  {['What is the current Phase State?', 'Are there any buy signals?', 'Explain the displacement trend.'].map((q, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setInputVal(isRTL ? (q === 'What is the current Phase State?' ? 'ما هي حالة المرحلة الحالية؟' : q === 'Are there any buy signals?' ? 'هل توجد إشارات شراء؟' : 'اشرح اتجاه الإزاحة.') : q)}
-                      className="px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors border"
+                <div className="flex flex-col gap-2 w-full max-w-[280px]">
+                  {[
+                    { en: 'What is the current Phase State?', ar: 'ما هي حالة المرحلة الحالية؟' },
+                    { en: 'Are there any buy signals?', ar: 'هل توجد إشارات شراء؟' },
+                    { en: 'Explain the displacement trend.', ar: 'اشرح اتجاه الإزاحة.' }
+                  ].map((q, i) => (
+                    <motion.button key={i}
+                      onClick={() => setInputVal(isRTL ? q.ar : q.en)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="px-4 py-2.5 rounded-xl text-[11px] font-medium text-left transition-all cursor-pointer"
                       style={{ 
-                        background: 'rgba(99,102,241,0.05)', 
-                        color: tk.textPrimary,
-                        borderColor: 'rgba(99,102,241,0.1)' 
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(99,102,241,0.05)'}
-                    >
-                      {isRTL 
-                        ? (q === 'What is the current Phase State?' ? 'ما هي حالة المرحلة الحالية؟' : q === 'Are there any buy signals?' ? 'هل توجد إشارات شراء؟' : 'اشرح اتجاه الإزاحة.') 
-                        : q}
-                    </button>
+                        background: `rgba(${accentRgb},0.04)`,
+                        color: '#94a3b8',
+                        border: `1px solid rgba(${accentRgb},0.1)`
+                      }}>
+                      <span className="mr-2 text-indigo-400">▹</span>
+                      {isRTL ? q.ar : q.en}
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -236,18 +224,28 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
                   className={`flex gap-3 max-w-[90%] ${msg.role === 'user' ? (isRTL ? 'mr-auto flex-row-reverse' : 'ml-auto flex-row-reverse') : ''}`}
                 >
                   {/* Avatar */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-fuchsia-500/20 text-fuchsia-400'}`}>
-                    {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                  </div>
+                  <motion.div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: msg.role === 'user'
+                        ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05))'
+                        : 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05))',
+                      border: `1px solid ${msg.role === 'user' ? 'rgba(99,102,241,0.2)' : 'rgba(168,85,247,0.2)'}`,
+                    }}>
+                    {msg.role === 'user' ? <User className="w-3.5 h-3.5 text-indigo-400" /> : <Bot className="w-3.5 h-3.5 text-purple-400" />}
+                  </motion.div>
                   
                   {/* Message Bubble */}
                   <div 
-                    className={`px-4 py-3 rounded-2xl ${msg.role === 'user' ? 'bg-indigo-600/20 text-indigo-100 rounded-tr-sm' : 'bg-slate-800/50 text-slate-300 rounded-tl-sm'}`}
+                    className={`px-4 py-3 rounded-2xl ${msg.role === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
                     style={{
-                      border: `1px solid ${msg.role === 'user' ? 'rgba(99,102,241,0.3)' : tk.border}`,
-                      boxShadow: msg.role === 'user' ? '0 4px 15px rgba(99,102,241,0.1)' : 'none',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
+                      background: msg.role === 'user'
+                        ? `rgba(${accentRgb},0.06)`
+                        : 'rgba(15,23,42,0.6)',
+                      border: `1px solid ${msg.role === 'user' ? `rgba(${accentRgb},0.15)` : 'rgba(168,85,247,0.1)'}`,
+                      boxShadow: msg.role === 'user' ? `0 4px 20px rgba(${accentRgb},0.08)` : 'none',
+                      fontSize: '12px',
+                      lineHeight: '1.7',
+                      color: '#c8d0dc'
                     }}
                     dir="auto"
                   >
@@ -257,23 +255,21 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
               ))
             )}
 
-            {/* Loading Indicator */}
+            {/* Loading */}
             {isLoading && (
-               <motion.div
-                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                 className={`flex gap-3 max-w-[90%] ${isRTL ? '' : ''}`}
-               >
-                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-fuchsia-500/20 text-fuchsia-400">
-                    <Bot className="w-4 h-4" />
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3 max-w-[90%]">
+                 <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                   style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05))', border: '1px solid rgba(168,85,247,0.2)' }}>
+                    <Bot className="w-3.5 h-3.5 text-purple-400" />
                  </div>
-                 <div className="px-4 py-3 rounded-2xl bg-slate-800/50 rounded-tl-sm border" style={{ borderColor: tk.border }}>
-                    <div className="flex gap-1">
+                 <div className="px-4 py-3 rounded-2xl rounded-tl-sm" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(168,85,247,0.1)' }}>
+                    <div className="flex gap-1.5">
                       {[0, 1, 2].map((i) => (
-                        <motion.div 
-                          key={i}
-                          className="w-2 h-2 rounded-full bg-fuchsia-400"
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                        <motion.div key={i}
+                          className="w-2 h-2 rounded-full"
+                          style={{ background: '#a855f7' }}
+                          animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
+                          transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
                         />
                       ))}
                     </div>
@@ -282,15 +278,15 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
             )}
 
             {error && (
-              <div className="text-center p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+              <div className="text-center p-2.5 rounded-xl text-red-400 text-[11px] font-medium" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)' }}>
                 {error}
               </div>
             )}
 
             {tokenError && (
-              <div className="flex items-center justify-center gap-2 text-center p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold my-2">
+              <div className="flex items-center justify-center gap-2 text-center p-3 rounded-xl text-amber-400 text-[11px] font-black gap-2" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.12)' }}>
                 <Coins className="w-4 h-4" />
-                {language === "ar" ? "رصيد التوكن غير كافٍ. يرجى الشحن من خلال ملفك الشخصي." : language === "fr" ? "Jetons IA insuffisants. Veuillez recharger dans votre profil." : language === "es" ? "Tokens de IA insuficientes. Por favor recarga en tu perfil." : language === "ru" ? "Недостаточно ИИ токенов. Пожалуйста, пополните счет в вашем профиле." : language === "tr" ? "Yetersiz YZ Jetonu. Lütfen profilinizden yükleme yapın." : "Insufficient AI Tokens. Please top up in your profile."}
+                {isRTL ? "رصيد التوكن غير كافٍ. يرجى الشحن من خلال ملفك الشخصي." : "Insufficient AI Tokens. Please top up in your profile."}
               </div>
             )}
             
@@ -298,7 +294,7 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
           </div>
 
           {/* Input Area */}
-          <div className="p-4 bg-transparent border-t" style={{ borderColor: tk.border }}>
+          <div className="p-4 relative" style={{ borderTop: `1px solid rgba(${accentRgb},0.08)` }}>
             <form onSubmit={handleSubmit} className="relative flex items-end">
               <textarea
                 ref={inputRef}
@@ -306,29 +302,36 @@ export function AIChatBot({ isOpen, onClose, marketContext, assetSymbol }: AICha
                 onChange={(e) => setInputVal(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={isRTL ? 'اسأل المحلل الذكي...' : 'Ask the Smart Analyst...'}
-                className="w-full bg-slate-800/50 rounded-xl px-4 py-3 pr-12 resize-none text-sm outline-none transition-all focus:ring-1"
+                className="w-full rounded-xl px-4 py-3 pr-12 resize-none text-[12px] outline-none transition-all font-medium"
                 style={{ 
-                  color: tk.textPrimary,
-                  border: `1px solid ${tk.border}`,
+                  color: '#e2e8f0',
+                  background: `rgba(${accentRgb},0.04)`,
+                  border: `1px solid rgba(${accentRgb},0.12)`,
                   minHeight: '52px',
-                  maxHeight: '120px'
+                  maxHeight: '120px',
+                  caretColor: accentColor
                 }}
                 rows={1}
               />
-              <button
+              <motion.button
                 type="submit"
                 disabled={!inputVal.trim() || isLoading}
-                className="absolute right-2 bottom-2 w-9 h-9 flex items-center justify-center rounded-lg disabled:opacity-50 transition-all cursor-pointer"
+                whileHover={inputVal.trim() && !isLoading ? { scale: 1.1 } : {}}
+                whileTap={inputVal.trim() && !isLoading ? { scale: 0.9 } : {}}
+                className="absolute right-2 bottom-2 w-9 h-9 flex items-center justify-center rounded-xl disabled:opacity-30 transition-all cursor-pointer"
                 style={{ 
-                  background: inputVal.trim() && !isLoading ? 'linear-gradient(135deg, #6366f1, #a855f7)' : tk.buttonGhost,
-                  color: inputVal.trim() && !isLoading ? '#fff' : tk.textMuted
+                  background: inputVal.trim() && !isLoading ? `linear-gradient(135deg, ${accentColor}, #a855f7)` : `rgba(${accentRgb},0.06)`,
+                  color: inputVal.trim() && !isLoading ? '#fff' : '#475569',
+                  boxShadow: inputVal.trim() && !isLoading ? `0 4px 15px rgba(${accentRgb},0.25)` : 'none'
                 }}
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" style={{ transform: isRTL ? 'scaleX(-1)' : 'none' }} />}
-              </button>
+              </motion.button>
             </form>
-            <div className="text-center mt-2">
-              <span className="text-[9px] uppercase tracking-widest text-slate-500 font-medium">✨ Powered by Gemini AI</span>
+            <div className="text-center mt-2.5">
+              <span className="text-[8px] tracking-[0.3em] uppercase font-semibold" style={{ color: `rgba(${accentRgb},0.2)` }}>
+                PHASE-X · AI ANALYTICS · CORE
+              </span>
             </div>
           </div>
         </motion.div>

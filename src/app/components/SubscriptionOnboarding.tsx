@@ -33,43 +33,54 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
     };
 
     const plans = [
-        { 
-            id: "monthly" as SubscriptionPlan, 
-            title: "Monthly", 
-            price: 29,
-            frequency: "month",
+        {
+            id: "monthly" as SubscriptionPlan,
+            title: t("monthlyPlan") || "Monthly",
+            price: 75,
+            frequency: isRTL ? "شهر" : "month",
             icon: <Zap size={24} className="text-[#3b82f6]" />,
             iconBg: "bg-[#3b82f6]/10",
             iconColor: "#3b82f6",
-            features: ["5 Technical Indicators", "All Markets", "Technical Support", "Daily Updates"],
+            features: [t("feature1"), t("feature2"), t("feature3"), t("feature4")],
             badge: null
         },
-        { 
-            id: "quarterly" as SubscriptionPlan, 
-            title: "Quarterly", 
-            price: 69,
-            frequency: "3 months",
+        {
+            id: "quarterly" as SubscriptionPlan,
+            title: t("quarterlyPlan") || "Quarterly",
+            price: 202.50,
+            frequency: isRTL ? "3 أشهر" : "3 months",
             icon: <Star size={24} className="text-[#00e5a0]" />,
             iconBg: "bg-[#00e5a0]/10",
             iconColor: "#00e5a0",
-            features: ["All Monthly Features", "Priority Support", "Advanced Analytics", "Training Sessions", "Instant Alerts"],
-            badge: { text: "Best Choice", color: "#00e5a0", rightText: "Save 20%" }
+            features: [t("featureAllPrevious"), t("featurePriority"), t("featureAnalytics"), t("featureTraining"), t("featureAlerts")],
+            badge: { text: isRTL ? "الأفضل قيمة" : "Best Choice", color: "#00e5a0", rightText: isRTL ? "وفر 10%" : "Save 10%" }
         },
-        { 
-            id: "annual" as SubscriptionPlan, 
-            title: "Annual", 
-            price: 199,
-            frequency: "year",
+        {
+            id: "semi-annual" as SubscriptionPlan,
+            title: t("semiAnnualPlan") || "Semi-Annual",
+            price: 382.50,
+            frequency: isRTL ? "6 أشهر" : "6 months",
+            icon: <Crown size={24} className="text-[#a855f7]" />,
+            iconBg: "bg-[#a855f7]/10",
+            iconColor: "#a855f7",
+            features: [t("featureAllPrevious"), t("featureConsultation"), t("featureAlpha"), t("featureManager")],
+            badge: { text: isRTL ? "خيار المحترفين" : "Pro Choice", color: "#a855f7", rightText: isRTL ? "وفر 15%" : "Save 15%" }
+        },
+        {
+            id: "annual" as SubscriptionPlan,
+            title: t("annualPlan") || "Annual",
+            price: 720,
+            frequency: isRTL ? "سنة" : "year",
             icon: <Trophy size={24} className="text-[#facc15]" />,
             iconBg: "bg-[#facc15]/10",
             iconColor: "#facc15",
-            features: ["All Quarterly Features", "1-on-1 Consultation", "Alpha Signal Access", "Dedicated Manager", "VIP Status"],
-            badge: { text: "Max Value", color: "#facc15", rightText: "Save 43%" }
+            features: [t("featureAllPrevious"), t("featureVip"), t("featureStrategies"), t("featureReports")],
+            badge: { text: isRTL ? "القيمة القصوى" : "Max Value", color: "#facc15", rightText: isRTL ? "وفر 20%" : "Save 20%" }
         },
     ];
 
     const currentPlan = plans.find(p => p.id === selectedPlan)!;
-    const totalAmount = currentPlan.price + (aiAddon ? 20 : 0);
+    const totalAmount = (currentPlan?.price || 0) + (aiAddon ? 20 : 0);
 
     return (
         <div className="min-h-screen flex flex-col pt-10 pb-20 px-4 relative overflow-x-hidden overflow-y-auto"
@@ -91,55 +102,18 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                         exit={{ opacity: 0, x: -100 }}
                         className="relative z-10 w-full max-w-6xl mx-auto flex flex-col items-center"
                     >
-                        {/* Step Indicator */}
-                        <div className="flex justify-center items-center mb-8 w-full max-w-2xl mx-auto">
-                            <div className="flex flex-col items-center">
-                                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#3b82f6] shadow-[0_0_20px_rgba(59,130,246,0.6)] z-10 relative">
-                                    <Check size={28} color="white" strokeWidth={3} />
-                                </div>
-                                <span className="text-xs font-bold text-gray-500 mt-3 tracking-wide">Personal Info</span>
-                            </div>
-                            
-                            <div className="flex-1 h-1 bg-[#1c2230] mx-4 relative top-[-10px]">
-                                <div className="h-full bg-[#3b82f6] w-[100%] rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-                            </div>
 
-                            <div className="flex flex-col items-center">
-                                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#00e5a0] shadow-[0_0_20px_rgba(0,229,160,0.6)] z-10 relative">
-                                    <Check size={28} color="black" strokeWidth={4} />
-                                </div>
-                                <span className="text-xs font-bold text-gray-500 mt-3 tracking-wide">Account Details</span>
-                            </div>
-
-                            <div className="flex-1 h-1 bg-[#1c2230] mx-4 relative top-[-10px]">
-                                <div className="h-full bg-[#00e5a0] w-[100%] rounded-full shadow-[0_0_8px_rgba(0,229,160,0.5)]"></div>
-                            </div>
-
-                            <div className="flex flex-col items-center">
-                                <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#facc15] shadow-[0_0_25px_rgba(250,204,21,0.5)] z-10 relative">
-                                    <Crown size={30} color="black" strokeWidth={3} />
-                                </div>
-                                <span className="text-xs font-black text-white mt-3 tracking-wide">Choose Plan</span>
-                            </div>
-                        </div>
 
                         {/* Hero Texts */}
-                        <div className="text-center mb-8 relative z-10">
-                            <h1 className="text-4xl md:text-5xl font-black mb-3 tracking-tight text-[#facc15]" style={{ textShadow: '0 0 30px rgba(250,204,21,0.4)' }}>
-                                Join PHASE X
+                        <div className="text-center mb-8 relative z-10 mt-6">
+                            <h1 className="text-4xl md:text-5xl font-black mb-3 tracking-tight text-[#00e5a0]" style={{ textShadow: '0 0 30px rgba(0,229,160,0.4)' }}>
+                                {isRTL ? "اختر خطة الاشتراك الخاصة بك" : "Subscribe to PHASE X"}
                             </h1>
-                            <p className="text-gray-400 text-lg font-medium">Complete your details and start your journey</p>
-                        </div>
-
-                        <div className="flex justify-center mb-10 w-full relative z-10">
-                            <div className="px-8 py-3 rounded-full border border-[#facc15]/30 bg-[#facc15]/10 flex items-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.15)]">
-                                <Crown size={20} className="text-[#facc15]" />
-                                <span className="font-black text-[#facc15] tracking-widest uppercase text-sm">Choose your perfect plan</span>
-                            </div>
+                            <p className="text-gray-400 text-lg font-medium">{isRTL ? "اختر الباقة المناسبة لتفعيل حسابك والبدء فوراً" : "Choose the right plan to activate your account and start immediately"}</p>
                         </div>
 
                         {/* Cards Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-[1200px] mx-auto relative z-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-[1400px] mx-auto relative z-10 px-4">
                             {plans.map((plan) => {
                                 const isActive = selectedPlan === plan.id;
                                 const cColor = isActive ? plan.iconColor : "#1c2230";
@@ -207,46 +181,51 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
 
                         {/* AI Add-on Section */}
                         <motion.div 
-                            className="mt-10 mx-auto w-full max-w-[1200px] p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between cursor-pointer border transition-all relative z-10"
+                            className="mt-8 mx-auto w-full max-w-[1400px] px-4"
                             onClick={() => setAiAddon(!aiAddon)}
-                            style={{
-                                backgroundColor: aiAddon ? `rgba(0, 195, 255, 0.05)` : "#10141d",
-                                borderColor: aiAddon ? "#00c3ff" : "#1c2230",
-                                boxShadow: aiAddon ? `0 10px 40px rgba(0,195,255,0.15), inset 0 0 20px rgba(0,195,255,0.05)` : 'none'
-                            }}
                         >
-                            <div className="flex items-center gap-8">
-                                <div className="w-20 h-20 rounded-[20px] flex items-center justify-center relative bg-[#0b0e14] border border-[#00c3ff]/30 shrink-0">
-                                    {aiAddon && <motion.div className="absolute inset-0 rounded-[20px] border-2 border-dashed border-[#00c3ff]/50" animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} />}
-                                    <Bot size={36} color={aiAddon ? "#00c3ff" : "#4b5563"} />
+                            <div className="p-6 md:p-8 rounded-[24px] flex flex-col md:flex-row items-center justify-between cursor-pointer border transition-all relative z-10"
+                                style={{
+                                    backgroundColor: aiAddon ? `rgba(0, 229, 160, 0.05)` : "#10141d",
+                                    borderColor: aiAddon ? "#00e5a0" : "#1c2230",
+                                    boxShadow: aiAddon ? `0 10px 40px rgba(0,229,160,0.15), inset 0 0 20px rgba(0,229,160,0.05)` : 'none'
+                                }}
+                            >
+                                <div className="flex items-center gap-6 md:gap-8">
+                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] flex items-center justify-center relative bg-[#0b0e14] border border-[#00e5a0]/30 shrink-0">
+                                        {aiAddon && <motion.div className="absolute inset-0 rounded-[20px] border-2 border-dashed border-[#00e5a0]/50" animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} />}
+                                        <Bot size={32} color={aiAddon ? "#00e5a0" : "#4b5563"} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl md:text-2xl font-black text-white mb-2 flex items-center gap-2">
+                                            {isRTL ? "مستكشف الذكاء الاصطناعي Phase-X AI" : "Phase-X AI Insight"} <Zap size={18} className="text-[#00e5a0]" />
+                                        </h3>
+                                        <p className="text-sm md:text-base font-medium text-gray-400 max-w-2xl leading-relaxed">
+                                            {isRTL ? "احصل على 3000 نقطة ذكاء اصطناعي (AI Tokens) صالحة لمدة شهر واحد، تتيح لك تشغيل رادار السوق المباشر ومحادثة الشات بوت للحصول على تحليلات دقيقة ولحظية." : "Unlock elite AI analytics. Get 3,000 AI Tokens to power live radar scans and conversational insights instantly."}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-2xl font-black text-white mb-2 flex items-center gap-3">
-                                        Phase-X AI Market Insight <Zap size={20} className="text-[#00c3ff]" />
-                                    </h3>
-                                    <p className="text-base font-medium text-gray-400 max-w-2xl leading-relaxed">Unlock elite AI analytics. Get 3,000 AI Tokens to power live radar scans and contextual conversational insights instantly.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-8 mt-6 md:mt-0 shrink-0">
-                                <div className="text-right">
-                                    <div className="text-4xl font-black text-[#00c3ff]">$20</div>
-                                    <div className="text-xs font-black uppercase tracking-widest text-gray-500 mt-1">/ Month</div>
-                                </div>
-                                <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-colors ${aiAddon ? 'border-[#00c3ff] bg-[#00c3ff]/20 text-[#00c3ff]' : 'border-[#4b5563] text-transparent'}`}>
-                                    <Check size={24} strokeWidth={4} />
+                                <div className="flex items-center gap-6 mt-6 md:mt-0 shrink-0 self-end md:self-auto">
+                                    <div className="text-right">
+                                        <div className="text-3xl md:text-4xl font-black text-[#00e5a0]">$20</div>
+                                        <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500 mt-1">{isRTL ? "/ إضافي شهرياً" : "/ Add-on"}</div>
+                                    </div>
+                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-colors ${aiAddon ? 'border-[#00e5a0] bg-[#00e5a0]/20 text-[#00e5a0]' : 'border-[#4b5563] text-transparent'}`}>
+                                        <Check size={20} strokeWidth={4} />
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
 
                         {/* Continue Button */}
-                        <div className="w-full max-w-[1200px] mx-auto mt-10 flex flex-col sm:flex-row justify-between items-center bg-[#10141d] p-8 rounded-[32px] border border-[#1c2230] relative z-10">
-                            <div className="font-bold text-xl text-gray-400 mb-6 sm:mb-0">
-                                Total Due: <span className="text-4xl font-black text-white ml-3">${totalAmount.toFixed(2)}</span>
+                        <div className="w-full max-w-[1400px] mx-auto mt-8 flex flex-col sm:flex-row justify-between items-center bg-[#10141d] p-6 md:p-8 rounded-[24px] border border-[#1c2230] relative z-10">
+                            <div className="font-bold text-lg md:text-xl text-gray-400 mb-6 sm:mb-0 text-center sm:text-left">
+                                {isRTL ? "المجموع المطلوب:" : "Total Due:"} <span className="text-3xl md:text-4xl font-black text-white ml-2 block sm:inline mt-2 sm:mt-0">${totalAmount.toFixed(2)}</span>
                             </div>
                             <button onClick={() => setStep("payment")}
-                                className="px-12 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center gap-3 text-black transition-transform hover:scale-[1.03] text-lg w-full sm:w-auto justify-center"
-                                style={{ background: `linear-gradient(90deg, #facc15, #f59e0b)`, boxShadow: `0 10px 30px rgba(250,204,21,0.3)` }}>
-                                Checkout Selected Plan <ArrowRight size={22} />
+                                className="px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform hover:scale-[1.02] text-base md:text-lg w-full sm:w-auto"
+                                style={{ background: `linear-gradient(90deg, #00e5a0, #00b37e)`, boxShadow: `0 10px 30px rgba(0,229,160,0.3)` }}>
+                                {isRTL ? "اكمال عملية الدفع" : "Checkout Selected Plan"} <ArrowRight size={20} />
                             </button>
                         </div>
                     </motion.div>
@@ -264,12 +243,12 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                             <div className="w-20 h-20 bg-[#00e5a0]/10 rounded-3xl flex items-center justify-center mx-auto mb-5 border border-[#00e5a0]/30 shadow-[0_0_30px_rgba(0,229,160,0.2)]">
                                 <CreditCard size={36} className="text-[#00e5a0]" />
                             </div>
-                            <h2 className="text-3xl font-black text-white">Confirm Payment</h2>
-                            <p className="text-gray-400 mt-2 text-base">To bypass gateways and get immediate processing, send exactly this amount manually.</p>
+                            <h2 className="text-3xl font-black text-white">{isRTL ? "تأكيد الدفع" : "Confirm Payment"}</h2>
+                            <p className="text-gray-400 mt-2 text-base">{isRTL ? "لتجاوز البوابات والحصول على تفعيل فوري، أرسل هذا المبلغ بالضبط يدوياً." : "To bypass gateways and get immediate processing, send exactly this amount manually."}</p>
                         </div>
 
                         <div className="p-6 rounded-2xl mb-10 flex justify-between items-center bg-[#0b0e14] border border-[#1c2230] shadow-inner">
-                            <span className="font-black text-gray-400 uppercase tracking-widest text-sm">Amount Due</span>
+                            <span className="font-black text-gray-400 uppercase tracking-widest text-sm">{isRTL ? "المبلغ المطلوب" : "Amount Due"}</span>
                             <span className="text-5xl font-black text-[#00e5a0]">${totalAmount.toFixed(2)}</span>
                         </div>
 
@@ -281,9 +260,9 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                 </div>
                                 <h3 className="font-black mb-2 flex items-center gap-3 text-white relative z-10 text-xl">
                                     <div className="bg-[#0088cc] text-black w-8 h-8 rounded-full flex items-center justify-center"><Send size={16} /></div> 
-                                    Telegram Fast-Track
+                                    {isRTL ? "تفعيل سريع عبر تيليجرام" : "Telegram Fast-Track"}
                                 </h3>
-                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">Send payment verification directly to a trusted agent.</p>
+                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">{isRTL ? "أرسل إثبات الدفع مباشرة إلى الوكيل المعتمد." : "Send payment verification directly to a trusted agent."}</p>
                                 <div className="grid grid-cols-1 gap-3 relative z-10">
                                     <div className="p-4 rounded-xl border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between group/btn cursor-pointer" onClick={() => copyToClipboard("@PhaeX_Ai")}>
                                         <span className="font-mono text-base font-bold text-white">@PhaeX_Ai</span>
@@ -303,9 +282,9 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                 </div>
                                 <h3 className="font-black mb-2 flex items-center gap-3 text-white relative z-10 text-xl">
                                     <div className="bg-[#f7931a] text-black w-8 h-8 rounded-full flex items-center justify-center"><Coins size={16} /></div> 
-                                    Crypto (USDT TRC20)
+                                    {isRTL ? "العملات الرقمية (USDT TRC20)" : "Crypto (USDT TRC20)"}
                                 </h3>
-                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">Send the exact amount from your secure wallet to our address.</p>
+                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">{isRTL ? "أرسل المبلغ المطلوب بالضبط من محفظتك إلى عنواننا." : "Send the exact amount from your secure wallet to our address."}</p>
                                 <div className="p-4 rounded-xl border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between relative z-10 group/btn cursor-pointer" onClick={() => copyToClipboard(walletAddress)}>
                                     <span className="font-mono text-sm sm:text-base font-bold break-all text-white max-w-[85%]">{walletAddress}</span>
                                     <div className="text-[#f7931a] group-hover/btn:text-white transition-colors shrink-0 bg-[#f7931a]/10 p-2.5 rounded-lg ml-2"><Copy size={20} /></div>
@@ -317,16 +296,16 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                             <div className="bg-[#00e5a0]/10 border border-[#00e5a0]/20 p-5 rounded-2xl mb-8 flex items-start gap-4">
                                 <div className="text-[#00e5a0] shrink-0 mt-0.5"><Shield size={24} /></div>
                                 <p className="text-sm font-medium text-[#00e5a0] leading-relaxed">
-                                    No receipt upload required here. If you have sent the funds and contacted support, simply confirm below. Your account will automatically enter the priority verification queue.
+                                    {isRTL ? "لا حاجة لرفع الإيصال. إذا كنت قد أرسلت المبلغ وتواصلت مع الدعم، قم بالتأكيد بالأسفل لتدخل قائمة التفعيل ذات الأولوية." : "No receipt upload required here. If you have sent the funds and contacted support, simply confirm below. Your account will automatically enter the priority verification queue."}
                                 </p>
                             </div>
                             <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
-                                <button onClick={() => setStep("plans")} className="font-bold text-gray-500 hover:text-white transition-colors px-6 py-4 w-full sm:w-auto">Cancel & Go Back</button>
+                                <button onClick={() => setStep("plans")} className="font-bold text-gray-500 hover:text-white transition-colors px-6 py-4 w-full sm:w-auto">{isRTL ? "تراجع" : "Cancel & Go Back"}</button>
                                 <button 
                                     onClick={handleFinish} 
                                     className={`px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-black transition-transform hover:scale-[1.03] flex items-center justify-center gap-3 w-full sm:w-auto`}
                                     style={{ background: "#00e5a0", boxShadow: `0 10px 40px rgba(0,229,160,0.3)` }}>
-                                    <CircleCheck size={22} /> I Confirm Payment Sent
+                                    <CircleCheck size={22} /> {isRTL ? "أؤكد تحويل المبلغ" : "I Confirm Payment Sent"}
                                 </button>
                             </div>
                         </div>
@@ -337,7 +316,7 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                     <motion.div key="pending"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-center relative z-10 p-12 rounded-[32px] bg-[#10141d] max-w-xl w-full mx-auto my-auto"
+                        className="text-center relative z-10 p-12 rounded-[32px] bg-[#10141d] max-w-xl w-full mx-auto my-auto mt-20"
                         style={{ border: `1px solid rgba(0,229,160,0.3)`, boxShadow: `0 0 80px rgba(0,229,160,0.15)` }}
                     >
                         <motion.div className="w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 relative"
@@ -346,9 +325,9 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                 animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
                             <Check size={56} color="#00e5a0" />
                         </motion.div>
-                        <h2 className="text-4xl font-black mb-4 text-white">Verification Pending</h2>
+                        <h2 className="text-4xl font-black mb-4 text-white">{isRTL ? "قيد المراجعة" : "Verification Pending"}</h2>
                         <p className="text-lg mb-8 leading-relaxed font-medium text-gray-400">
-                            Your payment is being verified by our compliance team. You will be granted full access within 2-4 hours. Redirecting to your dashboard...
+                            {isRTL ? "يتم التحقق من الدفعة الآن، سيتم منحك وصول كامل للمنصة حين موافقة الإدارة. (جاري تحويلك...)" : "Your payment is being verified by our compliance team. You will be granted full access within 2-4 hours. Redirecting to your dashboard..."}
                         </p>
                     </motion.div>
                 )}

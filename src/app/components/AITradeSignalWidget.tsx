@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAITradeSignal } from '../hooks/useAITradeSignal';
-import { Target, Crosshair, TrendingUp, TrendingDown, ShieldAlert, Cpu, Activity, Minus, Zap, BarChart2, ChevronUp, ChevronDown, Coins } from 'lucide-react';
+import { Target, Crosshair, TrendingUp, TrendingDown, ShieldAlert, Cpu, Activity, Minus, Zap, BarChart2, ChevronUp, ChevronDown, Coins, Sparkles, Gauge, Layers } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -34,7 +34,6 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
   const [isExpanded, setIsExpanded] = useState(true);
   const [tokenError, setTokenError] = useState(false);
 
-  // Fake progress bar for the "Scanning" sci-fi effect
   useEffect(() => {
     let interval: any;
     if (isScanning) {
@@ -61,19 +60,17 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
     scanMarket(marketContext, language);
   };
 
-  // Theming colors based on signal Action
   const getSignalColors = () => {
-    if (!signal) return { bg: 'rgba(30, 41, 59, 0.4)', border: 'rgba(51, 65, 85, 0.5)', text: '#94a3b8', glow: 'transparent' };
-    
+    if (!signal) return { bg: 'rgba(99,102,241,0.05)', border: 'rgba(99,102,241,0.2)', text: '#818cf8', glow: 'transparent', rgb: '99,102,241' };
     switch (signal.action) {
       case 'BUY':
-        return { bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.4)', text: '#34d399', glow: '0 0 20px rgba(16, 185, 129, 0.2)' };
+        return { bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.3)', text: '#34d399', glow: '0 0 25px rgba(16, 185, 129, 0.15)', rgb: '16,185,129' };
       case 'SELL':
-        return { bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.4)', text: '#f87171', glow: '0 0 20px rgba(239, 68, 68, 0.2)' };
+        return { bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.3)', text: '#f87171', glow: '0 0 25px rgba(239, 68, 68, 0.15)', rgb: '239,68,68' };
       case 'HOLD':
-        return { bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.4)', text: '#fbbf24', glow: '0 0 20px rgba(245, 158, 11, 0.2)' };
+        return { bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.3)', text: '#fbbf24', glow: '0 0 25px rgba(245, 158, 11, 0.15)', rgb: '245,158,11' };
       default:
-        return { bg: 'rgba(30, 41, 59, 0.4)', border: 'rgba(51, 65, 85, 0.5)', text: '#94a3b8', glow: 'transparent' };
+        return { bg: 'rgba(99,102,241,0.05)', border: 'rgba(99,102,241,0.2)', text: '#818cf8', glow: 'transparent', rgb: '99,102,241' };
     }
   };
 
@@ -83,46 +80,64 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
     <div 
       className="rounded-2xl overflow-hidden relative flex flex-col font-mono flex-shrink-0"
       style={{
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(12px)',
-        border: `1px solid ${colors.border}`,
-        boxShadow: colors.glow,
+        background: `radial-gradient(ellipse at 50% 0%, rgba(${colors.rgb},0.06) 0%, rgba(6,10,16,0.95) 60%)`,
+        backdropFilter: 'blur(16px)',
+        border: `1px solid rgba(${colors.rgb},0.15)`,
+        boxShadow: `${colors.glow}, 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)`,
         transition: 'all 0.5s ease'
       }}
     >
-      {/* Sci-Fi Decorative Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50 bg-slate-900/40 relative overflow-hidden">
-        {/* Animated Scan Line Background */}
+      {/* Top LED strip */}
+      <motion.div className="absolute top-0 left-0 right-0 h-[2px] z-30"
+        style={{ background: `linear-gradient(90deg, transparent 5%, ${colors.text} 30%, ${colors.text} 70%, transparent 95%)` }}
+        animate={{ opacity: [0.2, 0.8, 0.2] }}
+        transition={{ duration: 2.5, repeat: Infinity }} />
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3.5 relative overflow-hidden"
+        style={{ background: `linear-gradient(180deg, rgba(${colors.rgb},0.06) 0%, transparent 100%)`, borderBottom: `1px solid rgba(${colors.rgb},0.1)` }}>
+        
+        {/* Animated scan line */}
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent w-1/2"
-          animate={{ x: ['-200%', '300%'] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 w-1/3"
+          style={{ background: `linear-gradient(90deg, transparent, rgba(${colors.rgb},0.08), transparent)` }}
+          animate={{ x: ['-200%', '500%'] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
         />
 
-        <div className="flex items-center gap-2 relative z-10">
-          <Cpu className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-bold tracking-[0.2em] text-cyan-100 hidden sm:inline-block">PHASE-X CORE</span>
-          <span className="ml-2 text-[10px] bg-cyan-900/40 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800/50 flex items-center gap-1 font-bold">
-             <Zap size={10} /> {aiTokens}
-          </span>
+        <div className="flex items-center gap-2.5 relative z-10">
+          <motion.div className="w-8 h-8 rounded-lg flex items-center justify-center relative"
+            style={{ background: `linear-gradient(135deg, rgba(${colors.rgb},0.2), rgba(${colors.rgb},0.05))`, border: `1px solid rgba(${colors.rgb},0.25)` }}
+            animate={{ boxShadow: [`0 0 10px rgba(${colors.rgb},0.1)`, `0 0 20px rgba(${colors.rgb},0.25)`, `0 0 10px rgba(${colors.rgb},0.1)`] }}
+            transition={{ duration: 2.5, repeat: Infinity }}>
+            <Cpu className="w-4 h-4" style={{ color: colors.text }} />
+          </motion.div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: colors.text }}>PHASE-X</span>
+            <span className="text-[8px] font-bold tracking-[0.15em] text-gray-500">AI CORE ENGINE</span>
+          </div>
         </div>
         
         <div className="flex items-center gap-2 relative z-10">
-          <span className="text-[10px] text-slate-400 tracking-wider font-bold">
-            {isScanning ? txt.analyzing : signal ? txt.systemReady : txt.standby}
-          </span>
+          {/* Token badge */}
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black"
+            style={{ background: `rgba(${colors.rgb},0.08)`, border: `1px solid rgba(${colors.rgb},0.2)`, color: colors.text }}>
+            <Zap size={10} /> {aiTokens}
+          </div>
+          {/* Status dot */}
           <motion.div 
             className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: isScanning ? '#06b6d4' : signal ? colors.text : '#475569' }}
-            animate={{ opacity: isScanning ? [0.4, 1, 0.4] : 1 }}
+            style={{ backgroundColor: isScanning ? colors.text : signal ? colors.text : '#475569', boxShadow: `0 0 6px ${isScanning ? colors.text : 'transparent'}` }}
+            animate={{ opacity: isScanning ? [0.4, 1, 0.4] : 1, scale: isScanning ? [1, 1.3, 1] : 1 }}
             transition={{ duration: 0.8, repeat: Infinity }}
           />
-
+          {/* Collapse */}
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="ml-2 w-6 h-6 flex items-center justify-center rounded-md bg-slate-800/50 hover:bg-slate-700/50 transition-colors border border-slate-700/50"
+            className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+            style={{ background: `rgba(${colors.rgb},0.06)`, border: `1px solid rgba(${colors.rgb},0.15)` }}
           >
-            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" style={{ color: colors.text }} /> : <ChevronDown className="w-3.5 h-3.5" style={{ color: colors.text }} />}
           </button>
         </div>
       </div>
@@ -134,45 +149,65 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="flex flex-col flex-1 overflow-hidden"
+            className="flex flex-col flex-1 overflow-hidden relative"
           >
-            {/* Main Body */}
-            <div className="p-4 flex-1 relative overflow-y-auto max-h-[60vh] custom-scrollbar">
-
-        {/* Scan Progress Overlay */}
-        <AnimatePresence>
-          {isScanning && (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm"
-            >
-              <Activity className="w-8 h-8 text-cyan-400 mb-4 animate-pulse" />
-              <div className="w-3/4 h-1 bg-slate-800 rounded-full overflow-hidden relative">
+            {/* Scan Progress Overlay - covers entire expanded area */}
+            <AnimatePresence>
+              {isScanning && (
                 <motion.div 
-                  className="absolute inset-y-0 left-0 bg-cyan-400"
-                  initial={{ width: '0%' }}
-                  animate={{ width: `${Math.min(scanProgress, 100)}%` }}
-                  transition={{ ease: "circOut" }}
-                />
-              </div>
-              <span className="text-[10px] text-cyan-400 mt-2 tracking-widest">{txt.extracting} {Math.round(scanProgress)}%</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-30 flex flex-col items-center justify-center backdrop-blur-sm rounded-b-2xl"
+                  style={{ background: `radial-gradient(circle, rgba(${colors.rgb},0.05) 0%, rgba(6,10,16,0.95) 70%)` }}
+                >
+                  {/* Spinning ring */}
+                  <div className="relative w-20 h-20 mb-5">
+                    <motion.div className="absolute inset-0 rounded-full"
+                      style={{ border: `2px solid rgba(${colors.rgb},0.15)`, borderTopColor: colors.text }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} />
+                    <div className="absolute inset-2 rounded-full flex items-center justify-center"
+                      style={{ background: `rgba(${colors.rgb},0.05)` }}>
+                      <Cpu className="w-6 h-6" style={{ color: colors.text }} />
+                    </div>
+                  </div>
+                  <div className="w-3/4 h-1 rounded-full overflow-hidden relative" style={{ background: `rgba(${colors.rgb},0.1)` }}>
+                    <motion.div 
+                      className="absolute inset-y-0 left-0 rounded-full"
+                      style={{ background: `linear-gradient(90deg, ${colors.text}, rgba(${colors.rgb},0.5))` }}
+                      initial={{ width: '0%' }}
+                      animate={{ width: `${Math.min(scanProgress, 100)}%` }}
+                      transition={{ ease: "circOut" }}
+                    />
+                  </div>
+                  <span className="text-[10px] mt-2.5 tracking-[0.2em] font-bold" style={{ color: colors.text }}>{txt.extracting} {Math.round(scanProgress)}%</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Main Body */}
+            <div className="p-4 flex-1 overflow-y-auto max-h-[60vh] custom-scrollbar">
+
 
         {/* Error State */}
         {error && !isScanning && (
-          <div className="text-center py-6 text-red-400">
-            <ShieldAlert className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-xs">{error}</p>
+          <div className="text-center py-6">
+            <div className="w-14 h-14 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <ShieldAlert className="w-7 h-7 text-red-400" />
+            </div>
+            <p className="text-xs text-red-400 font-medium">{error}</p>
           </div>
         )}
 
         {/* Initial / Empty State */}
         {!signal && !isScanning && !error && !tokenError && (
           <div className="text-center py-8">
-            <Target className="w-10 h-10 mx-auto text-slate-600 mb-3 opacity-50" />
-            <p className="text-xs text-slate-400 leading-relaxed max-w-[200px] mx-auto">
+            <motion.div className="w-16 h-16 rounded-xl mx-auto mb-4 flex items-center justify-center relative"
+              style={{ background: `rgba(${colors.rgb},0.06)`, border: `1px solid rgba(${colors.rgb},0.15)` }}
+              animate={{ boxShadow: [`0 0 0 rgba(${colors.rgb},0)`, `0 0 30px rgba(${colors.rgb},0.15)`, `0 0 0 rgba(${colors.rgb},0)`] }}
+              transition={{ duration: 3, repeat: Infinity }}>
+              <Target className="w-8 h-8" style={{ color: colors.text, opacity: 0.5 }} />
+            </motion.div>
+            <p className="text-[11px] text-gray-500 leading-relaxed max-w-[200px] mx-auto font-medium">
               {txt.initScan}
             </p>
           </div>
@@ -180,13 +215,15 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
 
         {/* Token Error State */}
         {tokenError && !isScanning && (
-          <div className="text-center py-6 text-amber-500 bg-amber-500/10 rounded-xl border border-amber-500/20 m-4 p-4">
-            <Coins className="w-8 h-8 mx-auto mb-2 opacity-80" />
-            <h3 className="font-bold mb-1">
-              {language === "ar" ? "رصيد التوكن غير كافٍ" : language === "fr" ? "Jetons IA insuffisants" : language === "es" ? "Tokens de IA insuficientes" : language === "ru" ? "Недостаточно ИИ токенов" : language === "tr" ? "Yetersiz YZ Jetonu" : "Insufficient AI Tokens"}
+          <div className="text-center py-4 m-1 rounded-xl" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
+            <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+              <Coins className="w-6 h-6 text-amber-400" />
+            </div>
+            <h3 className="font-black text-amber-400 text-xs mb-1">
+              {language === "ar" ? "رصيد التوكن غير كافٍ" : "Insufficient AI Tokens"}
             </h3>
-            <p className="text-xs opacity-80">
-              {language === "ar" ? "يرجى شحن رصيدك من صفحة الملف الشخصي لإجراء مسوحات الذكاء الاصطناعي." : language === "fr" ? "Veuillez recharger vos jetons dans le profil utilisateur pour lancer des analyses IA." : language === "es" ? "Por favor recarga tus tokens en el perfil de usuario para ejecutar escaneos de IA." : language === "ru" ? "Пожалуйста, пополните свои токены в профиле пользователя для запуска ИИ-сканирований." : language === "tr" ? "YZ taramalarını çalıştırmak için lütfen kullanıcı profilinizden jeton yükleyin." : "Please top up your tokens in the user profile to run AI scans."}
+            <p className="text-[10px] text-gray-500 px-3 leading-relaxed">
+              {language === "ar" ? "يرجى شحن رصيدك من صفحة الملف الشخصي." : "Please top up your tokens in the user profile."}
             </p>
           </div>
         )}
@@ -196,71 +233,70 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }} 
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3"
           >
-            {/* The Huge Signal Text */}
-            <div className="text-center py-2 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-slate-900 px-3 py-0.5 rounded-full border border-slate-800 shadow-md whitespace-nowrap">
-                <span className="text-[10px] text-slate-400 tracking-widest font-bold">{txt.focus}</span>
-                <span className="text-[10px] text-purple-400 font-bold tracking-widest bg-purple-900/40 px-1.5 rounded-md border border-purple-800/50">
+            {/* The Huge Signal */}
+            <div className="text-center py-3 relative rounded-xl overflow-hidden"
+              style={{ background: colors.bg, border: `1px solid ${colors.border}` }}>
+              {/* Grid bg inside signal */}
+              <div className="absolute inset-0 pointer-events-none" style={{
+                backgroundImage: `linear-gradient(rgba(${colors.rgb},0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(${colors.rgb},0.04) 1px, transparent 1px)`,
+                backgroundSize: '20px 20px',
+              }} />
+              
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full z-10"
+                style={{ background: 'rgba(6,10,16,0.9)', border: `1px solid rgba(${colors.rgb},0.2)` }}>
+                <span className="text-[8px] tracking-[0.15em] font-bold" style={{ color: colors.text }}>{txt.focus}</span>
+                <span className="text-[8px] font-black tracking-widest px-1.5 rounded" style={{ background: `rgba(${colors.rgb},0.15)`, color: colors.text }}>
                   {indicatorName || 'PHASE X'}
                 </span>
-                <span className="text-[10px] text-cyan-400 font-black tracking-widest bg-cyan-900/40 px-1.5 rounded-md border border-cyan-800/50">
+                <span className="text-[8px] font-black tracking-widest px-1.5 rounded" style={{ background: `rgba(${colors.rgb},0.1)`, color: colors.text }}>
                   {signal.timeframeString}
                 </span>
               </div>
               
-              <div className="flex items-center justify-center gap-3 mt-3">
-                {signal.action === 'BUY' && <TrendingUp className="w-6 h-6" style={{ color: colors.text }} />}
-                {signal.action === 'SELL' && <TrendingDown className="w-6 h-6" style={{ color: colors.text }} />}
-                {signal.action === 'HOLD' && <Minus className="w-6 h-6" style={{ color: colors.text }} />}
-                <h1 
-                  className="text-4xl font-black tracking-widest"
-                  style={{ color: colors.text, textShadow: `0 0 15px ${colors.glow}` }}
+              <div className="flex items-center justify-center gap-2.5 mt-4 relative z-10">
+                {signal.action === 'BUY' && <TrendingUp className="w-5 h-5" style={{ color: colors.text }} />}
+                {signal.action === 'SELL' && <TrendingDown className="w-5 h-5" style={{ color: colors.text }} />}
+                {signal.action === 'HOLD' && <Minus className="w-5 h-5" style={{ color: colors.text }} />}
+                <motion.h1 
+                  className="text-3xl font-black tracking-[0.3em]"
+                  style={{ color: colors.text, textShadow: `0 0 20px rgba(${colors.rgb},0.4)` }}
+                  animate={{ textShadow: [`0 0 15px rgba(${colors.rgb},0.3)`, `0 0 30px rgba(${colors.rgb},0.5)`, `0 0 15px rgba(${colors.rgb},0.3)`] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
                   {signal.action}
-                </h1>
+                </motion.h1>
               </div>
-              <div className="mt-1 text-[10px] text-slate-500 tracking-wider">
-                CONFIDENCE RATIO: <strong style={{ color: colors.text }}>{signal.confidence}%</strong>
+              <div className="mt-1 text-[9px] text-gray-500 tracking-[0.15em] font-bold relative z-10">
+                CONFIDENCE · <strong style={{ color: colors.text }}>{signal.confidence}%</strong>
               </div>
             </div>
 
             {/* Targets Section */}
             {(signal.targets?.entry || signal.targets?.tp1 || signal.targets?.sl) && (
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {signal.targets.entry && (
-                  <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
-                    <div className="text-[9px] text-slate-400">{txt.entryProtocol}</div>
-                    <div className="text-xs font-bold text-white truncate">{signal.targets.entry}</div>
-                  </div>
-                )}
-                {signal.targets.tp1 && (
-                  <div className="bg-slate-800/50 p-2 rounded-lg border border-emerald-900/30">
-                    <div className="text-[9px] text-slate-400">{txt.targetPrimary}</div>
-                    <div className="text-xs font-bold text-emerald-400 truncate">{signal.targets.tp1}</div>
-                  </div>
-                )}
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  {signal.targets.entry && (
+                    <div className="p-2.5 rounded-xl" style={{ background: `rgba(${colors.rgb},0.04)`, border: `1px solid rgba(${colors.rgb},0.1)` }}>
+                      <div className="text-[8px] tracking-[0.15em] font-bold text-gray-500 mb-1">{txt.entryProtocol}</div>
+                      <div className="text-xs font-black text-white truncate">{signal.targets.entry}</div>
+                    </div>
+                  )}
+                  {signal.targets.tp1 && (
+                    <div className="p-2.5 rounded-xl" style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.12)' }}>
+                      <div className="text-[8px] tracking-[0.15em] font-bold text-gray-500 mb-1">{txt.targetPrimary}</div>
+                      <div className="text-xs font-black text-emerald-400 truncate">{signal.targets.tp1}</div>
+                    </div>
+                  )}
+                </div>
                 {signal.targets.sl && (
-                  <div className="flex flex-col gap-2 mt-2 col-span-2">
-                    <div className="flex gap-3">
-                      <div className="flex-1 bg-slate-900/50 rounded-lg p-3 border" style={{ borderColor: colors?.border || 'rgba(51, 65, 85, 0.5)' }}>
-                        <div className="text-[9px] text-slate-400 mb-1">{txt.entryProtocol}</div>
-                        <div className="text-sm font-bold text-slate-200">{signal.targets?.entry || 'Market'}</div>
-                      </div>
-                      <div className="flex-1 bg-slate-900/50 rounded-lg p-3 border" style={{ borderColor: colors?.border || 'rgba(51, 65, 85, 0.5)' }}>
-                        <div className="text-[9px] text-slate-400 mb-1">{txt.targetPrimary}</div>
-                        <div className="text-sm font-bold text-emerald-400">{signal.targets?.tp1 || 'N/A'}</div>
-                      </div>
+                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-[8px] tracking-[0.15em] font-bold text-gray-500">{txt.abortLevel}</div>
+                      <ShieldAlert className="w-3 h-3 text-red-500/40" />
                     </div>
-
-                    <div className="bg-slate-900/50 rounded-lg p-3 border" style={{ borderColor: colors?.border || 'rgba(51, 65, 85, 0.5)' }}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="text-[9px] text-slate-400">{txt.abortLevel}</div>
-                        <ShieldAlert className="w-3 h-3 text-red-500/50" />
-                      </div>
-                      <div className="text-sm font-bold text-red-400">{signal.targets?.sl || 'N/A'}</div>
-                    </div>
+                    <div className="text-xs font-black text-red-400">{signal.targets?.sl || 'N/A'}</div>
                   </div>
                 )}
               </div>
@@ -268,65 +304,124 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
 
             {/* Metrics Section */}
             {signal.metrics && (
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-700/30 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 mb-1.5 opacity-70">
-                    <Activity className="w-3.5 h-3.5 text-blue-400" />
-                    <span className="text-[9px] font-bold tracking-widest text-slate-300">{txt.volatility}</span>
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.1)' }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Activity className="w-3 h-3 text-indigo-400" />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.volatility}</span>
+                    </div>
+                    <div className="text-[11px] font-black text-white">{signal.metrics.volatility}</div>
                   </div>
-                  <div className="text-xs font-bold text-slate-200">{signal.metrics.volatility}</div>
-                </div>
-                
-                <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-700/30 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 mb-1.5 opacity-70">
-                    <Zap className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-[9px] font-bold tracking-widest text-slate-300">{txt.trendStrength}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-xs font-bold text-slate-200">{signal.metrics.trendStrength}%</div>
-                    <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-400" style={{ width: `${Math.min(100, Math.max(0, signal.metrics.trendStrength))}%` }} />
+                  
+                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.1)' }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Zap className="w-3 h-3 text-amber-400" />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.trendStrength}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-[11px] font-black text-white">{signal.metrics.trendStrength}%</div>
+                      <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(245,158,11,0.1)' }}>
+                        <motion.div className="h-full rounded-full"
+                          style={{ background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', width: `${Math.min(100, Math.max(0, signal.metrics.trendStrength))}%` }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, Math.max(0, signal.metrics.trendStrength))}%` }}
+                          transition={{ duration: 1, delay: 0.3 }} />
+                      </div>
                     </div>
                   </div>
+
+                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.1)' }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <BarChart2 className="w-3 h-3 text-emerald-400" />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.support}</span>
+                    </div>
+                    <div className="text-[11px] font-black text-emerald-400">{signal.metrics.support}</div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.1)' }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <BarChart2 className="w-3 h-3 text-rose-400" />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.resistance}</span>
+                    </div>
+                    <div className="text-[11px] font-black text-rose-400">{signal.metrics.resistance}</div>
+                  </div>
                 </div>
 
-                <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-700/30 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 mb-1.5 opacity-70">
-                    <BarChart2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-[9px] font-bold tracking-widest text-slate-300">{txt.support}</span>
+                {/* New metrics row */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Momentum Score */}
+                  <div className="p-2.5 rounded-xl" style={{ background: `rgba(${(signal.metrics.momentumScore ?? 0) >= 0 ? '16,185,129' : '239,68,68'},0.04)`, border: `1px solid rgba(${(signal.metrics.momentumScore ?? 0) >= 0 ? '16,185,129' : '239,68,68'},0.1)` }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Gauge className="w-3 h-3" style={{ color: (signal.metrics.momentumScore ?? 0) >= 0 ? '#34d399' : '#f87171' }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">MOMENTUM</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-[11px] font-black" style={{ color: (signal.metrics.momentumScore ?? 0) >= 0 ? '#34d399' : '#f87171' }}>{signal.metrics.momentumScore ?? 0}</div>
+                      <div className="flex-1 h-1 rounded-full overflow-hidden relative" style={{ background: 'rgba(100,100,100,0.15)' }}>
+                        <motion.div className="absolute h-full rounded-full"
+                          style={{
+                            background: (signal.metrics.momentumScore ?? 0) >= 0 ? 'linear-gradient(90deg, #059669, #34d399)' : 'linear-gradient(90deg, #f87171, #dc2626)',
+                            width: `${Math.abs(signal.metrics.momentumScore ?? 0) / 2}%`,
+                            left: (signal.metrics.momentumScore ?? 0) >= 0 ? '50%' : `${50 - Math.abs(signal.metrics.momentumScore ?? 0) / 2}%`
+                          }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.abs(signal.metrics.momentumScore ?? 0) / 2}%` }}
+                          transition={{ duration: 1, delay: 0.5 }} />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-600" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs font-bold text-emerald-400/90">{signal.metrics.support}</div>
-                </div>
 
-                <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-700/30 flex flex-col justify-between">
-                  <div className="flex items-center gap-1.5 mb-1.5 opacity-70">
-                    <BarChart2 className="w-3.5 h-3.5 text-rose-400" />
-                    <span className="text-[9px] font-bold tracking-widest text-slate-300">{txt.resistance}</span>
+                  {/* Market Sentiment */}
+                  <div className="p-2.5 rounded-xl" style={{ background: `rgba(${signal.metrics.marketSentiment === 'Bullish' ? '16,185,129' : signal.metrics.marketSentiment === 'Bearish' ? '239,68,68' : '245,158,11'},0.04)`, border: `1px solid rgba(${signal.metrics.marketSentiment === 'Bullish' ? '16,185,129' : signal.metrics.marketSentiment === 'Bearish' ? '239,68,68' : '245,158,11'},0.1)` }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Sparkles className="w-3 h-3" style={{ color: signal.metrics.marketSentiment === 'Bullish' ? '#34d399' : signal.metrics.marketSentiment === 'Bearish' ? '#f87171' : '#fbbf24' }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">SENTIMENT</span>
+                    </div>
+                    <div className="text-[11px] font-black" style={{ color: signal.metrics.marketSentiment === 'Bullish' ? '#34d399' : signal.metrics.marketSentiment === 'Bearish' ? '#f87171' : '#fbbf24' }}>{signal.metrics.marketSentiment}</div>
                   </div>
-                  <div className="text-xs font-bold text-rose-400/90">{signal.metrics.resistance}</div>
+
+                  {/* Timeframe Alignment */}
+                  <div className="p-2.5 rounded-xl" style={{ background: `rgba(${signal.metrics.timeframeAlignment === 'Aligned' ? '16,185,129' : signal.metrics.timeframeAlignment === 'Conflicting' ? '239,68,68' : '245,158,11'},0.04)`, border: `1px solid rgba(${signal.metrics.timeframeAlignment === 'Aligned' ? '16,185,129' : signal.metrics.timeframeAlignment === 'Conflicting' ? '239,68,68' : '245,158,11'},0.1)` }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Layers className="w-3 h-3" style={{ color: signal.metrics.timeframeAlignment === 'Aligned' ? '#34d399' : signal.metrics.timeframeAlignment === 'Conflicting' ? '#f87171' : '#fbbf24' }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">TF ALIGN</span>
+                    </div>
+                    <div className="text-[11px] font-black" style={{ color: signal.metrics.timeframeAlignment === 'Aligned' ? '#34d399' : signal.metrics.timeframeAlignment === 'Conflicting' ? '#f87171' : '#fbbf24' }}>{signal.metrics.timeframeAlignment}</div>
+                  </div>
+
+                  {/* Risk/Reward */}
+                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.1)' }}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Target className="w-3 h-3 text-purple-400" />
+                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">R:R RATIO</span>
+                    </div>
+                    <div className="text-[11px] font-black text-purple-400">{signal.metrics.riskRewardRatio || 'N/A'}</div>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             {/* AI Reasoning */}
-            <div className="bg-slate-900/30 rounded-lg p-4 border border-slate-700/30 mt-2">
+            <div className="rounded-xl p-3.5 relative overflow-hidden" style={{ background: `rgba(${colors.rgb},0.03)`, border: `1px solid rgba(${colors.rgb},0.1)` }}>
               <div className="flex items-center gap-2 mb-2">
-                <Cpu className="w-3.5 h-3.5 text-cyan-500" />
-                <span className="text-[10px] font-bold tracking-widest text-cyan-500/80">{txt.aiLogic}</span>
+                <Sparkles className="w-3.5 h-3.5" style={{ color: colors.text }} />
+                <span className="text-[9px] font-black tracking-[0.2em]" style={{ color: colors.text }}>{txt.aiLogic}</span>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed font-sans" dir={isRTL ? "rtl" : "ltr"}>
+              <p className="text-[11px] text-gray-400 leading-relaxed font-sans" dir={isRTL ? "rtl" : "ltr"}>
                 {signal.reasoning}
               </p>
             </div>
 
             {/* Risk Warnings */}
             {signal.risks && (
-              <div className="bg-red-900/10 rounded-lg p-4 border border-red-900/30">
+              <div className="rounded-xl p-3.5" style={{ background: 'rgba(239,68,68,0.03)', border: '1px solid rgba(239,68,68,0.1)' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
-                  <span className="text-[10px] font-bold tracking-widest text-red-400/80">{txt.riskVectors}</span>
+                  <span className="text-[9px] font-black tracking-[0.2em] text-red-400/80">{txt.riskVectors}</span>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed font-sans" dir={isRTL ? "rtl" : "ltr"}>
+                <p className="text-[11px] text-gray-500 leading-relaxed font-sans" dir={isRTL ? "rtl" : "ltr"}>
                   {signal.risks}
                 </p>
               </div>
@@ -335,51 +430,61 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="p-3 bg-slate-900/80 border-t border-slate-800 flex gap-2">
-        <button
+      {/* Action Button */}
+      <div className="p-3 flex gap-2" style={{ borderTop: `1px solid rgba(${colors.rgb},0.08)` }}>
+        <motion.button
           onClick={handleScan}
           disabled={isScanning}
-          className="flex-1 relative group overflow-hidden rounded-lg py-2.5 transition-all outline-none"
+          whileHover={!isScanning ? { scale: 1.02, boxShadow: `0 8px 30px rgba(${colors.rgb},0.25)` } : {}}
+          whileTap={!isScanning ? { scale: 0.98 } : {}}
+          className="flex-1 relative group overflow-hidden rounded-xl py-2.5 transition-all outline-none cursor-pointer"
           style={{ 
-            background: isScanning ? 'rgba(51, 65, 85, 0.5)' : 'linear-gradient(90deg, #0f172a, #1e293b, #0f172a)',
-            border: `1px solid ${isScanning ? '#334155' : '#06b6d4'}`
+            background: isScanning ? 'rgba(30,41,59,0.3)' : `linear-gradient(135deg, rgba(${colors.rgb},0.15), rgba(${colors.rgb},0.05))`,
+            border: `1px solid ${isScanning ? 'rgba(51,65,85,0.3)' : `rgba(${colors.rgb},0.25)`}`,
+            boxShadow: isScanning ? 'none' : `0 4px 20px rgba(${colors.rgb},0.1)`
           }}
         >
-          {/* Hover glow effect for button */}
           {!isScanning && (
             <motion.div 
-              className="absolute inset-0 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"
+              className="absolute inset-0 rounded-xl"
+              style={{ background: `linear-gradient(90deg, transparent, rgba(${colors.rgb},0.1), transparent)` }}
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
             />
           )}
 
           <div className="relative z-10 flex items-center justify-center gap-2">
-            <Crosshair className={`w-4 h-4 ${isScanning ? 'text-slate-500' : 'text-cyan-400'}`} />
-            <span className={`text-xs font-bold tracking-widest ${isScanning ? 'text-slate-500' : 'text-cyan-100'}`}>
+            <Crosshair className="w-4 h-4" style={{ color: isScanning ? '#475569' : colors.text }} />
+            <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: isScanning ? '#475569' : colors.text }}>
               {isScanning ? txt.scanningBtn : (signal ? txt.rescanBtn : txt.executeBtn)}
             </span>
           </div>
-        </button>
+        </motion.button>
 
-        {/* Reset / Cancel Button */}
         {signal && !isScanning && (
-          <button
+          <motion.button
             onClick={resetSignal}
-            className="w-10 relative group overflow-hidden rounded-lg py-2.5 transition-all outline-none flex items-center justify-center"
-            style={{ 
-              background: 'rgba(51, 65, 85, 0.3)',
-              border: `1px solid #334155`
-            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-10 rounded-xl py-2.5 flex items-center justify-center cursor-pointer"
+            style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}
             title="Reset Scan"
           >
-            <ShieldAlert className="w-4 h-4 text-slate-400 group-hover:text-rose-400 transition-colors" />
-          </button>
+            <ShieldAlert className="w-4 h-4 text-red-400/60" />
+          </motion.button>
         )}
       </div>
 
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Bottom branding */}
+      <div className="absolute bottom-1 left-0 right-0 flex justify-center pointer-events-none">
+        <span className="text-[7px] tracking-[0.3em] uppercase font-semibold" style={{ color: `rgba(${colors.rgb},0.15)` }}>
+          PHASE-X · CORE
+        </span>
+      </div>
     </div>
   );
 }

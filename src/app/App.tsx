@@ -35,7 +35,10 @@ function AppContent() {
           onBackToLogin={() => setCurrentPage("login")}
         />
       )}
-      {currentPage === "dashboard" && (
+      {currentPage === "dashboard" && subscriptionStatus === "none" && (
+        <SubscriptionOnboarding onComplete={() => window.location.reload()} />
+      )}
+      {currentPage === "dashboard" && subscriptionStatus !== "none" && (
         <TradingDashboard
           onLogout={() => setCurrentPage("landing")}
           onOpenDynamics={() => { setLastMainPage("dashboard"); setCurrentPage("phasex-dynamics"); }}

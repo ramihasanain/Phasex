@@ -24,6 +24,8 @@ export interface Indicator {
   type: "line" | "area" | "bar" | "tz";
   color: string;
   icon: string;
+  locked?: boolean;
+  lockType?: "coming_soon" | "upgrade";
 }
 
 interface IndicatorChartProps {

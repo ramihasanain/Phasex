@@ -7,7 +7,7 @@ import { TradingSignalsTable } from "./TradingSignalsTable";
 import {
   LineChart, Activity, LogOut, Search, Star,
   TrendingUp, TrendingDown, Sun, Moon, Map, User, KeySquare, MonitorDot, AlertTriangle, ArrowRight, X, Maximize2, Minimize2,
-  Calendar, Layers, Filter, CheckCircle2, ChevronDown, Lock, ShieldAlert, Cpu, Crown, Clock, Flame, BarChart3, RadioTower, Languages,
+  Calendar, Layers, Filter, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Lock, ShieldAlert, Cpu, Crown, Clock, Flame, BarChart3, RadioTower, Languages,
   Gauge, Move, Target, Navigation, Network
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -45,8 +45,10 @@ const indicators: Indicator[] = [
   { id: "oscillation", name: "حالة التذبذب", nameEn: "OSCILLATION STATE", type: "tz", color: "#fbbf24", icon: "Activity" },
   { id: "direction", name: "حالة الاتجاه", nameEn: "DIRECTION STATE", type: "tz", color: "#f87171", icon: "Navigation" },
   { id: "envelop", name: "حالة الغلاف", nameEn: "ENVELOP STATE", type: "tz", color: "#f472b6", icon: "Layers" },
+  { id: "momentum", name: "حالة الزخم", nameEn: "MOMENTUM STATE", type: "tz", color: "#fb923c", icon: "Gauge", locked: true, lockType: "coming_soon" },
+  { id: "volatility", name: "حالة التقلب", nameEn: "VOLATILITY STATE", type: "tz", color: "#38bdf8", icon: "Activity", locked: true, lockType: "upgrade" },
 ];
-const indicatorIcons: Record<string, any> = { Gauge, Move, Target, Activity, Navigation, Layers };
+const indicatorIcons: Record<string, any> = { Gauge, Move, Target, Activity, Navigation, Layers, Lock };
 
 /* ─── Chart Data Generator ─── */
 function generateChartData(asset: Asset, indicator: Indicator, timeframe: number) {
@@ -179,6 +181,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const isRTL = language === "ar";
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const ribbonRef = useRef<HTMLDivElement>(null);
 
   // Close language dropdown if clicked outside
   useEffect(() => {
@@ -397,12 +400,53 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
     <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ background: tk.bg, fontFamily: "'Inter', system-ui, sans-serif", transition: "background 0.3s" }}>
 
       {/* ═══════════════ HEADER ═══════════════ */}
-      <header style={{ background: tk.headerBg, borderBottom: `1px solid ${tk.headerBorder}`, transition: "background 0.3s, border-color 0.3s" }}>
-        <div className="flex items-center justify-between px-5 py-2.5">
+      <header className="relative overflow-hidden" style={{ 
+        background: `linear-gradient(180deg, rgba(6,10,16,0.95) 0%, rgba(6,10,16,0.85) 100%)`,
+        backdropFilter: 'blur(20px)',
+        borderBottom: `1px solid rgba(99,102,241,0.08)`,
+        transition: "background 0.3s, border-color 0.3s"
+      }}>
+        {/* Animated top LED strip */}
+        <motion.div className="absolute top-0 left-0 right-0 h-[1.5px] z-10"
+          style={{ background: 'linear-gradient(90deg, transparent, #6366f1 30%, #a855f7 50%, #6366f1 70%, transparent)' }}
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 3, repeat: Infinity }} />
+        
+        {/* Subtle animated scan line */}
+        <motion.div className="absolute inset-0 pointer-events-none z-0"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.03), transparent)', width: '30%' }}
+          animate={{ x: ['-100%', '400%'] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }} />
+        
+        {/* Grid pattern */}
+        <div className="absolute inset-0 pointer-events-none z-0" style={{
+          backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }} />
+
+        <div className="flex items-center justify-between px-5 py-2.5 relative z-10">
           {/* Logo */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
-            <div style={{ background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)", padding: "6px 18px", borderRadius: 10 }}>
-              <span style={{ color: "#fff", fontWeight: 800, fontSize: 16, letterSpacing: 2 }}>PHASE X</span>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3">
+            <motion.div className="relative"
+              whileHover={{ scale: 1.05 }}
+              style={{ 
+                background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 100%)", 
+                padding: "7px 20px", 
+                borderRadius: 12,
+                border: '1px solid rgba(99,102,241,0.25)',
+                boxShadow: '0 4px 20px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+              }}>
+              <span style={{ color: "#fff", fontWeight: 900, fontSize: 15, letterSpacing: 3.5 }}>PHASE X</span>
+              {/* Orbiting dot */}
+              <motion.div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
+                style={{ background: '#818cf8', boxShadow: '0 0 8px #818cf8' }}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2, repeat: Infinity }} />
+            </motion.div>
+            <div className="hidden sm:block">
+              <span className="text-[8px] font-bold tracking-[0.25em] uppercase" style={{ color: 'rgba(99,102,241,0.4)' }}>
+                STRUCTURAL DYNAMICS
+              </span>
             </div>
           </motion.div>
 
@@ -411,41 +455,45 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             {/* Structural Dynamics Link */}
             <motion.button
               onClick={onOpenDynamics}
-              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
+              whileHover={{ scale: 1.04, boxShadow: '0 4px 15px rgba(99,102,241,0.15)' }} whileTap={{ scale: 0.96 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
               style={{
                 color: "#818cf8",
-                background: "rgba(99,102,241,0.08)",
-                border: "1px solid rgba(99,102,241,0.15)",
+                background: "rgba(99,102,241,0.06)",
+                border: "1px solid rgba(99,102,241,0.12)",
+                backdropFilter: 'blur(8px)',
               }}>
               <Network className="w-3.5 h-3.5" />
-              <span>
-                {t("structuralDynamics")}
-              </span>
+              <span>{t("structuralDynamics")}</span>
             </motion.button>
 
             <motion.button onClick={() => setIsNewsOpen(!isNewsOpen)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer transition-colors ${isNewsOpen ? "bg-red-500/10 text-red-500 border-red-500/20" : "text-gray-400 hover:text-red-400"}`}
-              style={{ border: isNewsOpen ? `1px solid rgba(239,68,68,0.3)` : `1px solid ${tk.buttonGhostBorder}` }}>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
+              style={{ 
+                color: isNewsOpen ? '#f87171' : '#64748b',
+                background: isNewsOpen ? 'rgba(239,68,68,0.06)' : 'rgba(99,102,241,0.03)',
+                border: `1px solid ${isNewsOpen ? 'rgba(239,68,68,0.15)' : 'rgba(99,102,241,0.08)'}`,
+                backdropFilter: 'blur(8px)',
+              }}>
               <RadioTower className={`w-3.5 h-3.5 ${isNewsOpen ? "animate-pulse" : ""}`} />
               {t("breakingNews")}
             </motion.button>
 
             <motion.button onClick={() => setIsProfileOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
-              style={{ color: tk.buttonGhostText, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
+              style={{ color: '#64748b', background: 'rgba(99,102,241,0.03)', border: '1px solid rgba(99,102,241,0.08)', backdropFilter: 'blur(8px)' }}>
               <User className="w-3.5 h-3.5" /> {t("userProfile") || "Profile"}
             </motion.button>
 
             <motion.button onClick={onLogout} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer"
-              style={{ color: tk.buttonGhostText, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
+              style={{ color: '#64748b', background: 'rgba(99,102,241,0.03)', border: '1px solid rgba(99,102,241,0.08)', backdropFilter: 'blur(8px)' }}>
               <LogOut className="w-3.5 h-3.5" /> {t("logout")}
             </motion.button>
 
             <motion.button onClick={toggleTheme} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
-              className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
-              style={{ color: tk.isDark ? "#fbbf24" : "#6366f1", background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
+              className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer"
+              style={{ color: tk.isDark ? "#fbbf24" : "#6366f1", background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)' }}>
               {tk.isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </motion.button>
 
@@ -453,11 +501,11 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             <div className="relative mr-3" ref={dropdownRef}>
               <button
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-widest transition-colors border cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black tracking-widest transition-colors cursor-pointer"
                 style={{
-                  color: tk.textPrimary,
-                  borderColor: tk.border,
-                  backgroundColor: tk.surface,
+                  color: '#94a3b8',
+                  border: '1px solid rgba(99,102,241,0.1)',
+                  backgroundColor: 'rgba(99,102,241,0.04)',
                 }}
               >
                 <img src={`https://flagcdn.com/${currentLangObj.flagUrl}.svg`} alt={currentLangObj.code} className="w-5 h-auto rounded-sm object-cover" />
@@ -473,7 +521,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
                     className="absolute top-full mt-2 w-36 rounded-xl shadow-2xl overflow-hidden z-[60]"
-                    style={{ background: tk.surface, border: `1px solid ${tk.border}`, right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
+                    style={{ background: 'rgba(6,10,16,0.95)', border: '1px solid rgba(99,102,241,0.12)', backdropFilter: 'blur(20px)', right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
                   >
                     <div className="py-1 flex flex-col">
                       {languageOptions.map((lang) => (
@@ -485,8 +533,8 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                           }}
                           className="flex items-center gap-2 px-3 py-2 text-xs transition-colors text-left"
                           style={{
-                            color: language === lang.code ? tk.textPrimary : tk.textMuted,
-                            background: language === lang.code ? tk.buttonGhost : 'transparent'
+                            color: language === lang.code ? '#818cf8' : '#64748b',
+                            background: language === lang.code ? 'rgba(99,102,241,0.08)' : 'transparent'
                           }}
                         >
                           <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
@@ -499,12 +547,17 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
               </AnimatePresence>
             </div>
 
-            <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-black cursor-pointer transition-all hover:bg-[#facc15]/10"
-              style={{ color: "#facc15", background: "#10141d", border: `1px solid rgba(250,204,21,0.3)`, boxShadow: `0 0 15px rgba(250,204,21,0.05)` }}>
-              <Crown className="w-4 h-4" />
-              <span className="tracking-wide">{t("subscription")}</span>
-              <span className="text-[11px] font-black px-2 py-0.5 rounded-lg ml-1" style={{ background: "rgba(250,204,21,0.15)", color: "#facc15" }}>
+            <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04, boxShadow: '0 6px 25px rgba(250,204,21,0.15)' }} whileTap={{ scale: 0.96 }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-black cursor-pointer relative overflow-hidden"
+              style={{ color: "#facc15", background: "rgba(250,204,21,0.04)", border: '1px solid rgba(250,204,21,0.15)', boxShadow: '0 0 20px rgba(250,204,21,0.03)' }}>
+              {/* Shimmer on subscription button */}
+              <motion.div className="absolute inset-0 pointer-events-none"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(250,204,21,0.06), transparent)' }}
+                animate={{ x: ['-100%', '200%'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} />
+              <Crown className="w-4 h-4 relative z-10" />
+              <span className="tracking-wide relative z-10">{t("subscription")}</span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-lg ml-1 relative z-10" style={{ background: "rgba(250,204,21,0.1)", color: "#facc15", border: '1px solid rgba(250,204,21,0.15)' }}>
                 {subInfo.daysRemaining} {t("daysRemaining")}
               </span>
             </motion.button>
@@ -548,32 +601,60 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
         </motion.div>
 
         {/* ── CENTER: Indicators + Chart + Signals ── */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0 px-0">
+        <div className="flex-1 flex flex-col gap-3 min-w-0 px-0 ml-3">
 
-          {/* Indicator Ribbon (Compact & Horizontal) */}
-          <div className="rounded-xl overflow-hidden mb-1 flex-shrink-0" style={{ background: tk.surface, border: `1px solid ${tk.border}`, transition: "background 0.3s" }}>
-            <div className="flex items-center p-1 gap-1 overflow-x-auto hide-scrollbar">
+          {/* Indicator Ribbon (Compact & Horizontal with Scroll Arrows) */}
+          <div className="rounded-2xl overflow-hidden mb-1 flex-shrink-0 relative"
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, rgba(6,10,16,0.95) 60%)', border: '1px solid rgba(99,102,241,0.1)', backdropFilter: 'blur(16px)', transition: "background 0.3s" }}>
+            {/* Grid bg */}
+            <div className="absolute inset-0 pointer-events-none z-0" style={{
+              backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+            }} />
+            {/* Left Arrow */}
+            <button
+              onClick={() => ribbonRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+              className="absolute left-0 top-0 bottom-0 z-20 flex items-center justify-center w-7 cursor-pointer"
+              style={{ background: 'linear-gradient(90deg, rgba(6,10,16,0.9) 60%, transparent 100%)' }}
+            >
+              <ChevronLeft className="w-4 h-4" style={{ color: '#818cf8' }} />
+            </button>
+            {/* Right Arrow */}
+            <button
+              onClick={() => ribbonRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+              className="absolute right-0 top-0 bottom-0 z-20 flex items-center justify-center w-7 cursor-pointer"
+              style={{ background: 'linear-gradient(270deg, rgba(6,10,16,0.9) 60%, transparent 100%)' }}
+            >
+              <ChevronRight className="w-4 h-4" style={{ color: '#818cf8' }} />
+            </button>
+            <div ref={ribbonRef} className="flex items-center p-1 gap-1 overflow-x-auto hide-scrollbar mx-7 relative z-10" style={{ scrollBehavior: "smooth" }}>
               {indicators.map((ind) => {
-                const Icon = indicatorIcons[ind.icon];
+                const Icon = indicatorIcons[ind.icon] || Lock;
                 const active = selectedIndicator?.id === ind.id;
+                const isLocked = ind.locked === true;
                 return (
                   <motion.button key={ind.id} onClick={() => pickIndicator(ind)}
                     whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                    className="flex-shrink-0 flex flex-row items-center justify-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-all"
+                    className="flex-shrink-0 flex flex-row items-center justify-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all relative"
                     style={{
-                      background: active ? `${ind.color}15` : "transparent",
-                      border: active ? `1px solid ${ind.color}40` : "1px solid transparent",
-                      minWidth: "140px"
+                      background: active ? (isLocked ? 'rgba(148,163,184,0.06)' : `rgba(99,102,241,0.08)`) : "transparent",
+                      border: active ? `1px solid ${isLocked ? 'rgba(148,163,184,0.15)' : 'rgba(99,102,241,0.2)'}` : "1px solid transparent",
+                      boxShadow: active && !isLocked ? '0 2px 12px rgba(99,102,241,0.08)' : 'none',
+                      minWidth: "140px",
+                      opacity: isLocked ? 0.55 : 1
                     }}>
-                    <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{
-                      background: active ? `linear-gradient(135deg, ${ind.color}, ${ind.color}88)` : tk.surfaceHover,
-                      boxShadow: active ? `0 2px 10px ${ind.color}30` : "none",
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 relative" style={{
+                      background: active ? (isLocked ? 'rgba(148,163,184,0.1)' : `rgba(99,102,241,0.15)`) : 'rgba(99,102,241,0.04)',
+                      border: `1px solid ${active && !isLocked ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.06)'}`,
                     }}>
-                      <Icon className="w-3 h-3" style={{ color: active ? "#fff" : tk.textDim }} />
+                      {isLocked ? <Lock className="w-3 h-3" style={{ color: '#94a3b8' }} /> : <Icon className="w-3 h-3" style={{ color: active ? "#818cf8" : '#475569' }} />}
                     </div>
-                    <span className="text-[10px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: active ? ind.color : tk.textMuted }}>
-                      {t((ind.id + "State") as any)}
+                    <span className="text-[10px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: active ? (isLocked ? '#94a3b8' : '#818cf8') : '#475569' }}>
+                      {isRTL ? ind.name : ind.nameEn}
                     </span>
+                    {isLocked && (
+                      <Lock className="w-3 h-3 flex-shrink-0" style={{ color: '#94a3b8' }} />
+                    )}
                   </motion.button>
                 );
               })}
@@ -581,11 +662,169 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
           </div>
 
           {/* Chart */}
-          <div className="flex-shrink-0" style={{ minHeight: "420px", height: "calc(100vh - 280px)" }}>
+          <div className="flex-shrink-0 relative" style={{ minHeight: "420px", height: "calc(100vh - 280px)" }}>
+            {/* Lock Overlay */}
+            {selectedIndicator?.locked && (() => {
+              const isUpgrade = selectedIndicator.lockType === 'upgrade';
+              const accentColor = isUpgrade ? '#fb923c' : '#6366f1';
+              const accentRgb = isUpgrade ? '251,146,60' : '99,102,241';
+              return (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-xl overflow-hidden"
+                style={{
+                  background: `radial-gradient(ellipse at 50% 30%, rgba(${accentRgb},0.06) 0%, rgba(6,10,16,0.95) 70%)`,
+                  backdropFilter: "blur(16px)",
+                  border: `1px solid rgba(${accentRgb},0.12)`,
+                }}
+              >
+                {/* Animated grid background */}
+                <div className="absolute inset-0 pointer-events-none" style={{
+                  backgroundImage: `linear-gradient(rgba(${accentRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${accentRgb},0.03) 1px, transparent 1px)`,
+                  backgroundSize: '40px 40px',
+                }} />
+
+                {/* Scan line effect */}
+                <motion.div className="absolute inset-0 pointer-events-none"
+                  style={{ background: `linear-gradient(transparent 0%, rgba(${accentRgb},0.03) 50%, transparent 100%)`, backgroundSize: '100% 4px' }}
+                  animate={{ backgroundPosition: ['0 0', '0 100%'] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} />
+
+                {/* Outer orbital ring */}
+                <div className="absolute" style={{ width: '340px', height: '340px' }}>
+                  <motion.div className="w-full h-full rounded-full absolute"
+                    style={{ border: `1px dashed rgba(${accentRgb},0.15)` }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} />
+                </div>
+                {/* Middle orbital ring */}
+                <div className="absolute" style={{ width: '260px', height: '260px' }}>
+                  <motion.div className="w-full h-full rounded-full absolute"
+                    style={{ border: `1px solid rgba(${accentRgb},0.1)` }}
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} />
+                </div>
+
+                {/* Radial glow behind icon */}
+                <motion.div className="absolute rounded-full"
+                  style={{ width: '200px', height: '200px', background: `radial-gradient(circle, rgba(${accentRgb},0.12) 0%, transparent 70%)`, filter: 'blur(30px)' }}
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
+                  transition={{ duration: 4, repeat: Infinity }} />
+
+                {/* PHASE-X CORE brand tag */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 relative z-10"
+                  style={{ background: `rgba(${accentRgb},0.08)`, border: `1px solid rgba(${accentRgb},0.2)` }}>
+                  <motion.div className="w-2 h-2 rounded-full"
+                    style={{ background: accentColor, boxShadow: `0 0 8px ${accentColor}` }}
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }} />
+                  <span className="text-[10px] font-black tracking-[0.25em] uppercase" style={{ color: accentColor }}>
+                    PHASE-X CORE
+                  </span>
+                </motion.div>
+
+                {/* Main icon container with hexagonal feel */}
+                <motion.div
+                  animate={{ scale: [1, 1.04, 1] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                  className="relative z-10 w-28 h-28 flex items-center justify-center mb-6">
+                  {/* Spinning border */}
+                  <motion.div className="absolute inset-0 rounded-2xl"
+                    style={{ border: `2px solid rgba(${accentRgb},0.25)`, borderTopColor: accentColor, borderBottomColor: 'transparent' }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} />
+                  {/* Inner glow box */}
+                  <div className="absolute inset-2 rounded-xl"
+                    style={{ background: `linear-gradient(135deg, rgba(${accentRgb},0.1) 0%, rgba(${accentRgb},0.02) 100%)`, border: `1px solid rgba(${accentRgb},0.15)` }} />
+                  {/* Icon */}
+                  {isUpgrade
+                    ? <Crown size={40} style={{ color: accentColor, filter: `drop-shadow(0 0 12px rgba(${accentRgb},0.5))` }} className="relative z-10" />
+                    : <Lock size={40} style={{ color: accentColor, filter: `drop-shadow(0 0 12px rgba(${accentRgb},0.5))` }} className="relative z-10" />
+                  }
+                </motion.div>
+
+                {/* Indicator name */}
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-2xl font-black text-white mb-1 relative z-10 tracking-wide"
+                  style={{ textShadow: `0 0 30px rgba(${accentRgb},0.3)` }}>
+                  {isRTL ? selectedIndicator.name : selectedIndicator.nameEn}
+                </motion.h3>
+
+                {/* Status line */}
+                <div className="flex items-center gap-2 mb-5 relative z-10">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: isUpgrade ? '#f97316' : '#94a3b8' }} />
+                  <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: isUpgrade ? '#f97316' : '#94a3b8' }}>
+                    {isUpgrade
+                      ? (isRTL ? 'يتطلب ترقية' : 'UPGRADE REQUIRED')
+                      : (isRTL ? 'قيد التطوير' : 'IN DEVELOPMENT')
+                    }
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: isUpgrade ? '#f97316' : '#94a3b8' }} />
+                </div>
+
+                {/* Description */}
+                <p className="text-xs text-gray-500 max-w-xs text-center leading-relaxed mb-6 relative z-10 font-medium">
+                  {isUpgrade
+                    ? (isRTL ? 'هذا المؤشر متاح فقط للمشتركين المميزين. قم بترقية خطتك للوصول الكامل لجميع أدوات التحليل المتقدمة.' : 'This indicator is available exclusively for premium subscribers. Upgrade your plan to unlock all advanced analysis tools.')
+                    : (isRTL ? 'فريقنا يعمل على تطوير هذا المؤشر المتقدم. سيكون متاحاً قريباً ضمن منظومة Phase-X.' : 'Our team is developing this advanced indicator. It will be available soon within the Phase-X ecosystem.')
+                  }
+                </p>
+
+                {/* Action */}
+                {isUpgrade ? (
+                  <motion.button
+                    whileHover={{ scale: 1.05, boxShadow: `0 15px 40px rgba(${accentRgb},0.4)` }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative z-10 px-8 py-3 rounded-xl text-sm font-black uppercase tracking-[0.2em] cursor-pointer flex items-center gap-2"
+                    style={{ background: `linear-gradient(135deg, ${accentColor}, #f97316)`, color: '#000', boxShadow: `0 8px 30px rgba(${accentRgb},0.3)` }}>
+                    <motion.div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
+                      <motion.div className="absolute inset-0"
+                        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }}
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'linear', delay: 1 }} />
+                    </motion.div>
+                    <Crown size={16} />
+                    {isRTL ? 'ترقية الاشتراك' : 'Upgrade Plan'}
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="relative z-10 flex items-center gap-3 px-6 py-3 rounded-xl"
+                    style={{ background: `rgba(${accentRgb},0.06)`, border: `1px solid rgba(${accentRgb},0.15)` }}>
+                    <motion.div className="w-2.5 h-2.5 rounded-full"
+                      style={{ background: accentColor, boxShadow: `0 0 10px ${accentColor}` }}
+                      animate={{ scale: [1, 1.4, 1], opacity: [1, 0.4, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }} />
+                    <span className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: accentColor }}>
+                      {isRTL ? 'قريباً' : 'Coming Soon'}
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Bottom corner branding */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                  <span className="text-[9px] tracking-[0.4em] uppercase font-semibold" style={{ color: `rgba(${accentRgb},0.25)` }}>
+                    PHASE-X · STRUCTURAL DYNAMICS · CORE
+                  </span>
+                </div>
+              </motion.div>
+              );
+            })()}
             <AnimatePresence mode="wait">
               <IndicatorChart
                 key={`${selectedAsset?.id}-${selectedIndicator?.id}-${timeframe}`}
-                currency={liveSelectedAsset} indicator={selectedIndicator} data={chartData}
+                currency={liveSelectedAsset} indicator={selectedIndicator} data={selectedIndicator?.locked ? [] : chartData}
                 timeframe={timeframe} onTimeframeChange={pickTimeframe}
                 mtfEnabled={mtfEnabled} mtfSmallTimeframe={mtfSmallTimeframe} mtfLargeTimeframe={mtfLargeTimeframe}
                 onMtfEnabledChange={setMtfEnabled} onMtfSmallTimeframeChange={setMtfSmallTimeframe} onMtfLargeTimeframeChange={setMtfLargeTimeframe}

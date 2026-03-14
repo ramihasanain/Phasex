@@ -21,6 +21,10 @@ export interface TradeSignalResponse {
     trendStrength: number; // 0 to 100
     support: string;
     resistance: string;
+    momentumScore: number; // -100 to 100
+    marketSentiment: 'Bullish' | 'Bearish' | 'Neutral';
+    timeframeAlignment: 'Aligned' | 'Conflicting' | 'Mixed';
+    riskRewardRatio: string; // e.g. "1:2.5"
   };
 }
 
@@ -101,7 +105,11 @@ REQUIRED JSON FORMAT:
     "volatility": "Low" | "Medium" | "High",
     "trendStrength": <number 0-100 indicating momentum/trend power>,
     "support": "<price level>",
-    "resistance": "<price level>"
+    "resistance": "<price level>",
+    "momentumScore": <number -100 to 100, negative = bearish momentum, positive = bullish momentum>,
+    "marketSentiment": "Bullish" | "Bearish" | "Neutral",
+    "timeframeAlignment": "Aligned" | "Conflicting" | "Mixed",
+    "riskRewardRatio": "<ratio like 1:2.5>"
   }
 }
 `;
