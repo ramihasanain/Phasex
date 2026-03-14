@@ -4,6 +4,7 @@ import { useAITradeSignal } from '../hooks/useAITradeSignal';
 import { Target, Crosshair, TrendingUp, TrendingDown, ShieldAlert, Cpu, Activity, Minus, Zap, BarChart2, ChevronUp, ChevronDown, Coins, Sparkles, Gauge, Layers } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useThemeTokens } from '../hooks/useThemeTokens';
 
 interface AITradeSignalWidgetProps {
   marketContext: string;
@@ -17,6 +18,7 @@ interface AITradeSignalWidgetProps {
 export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, indicatorName }: AITradeSignalWidgetProps) {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+  const tk = useThemeTokens();
   
   const txtDict = {
     ar: { analyzing: "جاري التحليل...", systemReady: "جاهز", standby: "وضع الاستعداد", extracting: "استخراج البيانات...", initScan: "ابدأ الفحص لمعالجة ديناميكيات المرحلة مباشرة.", focus: "التركيز", entryProtocol: "نقطة الدخول", targetPrimary: "الهدف الرئيسي", abortLevel: "مستوى الإلغاء (SL)", volatility: "التقلب", trendStrength: "قوة الاتجاه", support: "الدعم", resistance: "المقاومة", aiLogic: "منطق الذكاء الاصطناعي", riskVectors: "مؤشرات الخطر", scanningBtn: "جاري المسح...", rescanBtn: "إعادة المسح", executeBtn: "تنفيذ المسح" },
@@ -61,16 +63,20 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
   };
 
   const getSignalColors = () => {
-    if (!signal) return { bg: 'rgba(99,102,241,0.05)', border: 'rgba(99,102,241,0.2)', text: '#818cf8', glow: 'transparent', rgb: '99,102,241' };
+    if (!signal) return { bg: tk.accentGlow08, border: tk.accentGlow25, text: tk.accent, glow: 'transparent', rgb: '99,102,241' };
     switch (signal.action) {
-      case 'BUY':
-        return { bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.3)', text: '#34d399', glow: '0 0 25px rgba(16, 185, 129, 0.15)', rgb: '16,185,129' };
-      case 'SELL':
-        return { bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.3)', text: '#f87171', glow: '0 0 25px rgba(239, 68, 68, 0.15)', rgb: '239,68,68' };
+      case 'BUY': {
+        const c = tk.positive;
+        return { bg: tk.positiveBg, border: tk.positiveBorder, text: c, glow: `0 0 25px ${tk.positiveBg}`, rgb: '16,185,129' };
+      }
+      case 'SELL': {
+        const c = tk.negative;
+        return { bg: tk.negativeBg, border: tk.negativeBorder, text: c, glow: `0 0 25px ${tk.negativeBg}`, rgb: '239,68,68' };
+      }
       case 'HOLD':
-        return { bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.3)', text: '#fbbf24', glow: '0 0 25px rgba(245, 158, 11, 0.15)', rgb: '245,158,11' };
+        return { bg: tk.warningBg, border: `${tk.warning}4d`, text: tk.warning, glow: `0 0 25px ${tk.warningBg}`, rgb: '245,158,11' };
       default:
-        return { bg: 'rgba(99,102,241,0.05)', border: 'rgba(99,102,241,0.2)', text: '#818cf8', glow: 'transparent', rgb: '99,102,241' };
+        return { bg: tk.accentGlow08, border: tk.accentGlow25, text: tk.accent, glow: 'transparent', rgb: '99,102,241' };
     }
   };
 
@@ -80,10 +86,10 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
     <div 
       className="rounded-2xl overflow-hidden relative flex flex-col font-mono flex-shrink-0"
       style={{
-        background: `radial-gradient(ellipse at 50% 0%, rgba(${colors.rgb},0.06) 0%, rgba(6,10,16,0.95) 60%)`,
-        backdropFilter: 'blur(16px)',
-        border: `1px solid rgba(${colors.rgb},0.15)`,
-        boxShadow: `${colors.glow}, 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)`,
+        background: tk.isDark ? `radial-gradient(ellipse at 50% 0%, rgba(${colors.rgb},0.06) 0%, ${tk.bgPage} 60%)` : tk.surface,
+        backdropFilter: tk.isDark ? 'blur(16px)' : undefined,
+        border: `1px solid ${colors.border}`,
+        boxShadow: tk.isDark ? `${colors.glow}, 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)` : `0 8px 30px rgba(0,0,0,0.06)`,
         transition: 'all 0.5s ease'
       }}
     >
@@ -114,7 +120,7 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
           </motion.div>
           <div className="flex flex-col">
             <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: colors.text }}>PHASE-X</span>
-            <span className="text-[8px] font-bold tracking-[0.15em] text-gray-500">AI CORE ENGINE</span>
+            <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color: tk.textDim }}>AI CORE ENGINE</span>
           </div>
         </div>
         
@@ -127,7 +133,7 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
           {/* Status dot */}
           <motion.div 
             className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: isScanning ? colors.text : signal ? colors.text : '#475569', boxShadow: `0 0 6px ${isScanning ? colors.text : 'transparent'}` }}
+            style={{ backgroundColor: isScanning ? colors.text : signal ? colors.text : tk.textDim, boxShadow: `0 0 6px ${isScanning ? colors.text : 'transparent'}` }}
             animate={{ opacity: isScanning ? [0.4, 1, 0.4] : 1, scale: isScanning ? [1, 1.3, 1] : 1 }}
             transition={{ duration: 0.8, repeat: Infinity }}
           />
@@ -191,10 +197,10 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
         {/* Error State */}
         {error && !isScanning && (
           <div className="text-center py-6">
-            <div className="w-14 h-14 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-              <ShieldAlert className="w-7 h-7 text-red-400" />
+            <div className="w-14 h-14 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: tk.negativeBg, border: `1px solid ${tk.negativeBorder}` }}>
+              <ShieldAlert className="w-7 h-7" style={{ color: tk.negative }} />
             </div>
-            <p className="text-xs text-red-400 font-medium">{error}</p>
+            <p className="text-xs font-medium" style={{ color: tk.negative }}>{error}</p>
           </div>
         )}
 
@@ -207,7 +213,7 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
               transition={{ duration: 3, repeat: Infinity }}>
               <Target className="w-8 h-8" style={{ color: colors.text, opacity: 0.5 }} />
             </motion.div>
-            <p className="text-[11px] text-gray-500 leading-relaxed max-w-[200px] mx-auto font-medium">
+            <p className="text-[11px] leading-relaxed max-w-[200px] mx-auto font-medium" style={{ color: tk.textMuted }}>
               {txt.initScan}
             </p>
           </div>
@@ -244,8 +250,8 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
                 backgroundSize: '20px 20px',
               }} />
               
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full z-10"
-                style={{ background: 'rgba(6,10,16,0.9)', border: `1px solid rgba(${colors.rgb},0.2)` }}>
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full z-10 backdrop-blur-md"
+                style={{ background: tk.isDark ? 'rgba(6,10,16,0.9)' : 'rgba(255,255,255,0.9)', border: `1px solid ${colors.border}`, boxShadow: tk.isDark ? 'none' : `0 2px 8px rgba(0,0,0,0.08)` }}>
                 <span className="text-[8px] tracking-[0.15em] font-bold" style={{ color: colors.text }}>{txt.focus}</span>
                 <span className="text-[8px] font-black tracking-widest px-1.5 rounded" style={{ background: `rgba(${colors.rgb},0.15)`, color: colors.text }}>
                   {indicatorName || 'PHASE X'}
@@ -268,7 +274,7 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
                   {signal.action}
                 </motion.h1>
               </div>
-              <div className="mt-1 text-[9px] text-gray-500 tracking-[0.15em] font-bold relative z-10">
+              <div className="mt-1 text-[9px] tracking-[0.15em] font-bold relative z-10" style={{ color: tk.textDim }}>
                 CONFIDENCE · <strong style={{ color: colors.text }}>{signal.confidence}%</strong>
               </div>
             </div>
@@ -279,24 +285,24 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
                 <div className="grid grid-cols-2 gap-2">
                   {signal.targets.entry && (
                     <div className="p-2.5 rounded-xl" style={{ background: `rgba(${colors.rgb},0.04)`, border: `1px solid rgba(${colors.rgb},0.1)` }}>
-                      <div className="text-[8px] tracking-[0.15em] font-bold text-gray-500 mb-1">{txt.entryProtocol}</div>
-                      <div className="text-xs font-black text-white truncate">{signal.targets.entry}</div>
+                      <div className="text-[8px] tracking-[0.15em] font-bold mb-1" style={{ color: tk.textDim }}>{txt.entryProtocol}</div>
+                      <div className="text-xs font-black truncate" style={{ color: tk.textBright }}>{signal.targets.entry}</div>
                     </div>
                   )}
                   {signal.targets.tp1 && (
-                    <div className="p-2.5 rounded-xl" style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.12)' }}>
-                      <div className="text-[8px] tracking-[0.15em] font-bold text-gray-500 mb-1">{txt.targetPrimary}</div>
-                      <div className="text-xs font-black text-emerald-400 truncate">{signal.targets.tp1}</div>
+                    <div className="p-2.5 rounded-xl" style={{ background: tk.positiveBg, border: `1px solid ${tk.positiveBorder}` }}>
+                      <div className="text-[8px] tracking-[0.15em] font-bold mb-1" style={{ color: tk.textDim }}>{txt.targetPrimary}</div>
+                      <div className="text-xs font-black truncate" style={{ color: tk.positive }}>{signal.targets.tp1}</div>
                     </div>
                   )}
                 </div>
                 {signal.targets.sl && (
-                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: tk.negativeBg, border: `1px solid ${tk.negativeBorder}` }}>
                     <div className="flex items-center justify-between mb-1">
-                      <div className="text-[8px] tracking-[0.15em] font-bold text-gray-500">{txt.abortLevel}</div>
-                      <ShieldAlert className="w-3 h-3 text-red-500/40" />
+                      <div className="text-[8px] tracking-[0.15em] font-bold" style={{ color: tk.textDim }}>{txt.abortLevel}</div>
+                      <ShieldAlert className="w-3 h-3" style={{ color: tk.negative, opacity: 0.4 }} />
                     </div>
-                    <div className="text-xs font-black text-red-400">{signal.targets?.sl || 'N/A'}</div>
+                    <div className="text-xs font-black" style={{ color: tk.negative }}>{signal.targets?.sl || 'N/A'}</div>
                   </div>
                 )}
               </div>
@@ -306,24 +312,24 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
             {signal.metrics && (
               <>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.1)' }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: tk.infoBg, border: `1px solid ${tk.info}1a` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Activity className="w-3 h-3 text-indigo-400" />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.volatility}</span>
+                      <Activity className="w-3 h-3" style={{ color: tk.info }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>{txt.volatility}</span>
                     </div>
-                    <div className="text-[11px] font-black text-white">{signal.metrics.volatility}</div>
+                    <div className="text-[11px] font-black" style={{ color: tk.textBright }}>{signal.metrics.volatility}</div>
                   </div>
                   
-                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.1)' }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: tk.warningBg, border: `1px solid ${tk.warning}1a` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Zap className="w-3 h-3 text-amber-400" />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.trendStrength}</span>
+                      <Zap className="w-3 h-3" style={{ color: tk.warning }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>{txt.trendStrength}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-[11px] font-black text-white">{signal.metrics.trendStrength}%</div>
-                      <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(245,158,11,0.1)' }}>
+                      <div className="text-[11px] font-black" style={{ color: tk.textBright }}>{signal.metrics.trendStrength}%</div>
+                      <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: tk.warningBg }}>
                         <motion.div className="h-full rounded-full"
-                          style={{ background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', width: `${Math.min(100, Math.max(0, signal.metrics.trendStrength))}%` }}
+                          style={{ background: `linear-gradient(90deg, ${tk.warning}, ${tk.warning})`, width: `${Math.min(100, Math.max(0, signal.metrics.trendStrength))}%` }}
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.min(100, Math.max(0, signal.metrics.trendStrength))}%` }}
                           transition={{ duration: 1, delay: 0.3 }} />
@@ -331,73 +337,73 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.1)' }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: tk.positiveBg, border: `1px solid ${tk.positiveBorder}` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <BarChart2 className="w-3 h-3 text-emerald-400" />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.support}</span>
+                      <BarChart2 className="w-3 h-3" style={{ color: tk.positive }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>{txt.support}</span>
                     </div>
-                    <div className="text-[11px] font-black text-emerald-400">{signal.metrics.support}</div>
+                    <div className="text-[11px] font-black" style={{ color: tk.positive }}>{signal.metrics.support}</div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.1)' }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: tk.negativeBg, border: `1px solid ${tk.negativeBorder}` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <BarChart2 className="w-3 h-3 text-rose-400" />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">{txt.resistance}</span>
+                      <BarChart2 className="w-3 h-3" style={{ color: tk.negative }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>{txt.resistance}</span>
                     </div>
-                    <div className="text-[11px] font-black text-rose-400">{signal.metrics.resistance}</div>
+                    <div className="text-[11px] font-black" style={{ color: tk.negative }}>{signal.metrics.resistance}</div>
                   </div>
                 </div>
 
                 {/* New metrics row */}
                 <div className="grid grid-cols-2 gap-2">
                   {/* Momentum Score */}
-                  <div className="p-2.5 rounded-xl" style={{ background: `rgba(${(signal.metrics.momentumScore ?? 0) >= 0 ? '16,185,129' : '239,68,68'},0.04)`, border: `1px solid rgba(${(signal.metrics.momentumScore ?? 0) >= 0 ? '16,185,129' : '239,68,68'},0.1)` }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: (signal.metrics.momentumScore ?? 0) >= 0 ? tk.positiveBg : tk.negativeBg, border: `1px solid ${(signal.metrics.momentumScore ?? 0) >= 0 ? tk.positiveBorder : tk.negativeBorder}` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Gauge className="w-3 h-3" style={{ color: (signal.metrics.momentumScore ?? 0) >= 0 ? '#34d399' : '#f87171' }} />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">MOMENTUM</span>
+                      <Gauge className="w-3 h-3" style={{ color: (signal.metrics.momentumScore ?? 0) >= 0 ? tk.positive : tk.negative }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>MOMENTUM</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-[11px] font-black" style={{ color: (signal.metrics.momentumScore ?? 0) >= 0 ? '#34d399' : '#f87171' }}>{signal.metrics.momentumScore ?? 0}</div>
-                      <div className="flex-1 h-1 rounded-full overflow-hidden relative" style={{ background: 'rgba(100,100,100,0.15)' }}>
+                      <div className="text-[11px] font-black" style={{ color: (signal.metrics.momentumScore ?? 0) >= 0 ? tk.positive : tk.negative }}>{signal.metrics.momentumScore ?? 0}</div>
+                      <div className="flex-1 h-1 rounded-full overflow-hidden relative" style={{ background: tk.surfaceHover }}>
                         <motion.div className="absolute h-full rounded-full"
                           style={{
-                            background: (signal.metrics.momentumScore ?? 0) >= 0 ? 'linear-gradient(90deg, #059669, #34d399)' : 'linear-gradient(90deg, #f87171, #dc2626)',
+                            background: (signal.metrics.momentumScore ?? 0) >= 0 ? tk.positive : tk.negative,
                             width: `${Math.abs(signal.metrics.momentumScore ?? 0) / 2}%`,
                             left: (signal.metrics.momentumScore ?? 0) >= 0 ? '50%' : `${50 - Math.abs(signal.metrics.momentumScore ?? 0) / 2}%`
                           }}
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.abs(signal.metrics.momentumScore ?? 0) / 2}%` }}
                           transition={{ duration: 1, delay: 0.5 }} />
-                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-600" />
+                        <div className="absolute left-1/2 top-0 bottom-0 w-px" style={{ background: tk.textDim }} />
                       </div>
                     </div>
                   </div>
 
                   {/* Market Sentiment */}
-                  <div className="p-2.5 rounded-xl" style={{ background: `rgba(${signal.metrics.marketSentiment === 'Bullish' ? '16,185,129' : signal.metrics.marketSentiment === 'Bearish' ? '239,68,68' : '245,158,11'},0.04)`, border: `1px solid rgba(${signal.metrics.marketSentiment === 'Bullish' ? '16,185,129' : signal.metrics.marketSentiment === 'Bearish' ? '239,68,68' : '245,158,11'},0.1)` }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: signal.metrics.marketSentiment === 'Bullish' ? tk.positiveBg : signal.metrics.marketSentiment === 'Bearish' ? tk.negativeBg : tk.warningBg, border: `1px solid ${signal.metrics.marketSentiment === 'Bullish' ? tk.positiveBorder : signal.metrics.marketSentiment === 'Bearish' ? tk.negativeBorder : tk.warning + '2d'}` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Sparkles className="w-3 h-3" style={{ color: signal.metrics.marketSentiment === 'Bullish' ? '#34d399' : signal.metrics.marketSentiment === 'Bearish' ? '#f87171' : '#fbbf24' }} />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">SENTIMENT</span>
+                      <Sparkles className="w-3 h-3" style={{ color: signal.metrics.marketSentiment === 'Bullish' ? tk.positive : signal.metrics.marketSentiment === 'Bearish' ? tk.negative : tk.warning }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>SENTIMENT</span>
                     </div>
-                    <div className="text-[11px] font-black" style={{ color: signal.metrics.marketSentiment === 'Bullish' ? '#34d399' : signal.metrics.marketSentiment === 'Bearish' ? '#f87171' : '#fbbf24' }}>{signal.metrics.marketSentiment}</div>
+                    <div className="text-[11px] font-black" style={{ color: signal.metrics.marketSentiment === 'Bullish' ? tk.positive : signal.metrics.marketSentiment === 'Bearish' ? tk.negative : tk.warning }}>{signal.metrics.marketSentiment}</div>
                   </div>
 
                   {/* Timeframe Alignment */}
-                  <div className="p-2.5 rounded-xl" style={{ background: `rgba(${signal.metrics.timeframeAlignment === 'Aligned' ? '16,185,129' : signal.metrics.timeframeAlignment === 'Conflicting' ? '239,68,68' : '245,158,11'},0.04)`, border: `1px solid rgba(${signal.metrics.timeframeAlignment === 'Aligned' ? '16,185,129' : signal.metrics.timeframeAlignment === 'Conflicting' ? '239,68,68' : '245,158,11'},0.1)` }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: signal.metrics.timeframeAlignment === 'Aligned' ? tk.positiveBg : signal.metrics.timeframeAlignment === 'Conflicting' ? tk.negativeBg : tk.warningBg, border: `1px solid ${signal.metrics.timeframeAlignment === 'Aligned' ? tk.positiveBorder : signal.metrics.timeframeAlignment === 'Conflicting' ? tk.negativeBorder : tk.warning + '2d'}` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Layers className="w-3 h-3" style={{ color: signal.metrics.timeframeAlignment === 'Aligned' ? '#34d399' : signal.metrics.timeframeAlignment === 'Conflicting' ? '#f87171' : '#fbbf24' }} />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">TF ALIGN</span>
+                      <Layers className="w-3 h-3" style={{ color: signal.metrics.timeframeAlignment === 'Aligned' ? tk.positive : signal.metrics.timeframeAlignment === 'Conflicting' ? tk.negative : tk.warning }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>TF ALIGN</span>
                     </div>
-                    <div className="text-[11px] font-black" style={{ color: signal.metrics.timeframeAlignment === 'Aligned' ? '#34d399' : signal.metrics.timeframeAlignment === 'Conflicting' ? '#f87171' : '#fbbf24' }}>{signal.metrics.timeframeAlignment}</div>
+                    <div className="text-[11px] font-black" style={{ color: signal.metrics.timeframeAlignment === 'Aligned' ? tk.positive : signal.metrics.timeframeAlignment === 'Conflicting' ? tk.negative : tk.warning }}>{signal.metrics.timeframeAlignment}</div>
                   </div>
 
                   {/* Risk/Reward */}
-                  <div className="p-2.5 rounded-xl" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.1)' }}>
+                  <div className="p-2.5 rounded-xl" style={{ background: tk.accentGlow08, border: `1px solid ${tk.accentGlow15}` }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Target className="w-3 h-3 text-purple-400" />
-                      <span className="text-[8px] font-bold tracking-[0.1em] text-gray-400">R:R RATIO</span>
+                      <Target className="w-3 h-3" style={{ color: tk.accent }} />
+                      <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>R:R RATIO</span>
                     </div>
-                    <div className="text-[11px] font-black text-purple-400">{signal.metrics.riskRewardRatio || 'N/A'}</div>
+                    <div className="text-[11px] font-black" style={{ color: tk.accent }}>{signal.metrics.riskRewardRatio || 'N/A'}</div>
                   </div>
                 </div>
               </>
@@ -409,19 +415,19 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
                 <Sparkles className="w-3.5 h-3.5" style={{ color: colors.text }} />
                 <span className="text-[9px] font-black tracking-[0.2em]" style={{ color: colors.text }}>{txt.aiLogic}</span>
               </div>
-              <p className="text-[11px] text-gray-400 leading-relaxed font-sans" dir={isRTL ? "rtl" : "ltr"}>
+              <p className="text-[11px] leading-relaxed font-sans" style={{ color: tk.textSecondary }} dir={isRTL ? "rtl" : "ltr"}>
                 {signal.reasoning}
               </p>
             </div>
 
             {/* Risk Warnings */}
             {signal.risks && (
-              <div className="rounded-xl p-3.5" style={{ background: 'rgba(239,68,68,0.03)', border: '1px solid rgba(239,68,68,0.1)' }}>
+              <div className="rounded-xl p-3.5" style={{ background: tk.negativeBg, border: `1px solid ${tk.negativeBorder}` }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
-                  <span className="text-[9px] font-black tracking-[0.2em] text-red-400/80">{txt.riskVectors}</span>
+                  <ShieldAlert className="w-3.5 h-3.5" style={{ color: tk.negative }} />
+                  <span className="text-[9px] font-black tracking-[0.2em]" style={{ color: tk.negative, opacity: 0.8 }}>{txt.riskVectors}</span>
                 </div>
-                <p className="text-[11px] text-gray-500 leading-relaxed font-sans" dir={isRTL ? "rtl" : "ltr"}>
+                <p className="text-[11px] leading-relaxed font-sans" style={{ color: tk.textMuted }} dir={isRTL ? "rtl" : "ltr"}>
                   {signal.risks}
                 </p>
               </div>
@@ -467,10 +473,10 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="w-10 rounded-xl py-2.5 flex items-center justify-center cursor-pointer"
-            style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}
+            style={{ background: tk.negativeBg, border: `1px solid ${tk.negativeBorder}` }}
             title="Reset Scan"
           >
-            <ShieldAlert className="w-4 h-4 text-red-400/60" />
+            <ShieldAlert className="w-4 h-4" style={{ color: tk.negative, opacity: 0.6 }} />
           </motion.button>
         )}
       </div>

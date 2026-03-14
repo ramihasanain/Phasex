@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<"landing" | "login" | "register" | "dashboard" | "phasex-dynamics">("landing");
   const [lastMainPage, setLastMainPage] = useState<"landing" | "dashboard">("landing");
+  const [isNewRegistration, setIsNewRegistration] = useState(false);
   const { subscriptionStatus } = useAuth();
 
   return (
@@ -25,22 +26,22 @@ function AppContent() {
       )}
       {currentPage === "login" && (
         <LoginPage
-          onLogin={() => setCurrentPage("dashboard")}
+          onLogin={() => { setIsNewRegistration(false); setCurrentPage("dashboard"); }}
           onRegister={() => setCurrentPage("register")}
         />
       )}
       {currentPage === "register" && (
         <RegisterPage
-          onRegister={() => setCurrentPage("dashboard")}
+          onRegister={() => { setIsNewRegistration(true); setCurrentPage("dashboard"); }}
           onBackToLogin={() => setCurrentPage("login")}
         />
       )}
-      {currentPage === "dashboard" && subscriptionStatus === "none" && (
-        <SubscriptionOnboarding onComplete={() => window.location.reload()} />
+      {currentPage === "dashboard" && isNewRegistration && subscriptionStatus === "none" && (
+        <SubscriptionOnboarding onComplete={() => { setIsNewRegistration(false); window.location.reload(); }} />
       )}
-      {currentPage === "dashboard" && subscriptionStatus !== "none" && (
+      {currentPage === "dashboard" && !(isNewRegistration && subscriptionStatus === "none") && (
         <TradingDashboard
-          onLogout={() => setCurrentPage("landing")}
+          onLogout={() => { setIsNewRegistration(false); setCurrentPage("landing"); }}
           onOpenDynamics={() => { setLastMainPage("dashboard"); setCurrentPage("phasex-dynamics"); }}
         />
       )}

@@ -93,7 +93,8 @@ const PriceCell = ({ price, isLive, fmt }: { price: number; isLive: boolean; fmt
         prevPriceRef.current = price;
     }, [price, isLive]);
 
-    const baseColor = isLive ? "#38bdf8" : "#cbd5e1";
+    const tk = useThemeTokens();
+    const baseColor = isLive ? tk.info : tk.textSecondary;
     return <span style={{ color: baseColor, ...flashStyle }}>{fmt(price)}</span>;
 };
 
@@ -309,7 +310,7 @@ export function TradingSignalsTable() {
         return (
             <div className="flex-shrink-0 mt-3 rounded-2xl overflow-hidden relative" style={{
                 background: tk.isDark ? "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)" : `linear-gradient(135deg, ${tk.surface} 0%, ${tk.surfaceElevated} 50%, ${tk.surface} 100%)`,
-                border: "1px solid rgba(99,102,241,0.12)", boxShadow: "0 0 40px rgba(99,102,241,0.04)",
+                border: `1px solid ${tk.accentGlow08}`, boxShadow: `0 0 40px ${tk.accentGlow08}`,
             }}>
                 <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
                     background: "linear-gradient(90deg, transparent 0%, #6366f1 20%, #ef4444 50%, #6366f1 80%, transparent 100%)", opacity: 0.6,
@@ -353,7 +354,7 @@ export function TradingSignalsTable() {
         <div className="flex justify-center w-full mt-3 flex-shrink-0">
             <div className="rounded-2xl overflow-hidden relative" style={{
                 background: tk.isDark ? "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)" : `linear-gradient(135deg, ${tk.surface} 0%, ${tk.surfaceElevated} 50%, ${tk.surface} 100%)`,
-                border: "1px solid rgba(99,102,241,0.1)", boxShadow: "0 0 40px rgba(99,102,241,0.04)",
+                border: `1px solid ${tk.accentGlow08}`, boxShadow: `0 0 40px ${tk.accentGlow08}`,
                 width: "90%", maxWidth: "1200px"
             }}>
                 <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
@@ -568,14 +569,14 @@ export function TradingSignalsTable() {
                 <table className="w-full" style={{ borderCollapse: "collapse" }}>
                     <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? "#080c15" : tk.surface }}>
                         <tr style={{ borderBottom: "1px solid rgba(99,102,241,0.08)" }}>
-                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: "#64748b" }}>{t("assetCol")}</th>
-                            <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: "#64748b" }}>{t("actionStr")}</th>
-                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: "#64748b" }}>{t("timeStr")}</th>
-                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#64748b" }}>{t("priceStr")}</th>
-                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#f87171" }}>SL</th>
-                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#4ade80" }}>TP</th>
-                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#94a3b8" }}>m.PRICE</th>
-                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: "#fbbf24" }}>{t("profitStr")}</th>
+                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: tk.textMuted }}>{t("assetCol")}</th>
+                            <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: tk.textMuted }}>{t("actionStr")}</th>
+                            <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: tk.textMuted }}>{t("timeStr")}</th>
+                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.textMuted }}>{t("priceStr")}</th>
+                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.negative }}>SL</th>
+                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.positive }}>TP</th>
+                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.textSecondary }}>m.PRICE</th>
+                            <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.warning }}>{t("profitStr")}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -678,25 +679,25 @@ export function TradingSignalsTable() {
                                                 </td>
                                                 <td className="p-2.5 text-center">
                                                     <span className="text-xs font-black px-3 py-1 rounded-lg" style={{
-                                                        color: isBuy ? "#22c55e" : isSell ? "#ef4444" : "#475569",
-                                                        background: isBuy ? "rgba(34,197,94,0.12)" : isSell ? "rgba(239,68,68,0.12)" : "transparent",
-                                                        border: isBuy ? "1px solid rgba(34,197,94,0.2)" : isSell ? "1px solid rgba(239,68,68,0.2)" : "1px solid transparent",
-                                                        textShadow: isBuy ? "0 0 10px rgba(34,197,94,0.4)" : isSell ? "0 0 10px rgba(239,68,68,0.4)" : "none",
+                                                        color: isBuy ? tk.positive : isSell ? tk.negative : tk.textDim,
+                                                        background: isBuy ? tk.positiveBg : isSell ? tk.negativeBg : "transparent",
+                                                        border: isBuy ? `1px solid ${tk.positiveBorder}` : isSell ? `1px solid ${tk.negativeBorder}` : "1px solid transparent",
+                                                        textShadow: tk.isDark ? (isBuy ? `0 0 10px ${tk.positiveBg}` : isSell ? `0 0 10px ${tk.negativeBg}` : "none") : "none",
                                                     }}>{entry.net_signal || "—"}</span>
                                                 </td>
-                                                <td className="p-2.5 text-xs font-mono font-medium" style={{ color: "#94a3b8" }}>{entry.time}</td>
-                                                <td className="p-2.5 text-sm font-black font-mono text-right tabular-nums" style={{ color: "#f0f4f8" }}>{fmt(entry.close)}</td>
-                                                <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.stop_loss ? "#fb7185" : "#1e293b" }}>{entry.stop_loss ? fmt(entry.stop_loss) : "—"}</td>
-                                                <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.take_profit ? "#34d399" : "#1e293b" }}>{entry.take_profit ? fmt(entry.take_profit) : "—"}</td>
+                                                <td className="p-2.5 text-xs font-mono font-medium" style={{ color: tk.textSecondary }}>{entry.time}</td>
+                                                <td className="p-2.5 text-sm font-black font-mono text-right tabular-nums" style={{ color: tk.textBright }}>{fmt(entry.close)}</td>
+                                                <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.stop_loss ? tk.negative : tk.textDim }}>{entry.stop_loss ? fmt(entry.stop_loss) : "—"}</td>
+                                                <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.take_profit ? tk.positive : tk.textDim }}>{entry.take_profit ? fmt(entry.take_profit) : "—"}</td>
                                                 <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums">
                                                     <PriceCell price={mPrice} isLive={!!liveMatch} fmt={fmt} />
                                                 </td>
                                                 <td className="p-2.5 text-right">
                                                     <span className="text-xs font-black font-mono tabular-nums px-2.5 py-1 rounded-lg" style={{
-                                                        color: profitPos ? "#22c55e" : "#ef4444",
-                                                        background: profitPos ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-                                                        border: profitPos ? "1px solid rgba(34,197,94,0.15)" : "1px solid rgba(239,68,68,0.15)",
-                                                        textShadow: profitPos ? "0 0 8px rgba(34,197,94,0.3)" : "0 0 8px rgba(239,68,68,0.3)",
+                                                        color: profitPos ? tk.positive : tk.negative,
+                                                        background: profitPos ? tk.positiveBg : tk.negativeBg,
+                                                        border: profitPos ? `1px solid ${tk.positiveBorder}` : `1px solid ${tk.negativeBorder}`,
+                                                        textShadow: tk.isDark ? (profitPos ? `0 0 8px ${tk.positiveBg}` : `0 0 8px ${tk.negativeBg}`) : "none",
                                                     }}>{profit !== 0 ? `${profitPos ? "+" : ""}${fmt(Math.abs(profit))}` : "—"}</span>
                                                 </td>
                                             </tr>

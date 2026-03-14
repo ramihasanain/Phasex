@@ -131,6 +131,7 @@ interface AnimatedStatProps {
 }
 
 const AnimatedStat = ({ label, value, color, isDirection }: AnimatedStatProps) => {
+  const tk = useThemeTokens();
   const [flash, setFlash] = useState(false);
   const prevValueRef = useRef(value);
 
@@ -157,7 +158,7 @@ const AnimatedStat = ({ label, value, color, isDirection }: AnimatedStatProps) =
       transition={{ duration: 0.3 }}
       style={{ border: `1px solid ${color} 12`, minWidth: 0 }}
     >
-      <div className="text-[9px] font-medium truncate w-full" style={{ color: "#64748b" }}>{label}</div>
+      <div className="text-[9px] font-medium truncate w-full" style={{ color: tk.isDark ? '#64748b' : '#475569' }}>{label}</div>
       <motion.div
         className={`font - bold tabular - nums truncate w - full ${isDirection ? 'text-[14px] tracking-widest' : 'text-[12px]'} `}
         style={{
@@ -617,14 +618,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   if (!currency || !indicator) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="h-full flex items-center justify-center rounded-xl"
-        style={{ background: tk.surface, border: `1px solid ${tk.border} `, minHeight: 400 }}>
-        <div className="text-center">
+        className="h-full flex items-center justify-center rounded-2xl relative overflow-hidden"
+        style={{ background: tk.isDark ? 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, rgba(6,10,16,0.95) 60%)' : tk.surface, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.1)' : tk.border}`, backdropFilter: tk.isDark ? 'blur(16px)' : undefined, minHeight: 400 }}>
+        {tk.isDark && <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />}
+        <div className="text-center relative z-10">
           <motion.div animate={{ y: [0, -8, 0], opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 2.5, repeat: Infinity }}>
-            <Activity className="w-14 h-14 mx-auto mb-4" style={{ color: tk.textDim }} />
+            <Activity className="w-14 h-14 mx-auto mb-4" style={{ color: tk.info }} />
           </motion.div>
-          <p className="text-sm font-medium" style={{ color: tk.textMuted }}>{t("selectAssetAndIndicator")}</p>
-          <p className="text-[11px] mt-1" style={{ color: "#334155" }}>
+          <p className="text-sm font-black" style={{ color: tk.textPrimary }}>{t("selectAssetAndIndicator")}</p>
+          <p className="text-[11px] mt-1 font-bold" style={{ color: tk.textDim }}>
             {isRTL ? "اختر سوق ومؤشر فني لبدء التحليل" : "Choose a market and technical indicator to start analysis"}
           </p>
         </div>
@@ -796,20 +798,24 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-        className="h-full rounded-xl overflow-hidden flex flex-col"
-        style={{ background: tk.surface, border: `1px solid ${tk.border} ` }}>
+        className="h-full rounded-2xl overflow-hidden flex flex-col relative"
+        style={{ background: tk.isDark ? 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, rgba(6,10,16,0.95) 60%)' : tk.surface, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.1)' : tk.border}`, backdropFilter: tk.isDark ? 'blur(16px)' : undefined }}>
+        {/* Grid bg — dark only */}
+        {tk.isDark && <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />}
 
         {/* ─── Header ─── */}
-        <div className="px-4 py-3 flex items-center justify-between relative" style={{ borderBottom: `1px solid ${tk.border} ` }}>
+        <div className="px-4 py-3 flex items-center justify-between relative z-10" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}` }}>
           <div className="flex items-center gap-3 relative z-10 w-1/3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: `${indicator.color} 15`, border: `1px solid ${indicator.color} 20` }}>
-              <Activity className="w-4 h-4" style={{ color: indicator.color }} />
-            </div>
+            <motion.div className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: tk.infoBg, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.15)' : 'rgba(79,70,229,0.15)'}` }}
+              animate={tk.isDark ? { boxShadow: ['0 0 0 rgba(99,102,241,0)', '0 0 15px rgba(99,102,241,0.1)', '0 0 0 rgba(99,102,241,0)'] } : {}}
+              transition={{ duration: 3, repeat: Infinity }}>
+              <Activity className="w-4 h-4" style={{ color: tk.info }} />
+            </motion.div>
             <div>
-              <span className="text-[13px] font-bold tracking-widest uppercase" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
-              <span className="text-[11px] mx-2" style={{ color: tk.textMuted }}>•</span>
-              <span className="text-[11px]" style={{ color: tk.textMuted }}>{currency.symbol}</span>
+              <span className="text-[12px] font-black tracking-[0.15em] uppercase" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
+              <span className="text-[10px] mx-2" style={{ color: tk.textDim }}>•</span>
+              <span className="text-[10px] font-bold" style={{ color: tk.textMuted }}>{currency.symbol}</span>
             </div>
           </div>
           
@@ -855,7 +861,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
           <div className="flex items-center gap-2 relative z-10 w-1/3 justify-end">
             {/* Price */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-lg" style={{ background: tk.surfaceHover }}>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl" style={{ background: tk.surfaceHover, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}` }}>
               <span className="text-[13px] font-bold tabular-nums" style={{ color: tk.textPrimary }}>{currency.price.toFixed(decimals)}</span>
               <span className="text-[11px] font-bold flex items-center gap-0.5"
                 style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
@@ -893,7 +899,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         </div>
 
         {/* ─── Timeframe + Navigation Bar ─── */}
-        <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.border} ` }}>
+        <div className="px-4 py-2 flex items-center justify-between relative z-10" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.06)' : tk.border}` }}>
           {/* Timeframes */}
           {indicator.id === "phase" ? (
             <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={handleMainTFChange} onSubTFChange={handleSubTFChange} color={indicator.color} isRTL={isRTL} compact />
@@ -1023,16 +1029,16 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
             {showDirections && (
               <motion.div key="directions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute inset-0 z-40 overflow-hidden flex flex-col bg-slate-900/95 backdrop-blur-md rounded-lg"
-                style={{ border: `1px solid ${tk.border}` }}>
+                className="absolute inset-0 z-40 overflow-hidden flex flex-col rounded-lg"
+                style={{ background: tk.isDark ? 'rgba(15,23,42,0.95)' : tk.surface, backdropFilter: 'blur(12px)', border: `1px solid ${tk.border}` }}>
                 {/* Custom Header for Directions Table */}
-                <div className="px-4 py-3 flex items-center justify-between" style={{ background: "rgba(15, 23, 42, 0.6)", borderBottom: `1px solid ${tk.border}` }}>
+                <div className="px-4 py-3 flex items-center justify-between" style={{ background: tk.isDark ? 'rgba(15,23,42,0.6)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-white tracking-widest">
+                    <span className="text-lg font-bold tracking-widest" style={{ color: tk.textPrimary }}>
                       Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                     </span>
                   </div>
-                  <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors" style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: `1px solid ${tk.border}` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}>
+                  <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
                     <BarChart3 className="w-3.5 h-3.5" />
                     {isRTL ? "العودة للشارت" : "Back to Chart"}
                   </button>
@@ -1041,10 +1047,10 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                 {/* Table Data */}
                 <div className="flex-1 overflow-auto">
                   <table className="w-full text-center border-collapse">
-                    <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: "rgba(15, 23, 42, 0.85)", borderBottom: `1px solid ${tk.border}` }}>
+                    <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: tk.isDark ? 'rgba(15,23,42,0.85)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
                       <tr>
                         {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit"].map((head, idx) => (
-                          <th key={idx} className="p-2 text-[12px] font-bold text-white border border-slate-700/50 whitespace-nowrap">
+                          <th key={idx} className="p-2 text-[12px] font-bold whitespace-nowrap" style={{ color: tk.textPrimary, border: `1px solid ${tk.isDark ? 'rgba(100,116,139,0.3)' : tk.border}` }}>
                             {isRTL ? (
                               head === "Current Price" ? "السعر الحالي" :
                                 head === "High Price" ? "أعلى سعر" :
@@ -1066,40 +1072,42 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       ) : (
                         directionsData && directionsData.rows.map((row: any) => {
                           const isEven = row.idx % 2 === 0;
-                          const rowBg = isEven ? "rgba(255,255,255,0.03)" : "transparent";
-                          const dirBg = row.isBuy ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)";
-                          const dirColor = row.isBuy ? "#10b981" : "#f43f5e";
+                          const rowBg = isEven ? (tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)') : 'transparent';
+                          const dirBg = row.isBuy ? (tk.isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.12)') : (tk.isDark ? 'rgba(244,63,94,0.2)' : 'rgba(244,63,94,0.12)');
+                          const dirColor = row.isBuy ? tk.positive : tk.negative;
 
                           const isMax = row.windowSize === directionsData.maxProfitWindow;
                           const isMin = row.windowSize === directionsData.minProfitWindow;
+                          const borderStyle = `1px solid ${tk.isDark ? 'rgba(100,116,139,0.3)' : tk.border}`;
 
                           return (
-                            <tr key={row.windowSize} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: rowBg }}>
-                              <td className="p-2 text-[13px] font-bold font-mono" style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
+                            <tr key={row.windowSize} style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.05)' : tk.border}`, background: rowBg }}>
+                              <td className="p-2 text-[13px] font-bold font-mono" style={{ color: isPositive ? tk.positive : tk.negative }}>
                                 {row.currentPrice.toFixed(decimals)}
                               </td>
-                              <td className="p-2 text-[13px] font-bold font-mono border-l border-r border-slate-700/50">
+                              <td className="p-2 text-[13px] font-bold font-mono" style={{ borderLeft: borderStyle, borderRight: borderStyle, color: tk.textPrimary }}>
                                 {row.high.toFixed(decimals)}
                               </td>
-                              <td className="p-2 text-[13px] font-bold font-mono border-r border-slate-700/50">
+                              <td className="p-2 text-[13px] font-bold font-mono" style={{ borderRight: borderStyle, color: tk.textPrimary }}>
                                 {row.low.toFixed(decimals)}
                               </td>
-                              <td className="p-2 text-[13px] font-bold font-mono border-r border-slate-700/50"
+                              <td className="p-2 text-[13px] font-bold font-mono"
                                 style={{
-                                  background: isMax ? "rgba(234, 179, 8, 0.15)" : isMin ? "rgba(239, 68, 68, 0.15)" : "rgba(30, 41, 59, 0.5)",
-                                  color: isMax ? "#eab308" : isMin ? "#ef4444" : "white"
+                                  borderRight: borderStyle,
+                                  background: isMax ? (tk.isDark ? 'rgba(234,179,8,0.15)' : 'rgba(234,179,8,0.1)') : isMin ? (tk.isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)') : (tk.isDark ? 'rgba(30,41,59,0.5)' : 'rgba(0,0,0,0.02)'),
+                                  color: isMax ? tk.warning : isMin ? tk.negative : tk.textPrimary
                                 }}>
                                 {row.windowSize}
                                 {isMax && <span className="ml-1 text-[10px]">⭐</span>}
                                 {isMin && <span className="ml-1 text-[10px]">🔻</span>}
                               </td>
-                              <td className="p-2 text-[13px] font-bold font-mono border-r border-slate-700/50">
+                              <td className="p-2 text-[13px] font-bold font-mono" style={{ borderRight: borderStyle, color: tk.textPrimary }}>
                                 {row.entry.toFixed(decimals)}
                               </td>
-                              <td className="p-2 text-[13px] font-bold border-r border-slate-700/50" style={{ background: dirBg, color: dirColor }}>
+                              <td className="p-2 text-[13px] font-bold" style={{ borderRight: borderStyle, background: dirBg, color: dirColor }}>
                                 {row.directionStr}
                               </td>
-                              <td className="p-2 text-[13px] font-bold font-mono" style={{ color: "#10b981" }}>
+                              <td className="p-2 text-[13px] font-bold font-mono" style={{ color: tk.positive }}>
                                 {row.profit.toFixed(decimals)}
                               </td>
                             </tr>
@@ -1114,7 +1122,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           </AnimatePresence>
         </div>
 
-        <div className="px-4 py-2 flex items-center justify-between gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+        <div className="px-4 py-2.5 flex items-center justify-between gap-3 relative z-10 mx-3 mb-2 rounded-xl" style={{ border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.12)' : tk.border}`, background: tk.isDark ? 'rgba(99,102,241,0.02)' : tk.surfaceHover }}>
           <div className="flex-1 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 items-center gap-2 md:gap-3">
             {(() => {
               const high = displayedData.length ? Math.max(...displayedData.map((d: any) => d.high ?? d.value)) : 0;
@@ -1124,21 +1132,21 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               const profit = isBuy ? currency.price - average : average - currency.price;
 
               return [
-                { label: isRTL ? "السعر الحالي" : t("currentPrice"), value: currency.price.toFixed(decimals), color: "#60a5fa" },
-                { label: isRTL ? "أعلى سعر" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: "#22c55e" },
-                { label: isRTL ? "أدنى سعر" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: "#ef4444" },
-                { label: isRTL ? "الشموع المعروضة" : "Candles Showed", value: displayedData.length, color: "#a78bfa" },
-                { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: "#fcd34d" },
+                { label: isRTL ? "السعر الحالي" : t("currentPrice"), value: currency.price.toFixed(decimals), color: tk.info },
+                { label: isRTL ? "أعلى سعر" : t("highPrice"), value: displayedData.length ? high.toFixed(decimals) : "—", color: tk.positive },
+                { label: isRTL ? "أدنى سعر" : t("lowPrice"), value: displayedData.length ? low.toFixed(decimals) : "—", color: tk.negative },
+                { label: isRTL ? "الشموع المعروضة" : "Candles Showed", value: displayedData.length, color: tk.accent },
+                { label: isRTL ? "المتوسط" : "Average", value: displayedData.length ? average.toFixed(decimals) : "—", color: tk.warning },
                 {
                   label: isRTL ? "الاتجاه" : "Direction",
                   value: displayedData.length ? (isBuy ? "BUY" : "SELL") : "—",
-                  color: displayedData.length ? (isBuy ? "#10b981" : "#f43f5e") : "#64748b",
+                  color: displayedData.length ? (isBuy ? tk.positive : tk.negative) : tk.textDim,
                   isDirection: true
                 },
                 {
                   label: isRTL ? "الربح" : "Profit",
                   value: displayedData.length ? profit.toFixed(decimals) : "—",
-                  color: displayedData.length ? (profit >= 0 ? "#10b981" : "#f43f5e") : "#64748b"
+                  color: displayedData.length ? (profit >= 0 ? tk.positive : tk.negative) : tk.textDim
                 },
               ].map(({ label, value, color, isDirection }) => (
                 <AnimatedStat key={label} label={label} value={value} color={color} isDirection={isDirection} />
@@ -1148,9 +1156,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
           <button
             onClick={() => setShowInfoPopup(true)}
             className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center cursor-pointer transition-colors"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", color: "#94a3b8" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#f8fafc"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#94a3b8"; }}
+            style={{ background: tk.surfaceHover, border: `1px solid ${tk.border}`, color: tk.textMuted }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = tk.surfaceActive; e.currentTarget.style.color = tk.textBright; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = tk.surfaceHover; e.currentTarget.style.color = tk.textMuted; }}
           >
             <Info className="w-5 h-5" />
           </button>

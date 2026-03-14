@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "motion/react";
 import type { Signal } from "./types";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useThemeTokens } from "../../hooks/useThemeTokens";
 
 /* ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  SUPERCAR GAUGE ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  */
 
@@ -131,14 +132,16 @@ export function SupercarGauge({ score, confidence, isRTL }: { score: number; con
 /* ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  Glass Panel ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  */
 
 export function Panel({ children, className = "", accent }: { children: React.ReactNode; className?: string; accent?: string }) {
+    const tk = useThemeTokens();
+    const d = tk.isDark;
     return (
         <motion.div className={`rounded-2xl overflow-hidden ${className}`}
             initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, type: "spring", stiffness: 150 }}
-            whileHover={{ boxShadow: accent ? `0 12px 50px rgba(0,0,0,0.6), 0 0 60px ${accent}` : "0 12px 50px rgba(0,0,0,0.6)" }}
+            whileHover={{ boxShadow: accent ? (d ? `0 12px 50px rgba(0,0,0,0.6), 0 0 60px ${accent}` : `0 8px 30px rgba(0,0,0,0.08), 0 0 30px ${accent}`) : (d ? "0 12px 50px rgba(0,0,0,0.6)" : "0 8px 30px rgba(0,0,0,0.08)") }}
             style={{
-                background: "linear-gradient(160deg, rgba(14,20,33,0.92) 0%, rgba(8,12,22,0.96) 100%)",
-                border: "1px solid rgba(255,255,255,0.05)",
-                boxShadow: accent ? `0 8px 40px rgba(0,0,0,0.5), 0 0 50px ${accent}, inset 0 1px 0 rgba(255,255,255,0.04)` : "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
+                background: d ? "linear-gradient(160deg, rgba(14,20,33,0.92) 0%, rgba(8,12,22,0.96) 100%)" : tk.surface,
+                border: `1px solid ${d ? 'rgba(255,255,255,0.05)' : tk.border}`,
+                boxShadow: accent ? (d ? `0 8px 40px rgba(0,0,0,0.5), 0 0 50px ${accent}, inset 0 1px 0 rgba(255,255,255,0.04)` : `0 4px 20px rgba(0,0,0,0.06), 0 0 30px ${accent}`) : (d ? "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 4px 20px rgba(0,0,0,0.06)"),
             }}>
             {children}
         </motion.div>
@@ -156,25 +159,27 @@ export function ScanLine({ color }: { color: string }) {
 /* ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  Animated Buy/Sell Cell ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  */
 
 export function SignalCell({ signal, rowIdx, colIdx }: { signal: Signal; rowIdx: number; colIdx: number }) {
+    const tk = useThemeTokens();
+    const d = tk.isDark;
     const isBuy = signal === "Buy";
     const isSell = signal === "Sell";
     const isNeutral = signal === "Neutral" || signal === "NA";
 
-    let color = "#666"; // Gray for NA
-    let bgColor = "rgba(255,255,255,0.03)";
+    let color = d ? "#666" : "#999";
+    let bgColor = d ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)";
     let label = "-";
 
     if (isBuy) {
-        color = "#00e676";
-        bgColor = "rgba(0,230,118,0.06)";
+        color = d ? "#00e676" : "#16a34a";
+        bgColor = d ? "rgba(0,230,118,0.06)" : "rgba(22,163,74,0.06)";
         label = "Buy";
     } else if (isSell) {
-        color = "#ff1744";
-        bgColor = "rgba(255,23,68,0.06)";
+        color = d ? "#ff1744" : "#dc2626";
+        bgColor = d ? "rgba(255,23,68,0.06)" : "rgba(220,38,38,0.06)";
         label = "Sell";
     } else if (signal === "Neutral") {
-        color = "#ffc400";
-        bgColor = "rgba(255,196,0,0.06)";
+        color = d ? "#ffc400" : "#d97706";
+        bgColor = d ? "rgba(255,196,0,0.06)" : "rgba(217,119,6,0.06)";
         label = "Neu";
     }
 
@@ -183,7 +188,7 @@ export function SignalCell({ signal, rowIdx, colIdx }: { signal: Signal; rowIdx:
             style={{
                 color: color,
                 background: bgColor,
-                borderColor: "rgba(255,255,255,0.03)",
+                borderColor: d ? "rgba(255,255,255,0.03)" : tk.border,
             }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -192,7 +197,7 @@ export function SignalCell({ signal, rowIdx, colIdx }: { signal: Signal; rowIdx:
                 scale: 1.15,
                 zIndex: 20,
                 boxShadow: `0 0 10px ${color}30`,
-                background: isBuy ? "rgba(0,230,118,0.12)" : isSell ? "rgba(255,23,68,0.12)" : "rgba(255,255,255,0.08)",
+                background: isBuy ? (d ? "rgba(0,230,118,0.12)" : "rgba(22,163,74,0.1)") : isSell ? (d ? "rgba(255,23,68,0.12)" : "rgba(220,38,38,0.1)") : (d ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"),
             }}
         >
             {label}

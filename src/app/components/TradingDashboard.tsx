@@ -14,7 +14,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
 import { useLivePrices } from "../hooks/useLivePrices";
 import { useThemeTokens } from "../hooks/useThemeTokens";
-import { useTheme } from "../contexts/ThemeContext";
+import { useTheme, themeOptions } from "../contexts/ThemeContext";
 import { useMarketsAPI } from "../hooks/useMarketsAPI";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { useDirectionStateAPI } from "../hooks/useDirectionStateAPI";
@@ -174,7 +174,10 @@ function generateCandlesFromReal(real: PhaseCandle, count: number = 90): any[] {
 
 export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardProps) {
   const [chartLayout, setChartLayout] = useState<"single" | "split" | "quad">("single");
-  const { toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const currentThemeOption = themeOptions.find(o => o.key === theme) || themeOptions[0];
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
   const tk = useThemeTokens();
   const { subscriptionStatus, subscriptionPlan } = useAuth();
   const { language, setLanguageKey, t } = useLanguage();
@@ -183,11 +186,14 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const dropdownRef = useRef<HTMLDivElement>(null);
   const ribbonRef = useRef<HTMLDivElement>(null);
 
-  // Close language dropdown if clicked outside
+  // Close dropdowns if clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setLangDropdownOpen(false);
+      }
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setThemeDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -397,32 +403,32 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   mtfEnabled, mtfLargeTimeframe, mtfSmallTimeframe, chartData]);
 
   return (
-    <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ background: tk.bg, fontFamily: "'Inter', system-ui, sans-serif", transition: "background 0.3s" }}>
+    <div className="min-h-screen overflow-x-hidden" dir={isRTL ? "rtl" : "ltr"} style={{ background: tk.bg, fontFamily: "'Inter', system-ui, sans-serif", transition: "background 0.3s" }}>
 
       {/* ═══════════════ HEADER ═══════════════ */}
-      <header className="relative overflow-hidden" style={{ 
-        background: `linear-gradient(180deg, rgba(6,10,16,0.95) 0%, rgba(6,10,16,0.85) 100%)`,
-        backdropFilter: 'blur(20px)',
-        borderBottom: `1px solid rgba(99,102,241,0.08)`,
+      <header className="relative z-40" style={{ 
+        background: tk.isDark ? 'linear-gradient(180deg, rgba(6,10,16,0.95) 0%, rgba(6,10,16,0.85) 100%)' : tk.headerBg,
+        backdropFilter: tk.isDark ? 'blur(20px)' : undefined,
+        borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.headerBorder}`,
         transition: "background 0.3s, border-color 0.3s"
       }}>
-        {/* Animated top LED strip */}
-        <motion.div className="absolute top-0 left-0 right-0 h-[1.5px] z-10"
+        {/* Animated top LED strip — dark only */}
+        {tk.isDark && <motion.div className="absolute top-0 left-0 right-0 h-[1.5px] z-10"
           style={{ background: 'linear-gradient(90deg, transparent, #6366f1 30%, #a855f7 50%, #6366f1 70%, transparent)' }}
           animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity }} />
+          transition={{ duration: 3, repeat: Infinity }} />}
         
-        {/* Subtle animated scan line */}
-        <motion.div className="absolute inset-0 pointer-events-none z-0"
+        {/* Subtle animated scan line — dark only */}
+        {tk.isDark && <motion.div className="absolute inset-0 pointer-events-none z-0"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.03), transparent)', width: '30%' }}
           animate={{ x: ['-100%', '400%'] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }} />
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }} />}
         
-        {/* Grid pattern */}
-        <div className="absolute inset-0 pointer-events-none z-0" style={{
+        {/* Grid pattern — dark only */}
+        {tk.isDark && <div className="absolute inset-0 pointer-events-none z-0" style={{
           backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
-        }} />
+        }} />}
 
         <div className="flex items-center justify-between px-5 py-2.5 relative z-10">
           {/* Logo */}
@@ -430,21 +436,21 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             <motion.div className="relative"
               whileHover={{ scale: 1.05 }}
               style={{ 
-                background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 100%)", 
+                background: tk.isDark ? 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 100%)' : 'linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.06) 100%)', 
                 padding: "7px 20px", 
                 borderRadius: 12,
-                border: '1px solid rgba(99,102,241,0.25)',
-                boxShadow: '0 4px 20px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+                border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.25)' : 'rgba(79,70,229,0.2)'}`,
+                boxShadow: tk.isDark ? '0 4px 20px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.05)' : '0 2px 10px rgba(79,70,229,0.06)'
               }}>
-              <span style={{ color: "#fff", fontWeight: 900, fontSize: 15, letterSpacing: 3.5 }}>PHASE X</span>
+              <span style={{ color: tk.isDark ? '#fff' : '#4f46e5', fontWeight: 900, fontSize: 15, letterSpacing: 3.5 }}>PHASE X</span>
               {/* Orbiting dot */}
               <motion.div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
-                style={{ background: '#818cf8', boxShadow: '0 0 8px #818cf8' }}
+                style={{ background: tk.info, boxShadow: `0 0 8px ${tk.info}` }}
                 animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
                 transition={{ duration: 2, repeat: Infinity }} />
             </motion.div>
             <div className="hidden sm:block">
-              <span className="text-[8px] font-bold tracking-[0.25em] uppercase" style={{ color: 'rgba(99,102,241,0.4)' }}>
+              <span className="text-[8px] font-bold tracking-[0.25em] uppercase" style={{ color: tk.isDark ? 'rgba(99,102,241,0.4)' : 'rgba(79,70,229,0.35)' }}>
                 STRUCTURAL DYNAMICS
               </span>
             </div>
@@ -458,10 +464,10 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
               whileHover={{ scale: 1.04, boxShadow: '0 4px 15px rgba(99,102,241,0.15)' }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
               style={{
-                color: "#818cf8",
-                background: "rgba(99,102,241,0.06)",
-                border: "1px solid rgba(99,102,241,0.12)",
-                backdropFilter: 'blur(8px)',
+                color: tk.info,
+                background: tk.infoBg,
+                border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.15)'}`,
+                backdropFilter: tk.isDark ? 'blur(8px)' : undefined,
               }}>
               <Network className="w-3.5 h-3.5" />
               <span>{t("structuralDynamics")}</span>
@@ -470,10 +476,10 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             <motion.button onClick={() => setIsNewsOpen(!isNewsOpen)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
               style={{ 
-                color: isNewsOpen ? '#f87171' : '#64748b',
-                background: isNewsOpen ? 'rgba(239,68,68,0.06)' : 'rgba(99,102,241,0.03)',
-                border: `1px solid ${isNewsOpen ? 'rgba(239,68,68,0.15)' : 'rgba(99,102,241,0.08)'}`,
-                backdropFilter: 'blur(8px)',
+                color: isNewsOpen ? tk.negative : tk.textMuted,
+                background: isNewsOpen ? tk.negativeBg : tk.buttonGhost,
+                border: `1px solid ${isNewsOpen ? tk.negativeBorder : tk.buttonGhostBorder}`,
+                backdropFilter: tk.isDark ? 'blur(8px)' : undefined,
               }}>
               <RadioTower className={`w-3.5 h-3.5 ${isNewsOpen ? "animate-pulse" : ""}`} />
               {t("breakingNews")}
@@ -481,31 +487,65 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
 
             <motion.button onClick={() => setIsProfileOpen(true)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
-              style={{ color: '#64748b', background: 'rgba(99,102,241,0.03)', border: '1px solid rgba(99,102,241,0.08)', backdropFilter: 'blur(8px)' }}>
+              style={{ color: tk.textMuted, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}`, backdropFilter: tk.isDark ? 'blur(8px)' : undefined }}>
               <User className="w-3.5 h-3.5" /> {t("userProfile") || "Profile"}
             </motion.button>
 
             <motion.button onClick={onLogout} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
-              style={{ color: '#64748b', background: 'rgba(99,102,241,0.03)', border: '1px solid rgba(99,102,241,0.08)', backdropFilter: 'blur(8px)' }}>
+              style={{ color: tk.textMuted, background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}`, backdropFilter: tk.isDark ? 'blur(8px)' : undefined }}>
               <LogOut className="w-3.5 h-3.5" /> {t("logout")}
             </motion.button>
 
-            <motion.button onClick={toggleTheme} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
-              className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer"
-              style={{ color: tk.isDark ? "#fbbf24" : "#6366f1", background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)' }}>
-              {tk.isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-            </motion.button>
+            {/* Theme Mode Dropdown */}
+            <div className="relative" ref={themeDropdownRef}>
+              <motion.button onClick={() => setThemeDropdownOpen(!themeDropdownOpen)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.96 }}
+                className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer text-[16px]"
+                style={{ background: tk.buttonGhost, border: `1px solid ${tk.buttonGhostBorder}` }}>
+                {currentThemeOption.icon}
+              </motion.button>
+              <AnimatePresence>
+                {themeDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full mt-2 w-36 rounded-xl shadow-2xl overflow-hidden z-[60]"
+                    style={{ background: tk.isDark ? 'rgba(6,10,16,0.95)' : tk.surfaceElevated, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.12)' : tk.border}`, backdropFilter: tk.isDark ? 'blur(20px)' : undefined, right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
+                  >
+                    <div className="py-1 flex flex-col">
+                      {themeOptions.map((opt) => (
+                        <button
+                          key={opt.key}
+                          onClick={() => { setTheme(opt.key); setThemeDropdownOpen(false); }}
+                          className="flex items-center gap-2.5 px-3 py-2.5 text-xs transition-colors text-left cursor-pointer"
+                          style={{
+                            color: theme === opt.key ? tk.info : tk.textMuted,
+                            background: theme === opt.key ? tk.infoBg : 'transparent',
+                          }}
+                        >
+                          <span className="text-[16px]">{opt.icon}</span>
+                          <span className={theme === opt.key ? "font-bold" : ""}>
+                            {isRTL ? opt.labelAr : opt.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Language Dropdown */}
-            <div className="relative mr-3" ref={dropdownRef}>
+            <div className="relative mr-3 z-50" ref={dropdownRef}>
               <button
                 onClick={() => setLangDropdownOpen(!langDropdownOpen)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black tracking-widest transition-colors cursor-pointer"
                 style={{
-                  color: '#94a3b8',
-                  border: '1px solid rgba(99,102,241,0.1)',
-                  backgroundColor: 'rgba(99,102,241,0.04)',
+                  color: tk.buttonGhostText,
+                  border: `1px solid ${tk.buttonGhostBorder}`,
+                  backgroundColor: tk.buttonGhost,
                 }}
               >
                 <img src={`https://flagcdn.com/${currentLangObj.flagUrl}.svg`} alt={currentLangObj.code} className="w-5 h-auto rounded-sm object-cover" />
@@ -521,7 +561,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
                     className="absolute top-full mt-2 w-36 rounded-xl shadow-2xl overflow-hidden z-[60]"
-                    style={{ background: 'rgba(6,10,16,0.95)', border: '1px solid rgba(99,102,241,0.12)', backdropFilter: 'blur(20px)', right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
+                    style={{ background: tk.isDark ? 'rgba(6,10,16,0.95)' : tk.surfaceElevated, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.12)' : tk.border}`, backdropFilter: tk.isDark ? 'blur(20px)' : undefined, right: isRTL ? 'auto' : 0, left: isRTL ? 0 : 'auto' }}
                   >
                     <div className="py-1 flex flex-col">
                       {languageOptions.map((lang) => (
@@ -533,8 +573,8 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                           }}
                           className="flex items-center gap-2 px-3 py-2 text-xs transition-colors text-left"
                           style={{
-                            color: language === lang.code ? '#818cf8' : '#64748b',
-                            background: language === lang.code ? 'rgba(99,102,241,0.08)' : 'transparent'
+                            color: language === lang.code ? tk.info : tk.textMuted,
+                            background: language === lang.code ? tk.infoBg : 'transparent'
                           }}
                         >
                           <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
@@ -549,15 +589,15 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
 
             <motion.button onClick={() => setIsSubscriptionOpen(true)} whileHover={{ scale: 1.04, boxShadow: '0 6px 25px rgba(250,204,21,0.15)' }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-black cursor-pointer relative overflow-hidden"
-              style={{ color: "#facc15", background: "rgba(250,204,21,0.04)", border: '1px solid rgba(250,204,21,0.15)', boxShadow: '0 0 20px rgba(250,204,21,0.03)' }}>
+              style={{ color: tk.warning, background: tk.warningBg, border: `1px solid ${tk.isDark ? 'rgba(250,204,21,0.15)' : 'rgba(217,119,6,0.2)'}`, boxShadow: tk.isDark ? '0 0 20px rgba(250,204,21,0.03)' : 'none' }}>
               {/* Shimmer on subscription button */}
               <motion.div className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(250,204,21,0.06), transparent)' }}
+                style={{ background: `linear-gradient(90deg, transparent, ${tk.isDark ? 'rgba(250,204,21,0.06)' : 'rgba(217,119,6,0.06)'}, transparent)` }}
                 animate={{ x: ['-100%', '200%'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} />
               <Crown className="w-4 h-4 relative z-10" />
               <span className="tracking-wide relative z-10">{t("subscription")}</span>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-lg ml-1 relative z-10" style={{ background: "rgba(250,204,21,0.1)", color: "#facc15", border: '1px solid rgba(250,204,21,0.15)' }}>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-lg ml-1 relative z-10" style={{ background: tk.warningBg, color: tk.warning, border: `1px solid ${tk.isDark ? 'rgba(250,204,21,0.15)' : 'rgba(217,119,6,0.15)'}` }}>
                 {subInfo.daysRemaining} {t("daysRemaining")}
               </span>
             </motion.button>
@@ -605,27 +645,27 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
 
           {/* Indicator Ribbon (Compact & Horizontal with Scroll Arrows) */}
           <div className="rounded-2xl overflow-hidden mb-1 flex-shrink-0 relative"
-            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, rgba(6,10,16,0.95) 60%)', border: '1px solid rgba(99,102,241,0.1)', backdropFilter: 'blur(16px)', transition: "background 0.3s" }}>
-            {/* Grid bg */}
-            <div className="absolute inset-0 pointer-events-none z-0" style={{
+            style={{ background: tk.isDark ? 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, rgba(6,10,16,0.95) 60%)' : tk.surface, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.1)' : tk.border}`, backdropFilter: tk.isDark ? 'blur(16px)' : undefined, transition: "background 0.3s" }}>
+            {/* Grid bg — dark only */}
+            {tk.isDark && <div className="absolute inset-0 pointer-events-none z-0" style={{
               backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)',
               backgroundSize: '40px 40px',
-            }} />
+            }} />}
             {/* Left Arrow */}
             <button
               onClick={() => ribbonRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
               className="absolute left-0 top-0 bottom-0 z-20 flex items-center justify-center w-7 cursor-pointer"
-              style={{ background: 'linear-gradient(90deg, rgba(6,10,16,0.9) 60%, transparent 100%)' }}
+              style={{ background: tk.isDark ? 'linear-gradient(90deg, rgba(6,10,16,0.9) 60%, transparent 100%)' : `linear-gradient(90deg, ${tk.surface} 60%, transparent 100%)` }}
             >
-              <ChevronLeft className="w-4 h-4" style={{ color: '#818cf8' }} />
+              <ChevronLeft className="w-4 h-4" style={{ color: tk.info }} />
             </button>
             {/* Right Arrow */}
             <button
               onClick={() => ribbonRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
               className="absolute right-0 top-0 bottom-0 z-20 flex items-center justify-center w-7 cursor-pointer"
-              style={{ background: 'linear-gradient(270deg, rgba(6,10,16,0.9) 60%, transparent 100%)' }}
+              style={{ background: tk.isDark ? 'linear-gradient(270deg, rgba(6,10,16,0.9) 60%, transparent 100%)' : `linear-gradient(270deg, ${tk.surface} 60%, transparent 100%)` }}
             >
-              <ChevronRight className="w-4 h-4" style={{ color: '#818cf8' }} />
+              <ChevronRight className="w-4 h-4" style={{ color: tk.info }} />
             </button>
             <div ref={ribbonRef} className="flex items-center p-1 gap-1 overflow-x-auto hide-scrollbar mx-7 relative z-10" style={{ scrollBehavior: "smooth" }}>
               {indicators.map((ind) => {
@@ -637,23 +677,23 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                     whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
                     className="flex-shrink-0 flex flex-row items-center justify-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all relative"
                     style={{
-                      background: active ? (isLocked ? 'rgba(148,163,184,0.06)' : `rgba(99,102,241,0.08)`) : "transparent",
-                      border: active ? `1px solid ${isLocked ? 'rgba(148,163,184,0.15)' : 'rgba(99,102,241,0.2)'}` : "1px solid transparent",
-                      boxShadow: active && !isLocked ? '0 2px 12px rgba(99,102,241,0.08)' : 'none',
+                      background: active ? (isLocked ? 'rgba(148,163,184,0.06)' : tk.infoBg) : "transparent",
+                      border: active ? `1px solid ${isLocked ? 'rgba(148,163,184,0.15)' : (tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.2)')}` : "1px solid transparent",
+                      boxShadow: active && !isLocked && tk.isDark ? '0 2px 12px rgba(99,102,241,0.08)' : 'none',
                       minWidth: "140px",
                       opacity: isLocked ? 0.55 : 1
                     }}>
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 relative" style={{
-                      background: active ? (isLocked ? 'rgba(148,163,184,0.1)' : `rgba(99,102,241,0.15)`) : 'rgba(99,102,241,0.04)',
-                      border: `1px solid ${active && !isLocked ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.06)'}`,
+                      background: active ? (isLocked ? 'rgba(148,163,184,0.1)' : (tk.isDark ? 'rgba(99,102,241,0.15)' : 'rgba(79,70,229,0.1)')) : tk.surfaceHover,
+                      border: `1px solid ${active && !isLocked ? (tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.15)') : tk.border}`,
                     }}>
-                      {isLocked ? <Lock className="w-3 h-3" style={{ color: '#94a3b8' }} /> : <Icon className="w-3 h-3" style={{ color: active ? "#818cf8" : '#475569' }} />}
+                      {isLocked ? <Lock className="w-3 h-3" style={{ color: tk.textDim }} /> : <Icon className="w-3 h-3" style={{ color: active ? tk.info : tk.textDim }} />}
                     </div>
-                    <span className="text-[10px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: active ? (isLocked ? '#94a3b8' : '#818cf8') : '#475569' }}>
+                    <span className="text-[10px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: active ? (isLocked ? tk.textDim : tk.info) : tk.textDim }}>
                       {isRTL ? ind.name : ind.nameEn}
                     </span>
                     {isLocked && (
-                      <Lock className="w-3 h-3 flex-shrink-0" style={{ color: '#94a3b8' }} />
+                      <Lock className="w-3 h-3 flex-shrink-0" style={{ color: tk.textDim }} />
                     )}
                   </motion.button>
                 );

@@ -190,8 +190,8 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
 
   const gridColor = tk.chartGrid;
   const textColor = tk.chartText;
-  const bgColor = tk.surface;
-  const crosshairColor = '#6366f1';
+  const bgColor = tk.chartBg;
+  const crosshairColor = tk.accent;
 
   return (
     <div ref={containerRef} className="w-full h-full relative" style={{ direction: 'ltr' }}>
@@ -329,8 +329,8 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
               );
             }
 
-            const color = (isLive ? effectiveIsGreen : isGreen) ? '#059669' : '#dc2626';
-            const hoverColor = (isLive ? effectiveIsGreen : isGreen) ? '#10b981' : '#ef4444';
+            const color = (isLive ? effectiveIsGreen : isGreen) ? tk.chartCandleGreen : tk.chartCandleRed;
+            const hoverColor = (isLive ? effectiveIsGreen : isGreen) ? tk.chartCandleGreen : tk.chartCandleRed;
             const isHovered = i === hoveredIndex;
             const fillColor = isHovered ? hoverColor : color;
 
@@ -363,7 +363,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
                   width={w}
                   height={bodyH}
                   fill={isLive ? `url(#liveGrad${effectiveIsGreen ? 'Green' : 'Red'})` : fillColor}
-                  stroke={isLive ? 'rgba(255,255,255,0.3)' : fillColor}
+                  stroke={isLive ? tk.chartCandleLive : fillColor}
                   strokeWidth={isLive ? 1 : 0.5}
                   rx={isLive ? 2 : 1}
                   opacity={isHovered ? 1 : isLive ? 0.95 : 0.9}
@@ -589,23 +589,23 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
           </filter>
           {/* Live candle gradient fills */}
           <linearGradient id="liveGradGreen" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
-            <stop offset="50%" stopColor="#10b981" stopOpacity="0.95" />
-            <stop offset="50%" stopColor="#059669" stopOpacity="0.95" />
+            <stop offset="0%" stopColor={tk.chartCandleGreen} stopOpacity="1" />
+            <stop offset="50%" stopColor={tk.chartCandleGreen} stopOpacity="0.95" />
+            <stop offset="100%" stopColor={tk.chartCandleGreen} stopOpacity="0.9" />
           </linearGradient>
           <linearGradient id="liveGradRed" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
-            <stop offset="50%" stopColor="#dc2626" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#dc2626" stopOpacity="0.9" />
+            <stop offset="0%" stopColor={tk.chartCandleRed} stopOpacity="1" />
+            <stop offset="50%" stopColor={tk.chartCandleRed} stopOpacity="0.95" />
+            <stop offset="100%" stopColor={tk.chartCandleRed} stopOpacity="0.9" />
           </linearGradient>
           {/* Price label gradients */}
           <linearGradient id="priceLabelGreen" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#059669" />
-            <stop offset="100%" stopColor="#059669" />
+            <stop offset="0%" stopColor={tk.chartCandleGreen} />
+            <stop offset="100%" stopColor={tk.chartCandleGreen} />
           </linearGradient>
           <linearGradient id="priceLabelRed" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#dc2626" />
-            <stop offset="100%" stopColor="#dc2626" />
+            <stop offset="0%" stopColor={tk.chartCandleRed} />
+            <stop offset="100%" stopColor={tk.chartCandleRed} />
           </linearGradient>
         </defs>
       </svg>
@@ -624,32 +624,35 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
               transform: 'translateX(-50%)',
             }}
           >
-            <div className="p-3 rounded-xl border shadow-2xl backdrop-blur-sm" style={{ background: tk.isDark ? 'rgba(17,21,32,0.95)' : 'rgba(255,255,255,0.95)', borderColor: tk.borderStrong }}>
-              <p className="text-xs text-gray-400 mb-1.5 font-mono flex items-center gap-1.5">
+            <div className="p-3 rounded-xl border shadow-2xl backdrop-blur-sm" style={{ background: tk.tooltipBg, borderColor: tk.tooltipBorder }}>
+              <p className="text-xs mb-1.5 font-mono flex items-center gap-1.5" style={{ color: tk.textDim }}>
                 📅 {tooltip.data.fullTime || tooltip.data.time}
-                {tooltip.data.isReal && <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold">★ JSON</span>}
+                {tooltip.data.isReal && <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: tk.accentGlow15, color: tk.accent }}>★ JSON</span>}
               </p>
               <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded ${tooltip.data.isGreen ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                <span className="text-xs font-bold px-2 py-0.5 rounded" style={{
+                  background: tooltip.data.isGreen ? tk.positiveBg : tk.negativeBg,
+                  color: tooltip.data.isGreen ? tk.chartCandleGreen : tk.chartCandleRed
+                }}>
                   {tooltip.data.isGreen ? '▲ Bullish' : '▼ Bearish'}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-x-5 gap-y-1.5 text-xs text-gray-300">
+              <div className="grid grid-cols-2 gap-x-5 gap-y-1.5 text-xs" style={{ color: tk.textSecondary }}>
                 <div className="flex justify-between gap-3">
-                  <span className="opacity-50">Open</span>
-                  <span className="font-mono font-bold">{tooltip.data.open.toFixed(dec)}</span>
+                  <span style={{ opacity: 0.5 }}>Open</span>
+                  <span className="font-mono font-bold" style={{ color: tk.textBright }}>{tooltip.data.open.toFixed(dec)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="opacity-50">High</span>
-                  <span className="font-mono font-bold text-green-400">{tooltip.data.high.toFixed(dec)}</span>
+                  <span style={{ opacity: 0.5 }}>High</span>
+                  <span className="font-mono font-bold" style={{ color: tk.positive }}>{tooltip.data.high.toFixed(dec)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="opacity-50">Low</span>
-                  <span className="font-mono font-bold text-red-400">{tooltip.data.low.toFixed(dec)}</span>
+                  <span style={{ opacity: 0.5 }}>Low</span>
+                  <span className="font-mono font-bold" style={{ color: tk.negative }}>{tooltip.data.low.toFixed(dec)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="opacity-50">Close</span>
-                  <span className="font-mono font-bold">{tooltip.data.close.toFixed(dec)}</span>
+                  <span style={{ opacity: 0.5 }}>Close</span>
+                  <span className="font-mono font-bold" style={{ color: tk.textBright }}>{tooltip.data.close.toFixed(dec)}</span>
                 </div>
               </div>
             </div>

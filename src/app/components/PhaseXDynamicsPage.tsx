@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, TrendingDown, Activity, Zap, Upload, RotateCcw, Target, Cpu, Activity as Pulse, Shield, Flame, Layers, Bot, X, RadioTower } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useThemeTokens } from "../hooks/useThemeTokens";
 import type { VCRow } from "./phase-x/types";
 import { SciFiClock } from "./SciFiClock";
 import { BreakingNews } from "./BreakingNews";
@@ -389,6 +390,8 @@ function getDynamicLayerData(symbol: string, currentSources: Record<AnalysisTab,
 
 function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symbol: string; isRTL: boolean; sources: Record<AnalysisTab, any[]> }) {
     const { language, t: globalT } = useLanguage();
+    const tk = useThemeTokens();
+    const d = tk.isDark;
     const lang = ["ar", "ru", "tr", "fr", "es"].includes(language) ? language : "en";
     const data = getTabData(tab, symbol, sources);
     const displayRows = data.rows;
@@ -399,8 +402,11 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
     const displayOverallClass = data.overallClass;
 
     const t = i18n[lang];
-    const accentColor = displayOverallTotal >= 0 ? "#00e676" : "#ff1744";
-    const accentGlow = displayOverallTotal >= 0 ? "rgba(0,230,118,0.04)" : "rgba(255,23,68,0.04)";
+    const accentColor = displayOverallTotal >= 0 ? (d ? "#00e676" : "#16a34a") : (d ? "#ff1744" : "#dc2626");
+    const accentGlow = displayOverallTotal >= 0 ? (d ? "rgba(0,230,118,0.04)" : "rgba(22,163,74,0.03)") : (d ? "rgba(255,23,68,0.04)" : "rgba(220,38,38,0.03)");
+    const tableBg = d ? "rgba(10,16,28,0.98)" : tk.surfaceElevated;
+    const borderC = d ? "rgba(255,255,255,0.05)" : tk.border;
+    const cellBorderC = d ? "rgba(255,255,255,0.03)" : tk.border;
 
     const tvTab = (v: string) => {
         switch(v) {
@@ -427,7 +433,7 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                         <motion.span className="text-lg" animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity }}>
                             {analysisTabIcons[tab]}
                         </motion.span>
-                        <span className="text-[14px] font-black text-white tracking-wider uppercase" dir="auto">
+                        <span className="text-[14px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">
                             {tvTab(tab)}
                         </span>
                         {(displayRows.length > 0) && (
@@ -456,24 +462,24 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                     </div>
                 </div>
                 {/* Scrollable Table */}
-                <div ref={tableRef} className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.04)" }}>
+                <div ref={tableRef} className="rounded-xl" style={{ border: `1px solid ${borderC}` }}>
                     <table className="w-full border-collapse">
                         <thead className="sticky top-0 z-10">
-                            <tr style={{ background: "rgba(10,16,28,0.98)" }}>
-                                <th className="text-left text-[11px] font-bold text-gray-400 py-2 px-3 border-r border-b sticky left-0 z-20"
-                                    style={{ background: "rgba(10,16,28,0.98)", borderColor: "rgba(255,255,255,0.05)", minWidth: "78px" }}>
+                            <tr style={{ background: tableBg }}>
+                                <th className="text-left text-[11px] font-bold py-2 px-3 border-r border-b sticky left-0 z-20"
+                                    style={{ background: tableBg, borderColor: borderC, minWidth: "78px", color: tk.textMuted }}>
                                     {data.paramLabel}
                                 </th>
                                 {displayTfCols.map(tf => (
-                                    <th key={tf} className="text-center text-[10px] font-bold text-gray-500 py-2 px-1 border-r border-b tracking-wider"
-                                        style={{ borderColor: "rgba(255,255,255,0.05)", minWidth: "52px" }}>
+                                    <th key={tf} className="text-center text-[10px] font-bold py-2 px-1 border-r border-b tracking-wider"
+                                        style={{ borderColor: borderC, minWidth: "52px", color: tk.textDim }}>
                                         {tf}
                                     </th>
                                 ))}
-                                <th className="text-center text-[10px] font-bold text-amber-400 py-2 px-2 border-r border-b tracking-wider"
-                                    style={{ borderColor: "rgba(255,255,255,0.05)", minWidth: "55px" }}>{t.total}</th>
-                                <th className="text-center text-[10px] font-bold text-cyan-400 py-2 px-2 border-b tracking-wider"
-                                    style={{ borderColor: "rgba(255,255,255,0.05)", minWidth: "110px" }}>{t.classification}</th>
+                                <th className="text-center text-[10px] font-bold py-2 px-2 border-r border-b tracking-wider"
+                                    style={{ borderColor: borderC, minWidth: "55px", color: d ? '#fbbf24' : '#d97706' }}>{t.total}</th>
+                                <th className="text-center text-[10px] font-bold py-2 px-2 border-b tracking-wider"
+                                    style={{ borderColor: borderC, minWidth: "110px", color: d ? '#22d3ee' : '#0891b2' }}>{t.classification}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -489,57 +495,57 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
                                         scale: 1.005,
                                         x: 3,
                                     }}>
-                                    <td className="text-[11px] font-semibold text-gray-500 py-[5px] px-3 border-r border-b sticky left-0"
-                                        style={{ background: "rgba(10,16,28,0.95)", borderColor: "rgba(255,255,255,0.03)" }}>
+                                    <td className="text-[11px] font-semibold py-[5px] px-3 border-r border-b sticky left-0"
+                                        style={{ background: tableBg, borderColor: cellBorderC, color: tk.textMuted }}>
                                         {row.param}
                                     </td>
                                     {row.signals.map((sig: Signal, ci: number) => (
                                         <SignalCell key={ci} signal={sig} rowIdx={ri} colIdx={ci} />
                                     ))}
                                     <td className="text-center text-[11px] font-black py-[5px] px-2 border-r border-b"
-                                        style={{ color: getTotalColor(row.total), borderColor: "rgba(255,255,255,0.03)", background: `${getTotalColor(row.total)}08` }}>
+                                        style={{ color: getTotalColor(row.total), borderColor: cellBorderC, background: `${getTotalColor(row.total)}08` }}>
                                         {row.total}%
                                     </td>
                                     <td className="text-center text-[10px] font-bold py-[5px] px-2 border-b"
-                                        style={{ color: getClassColor(row.classification), borderColor: "rgba(255,255,255,0.03)" }}>
+                                        style={{ color: getClassColor(row.classification), borderColor: cellBorderC }}>
                                         {tv(row.classification)}
                                     </td>
                                 </motion.tr>
                             ))}
                             {/* Total Row */}
-                            <tr style={{ background: "rgba(255,200,0,0.04)" }}>
-                                <td className="text-[11px] font-black text-amber-400 py-2 px-3 border-r border-b sticky left-0"
-                                    style={{ background: "rgba(10,16,28,0.98)", borderColor: "rgba(255,255,255,0.05)" }}>
+                            <tr style={{ background: d ? 'rgba(255,200,0,0.04)' : 'rgba(217,119,6,0.03)' }}>
+                                <td className="text-[11px] font-black py-2 px-3 border-r border-b sticky left-0"
+                                    style={{ background: tableBg, borderColor: borderC, color: d ? '#fbbf24' : '#d97706' }}>
                                     {t.total}
                                 </td>
                                 {displayColTotals.map((t, ci) => (
                                     <td key={ci} className="text-center text-[11px] font-black py-2 px-1 border-r border-b"
-                                        style={{ color: getTotalColor(t), borderColor: "rgba(255,255,255,0.05)", background: `${getTotalColor(t)}08` }}>
+                                        style={{ color: getTotalColor(t), borderColor: borderC, background: `${getTotalColor(t)}08` }}>
                                         {t}%
                                     </td>
                                 ))}
                                 <td className="text-center text-[12px] font-black py-2 px-2 border-r border-b"
-                                    style={{ color: getTotalColor(displayOverallTotal), borderColor: "rgba(255,255,255,0.05)" }}>
+                                    style={{ color: getTotalColor(displayOverallTotal), borderColor: borderC }}>
                                     {displayOverallTotal}%
                                 </td>
                                 <td className="text-center text-[11px] font-black py-2 px-2 border-b"
-                                    style={{ color: getClassColor(displayOverallClass), borderColor: "rgba(255,255,255,0.05)" }}>
+                                    style={{ color: getClassColor(displayOverallClass), borderColor: borderC }}>
                                     {displayOverallClass}
                                 </td>
                             </tr>
                             {/* Classification Row */}
-                            <tr style={{ background: "rgba(0,200,255,0.03)" }}>
-                                <td className="text-[10px] font-bold text-cyan-400 py-2 px-3 border-r sticky left-0"
-                                    style={{ background: "rgba(10,16,28,0.98)", borderColor: "rgba(255,255,255,0.05)" }}>
+                            <tr style={{ background: d ? 'rgba(0,200,255,0.03)' : 'rgba(8,145,178,0.03)' }}>
+                                <td className="text-[10px] font-bold py-2 px-3 border-r sticky left-0"
+                                    style={{ background: tableBg, borderColor: borderC, color: d ? '#22d3ee' : '#0891b2' }}>
                                     {t.classification}
                                 </td>
                                 {displayColClassifications.map((c, ci) => (
                                     <td key={ci} className="text-center text-[9px] font-bold py-2 px-0.5 border-r"
-                                        style={{ color: getClassColor(c), borderColor: "rgba(255,255,255,0.05)", direction: 'ltr' }}>
+                                        style={{ color: getClassColor(c), borderColor: borderC, direction: 'ltr' }}>
                                         {tv(c)}
                                     </td>
                                 ))}
-                                <td className="border-r" style={{ borderColor: "rgba(255,255,255,0.05)" }}></td>
+                                <td className="border-r" style={{ borderColor: borderC }}></td>
                                 <td></td>
                             </tr>
                         </tbody>
@@ -553,6 +559,8 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
 
 function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: boolean; sources: Record<AnalysisTab, any[]> }) {
     const { language, t: globalT } = useLanguage();
+    const tk = useThemeTokens();
+    const d = tk.isDark;
     const lang = ["ar", "ru", "tr", "fr", "es"].includes(language) ? language : "en";
     const t = i18n[lang];
 
@@ -587,9 +595,9 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
     };
 
     const bullish = score >= 0;
-    const accent = bullish ? "#00e676" : "#ff1744";
-    const accentG = bullish ? "rgba(0,230,118," : "rgba(255,23,68,";
-    const cellStyle = (v: number) => ({ color: v >= 0 ? "#00e676" : "#ff1744" });
+    const accent = bullish ? (d ? "#00e676" : "#16a34a") : (d ? "#ff1744" : "#dc2626");
+    const accentG = bullish ? (d ? "rgba(0,230,118," : "rgba(22,163,74,") : (d ? "rgba(255,23,68," : "rgba(220,38,38,");
+    const cellStyle = (v: number) => ({ color: v >= 0 ? (d ? "#00e676" : "#16a34a") : (d ? "#ff1744" : "#dc2626") });
 
 
     const classStyle = (c: string) => ({ color: getClassColor(c) });
@@ -604,13 +612,14 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
         classification: t.overall.classification,
     }));
 
-    const thCls = "text-[13px] font-bold text-gray-300 py-3.5 px-4 border-r border-b tracking-wider";
+    const thCls = "text-[13px] font-bold py-3.5 px-4 border-r border-b tracking-wider";
 
     const tdCls = "text-center text-[13px] font-bold py-3 px-3 border-r border-b";
 
     const tdClsLast = "text-center text-[13px] font-bold py-3 px-4 border-b";
 
-    const borderC = "rgba(255,255,255,0.06)";
+    const borderC = d ? "rgba(255,255,255,0.06)" : tk.border;
+    const tableBg = d ? "rgba(10,16,28,0.98)" : tk.surfaceElevated;
     return (
         <div className="space-y-5">
             {/* ═══ Summary Cards Above Tables ═══ */}
@@ -622,26 +631,26 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2.5">
                                     <motion.span className="text-xl" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
-                                    <span className="text-[16px] font-black text-white tracking-wider uppercase" dir="auto">{globalT("allTxt")}</span>
+                                    <span className="text-[16px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">{globalT("allTxt")}</span>
                                 </div>
-                                <span className="text-[10px] text-gray-600 tracking-widest uppercase">{globalT("classificationSummary")}</span>
+                                <span className="text-[10px] tracking-widest uppercase" style={{ color: tk.textDim }}>{globalT("classificationSummary")}</span>
                             </div>
                             <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${accentG}0.1)` }}>
                                 <table className="w-full border-collapse">
                                     <thead>
-                                        <tr style={{ background: "rgba(10,16,28,0.98)" }}>
+                                        <tr style={{ background: tableBg }}>
                                             {[globalT("team"), globalT("buyBtn"), globalT("sellBtn"), "Net", "DSR", t.classification].map((h, i) => (
-                                                <th key={i} className="text-[12px] font-bold text-gray-400 py-3 px-4 border-r border-b tracking-wider"
-                                                    style={{ borderColor: borderC, background: i === 0 ? `${accentG}0.05)` : undefined }}>{h}</th>
+                                                <th key={i} className="text-[12px] font-bold py-3 px-4 border-r border-b tracking-wider"
+                                                    style={{ borderColor: borderC, background: i === 0 ? `${accentG}0.05)` : undefined, color: tk.textMuted }}>{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {allTeams.map((row, i) => (
-                                            <motion.tr key={i} className="hover:bg-white/[0.02]" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}>
-                                                <td className="text-[13px] font-bold text-gray-300 py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, background: `${accentG}0.03)` }}>{tvTeam(row.team)}</td>
-                                                <td className="text-center text-[13px] font-bold py-2.5 px-3 border-r border-b" style={{ color: "#00e676", borderColor: borderC }}>{row.buy}</td>
-                                                <td className="text-center text-[13px] font-bold py-2.5 px-3 border-r border-b" style={{ color: "#ff1744", borderColor: borderC }}>{row.sell}</td>
+                                            <motion.tr key={i} className={d ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.02]'} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}>
+                                                <td className="text-[13px] font-bold py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, background: `${accentG}0.03)`, color: tk.textSecondary }}>{tvTeam(row.team)}</td>
+                                                <td className="text-center text-[13px] font-bold py-2.5 px-3 border-r border-b" style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{row.buy}</td>
+                                                <td className="text-center text-[13px] font-bold py-2.5 px-3 border-r border-b" style={{ color: d ? "#ff1744" : "#dc2626", borderColor: borderC }}>{row.sell}</td>
                                                 <td className="text-center text-[13px] font-bold py-2.5 px-3 border-r border-b" style={{ ...cellStyle(row.net), borderColor: borderC }}>{row.net}</td>
                                                 <td className="text-center text-[13px] font-bold py-2.5 px-3 border-r border-b" style={{ ...cellStyle(row.dsr), borderColor: borderC }}>({row.dsr.toFixed(2)})</td>
                                                 <td className="text-center text-[13px] font-bold py-2.5 px-4 border-b" style={{ ...classStyle(row.classification), borderColor: borderC }}>{tv(row.classification)}</td>
@@ -649,9 +658,9 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                                         ))}
                                         {/* Over all row */}
                                         <motion.tr style={{ background: `${accentG}0.04)` }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
-                                            <td className="text-[13px] font-black text-amber-400 py-2.5 px-4 border-r border-b" style={{ borderColor: `${accentG}0.1)`, background: `${accentG}0.06)` }}>{tvTeam("Over all")}</td>
-                                            <td className="text-center text-[14px] font-black py-2.5 px-3 border-r border-b" style={{ color: "#00e676", borderColor: `${accentG}0.1)` }}>{layerData.allRow.buy}</td>
-                                            <td className="text-center text-[14px] font-black py-2.5 px-3 border-r border-b" style={{ color: "#ff1744", borderColor: `${accentG}0.1)` }}>{layerData.allRow.sell}</td>
+                                            <td className="text-[13px] font-black py-2.5 px-4 border-r border-b" style={{ borderColor: `${accentG}0.1)`, background: `${accentG}0.06)`, color: d ? '#fbbf24' : '#d97706' }}>{tvTeam("Over all")}</td>
+                                            <td className="text-center text-[14px] font-black py-2.5 px-3 border-r border-b" style={{ color: d ? "#00e676" : "#16a34a", borderColor: `${accentG}0.1)` }}>{layerData.allRow.buy}</td>
+                                            <td className="text-center text-[14px] font-black py-2.5 px-3 border-r border-b" style={{ color: d ? "#ff1744" : "#dc2626", borderColor: `${accentG}0.1)` }}>{layerData.allRow.sell}</td>
                                             <td className="text-center text-[14px] font-black py-2.5 px-3 border-r border-b" style={{ ...cellStyle(layerData.allRow.net), borderColor: `${accentG}0.1)` }}>{layerData.allRow.net}</td>
                                             <td className="text-center text-[14px] font-black py-2.5 px-3 border-r border-b" style={{ ...cellStyle(layerData.allRow.dsr), borderColor: `${accentG}0.1)` }}>({layerData.allRow.dsr.toFixed(2)})</td>
                                             <td className="text-center text-[14px] font-black py-2.5 px-4 border-b" style={{ ...classStyle(layerData.allRow.classification), borderColor: `${accentG}0.1)` }}>{tv(layerData.allRow.classification)}</td>
@@ -689,37 +698,37 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                 <div className="p-5">
                     <div className="flex items-center gap-2.5 mb-4">
                         <motion.span className="text-xl" animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 3, repeat: Infinity }}> </motion.span>
-                        <span className="text-[15px] font-black text-white tracking-wider uppercase" dir="auto">
+                        <span className="text-[15px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">
                             {globalT("indicatorsByTeam")}
                         </span>
                     </div>
                     <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${accentG}0.08)` }}>
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr style={{ background: "rgba(10,16,28,0.98)" }}>
+                                <tr style={{ background: tableBg }}>
                                     {[globalT("indicatorLbl"), globalT("team"), globalT("buyBtn"), globalT("sellBtn"), "Net", "DSR", t.classification].map((h, i) => (
                                         <th key={i} className={thCls}
-                                            style={{ borderColor: borderC, background: i < 2 ? "rgba(255,200,0,0.04)" : undefined }}>{h}</th>
+                                            style={{ borderColor: borderC, background: i < 2 ? (d ? "rgba(255,200,0,0.04)" : "rgba(217,119,6,0.03)") : undefined, color: tk.textMuted }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {layerData.byIndicator.map((ind, ii) => (
                                     <>{ind.teams.map((tm, ti) => (
-                                        <motion.tr key={`${ii}-${ti}`} className="hover:bg-white/[0.02]" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: (ii * 4 + ti) * 0.025 }}>
-                                            {ti === 0 && <td rowSpan={4} className="text-[14px] font-black text-white py-3 px-4 border-r border-b" style={{ borderColor: borderC, background: "rgba(255,200,0,0.04)", verticalAlign: "middle" }}>{tvTab(ind.indicator)}</td>}
-                                            <td className="text-[13px] font-semibold text-gray-400 py-2.5 px-4 border-r border-b" style={{ borderColor: borderC }}>{tvTeam(tm.team)}</td>
-                                            <td className={tdCls} style={{ color: "#00e676", borderColor: borderC }}>{tm.buy}</td>
-                                            <td className={tdCls} style={{ color: "#ff1744", borderColor: borderC }}>{tm.sell}</td>
+                                        <motion.tr key={`${ii}-${ti}`} className={d ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.02]'} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: (ii * 4 + ti) * 0.025 }}>
+                                            {ti === 0 && <td rowSpan={4} className="text-[14px] font-black py-3 px-4 border-r border-b" style={{ borderColor: borderC, background: d ? "rgba(255,200,0,0.04)" : "rgba(217,119,6,0.03)", verticalAlign: "middle", color: tk.textPrimary }}>{tvTab(ind.indicator)}</td>}
+                                            <td className="text-[13px] font-semibold py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, color: tk.textMuted }}>{tvTeam(tm.team)}</td>
+                                            <td className={tdCls} style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{tm.buy}</td>
+                                            <td className={tdCls} style={{ color: d ? "#ff1744" : "#dc2626", borderColor: borderC }}>{tm.sell}</td>
                                             <td className={tdCls} style={{ ...cellStyle(tm.net), borderColor: borderC }}>{tm.net}</td>
                                             <td className={tdCls} style={{ ...cellStyle(tm.dsr), borderColor: borderC }}>({tm.dsr.toFixed(2)})</td>
                                             <td className={tdClsLast} style={{ ...classStyle(tm.classification), borderColor: borderC }}>{tv(tm.classification)}</td>
                                         </motion.tr>
                                     ))}
                                         <motion.tr style={{ background: "rgba(255,200,0,0.04)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: (ii * 4 + 3) * 0.025 }}>
-                                            <td className="text-[13px] font-black text-amber-400 py-2.5 px-4 border-r border-b" style={{ borderColor: borderC }}>{tvTeam("Over all")}</td>
-                                            <td className={tdCls + " !font-black"} style={{ color: "#00e676", borderColor: borderC }}>{ind.overall.buy}</td>
-                                            <td className={tdCls + " !font-black"} style={{ color: "#ff1744", borderColor: borderC }}>{ind.overall.sell}</td>
+                                            <td className="text-[13px] font-black py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, color: d ? '#fbbf24' : '#d97706' }}>{tvTeam("Over all")}</td>
+                                            <td className={tdCls + " !font-black"} style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{ind.overall.buy}</td>
+                                            <td className={tdCls + " !font-black"} style={{ color: d ? "#ff1744" : "#dc2626", borderColor: borderC }}>{ind.overall.sell}</td>
                                             <td className={tdCls + " !font-black"} style={{ ...cellStyle(ind.overall.net), borderColor: borderC }}>{ind.overall.net}</td>
                                             <td className={tdCls + " !font-black"} style={{ ...cellStyle(ind.overall.dsr), borderColor: borderC }}>{ind.overall.dsr.toFixed(2)}</td>
                                             <td className={tdClsLast + " !font-black"} style={{ ...classStyle(ind.overall.classification), borderColor: borderC }}>{tv(ind.overall.classification)}</td>
@@ -748,37 +757,37 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                 <div className="p-5">
                     <div className="flex items-center gap-2.5 mb-4">
                         <motion.span className="text-xl" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
-                        <span className="text-[15px] font-black text-white tracking-wider uppercase" dir="auto">
+                        <span className="text-[15px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">
                             {globalT("teamsByIndicator")}
                         </span>
                     </div>
                     <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${accentG}0.08)` }}>
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr style={{ background: "rgba(10,16,28,0.98)" }}>
+                                <tr style={{ background: tableBg }}>
                                     {[globalT("team"), globalT("indicatorLbl"), globalT("buyBtn"), globalT("sellBtn"), "Net", "DSR", t.classification].map((h, i) => (
                                         <th key={i} className={thCls}
-                                            style={{ borderColor: borderC, background: i < 2 ? "rgba(0,200,255,0.04)" : undefined }}>{h}</th>
+                                            style={{ borderColor: borderC, background: i < 2 ? (d ? "rgba(0,200,255,0.04)" : "rgba(8,145,178,0.03)") : undefined, color: tk.textMuted }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {layerData.byTeam.map((tm, ti) => (
                                     <>{tm.indicators.map((ind, ii) => (
-                                        <motion.tr key={`${ti}-${ii}`} className="hover:bg-white/[0.02]" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: (ti * 6 + ii) * 0.025 }}>
-                                            {ii === 0 && <td rowSpan={6} className="text-[14px] font-black text-white py-3 px-4 border-r border-b" style={{ borderColor: borderC, background: "rgba(0,200,255,0.04)", verticalAlign: "middle" }}>{tvTeam(tm.team)}</td>}
-                                            <td className="text-[13px] font-semibold text-gray-400 py-2.5 px-4 border-r border-b" style={{ borderColor: borderC }}>{tvTab(ind.indicator)}</td>
-                                            <td className={tdCls} style={{ color: "#00e676", borderColor: borderC }}>{ind.buy}</td>
-                                            <td className={tdCls} style={{ color: "#ff1744", borderColor: borderC }}>{ind.sell}</td>
+                                        <motion.tr key={`${ti}-${ii}`} className={d ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.02]'} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: (ti * 6 + ii) * 0.025 }}>
+                                            {ii === 0 && <td rowSpan={6} className="text-[14px] font-black py-3 px-4 border-r border-b" style={{ borderColor: borderC, background: d ? "rgba(0,200,255,0.04)" : "rgba(8,145,178,0.03)", verticalAlign: "middle", color: tk.textPrimary }}>{tvTeam(tm.team)}</td>}
+                                            <td className="text-[13px] font-semibold py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, color: tk.textMuted }}>{tvTab(ind.indicator)}</td>
+                                            <td className={tdCls} style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{ind.buy}</td>
+                                            <td className={tdCls} style={{ color: d ? "#ff1744" : "#dc2626", borderColor: borderC }}>{ind.sell}</td>
                                             <td className={tdCls} style={{ ...cellStyle(ind.net), borderColor: borderC }}>{ind.net}</td>
                                             <td className={tdCls} style={{ ...cellStyle(ind.dsr), borderColor: borderC }}>{(ind.dsr * 100).toFixed(0)}%</td>
                                             <td className={tdClsLast} style={{ ...classStyle(ind.classification), borderColor: borderC }}>{tv(ind.classification)}</td>
                                         </motion.tr>
                                     ))}
                                         <motion.tr style={{ background: "rgba(0,200,255,0.03)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: (ti * 6 + 5) * 0.025 }}>
-                                            <td className="text-[13px] font-black text-cyan-400 py-2.5 px-4 border-r border-b" style={{ borderColor: borderC }}>{tvTeam("Over all")}</td>
-                                            <td className={tdCls + " !font-black"} style={{ color: "#00e676", borderColor: borderC }}>{tm.overall.buy}</td>
-                                            <td className={tdCls + " !font-black"} style={{ color: "#ff1744", borderColor: borderC }}>{tm.overall.sell}</td>
+                                            <td className="text-[13px] font-black py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, color: d ? '#22d3ee' : '#0891b2' }}>{tvTeam("Over all")}</td>
+                                            <td className={tdCls + " !font-black"} style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{tm.overall.buy}</td>
+                                            <td className={tdCls + " !font-black"} style={{ color: d ? "#ff1744" : "#dc2626", borderColor: borderC }}>{tm.overall.sell}</td>
                                             <td className={tdCls + " !font-black"} style={{ ...cellStyle(tm.overall.net), borderColor: borderC }}>{tm.overall.net}</td>
                                             <td className={tdCls + " !font-black"} style={{ ...cellStyle(tm.overall.dsr), borderColor: borderC }}>{(tm.overall.dsr * 100).toFixed(0)}%</td>
                                             <td className={tdClsLast + " !font-black"} style={{ ...classStyle(tm.overall.classification), borderColor: borderC }}>{tv(tm.overall.classification)}</td>

@@ -1,53 +1,78 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "dark" | "light" | "ocean" | "sunset" | "neon" | "gold" | "snow";
+
+export interface ThemeOption {
+  key: Theme;
+  icon: string;
+  label: string;
+  labelAr: string;
+}
+
+export const themeOptions: ThemeOption[] = [
+  { key: "dark",   icon: "🌑", label: "Dark",    labelAr: "داكن" },
+  { key: "light",  icon: "☀️",  label: "Light",   labelAr: "فاتح" },
+  { key: "ocean",  icon: "🌊", label: "Ocean",   labelAr: "محيط" },
+  { key: "sunset", icon: "🌅", label: "Sunset",  labelAr: "غروب" },
+  { key: "neon",   icon: "⚡", label: "Neon",    labelAr: "نيون" },
+  { key: "gold",   icon: "👑", label: "Gold",    labelAr: "ذهبي" },
+  { key: "snow",   icon: "❄️",  label: "Snow",    labelAr: "ثلجي" },
+];
 
 interface ThemeContextType {
   theme: Theme;
+  setTheme: (t: Theme) => void;
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-function getInitialTheme(): Theme {
-  // 1. Check localStorage
-  const saved = localStorage.getItem("theme") as Theme | null;
-  if (saved === "light" || saved === "dark") return saved;
+const VALID_THEMES: Theme[] = ["dark", "light", "ocean", "sunset", "neon", "gold", "snow"];
 
-  // 2. Check system preference
+function getInitialTheme(): Theme {
+  const saved = localStorage.getItem("theme") as Theme | null;
+  if (saved && VALID_THEMES.includes(saved)) return saved;
+
   if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: light)").matches) {
     return "light";
   }
 
-  // 3. Default to dark (trading platforms are typically dark)
   return "dark";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark"); // SSR safe default
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
     const initial = getInitialTheme();
-    setTheme(initial);
+    setThemeState(initial);
     applyTheme(initial);
   }, []);
 
   function applyTheme(t: Theme) {
     const root = document.documentElement;
-    root.classList.toggle("dark", t === "dark");
-    root.classList.toggle("light", t === "light");
-    root.style.colorScheme = t;
+    // Remove all theme classes
+    VALID_THEMES.forEach(v => root.classList.remove(v));
+    // Add current theme
+    root.classList.add(t);
+    root.style.colorScheme = t === "light" ? "light" : "dark";
   }
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
     localStorage.setItem("theme", newTheme);
     applyTheme(newTheme);
   };
 
+  // Cycle through themes in order
+  const toggleTheme = () => {
+    const idx = VALID_THEMES.indexOf(theme);
+    const next = VALID_THEMES[(idx + 1) % VALID_THEMES.length];
+    setTheme(next);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
