@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, Shield, Zap, Copy, Send, ArrowRight, CreditCard, Bot, Coins, Crown, Star, Trophy, CircleCheck } from "lucide-react";
+import { Check, Shield, Zap, Copy, Send, ArrowRight, CreditCard, Bot, Coins, Crown, Star, Trophy, CircleCheck, X } from "lucide-react";
 import { useAuth, SubscriptionPlan } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -10,11 +10,15 @@ interface SubscriptionOnboardingProps {
 
 export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingProps) {
     const { t, language } = useLanguage();
-    const { submitReceipt } = useAuth();
+    const { submitReceipt, applyReferralCode } = useAuth();
     
-    const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>("quarterly");
+    const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>("trader");
     const [aiAddon, setAiAddon] = useState(false);
     const [step, setStep] = useState<"plans" | "payment" | "pending">("plans");
+    const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+    const [referralInput, setReferralInput] = useState("");
+    const [referralApplied, setReferralApplied] = useState(false);
+    const [referralError, setReferralError] = useState(false);
     
     const isRTL = language === "ar";
     
@@ -34,53 +38,68 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
 
     const plans = [
         {
-            id: "monthly" as SubscriptionPlan,
-            title: t("monthlyPlan") || "Monthly",
-            price: 75,
-            frequency: isRTL ? "شهر" : "month",
-            icon: <Zap size={24} className="text-[#3b82f6]" />,
-            iconBg: "bg-[#3b82f6]/10",
+            id: "core" as SubscriptionPlan,
+            title: t("planCoreName"),
+            price: 29,
             iconColor: "#3b82f6",
-            features: [t("feature1"), t("feature2"), t("feature3"), t("feature4")],
-            badge: null
+            icon: <Zap size={24} className="text-[#3b82f6]" />,
+            badge: null,
+            charts: ["Phase State", "Direction State"],
+            features: [t("planCoreF1"), t("planCoreF2"), t("planCoreF3"), t("planCoreF4")],
+            limitations: [t("planCoreL1"), t("planCoreL2")],
+            description: t("planCoreDesc"),
         },
         {
-            id: "quarterly" as SubscriptionPlan,
-            title: t("quarterlyPlan") || "Quarterly",
-            price: 202.50,
-            frequency: isRTL ? "3 أشهر" : "3 months",
-            icon: <Star size={24} className="text-[#00e5a0]" />,
-            iconBg: "bg-[#00e5a0]/10",
+            id: "trader" as SubscriptionPlan,
+            title: t("planTraderName"),
+            price: 49,
             iconColor: "#00e5a0",
-            features: [t("featureAllPrevious"), t("featurePriority"), t("featureAnalytics"), t("featureTraining"), t("featureAlerts")],
-            badge: { text: isRTL ? "الأفضل قيمة" : "Best Choice", color: "#00e5a0", rightText: isRTL ? "وفر 10%" : "Save 10%" }
+            icon: <Star size={24} className="text-[#00e5a0]" />,
+            badge: { text: t("planTraderBadge"), color: "#00e5a0" },
+            charts: ["Phase State", "Direction State", "Oscillation State"],
+            features: [t("planTraderF1"), t("planTraderF2"), t("planTraderF3"), t("planTraderF4")],
+            limitations: null,
+            description: t("planTraderDesc"),
         },
         {
-            id: "semi-annual" as SubscriptionPlan,
-            title: t("semiAnnualPlan") || "Semi-Annual",
-            price: 382.50,
-            frequency: isRTL ? "6 أشهر" : "6 months",
-            icon: <Crown size={24} className="text-[#a855f7]" />,
-            iconBg: "bg-[#a855f7]/10",
+            id: "professional" as SubscriptionPlan,
+            title: t("planProName"),
+            price: 89,
             iconColor: "#a855f7",
-            features: [t("featureAllPrevious"), t("featureConsultation"), t("featureAlpha"), t("featureManager")],
-            badge: { text: isRTL ? "خيار المحترفين" : "Pro Choice", color: "#a855f7", rightText: isRTL ? "وفر 15%" : "Save 15%" }
+            icon: <Trophy size={24} className="text-[#a855f7]" />,
+            badge: { text: t("planProBadge"), color: "#a855f7" },
+            charts: ["Phase State", "Direction State", "Oscillation State", "Reference State", "Displacement State"],
+            features: [t("planProF1"), t("planProF2"), t("planProF3"), t("planProF4")],
+            limitations: null,
+            description: t("planProDesc"),
         },
         {
-            id: "annual" as SubscriptionPlan,
-            title: t("annualPlan") || "Annual",
-            price: 720,
-            frequency: isRTL ? "سنة" : "year",
-            icon: <Trophy size={24} className="text-[#facc15]" />,
-            iconBg: "bg-[#facc15]/10",
+            id: "institutional" as SubscriptionPlan,
+            title: t("planInstName"),
+            price: 149,
             iconColor: "#facc15",
-            features: [t("featureAllPrevious"), t("featureVip"), t("featureStrategies"), t("featureReports")],
-            badge: { text: isRTL ? "القيمة القصوى" : "Max Value", color: "#facc15", rightText: isRTL ? "وفر 20%" : "Save 20%" }
+            icon: <Crown size={24} className="text-[#facc15]" />,
+            badge: { text: t("planInstBadge"), color: "#facc15" },
+            charts: ["Phase State", "Direction State", "Oscillation State", "Reference State", "Displacement State", "Envelope State"],
+            features: [t("planInstF1"), t("planInstF2"), t("planInstF3"), t("planInstF4"), t("planInstF5")],
+            limitations: null,
+            description: t("planInstDesc"),
         },
     ];
 
     const currentPlan = plans.find(p => p.id === selectedPlan)!;
-    const totalAmount = (currentPlan?.price || 0) + (aiAddon ? 20 : 0);
+    const getPrice = (basePrice: number) => billingCycle === "yearly" ? Math.round(basePrice * 12 * 0.8) : basePrice;
+    const subtotal = (currentPlan ? getPrice(currentPlan.price) : 0) + (aiAddon ? (billingCycle === "yearly" ? Math.round(20 * 12 * 0.8) : 20) : 0);
+    const referralDiscountAmount = referralApplied ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
+    const totalAmount = subtotal - referralDiscountAmount;
+
+    const handleApplyReferral = () => {
+        setReferralError(false);
+        const result = applyReferralCode(referralInput);
+        if (result.valid) { setReferralApplied(true); setReferralError(false); }
+        else { setReferralApplied(false); setReferralError(true); }
+    };
+    const handleRemoveReferral = () => { setReferralApplied(false); setReferralInput(""); setReferralError(false); };
 
     return (
         <div className="min-h-screen flex flex-col pt-10 pb-20 px-4 relative overflow-x-hidden overflow-y-auto"
@@ -89,7 +108,7 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
             {/* Cinematic Background */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-[0%] left-[20%] w-[600px] h-[600px] rounded-full"
-                    style={{ background: `radial-gradient(circle, rgba(0, 229, 160, 0.04) 0%, transparent 60%)`, filter: "blur(80px)" }} />
+                    style={{ background: `radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 60%)`, filter: "blur(80px)" }} />
                 <div className="absolute bottom-[0%] right-[20%] w-[600px] h-[600px] rounded-full"
                     style={{ background: `radial-gradient(circle, rgba(250, 204, 21, 0.02) 0%, transparent 60%)`, filter: "blur(80px)" }} />
             </div>
@@ -103,77 +122,134 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                         className="relative z-10 w-full max-w-6xl mx-auto flex flex-col items-center"
                     >
 
-
                         {/* Hero Texts */}
                         <div className="text-center mb-8 relative z-10 mt-6">
-                            <h1 className="text-4xl md:text-5xl font-black mb-3 tracking-tight text-[#00e5a0]" style={{ textShadow: '0 0 30px rgba(0,229,160,0.4)' }}>
-                                {isRTL ? "اختر خطة الاشتراك الخاصة بك" : "Subscribe to PHASE X"}
+                            <h1 className="text-4xl md:text-5xl font-black mb-3 tracking-tight text-[#6366f1]" style={{ textShadow: '0 0 30px rgba(99,102,241,0.4)' }}>
+                                {t("chooseYourPlan")}
                             </h1>
-                            <p className="text-gray-400 text-lg font-medium">{isRTL ? "اختر الباقة المناسبة لتفعيل حسابك والبدء فوراً" : "Choose the right plan to activate your account and start immediately"}</p>
+                            <p className="text-gray-400 text-lg font-medium">{t("chooseYourPlanSub")}</p>
                         </div>
 
                         {/* Cards Grid */}
+                        {/* Billing Toggle */}
+                        <div className="flex items-center justify-center gap-3 mb-6 relative z-10">
+                            <div className="flex items-center rounded-full p-1 gap-1" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                <button onClick={() => setBillingCycle("monthly")}
+                                    className={`px-5 py-2 rounded-full text-sm font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "monthly" ? "text-black bg-[#6366f1]" : "text-gray-400 hover:text-white"}`}>
+                                    {t("billingMonthly")}
+                                </button>
+                                <button onClick={() => setBillingCycle("yearly")}
+                                    className={`px-5 py-2 rounded-full text-sm font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "yearly" ? "text-black bg-[#6366f1]" : "text-gray-400 hover:text-white"}`}>
+                                    {t("billingYearly")}
+                                </button>
+                            </div>
+                            {billingCycle === "yearly" && (
+                                <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                                    className="px-3 py-1.5 rounded-full text-xs font-black tracking-wider text-black"
+                                    style={{ background: "linear-gradient(90deg, #00e5a0, #00c890)" }}>
+                                    {t("save20")}
+                                </motion.span>
+                            )}
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-[1400px] mx-auto relative z-10 px-4">
                             {plans.map((plan) => {
                                 const isActive = selectedPlan === plan.id;
-                                const cColor = isActive ? plan.iconColor : "#1c2230";
                                 return (
                                     <motion.div
                                         key={plan.id}
                                         onClick={() => setSelectedPlan(plan.id)}
                                         whileHover={{ y: -5 }}
-                                        className={`relative rounded-[32px] cursor-pointer p-8 flex flex-col transition-all duration-300 ${isActive ? 'shadow-2xl' : 'hover:bg-[#151a26]'}`}
+                                        className={`relative rounded-[24px] cursor-pointer p-6 flex flex-col transition-all duration-300 ${isActive ? 'shadow-2xl' : 'hover:bg-[#151a26]'}`}
                                         style={{
                                             backgroundColor: isActive ? `${plan.iconColor}08` : "#10141d", 
                                             border: `1px solid ${isActive ? plan.iconColor : "#1c2230"}`,
                                             boxShadow: isActive ? `0 20px 50px -10px ${plan.iconColor}30, inset 0 0 20px ${plan.iconColor}10` : 'none',
-                                            minHeight: "460px"
+                                            minHeight: "420px"
                                         }}
                                     >
                                         {/* Badges */}
-                                        {plan.badge && (isActive || true) && (
-                                            <>
-                                                <div className="absolute top-0 left-6 px-4 py-1.5 rounded-b-xl text-xs font-black text-black shadow-lg"
-                                                     style={{ backgroundColor: plan.badge.color }}>
-                                                    {plan.badge.text}
-                                                </div>
-                                                <div className="absolute top-0 right-6 px-4 py-1.5 rounded-b-xl text-xs font-black text-white shadow-lg border border-t-0"
-                                                     style={{ backgroundColor: `${plan.badge.color}20`, borderColor: plan.badge.color }}>
-                                                    {plan.badge.rightText}
-                                                </div>
-                                            </>
+                                        {plan.badge && (
+                                            <div className="absolute top-0 left-5 px-3 py-1 rounded-b-xl text-[9px] font-black text-black shadow-lg uppercase tracking-widest"
+                                                 style={{ backgroundColor: plan.badge.color }}>
+                                                {plan.badge.text}
+                                            </div>
                                         )}
                                         
                                         {/* Active Check Circle */}
                                         {isActive && (
-                                            <div className="absolute top-6 right-6 rounded-full bg-transparent border-2 p-0.5 z-20" style={{ color: plan.iconColor, borderColor: plan.iconColor }}>
+                                            <div className="absolute top-5 right-5 rounded-full bg-transparent border-2 p-0.5 z-20" style={{ color: plan.iconColor, borderColor: plan.iconColor }}>
                                                 <Check size={16} strokeWidth={4} />
                                             </div>
                                         )}
 
-                                        <div className={`mt-10 mb-5 w-14 h-14 rounded-2xl flex items-center justify-center`} style={{ backgroundColor: plan.iconBg }}>
-                                            {plan.icon}
+                                        {/* Plan Name + Price */}
+                                        <div className="mt-6 mb-3">
+                                            <h3 className="text-base font-black text-white mb-0.5">{plan.title}</h3>
+                                            <p className="text-[11px] text-gray-500 font-medium leading-snug">{plan.description}</p>
                                         </div>
+
+                                        <div className="flex items-baseline gap-1 mb-3">
+                                            <span className="text-3xl font-black" style={{ color: isActive ? plan.iconColor : '#fff' }}>${getPrice(plan.price)}</span>
+                                            <span className="text-xs text-gray-500 font-bold">/ {billingCycle === "yearly" ? t("perYear") : t("perMonth")}</span>
+                                            {billingCycle === "yearly" && (
+                                                <span className="text-[10px] text-gray-600 line-through ml-1">${plan.price * 12}</span>
+                                            )}
+                                        </div>
+                                        {billingCycle === "yearly" && (
+                                            <p className="text-[9px] text-[#00e5a0] font-bold mb-2">{t("billedAnnually")} — {t("save20")}</p>
+                                        )}
                                         
-                                        <h3 className="text-2xl font-black text-white mb-2 flex items-baseline">
-                                            {plan.title} 
-                                            <span className="text-4xl font-black ml-3" style={{ color: isActive ? plan.iconColor : '#fff' }}>${plan.price}</span> 
-                                            <span className="text-sm font-semibold text-gray-500 ml-1">/{plan.frequency}</span>
-                                        </h3>
-                                        
-                                        <div className="my-6 border-t border-[#1c2230]" />
-                                        
-                                        <ul className="flex-1 space-y-4">
-                                            {plan.features.map((feature, i) => (
-                                                <li key={i} className="flex items-start gap-4 text-[15px]">
-                                                    <div className="shrink-0 mt-1 w-[18px] h-[18px] rounded-full border flex items-center justify-center text-gray-400"
-                                                        style={isActive ? { borderColor: plan.iconColor, color: plan.iconColor } : { borderColor: '#4b5563' }}>
-                                                        <Check size={12} strokeWidth={3} />
+                                        {/* Divider */}
+                                        <div className="h-px w-full mb-3" style={{ background: `linear-gradient(90deg, transparent, ${plan.iconColor}30, transparent)` }} />
+
+                                        {/* Chart Access */}
+                                        <div className="mb-3">
+                                            <p className="text-[10px] uppercase tracking-widest font-black mb-2" style={{ color: plan.iconColor }}>
+                                                {t("chartAccess")}
+                                            </p>
+                                            <div className="space-y-1.5">
+                                                {plan.charts.map((chart, i) => (
+                                                    <div key={i} className="flex items-center gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: plan.iconColor }} />
+                                                        <span className="text-[11px] text-gray-300 font-medium">{chart}</span>
                                                     </div>
-                                                    <span className={isActive ? "text-gray-200 font-medium" : "text-gray-400 font-medium"}>{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Divider */}
+                                        <div className="h-px w-full mb-3" style={{ background: `linear-gradient(90deg, transparent, ${plan.iconColor}15, transparent)` }} />
+
+                                        {/* Features */}
+                                        <div className="mb-3 flex-1">
+                                            <p className="text-[10px] uppercase tracking-widest font-black mb-2" style={{ color: plan.iconColor }}>
+                                                {t("subFeatures")}
+                                            </p>
+                                            <ul className="space-y-1.5">
+                                                {plan.features.map((feature, i) => (
+                                                    <li key={i} className="flex items-start gap-2 text-[11px]">
+                                                        <div className="shrink-0 mt-0.5" style={{ color: isActive ? plan.iconColor : "#64748b" }}>
+                                                            <Check size={12} strokeWidth={3} />
+                                                        </div>
+                                                        <span className={isActive ? "text-gray-200 font-medium" : "text-gray-400 font-medium"}>{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        {/* Limitations */}
+                                        {plan.limitations && (
+                                            <div className="mb-2">
+                                                <ul className="space-y-1.5">
+                                                    {plan.limitations.map((lim, i) => (
+                                                        <li key={i} className="flex items-start gap-2 text-[11px]">
+                                                            <div className="shrink-0 mt-0.5 text-red-500/60"><X size={12} strokeWidth={3} /></div>
+                                                            <span className="text-gray-500 font-medium">{lim}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 );
                             })}
@@ -198,17 +274,17 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                     </div>
                                     <div>
                                         <h3 className="text-xl md:text-2xl font-black text-white mb-2 flex items-center gap-2">
-                                            {isRTL ? "مستكشف الذكاء الاصطناعي Phase-X AI" : "Phase-X AI Insight"} <Zap size={18} className="text-[#00e5a0]" />
+                                            {t("aiInsightTitle")} <Zap size={18} className="text-[#00e5a0]" />
                                         </h3>
                                         <p className="text-sm md:text-base font-medium text-gray-400 max-w-2xl leading-relaxed">
-                                            {isRTL ? "احصل على 3000 نقطة ذكاء اصطناعي (AI Tokens) صالحة لمدة شهر واحد، تتيح لك تشغيل رادار السوق المباشر ومحادثة الشات بوت للحصول على تحليلات دقيقة ولحظية." : "Unlock elite AI analytics. Get 3,000 AI Tokens to power live radar scans and conversational insights instantly."}
+                                            {t("aiInsightDesc")}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-6 mt-6 md:mt-0 shrink-0 self-end md:self-auto">
                                     <div className="text-right">
                                         <div className="text-3xl md:text-4xl font-black text-[#00e5a0]">$20</div>
-                                        <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500 mt-1">{isRTL ? "/ إضافي شهرياً" : "/ Add-on"}</div>
+                                        <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500 mt-1">{t("aiAddonLabel")}</div>
                                     </div>
                                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-colors ${aiAddon ? 'border-[#00e5a0] bg-[#00e5a0]/20 text-[#00e5a0]' : 'border-[#4b5563] text-transparent'}`}>
                                         <Check size={20} strokeWidth={4} />
@@ -217,15 +293,49 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                             </div>
                         </motion.div>
 
+                        {/* Referral Code Input */}
+                        <div className="w-full max-w-[1400px] mx-auto mt-6 p-5 rounded-[24px] relative z-10" style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)" }}>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#a855f7] mb-3">{t("referralCodeInput")}</p>
+                            {referralApplied ? (
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Check size={18} className="text-[#00e5a0]" />
+                                        <span className="text-sm font-bold text-[#00e5a0]">{t("referralApplied")}</span>
+                                        <span className="font-mono text-xs text-gray-400 ml-1">{referralInput.toUpperCase()}</span>
+                                    </div>
+                                    <button onClick={handleRemoveReferral} className="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer uppercase tracking-widest">{t("referralRemove")}</button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <input type="text" value={referralInput} onChange={(e) => { setReferralInput(e.target.value); setReferralError(false); }}
+                                        className="flex-1 px-4 py-3 rounded-xl text-sm font-mono font-bold bg-[#0b0e14] border border-[#1c2230] text-white placeholder-gray-600 focus:border-[#a855f7] outline-none uppercase tracking-wider"
+                                        placeholder={t("referralCodePlaceholder")} />
+                                    <button onClick={handleApplyReferral}
+                                        className="px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest bg-[#a855f7] text-black cursor-pointer hover:bg-[#9333ea] transition-colors">
+                                        {t("applyCode")}
+                                    </button>
+                                </div>
+                            )}
+                            {referralError && <p className="text-[10px] text-red-400 mt-1 font-bold">{t("referralInvalid")}</p>}
+                        </div>
+
+                        {/* Referral Discount Line */}
+                        {referralApplied && (
+                            <div className="w-full max-w-[1400px] mx-auto mt-3 flex items-center justify-between px-5 py-3 rounded-[24px] relative z-10" style={{ background: "rgba(0,229,160,0.05)", border: "1px solid rgba(0,229,160,0.15)" }}>
+                                <span className="text-sm font-bold text-[#00e5a0]">{t("referralDiscount")}</span>
+                                <span className="text-lg font-black text-[#00e5a0]">-${referralDiscountAmount.toFixed(2)}</span>
+                            </div>
+                        )}
+
                         {/* Continue Button */}
                         <div className="w-full max-w-[1400px] mx-auto mt-8 flex flex-col sm:flex-row justify-between items-center bg-[#10141d] p-6 md:p-8 rounded-[24px] border border-[#1c2230] relative z-10">
                             <div className="font-bold text-lg md:text-xl text-gray-400 mb-6 sm:mb-0 text-center sm:text-left">
-                                {isRTL ? "المجموع المطلوب:" : "Total Due:"} <span className="text-3xl md:text-4xl font-black text-white ml-2 block sm:inline mt-2 sm:mt-0">${totalAmount.toFixed(2)}</span>
+                                {t("totalDue")} <span className="text-3xl md:text-4xl font-black text-white ml-2 block sm:inline mt-2 sm:mt-0">${totalAmount.toFixed(2)}</span>
                             </div>
                             <button onClick={() => setStep("payment")}
-                                className="px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform hover:scale-[1.02] text-base md:text-lg w-full sm:w-auto"
+                                className="px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform hover:scale-[1.02] text-base md:text-lg w-full sm:w-auto cursor-pointer"
                                 style={{ background: `linear-gradient(90deg, #00e5a0, #00b37e)`, boxShadow: `0 10px 30px rgba(0,229,160,0.3)` }}>
-                                {isRTL ? "اكمال عملية الدفع" : "Checkout Selected Plan"} <ArrowRight size={20} />
+                                {t("checkoutPlan")} <ArrowRight size={20} />
                             </button>
                         </div>
                     </motion.div>
@@ -243,12 +353,18 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                             <div className="w-20 h-20 bg-[#00e5a0]/10 rounded-3xl flex items-center justify-center mx-auto mb-5 border border-[#00e5a0]/30 shadow-[0_0_30px_rgba(0,229,160,0.2)]">
                                 <CreditCard size={36} className="text-[#00e5a0]" />
                             </div>
-                            <h2 className="text-3xl font-black text-white">{isRTL ? "تأكيد الدفع" : "Confirm Payment"}</h2>
-                            <p className="text-gray-400 mt-2 text-base">{isRTL ? "لتجاوز البوابات والحصول على تفعيل فوري، أرسل هذا المبلغ بالضبط يدوياً." : "To bypass gateways and get immediate processing, send exactly this amount manually."}</p>
+                            <h2 className="text-3xl font-black text-white">{t("confirmPayment")}</h2>
+                            <p className="text-gray-400 mt-2 text-base">{t("confirmPaymentDesc")}</p>
+                            {currentPlan && (
+                              <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl" style={{ background: `${currentPlan.iconColor}10`, border: `1px solid ${currentPlan.iconColor}20` }}>
+                                <span className="text-sm font-black" style={{ color: currentPlan.iconColor }}>{currentPlan.title}</span>
+                                {aiAddon && <span className="text-xs font-bold text-[#00e5a0]">+ AI Insight</span>}
+                              </div>
+                            )}
                         </div>
 
                         <div className="p-6 rounded-2xl mb-10 flex justify-between items-center bg-[#0b0e14] border border-[#1c2230] shadow-inner">
-                            <span className="font-black text-gray-400 uppercase tracking-widest text-sm">{isRTL ? "المبلغ المطلوب" : "Amount Due"}</span>
+                            <span className="font-black text-gray-400 uppercase tracking-widest text-sm">{t("amountDue")}</span>
                             <span className="text-5xl font-black text-[#00e5a0]">${totalAmount.toFixed(2)}</span>
                         </div>
 
@@ -260,18 +376,18 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                 </div>
                                 <h3 className="font-black mb-2 flex items-center gap-3 text-white relative z-10 text-xl">
                                     <div className="bg-[#0088cc] text-black w-8 h-8 rounded-full flex items-center justify-center"><Send size={16} /></div> 
-                                    {isRTL ? "تفعيل سريع عبر تيليجرام" : "Telegram Fast-Track"}
+                                    {t("telegramFastTrack")}
                                 </h3>
-                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">{isRTL ? "أرسل إثبات الدفع مباشرة إلى الوكيل المعتمد." : "Send payment verification directly to a trusted agent."}</p>
+                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">{t("telegramFastTrackDesc")}</p>
                                 <div className="grid grid-cols-1 gap-3 relative z-10">
-                                    <div className="p-4 rounded-xl border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between group/btn cursor-pointer" onClick={() => copyToClipboard("@PhaeX_Ai")}>
-                                        <span className="font-mono text-base font-bold text-white">@PhaeX_Ai</span>
+                                    <a href="https://t.me/PhaseX_Ai" target="_blank" rel="noopener noreferrer" className="p-4 rounded-xl border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between group/btn cursor-pointer hover:border-[#0088cc]/50 transition-colors no-underline">
+                                        <span className="font-mono text-base font-bold text-white">@PhaseX_Ai</span>
                                         <div className="text-[#0088cc] group-hover/btn:text-white transition-colors bg-[#0088cc]/10 p-2.5 rounded-lg"><Copy size={18} /></div>
-                                    </div>
-                                    <div className="p-4 rounded-xl border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between group/btn cursor-pointer" onClick={() => copyToClipboard("@PhaseX_Ai_SupportBot")}>
+                                    </a>
+                                    <a href="https://t.me/PhaseX_Ai_SupportBot" target="_blank" rel="noopener noreferrer" className="p-4 rounded-xl border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between group/btn cursor-pointer hover:border-[#0088cc]/50 transition-colors no-underline">
                                         <span className="font-mono text-base font-bold text-white">@PhaseX_Ai_SupportBot</span>
                                         <div className="text-[#0088cc] group-hover/btn:text-white transition-colors bg-[#0088cc]/10 p-2.5 rounded-lg"><Copy size={18} /></div>
-                                    </div>
+                                    </a>
                                 </div>
                             </div>
                             
@@ -282,9 +398,9 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                 </div>
                                 <h3 className="font-black mb-2 flex items-center gap-3 text-white relative z-10 text-xl">
                                     <div className="bg-[#f7931a] text-black w-8 h-8 rounded-full flex items-center justify-center"><Coins size={16} /></div> 
-                                    {isRTL ? "العملات الرقمية (USDT TRC20)" : "Crypto (USDT TRC20)"}
+                                    {t("cryptoPayment")}
                                 </h3>
-                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">{isRTL ? "أرسل المبلغ المطلوب بالضبط من محفظتك إلى عنواننا." : "Send the exact amount from your secure wallet to our address."}</p>
+                                <p className="text-sm font-medium text-gray-400 mb-6 relative z-10">{t("cryptoPaymentDesc")}</p>
                                 <div className="p-4 rounded-xl border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between relative z-10 group/btn cursor-pointer" onClick={() => copyToClipboard(walletAddress)}>
                                     <span className="font-mono text-sm sm:text-base font-bold break-all text-white max-w-[85%]">{walletAddress}</span>
                                     <div className="text-[#f7931a] group-hover/btn:text-white transition-colors shrink-0 bg-[#f7931a]/10 p-2.5 rounded-lg ml-2"><Copy size={20} /></div>
@@ -296,16 +412,16 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                             <div className="bg-[#00e5a0]/10 border border-[#00e5a0]/20 p-5 rounded-2xl mb-8 flex items-start gap-4">
                                 <div className="text-[#00e5a0] shrink-0 mt-0.5"><Shield size={24} /></div>
                                 <p className="text-sm font-medium text-[#00e5a0] leading-relaxed">
-                                    {isRTL ? "لا حاجة لرفع الإيصال. إذا كنت قد أرسلت المبلغ وتواصلت مع الدعم، قم بالتأكيد بالأسفل لتدخل قائمة التفعيل ذات الأولوية." : "No receipt upload required here. If you have sent the funds and contacted support, simply confirm below. Your account will automatically enter the priority verification queue."}
+                                    {t("noReceiptNote")}
                                 </p>
                             </div>
                             <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
-                                <button onClick={() => setStep("plans")} className="font-bold text-gray-500 hover:text-white transition-colors px-6 py-4 w-full sm:w-auto">{isRTL ? "تراجع" : "Cancel & Go Back"}</button>
+                                <button onClick={() => setStep("plans")} className="font-bold text-gray-500 hover:text-white transition-colors px-6 py-4 w-full sm:w-auto cursor-pointer">{t("cancelGoBack")}</button>
                                 <button 
                                     onClick={handleFinish} 
-                                    className={`px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-black transition-transform hover:scale-[1.03] flex items-center justify-center gap-3 w-full sm:w-auto`}
+                                    className="px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-black transition-transform hover:scale-[1.03] flex items-center justify-center gap-3 w-full sm:w-auto cursor-pointer"
                                     style={{ background: "#00e5a0", boxShadow: `0 10px 40px rgba(0,229,160,0.3)` }}>
-                                    <CircleCheck size={22} /> {isRTL ? "أؤكد تحويل المبلغ" : "I Confirm Payment Sent"}
+                                    <CircleCheck size={22} /> {t("confirmPaymentSent")}
                                 </button>
                             </div>
                         </div>
@@ -325,9 +441,9 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                 animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
                             <Check size={56} color="#00e5a0" />
                         </motion.div>
-                        <h2 className="text-4xl font-black mb-4 text-white">{isRTL ? "قيد المراجعة" : "Verification Pending"}</h2>
+                        <h2 className="text-4xl font-black mb-4 text-white">{t("verificationPending")}</h2>
                         <p className="text-lg mb-8 leading-relaxed font-medium text-gray-400">
-                            {isRTL ? "يتم التحقق من الدفعة الآن، سيتم منحك وصول كامل للمنصة حين موافقة الإدارة. (جاري تحويلك...)" : "Your payment is being verified by our compliance team. You will be granted full access within 2-4 hours. Redirecting to your dashboard..."}
+                            {t("verificationPendingDescOnboard")}
                         </p>
                     </motion.div>
                 )}
@@ -335,4 +451,3 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
         </div>
     );
 }
-

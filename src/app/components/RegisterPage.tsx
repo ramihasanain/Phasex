@@ -19,7 +19,8 @@ import {
   ChevronDown,
   Send,
   Clock,
-  CircleCheck
+  CircleCheck,
+  X
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -31,12 +32,16 @@ interface RegisterPageProps {
 
 export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const { language, t } = useLanguage();
-  const { login, submitReceipt } = useAuth();
+  const { login, submitReceipt, applyReferralCode } = useAuth();
   const isRTL = language === "ar";
 
   const [step, setStep] = useState(1);
   const [focused, setFocused] = useState<string | null>(null);
   const [aiAddon, setAiAddon] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [referralInput, setReferralInput] = useState("");
+  const [referralApplied, setReferralApplied] = useState(false);
+  const [referralError, setReferralError] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -44,7 +49,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
     password: "",
     confirmPassword: "",
     country: "",
-    subscriptionType: "quarterly"
+    subscriptionType: "trader"
   });
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
@@ -90,70 +95,91 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
   const subscriptionTypes = [
     {
-      id: "monthly",
-      name: isRTL ? "شهري" : "Monthly",
-      price: 75,
-      frequency: isRTL ? "شهر" : "month",
+      id: "core",
+      name: t("planCoreName"),
+      price: 29,
+      frequency: t("perMonth"),
       color: "#3b82f6",
       icon: Zap,
       save: "",
-      features: [
-        isRTL ? "5 مؤشرات تقنية" : "5 Technical Indicators",
-        isRTL ? "جميع الأسواق" : "All Markets",
-        isRTL ? "دعم فني" : "Technical Support",
-        isRTL ? "تحديثات يومية" : "Daily Updates"
-      ]
+      charts: ["Phase State", "Direction State"],
+      features: [t("planCoreF1"), t("planCoreF2"), t("planCoreF3"), t("planCoreF4")],
+      limitations: [t("planCoreL1"), t("planCoreL2")],
+      description: t("planCoreDesc"),
+      suitable: t("planCoreSuitable"),
     },
     {
-      id: "quarterly",
-      name: isRTL ? "ربع سنوي" : "Quarterly",
-      price: 202.50,
-      frequency: isRTL ? "3 أشهر" : "3 months",
+      id: "trader",
+      name: t("planTraderName"),
+      price: 49,
+      frequency: t("perMonth"),
       color: accent,
       icon: Star,
       popular: true,
-      save: isRTL ? "وفر 10%" : "Save 10%",
-      features: [
-        isRTL ? "كل مميزات الشهري" : "All Monthly Features",
-        isRTL ? "دعم أولوية" : "Priority Support",
-        isRTL ? "تحليلات متقدمة" : "Advanced Analytics",
-        isRTL ? "جلسات تدريب" : "Training Sessions",
-        isRTL ? "تنبيهات فورية" : "Instant Alerts"
-      ]
+      save: "",
+      badge: t("planTraderBadge"),
+      charts: ["Phase State", "Direction State", "Oscillation State"],
+      features: [t("planTraderF1"), t("planTraderF2"), t("planTraderF3"), t("planTraderF4")],
+      limitations: null,
+      description: t("planTraderDesc"),
+      suitable: t("planTraderSuitable"),
     },
     {
-      id: "semi-annual",
-      name: isRTL ? "نصف سنوي" : "Semi-Annual",
-      price: 382.50,
-      frequency: isRTL ? "6 أشهر" : "6 months",
+      id: "professional",
+      name: t("planProName"),
+      price: 89,
+      frequency: t("perMonth"),
       color: "#a855f7",
       icon: Crown,
-      save: isRTL ? "وفر 15%" : "Save 15%",
-      features: [
-        isRTL ? "كل مميزات الربع سنوي" : "All Quarterly Features",
-        isRTL ? "استشارة خاصة" : "1-on-1 Consultation",
-        isRTL ? "إشارات ألفا" : "Alpha Signal Access"
-      ]
+      save: "",
+      badge: t("planProBadge"),
+      charts: ["Phase State", "Direction State", "Oscillation State", "Reference State", "Displacement State"],
+      features: [t("planProF1"), t("planProF2"), t("planProF3"), t("planProF4")],
+      limitations: null,
+      description: t("planProDesc"),
+      suitable: t("planProSuitable"),
     },
     {
-      id: "annual",
-      name: isRTL ? "سنوي" : "Annual",
-      price: 720,
-      frequency: isRTL ? "سنة" : "year",
+      id: "institutional",
+      name: t("planInstName"),
+      price: 149,
+      frequency: t("perMonth"),
       color: "#facc15",
       icon: Trophy,
-      save: isRTL ? "وفر 20%" : "Save 20%",
-      features: [
-        isRTL ? "كل مميزات النصف سنوي" : "All Semi-Annual Features",
-        isRTL ? "مدير حساب خاص" : "Dedicated Manager",
-        isRTL ? "عضوية VIP" : "VIP Status",
-        isRTL ? "تقارير مخصصة" : "Custom Reports"
-      ]
+      save: "",
+      badge: t("planInstBadge"),
+      charts: ["Phase State", "Direction State", "Oscillation State", "Reference State", "Displacement State", "Envelope State"],
+      features: [t("planInstF1"), t("planInstF2"), t("planInstF3"), t("planInstF4"), t("planInstF5")],
+      limitations: null,
+      description: t("planInstDesc"),
+      suitable: t("planInstSuitable"),
     }
   ];
 
   const selectedSub = subscriptionTypes.find(s => s.id === formData.subscriptionType);
-  const totalAmount = (selectedSub?.price || 0) + (aiAddon ? 20 : 0);
+  const getPrice = (basePrice: number) => billingCycle === "yearly" ? Math.round(basePrice * 12 * 0.8) : basePrice;
+  const displayPrice = (basePrice: number) => billingCycle === "yearly" ? `$${getPrice(basePrice)}` : `$${basePrice}`;
+  const subtotal = (selectedSub ? getPrice(selectedSub.price) : 0) + (aiAddon ? (billingCycle === "yearly" ? Math.round(20 * 12 * 0.8) : 20) : 0);
+  const referralDiscountAmount = referralApplied ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
+  const totalAmount = subtotal - referralDiscountAmount;
+
+  const handleApplyReferral = () => {
+    setReferralError(false);
+    const result = applyReferralCode(referralInput);
+    if (result.valid) {
+      setReferralApplied(true);
+      setReferralError(false);
+    } else {
+      setReferralApplied(false);
+      setReferralError(true);
+    }
+  };
+
+  const handleRemoveReferral = () => {
+    setReferralApplied(false);
+    setReferralInput("");
+    setReferralError(false);
+  };
 
   const stepColors = ["#448aff", accent, "#ffc400", accent, "#00e5a0"];
 
@@ -488,15 +514,39 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       transition={{ duration: 2, repeat: Infinity }}>
                       <Crown className="w-4 h-4" style={{ color: stepColors[2] }} />
                       <span className="text-sm font-bold" style={{ color: stepColors[2] }}>
-                        {isRTL ? "اختر باقتك المثالية" : "Choose your perfect plan"}
+                        {t("chooseYourPlanSub")}
                       </span>
                     </motion.div>
+                  </div>
+
+                  {/* Billing Toggle */}
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <div className="flex items-center rounded-full p-1 gap-1" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                      <button type="button" onClick={() => setBillingCycle("monthly")}
+                        className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${billingCycle === "monthly" ? "text-black" : "text-gray-400 hover:text-white"}`}
+                        style={{ background: billingCycle === "monthly" ? accent : "transparent" }}>
+                        {t("billingMonthly")}
+                      </button>
+                      <button type="button" onClick={() => setBillingCycle("yearly")}
+                        className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center gap-1.5 ${billingCycle === "yearly" ? "text-black" : "text-gray-400 hover:text-white"}`}
+                        style={{ background: billingCycle === "yearly" ? accent : "transparent" }}>
+                        {t("billingYearly")}
+                      </button>
+                    </div>
+                    {billingCycle === "yearly" && (
+                      <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                        className="px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider text-black"
+                        style={{ background: `linear-gradient(90deg, ${accent}, #00c890)` }}>
+                        {t("save20")}
+                      </motion.span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {subscriptionTypes.map((sub) => {
                       const Icon = sub.icon;
                       const isSelected = formData.subscriptionType === sub.id;
+                      const price = getPrice(sub.price);
                       return (
                         <motion.button key={sub.id} type="button"
                           onClick={() => setFormData({ ...formData, subscriptionType: sub.id })}
@@ -516,21 +566,13 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                               <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider text-black"
                                 style={{ background: `linear-gradient(90deg, ${accent}, #00c890)`, boxShadow: `0 0 15px ${accent}50` }}>
                                 <Star className="w-2.5 h-2.5" />
-                                {isRTL ? "الأفضل" : "Best"}
+                                {sub.badge || t("planTraderBadge")}
                               </div>
                             </div>
                           )}
 
-                          {sub.save && (
-                            <div className={`absolute -top-2.5 ${isRTL ? 'left-3' : 'right-3'}`}>
-                              <div className="px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider"
-                                style={{ background: `${sub.color}20`, color: sub.color, border: `1px solid ${sub.color}30` }}>
-                                {sub.save}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-start gap-3">
+                          {/* Plan Header */}
+                          <div className="flex items-start gap-3 mb-3">
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                               style={{
                                 background: isSelected ? `linear-gradient(135deg, ${sub.color}, ${sub.color}88)` : `${sub.color}15`,
@@ -540,19 +582,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-baseline gap-1.5 mb-1">
-                                <h4 className="text-sm font-black text-white">{sub.name}</h4>
-                                <span className="text-lg font-black" style={{ color: sub.color }}>${sub.price}</span>
-                                <span className="text-[10px] text-gray-500 font-medium">/{sub.frequency}</span>
-                              </div>
-                              <ul className="space-y-0.5">
-                                {sub.features.map((f, i) => (
-                                  <li key={i} className="flex items-center gap-1.5 text-[11px]">
-                                    <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: isSelected ? sub.color : "#4b5563" }} />
-                                    <span className={isSelected ? "text-gray-300" : "text-gray-500"}>{f}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                              <h4 className="text-sm font-black text-white leading-tight">{sub.name}</h4>
+                              <p className="text-[10px] text-gray-500 font-medium leading-snug mt-0.5">{sub.description}</p>
                             </div>
 
                             {isSelected && (
@@ -564,6 +595,65 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                               </motion.div>
                             )}
                           </div>
+
+                          {/* Price */}
+                          <div className="flex items-baseline gap-1.5 mb-3">
+                            <span className="text-xl font-black" style={{ color: sub.color }}>${price}</span>
+                            <span className="text-[10px] text-gray-500 font-medium">/{billingCycle === "yearly" ? t("perYear") : t("perMonth")}</span>
+                            {billingCycle === "yearly" && (
+                              <span className="text-[9px] text-gray-600 line-through ml-1">${sub.price * 12}</span>
+                            )}
+                          </div>
+                          {billingCycle === "yearly" && (
+                            <p className="text-[9px] text-[#00e5a0] font-bold mb-2">{t("billedAnnually")} — {t("save20")}</p>
+                          )}
+
+                          {/* Divider */}
+                          <div className="h-px w-full mb-2" style={{ background: `linear-gradient(90deg, transparent, ${sub.color}25, transparent)` }} />
+
+                          {/* Chart Access */}
+                          <div className="mb-2">
+                            <p className="text-[9px] uppercase tracking-widest font-black mb-1.5" style={{ color: sub.color }}>{t("chartAccess")}</p>
+                            <div className="space-y-1">
+                              {sub.charts.map((chart, i) => (
+                                <div key={i} className="flex items-center gap-1.5">
+                                  <div className="w-1 h-1 rounded-full" style={{ background: sub.color }} />
+                                  <span className="text-[10px] text-gray-300 font-medium">{chart}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Divider */}
+                          <div className="h-px w-full mb-2" style={{ background: `linear-gradient(90deg, transparent, ${sub.color}12, transparent)` }} />
+
+                          {/* Features */}
+                          <div className="mb-2">
+                            <p className="text-[9px] uppercase tracking-widest font-black mb-1.5" style={{ color: sub.color }}>{t("subFeatures")}</p>
+                            <ul className="space-y-0.5">
+                              {sub.features.map((f, i) => (
+                                <li key={i} className="flex items-center gap-1.5 text-[10px]">
+                                  <CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: isSelected ? sub.color : "#4b5563" }} />
+                                  <span className={isSelected ? "text-gray-300" : "text-gray-500"}>{f}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Limitations */}
+                          {sub.limitations && sub.limitations.length > 0 && (
+                            <div className="mb-2">
+                              <p className="text-[9px] uppercase tracking-widest font-black mb-1.5 text-red-500/70">{t("subLimitations")}</p>
+                              <ul className="space-y-0.5">
+                                {sub.limitations.map((lim, i) => (
+                                  <li key={i} className="flex items-center gap-1.5 text-[10px]">
+                                    <X className="w-3 h-3 flex-shrink-0 text-red-500/60" />
+                                    <span className="text-gray-500">{lim}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </motion.button>
                       );
                     })}
@@ -586,21 +676,58 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       </div>
                       <div>
                         <h4 className="text-sm font-black text-white flex items-center gap-1.5">
-                          Phase-X AI <Zap size={12} className="text-[#00e5a0]" />
+                          {t("aiInsightTitle")} <Zap size={12} className="text-[#00e5a0]" />
                         </h4>
                         <p className="text-[11px] text-gray-400">
-                          {isRTL ? "3,000 نقطة ذكاء اصطناعي — $20/شهر" : "3,000 AI Tokens — $20/mo"}
+                          {t("aiInsightDesc")}
                         </p>
                       </div>
                     </div>
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${aiAddon ? 'border-[#00e5a0] bg-[#00e5a0]/20 text-[#00e5a0]' : 'border-[#4b5563] text-transparent'}`}>
-                      <Check size={16} strokeWidth={4} />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-black text-[#00e5a0]">{billingCycle === "yearly" ? `$${Math.round(20 * 12 * 0.8)}/${t("perYear")}` : `$20/${t("perMonth")}`}</span>
+                      <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${aiAddon ? 'border-[#00e5a0] bg-[#00e5a0]/20 text-[#00e5a0]' : 'border-[#4b5563] text-transparent'}`}>
+                        <Check size={16} strokeWidth={4} />
+                      </div>
                     </div>
                   </motion.div>
 
+                  {/* Referral Code Input */}
+                  <div className="p-3 rounded-xl" style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#a855f7] mb-2">{t("referralCodeInput")}</p>
+                    {referralApplied ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Check size={16} className="text-[#00e5a0]" />
+                          <span className="text-sm font-bold text-[#00e5a0]">{t("referralApplied")}</span>
+                          <span className="font-mono text-xs text-gray-400 ml-1">{referralInput.toUpperCase()}</span>
+                        </div>
+                        <button type="button" onClick={handleRemoveReferral} className="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer uppercase tracking-widest">{t("referralRemove")}</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input type="text" value={referralInput} onChange={(e) => { setReferralInput(e.target.value); setReferralError(false); }}
+                          className="flex-1 px-3 py-2 rounded-lg text-sm font-mono font-bold bg-[#0b0e14] border border-[#1c2230] text-white placeholder-gray-600 focus:border-[#a855f7] outline-none uppercase tracking-wider"
+                          placeholder={t("referralCodePlaceholder")} />
+                        <button type="button" onClick={handleApplyReferral}
+                          className="px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest bg-[#a855f7] text-black cursor-pointer hover:bg-[#9333ea] transition-colors">
+                          {t("applyCode")}
+                        </button>
+                      </div>
+                    )}
+                    {referralError && <p className="text-[10px] text-red-400 mt-1 font-bold">{t("referralInvalid")}</p>}
+                  </div>
+
+                  {/* Referral Discount Line */}
+                  {referralApplied && (
+                    <div className="flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "rgba(0,229,160,0.05)", border: "1px solid rgba(0,229,160,0.15)" }}>
+                      <span className="text-xs font-bold text-[#00e5a0]">{t("referralDiscount")}</span>
+                      <span className="text-sm font-black text-[#00e5a0]">-${referralDiscountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+
                   {/* Total */}
                   <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <span className="text-xs font-bold uppercase tracking-widest text-gray-400">{isRTL ? "المجموع" : "Total"}</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-gray-400">{t("totalDue")}</span>
                     <span className="text-xl font-black text-white">${totalAmount.toFixed(2)}</span>
                   </div>
                 </motion.div>
@@ -613,12 +740,12 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                     <div className="w-16 h-16 bg-[#00e5a0]/10 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-[#00e5a0]/30 shadow-[0_0_20px_rgba(0,229,160,0.2)]">
                       <Send size={28} className="text-[#00e5a0]" />
                     </div>
-                    <h2 className="text-xl font-black text-white">{isRTL ? "تأكيد الدفع" : "Confirm Payment"}</h2>
-                    <p className="text-gray-400 mt-1 text-xs">{isRTL ? "أرسل المبلغ التالي بالضبط يدوياً" : "Send exactly this amount manually"}</p>
+                    <h2 className="text-xl font-black text-white">{t("confirmPayment")}</h2>
+                    <p className="text-gray-400 mt-1 text-xs">{t("confirmPaymentDesc")}</p>
                   </div>
 
                   <div className="p-4 rounded-xl flex justify-between items-center bg-[#0b0e14] border border-[#1c2230]">
-                    <span className="font-black text-gray-400 uppercase tracking-widest text-xs">{isRTL ? "المبلغ المطلوب" : "Amount Due"}</span>
+                    <span className="font-black text-gray-400 uppercase tracking-widest text-xs">{t("amountDue")}</span>
                     <span className="text-3xl font-black text-[#00e5a0]">${totalAmount.toFixed(2)}</span>
                   </div>
 
@@ -626,18 +753,18 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                   <div className="p-5 rounded-xl border border-[#0088cc]/30 bg-[#0088cc]/5 hover:border-[#0088cc] transition-colors">
                     <h3 className="font-black mb-1.5 flex items-center gap-2 text-white text-sm">
                       <div className="bg-[#0088cc] text-black w-6 h-6 rounded-full flex items-center justify-center"><Send size={12} /></div>
-                      {isRTL ? "تيليجرام" : "Telegram"}
+                      {t("telegramFastTrack")}
                     </h3>
-                    <p className="text-[11px] text-gray-400 mb-3">{isRTL ? "أرسل إثبات الدفع للوكيل المعتمد" : "Send payment proof to a trusted agent"}</p>
+                    <p className="text-[11px] text-gray-400 mb-3">{t("telegramFastTrackDesc")}</p>
                     <div className="space-y-2">
-                      <div className="p-3 rounded-lg border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between cursor-pointer" onClick={() => copyToClipboard("@PhaeX_Ai")}>
-                        <span className="font-mono text-sm font-bold text-white">@PhaeX_Ai</span>
+                      <a href="https://t.me/PhaseX_Ai" target="_blank" rel="noopener noreferrer" className="p-3 rounded-lg border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between cursor-pointer hover:border-[#0088cc]/50 transition-colors no-underline">
+                        <span className="font-mono text-sm font-bold text-white">@PhaseX_Ai</span>
                         <div className="text-[#0088cc] bg-[#0088cc]/10 p-1.5 rounded-lg"><Send size={14} /></div>
-                      </div>
-                      <div className="p-3 rounded-lg border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between cursor-pointer" onClick={() => copyToClipboard("@PhaseX_Ai_SupportBot")}>
+                      </a>
+                      <a href="https://t.me/PhaseX_Ai_SupportBot" target="_blank" rel="noopener noreferrer" className="p-3 rounded-lg border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between cursor-pointer hover:border-[#0088cc]/50 transition-colors no-underline">
                         <span className="font-mono text-sm font-bold text-white">@PhaseX_Ai_SupportBot</span>
                         <div className="text-[#0088cc] bg-[#0088cc]/10 p-1.5 rounded-lg"><Send size={14} /></div>
-                      </div>
+                      </a>
                     </div>
                   </div>
 
@@ -647,7 +774,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       <div className="bg-[#f7931a] text-black w-6 h-6 rounded-full flex items-center justify-center"><Zap size={12} /></div>
                       USDT TRC20
                     </h3>
-                    <p className="text-[11px] text-gray-400 mb-3">{isRTL ? "أرسل المبلغ بالضبط من محفظتك" : "Send exact amount from your wallet"}</p>
+                    <p className="text-[11px] text-gray-400 mb-3">{t("cryptoPaymentDesc")}</p>
                     <div className="p-3 rounded-lg border border-[#1c2230] bg-[#0b0e14] flex items-center justify-between cursor-pointer" onClick={() => copyToClipboard(walletAddress)}>
                       <span className="font-mono text-xs font-bold break-all text-white max-w-[85%]">{walletAddress}</span>
                       <div className="text-[#f7931a] shrink-0 bg-[#f7931a]/10 p-1.5 rounded-lg ml-2"><Send size={16} /></div>
@@ -666,16 +793,16 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
                     <Check size={44} color="#00e5a0" />
                   </motion.div>
-                  <h2 className="text-2xl font-black mb-3 text-white">{isRTL ? "قيد المراجعة" : "Verification Pending"}</h2>
+                  <h2 className="text-2xl font-black mb-3 text-white">{t("verificationPending")}</h2>
                   <p className="text-sm text-gray-400 max-w-sm mx-auto leading-relaxed font-medium mb-6">
-                    {isRTL ? "يتم التحقق من الدفعة الآن. سيتم منحك وصول كامل للمنصة خلال 2-4 ساعات. يمكنك إغلاق هذه الصفحة." : "Your payment is being verified. You will be granted full access within 2-4 hours. You may close this page."}
+                    {t("verificationPendingDescOnboard")}
                   </p>
                   <motion.button onClick={onRegister}
                     className="px-8 py-3 rounded-xl font-black uppercase tracking-widest text-sm text-black"
                     style={{ background: "#00e5a0", boxShadow: "0 10px 30px rgba(0,229,160,0.3)" }}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}>
-                    {isRTL ? "حسناً، شكراً" : "OK, Got It"}
+                    {t("gotIt")}
                   </motion.button>
                 </motion.div>
               )}

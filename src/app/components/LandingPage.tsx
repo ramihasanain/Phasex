@@ -5,9 +5,16 @@ import {
   ArrowRight, Activity, TrendingUp, Shield, Zap, Globe, Cpu, ChevronRight, Menu, X, Play, Clock, BarChart2,
   Lock, RefreshCw, Server, Send, LayoutTemplate, Smartphone, Languages, ChevronDown,
   Gauge, Move, Target, Navigation, Users, BarChart3, Sparkles, ChevronLeft, Linkedin, Twitter, Mail,
-  Briefcase, Brain, Eye, LineChart, Ban, BellOff, HeartOff
+  Briefcase, Brain, Eye, LineChart, Ban, BellOff, HeartOff, Layers
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
+import screenshot1 from "../../assets/screenshot1.png";
+import screenshot2 from "../../assets/screenshot2.png";
+import screenshot3 from "../../assets/screenshot3.png";
+import screenshot4 from "../../assets/screenshot4.png";
+import screenshot5 from "../../assets/screenshot5.png";
+import screenshot6 from "../../assets/screenshot6.png";
+import screenshot7 from "../../assets/screenshot7.png";
 import { TermsModal, TermsButton, CookiePolicyModal, CookieButton, LegalDisclaimerModal, LegalDisclaimerButton, ManifestoModal, ManifestoButton, PrivacyPolicyModal, PrivacyPolicyButton, RiskDisclosureModal, RiskDisclosureButton } from "./TermsAndConditions";
 import { BreakingNews } from "./BreakingNews";
 
@@ -30,6 +37,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
   const [manifestoOpen, setManifestoOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [riskOpen, setRiskOpen] = useState(false);
+  const [expandedState, setExpandedState] = useState<number | null>(null);
+  const [flippedBroker, setFlippedBroker] = useState<number | null>(null);
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -65,19 +74,23 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
   ];
 
   const screenshots = [
-    { url: "https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=1200&q=80", title: isRTL ? "لوحة التحكم الرئيسية" : "Main Dashboard", description: isRTL ? "واجهة احترافية لعرض جميع الأسواق والمؤشرات" : "Professional interface displaying all markets and indicators" },
-    { url: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80", title: isRTL ? "المؤشرات الفنية" : "Technical Indicators", description: isRTL ? "5 مؤشرات فنية حصرية ومتطورة" : "5 exclusive and advanced technical indicators" },
-    { url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80", title: isRTL ? "تحليل متعدد الأطر الزمنية" : "Multi-Timeframe Analysis", description: isRTL ? "رؤية شاملة للسوق عبر فريمات مختلفة" : "Comprehensive market view across different timeframes" },
-    { url: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&q=80", title: isRTL ? "أسواق متعددة" : "Multiple Markets", description: isRTL ? "FOREX, CRYPTO, INDEX, COMMODITY" : "FOREX, CRYPTO, INDEX, COMMODITY" }
+    { url: screenshot1, title: isRTL ? "لوحة التحكم الرئيسية" : "Main Dashboard", description: isRTL ? "واجهة احترافية لعرض جميع الأسواق والمؤشرات" : "Professional interface displaying all markets and indicators" },
+    { url: screenshot2, title: isRTL ? "المؤشرات الفنية" : "Technical Indicators", description: isRTL ? "5 مؤشرات فنية حصرية ومتطورة" : "5 exclusive and advanced technical indicators" },
+    { url: screenshot3, title: isRTL ? "تحليل متعدد الأطر الزمنية" : "Multi-Timeframe Analysis", description: isRTL ? "رؤية شاملة للسوق عبر فريمات مختلفة" : "Comprehensive market view across different timeframes" },
+    { url: screenshot4, title: isRTL ? "أسواق متعددة" : "Multiple Markets", description: isRTL ? "FOREX, CRYPTO, INDEX, COMMODITY" : "FOREX, CRYPTO, INDEX, COMMODITY" },
+    { url: screenshot5, title: isRTL ? "تحليل الذكاء الاصطناعي" : "AI Analysis", description: isRTL ? "تحليل ذكي للسوق باستخدام الذكاء الاصطناعي" : "Smart market analysis powered by AI" },
+    { url: screenshot6, title: isRTL ? "أدوات التداول" : "Trading Tools", description: isRTL ? "أدوات تداول متقدمة لتحليل دقيق" : "Advanced trading tools for precise analysis" },
+    { url: screenshot7, title: isRTL ? "إدارة المحفظة" : "Portfolio Management", description: isRTL ? "إدارة وتتبع محفظتك بسهولة" : "Easily manage and track your portfolio" },
   ];
 
-  const stateColors = ["#a855f7", "#448aff", "#00e676", "#ff9100", "#ff1744"];
+  const stateColors = ["#a855f7", "#448aff", "#00e676", "#ff9100", "#ff1744", "#00bcd4"];
   const states = [
     { icon: Gauge, name: t("statePhaseName"), nameAr: t("statePhaseNameAr"), question: t("statePhaseQuestion"), description: t("statePhaseDesc"), color: stateColors[0] },
     { icon: Move, name: t("stateDisplacementName"), nameAr: t("stateDisplacementNameAr"), question: t("stateDisplacementQuestion"), description: t("stateDisplacementDesc"), color: stateColors[1] },
     { icon: Target, name: t("stateReferenceName"), nameAr: t("stateReferenceNameAr"), question: t("stateReferenceQuestion"), description: t("stateReferenceDesc"), color: stateColors[2] },
     { icon: Activity, name: t("stateOscillationName"), nameAr: t("stateOscillationNameAr"), question: t("stateOscillationQuestion"), description: t("stateOscillationDesc"), color: stateColors[3] },
     { icon: Navigation, name: t("stateDirectionName"), nameAr: t("stateDirectionNameAr"), question: t("stateDirectionQuestion"), description: t("stateDirectionDesc"), color: stateColors[4] },
+    { icon: Layers, name: t("stateEnvelopeName"), nameAr: t("stateEnvelopeNameAr"), question: t("stateEnvelopeQuestion"), description: t("stateEnvelopeDesc"), color: stateColors[5] },
   ];
 
   // Starfield - distant twinkling stars
@@ -196,7 +209,6 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           <div className="flex items-center justify-between h-16">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
               <Logo size="sm" animated={true} />
-              <span className="text-xl font-black hidden md:block" style={{ color: accent }}>PHASE X</span>
             </motion.div>
 
             <nav className="hidden lg:flex items-center gap-6">
@@ -500,10 +512,377 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                       <div className="md:w-2/3 p-6">
                         <p className="text-base font-bold mb-3" style={{ color: state.color }}>{state.question}</p>
                         <p className="text-sm text-gray-400 leading-relaxed mb-4">{state.description}</p>
-                        <button className="text-xs font-bold flex items-center gap-1.5 text-gray-500 hover:text-white transition-colors group cursor-pointer">
-                          {t("readMore")}
-                          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                        </button>
+                        {(i === 0 || i === 1 || i === 2 || i === 3 || i === 4 || i === 5) && (
+                          <button
+                            onClick={() => setExpandedState(expandedState === i ? null : i)}
+                            className="text-xs font-bold flex items-center gap-1.5 text-gray-500 hover:text-white transition-colors group cursor-pointer"
+                          >
+                            {t("readMore")}
+                            <motion.span animate={{ rotate: expandedState === i ? 90 : 0 }} transition={{ duration: 0.3 }}>
+                              <ArrowRight className="w-3 h-3" />
+                            </motion.span>
+                          </button>
+                        )}
+
+                        {/* Expandable Read More Content for PHASE STATE */}
+                        <AnimatePresence>
+                          {i === 0 && expandedState === 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.4, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-5 pt-5 space-y-5" style={{ borderTop: `1px solid ${state.color}20` }}>
+                                {/* Title */}
+                                <h4 className="text-lg font-black" style={{ color: state.color }}>{t("statePhaseReadMoreTitle")}</h4>
+
+                                {/* Section 1: Intro */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreIntro")}</p>
+                                <div className="space-y-1">
+                                  <p className="text-sm font-bold text-gray-300">{t("statePhaseReadMoreNotBuying")}</p>
+                                  <p className="text-sm font-bold text-gray-300">{t("statePhaseReadMoreNotSelling")}</p>
+                                  <p className="text-sm font-bold" style={{ color: state.color }}>{t("statePhaseReadMoreTransitioning")}</p>
+                                </div>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreTraditional")}</p>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("statePhaseReadMoreChallenge")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Section 2: Markets Move Through Phases */}
+                                <h5 className="text-base font-black text-white">{t("statePhaseReadMoreS2Title")}</h5>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS2Intro")}</p>
+                                <p className="text-sm text-gray-300 leading-relaxed font-medium italic" style={{ borderLeft: `3px solid ${state.color}`, paddingLeft: 12 }}>
+                                  {t("statePhaseReadMoreS2Sub")}
+                                </p>
+                                <div className="space-y-2">
+                                  {["statePhaseReadMoreS2Bullet1", "statePhaseReadMoreS2Bullet2", "statePhaseReadMoreS2Bullet3"].map((key, bi) => (
+                                    <div key={bi} className="flex items-center gap-2">
+                                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: state.color }} />
+                                      <span className="text-sm text-gray-300">{t(key)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS2Closing")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Section 3: Context Before Action */}
+                                <h5 className="text-base font-black text-white">{t("statePhaseReadMoreS3Title")}</h5>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS3P1")}</p>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("statePhaseReadMoreS3Question")}</p>
+                                <p className="text-sm text-gray-400">{t("statePhaseReadMoreS3Helps")}</p>
+                                <div className="space-y-2" style={{ paddingLeft: 4 }}>
+                                  {["statePhaseReadMoreS3Bullet1", "statePhaseReadMoreS3Bullet2", "statePhaseReadMoreS3Bullet3"].map((key, ci) => (
+                                    <div key={ci} className="flex items-center gap-2">
+                                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: state.color }} />
+                                      <span className="text-sm text-gray-300">{t(key)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS3Closing")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Section 4: Phase Recognition */}
+                                <h5 className="text-base font-black text-white">{t("statePhaseReadMoreS4Title")}</h5>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS4P1")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS4P2")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS4P3")}</p>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("statePhaseReadMoreS4P4")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Section 5: Clarity Over Reaction */}
+                                <h5 className="text-base font-black text-white">{t("statePhaseReadMoreS5Title")}</h5>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS5P1")}</p>
+                                <p className="text-sm text-gray-300">{t("statePhaseReadMoreS5P2")}</p>
+                                <p className="text-sm text-gray-300">{t("statePhaseReadMoreS5P3")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("statePhaseReadMoreS5P4")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Tagline */}
+                                <motion.p
+                                  className="text-sm font-black text-center pt-2"
+                                  style={{ color: state.color }}
+                                  animate={{ scale: [1, 1.02, 1] }}
+                                  transition={{ duration: 3, repeat: Infinity }}
+                                >
+                                  {t("statePhaseReadMoreTagline")}
+                                </motion.p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Expandable Read More Content for DISPLACEMENT STATE */}
+                        <AnimatePresence>
+                          {i === 1 && expandedState === 1 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.4, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-5 pt-5 space-y-4" style={{ borderTop: `1px solid ${state.color}20` }}>
+                                {/* Title */}
+                                <h4 className="text-lg font-black" style={{ color: state.color }}>{t("stateDisplacementReadMoreTitle")}</h4>
+
+                                {/* Intro */}
+                                <p className="text-sm text-gray-300 leading-relaxed font-medium italic" style={{ borderLeft: `3px solid ${state.color}`, paddingLeft: 12 }}>
+                                  {t("stateDisplacementReadMoreP1")}
+                                </p>
+
+                                {/* Body */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateDisplacementReadMoreP2")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateDisplacementReadMoreP3")}</p>
+
+                                {/* Risk highlight */}
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateDisplacementReadMoreP4")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Closing tagline */}
+                                <motion.p
+                                  className="text-sm font-black text-center pt-2"
+                                  style={{ color: state.color }}
+                                  animate={{ scale: [1, 1.02, 1] }}
+                                  transition={{ duration: 3, repeat: Infinity }}
+                                >
+                                  {t("stateDisplacementReadMoreP5")}
+                                </motion.p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Expandable Read More Content for REFERENCE STATE */}
+                        <AnimatePresence>
+                          {i === 2 && expandedState === 2 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.4, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-5 pt-5 space-y-4" style={{ borderTop: `1px solid ${state.color}20` }}>
+                                {/* Title */}
+                                <h4 className="text-lg font-black" style={{ color: state.color }}>{t("stateReferenceReadMoreTitle")}</h4>
+
+                                {/* Intro */}
+                                <p className="text-sm text-gray-300 leading-relaxed font-medium italic" style={{ borderLeft: `3px solid ${state.color}`, paddingLeft: 12 }}>
+                                  {t("stateReferenceReadMoreP1")}
+                                </p>
+
+                                {/* Body */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateReferenceReadMoreP2")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateReferenceReadMoreP3")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Closing tagline */}
+                                <motion.p
+                                  className="text-sm font-black text-center pt-2"
+                                  style={{ color: state.color }}
+                                  animate={{ scale: [1, 1.02, 1] }}
+                                  transition={{ duration: 3, repeat: Infinity }}
+                                >
+                                  {t("stateReferenceReadMoreP4")}
+                                </motion.p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Expandable Read More Content for OSCILLATION STATE */}
+                        <AnimatePresence>
+                          {i === 3 && expandedState === 3 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.4, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-5 pt-5 space-y-4" style={{ borderTop: `1px solid ${state.color}20` }}>
+                                {/* Title */}
+                                <h4 className="text-lg font-black" style={{ color: state.color }}>{t("stateOscillationReadMoreTitle")}</h4>
+
+                                {/* Intro */}
+                                <p className="text-sm text-gray-300 leading-relaxed font-medium italic" style={{ borderLeft: `3px solid ${state.color}`, paddingLeft: 12 }}>
+                                  {t("stateOscillationReadMoreP1")}
+                                </p>
+
+                                {/* Body */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateOscillationReadMoreP2")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateOscillationReadMoreP3")}</p>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateOscillationReadMoreP4")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Oscillation gets */}
+                                <p className="text-sm text-gray-400">{t("stateOscillationReadMoreP5")}</p>
+                                <div className="space-y-2">
+                                  {["stateOscillationReadMoreBullet1", "stateOscillationReadMoreBullet2", "stateOscillationReadMoreBullet3", "stateOscillationReadMoreBullet4"].map((key, bi) => (
+                                    <div key={bi} className="flex items-center gap-2">
+                                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: state.color }} />
+                                      <span className="text-sm text-gray-300 font-medium">{t(key)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateOscillationReadMoreP6")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* About section */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateOscillationReadMoreP7")}</p>
+                                <div className="space-y-2" style={{ paddingLeft: 4 }}>
+                                  {["stateOscillationReadMoreBullet5", "stateOscillationReadMoreBullet6", "stateOscillationReadMoreBullet7", "stateOscillationReadMoreBullet8"].map((key, ci) => (
+                                    <div key={ci} className="flex items-center gap-2">
+                                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: state.color }} />
+                                      <span className="text-sm text-gray-300">{t(key)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Closing */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateOscillationReadMoreP8")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateOscillationReadMoreP9")}</p>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateOscillationReadMoreP10")}</p>
+                                <p className="text-sm text-gray-300 leading-relaxed">{t("stateOscillationReadMoreP11")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Tagline */}
+                                <motion.p
+                                  className="text-sm font-black text-center pt-2"
+                                  style={{ color: state.color }}
+                                  animate={{ scale: [1, 1.02, 1] }}
+                                  transition={{ duration: 3, repeat: Infinity }}
+                                >
+                                  {t("stateOscillationReadMoreTagline")}
+                                </motion.p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Expandable Read More Content for DIRECTION STATE */}
+                        <AnimatePresence>
+                          {i === 4 && expandedState === 4 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.4, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-5 pt-5 space-y-4" style={{ borderTop: `1px solid ${state.color}20` }}>
+                                {/* Title */}
+                                <h4 className="text-lg font-black" style={{ color: state.color }}>{t("stateDirectionReadMoreTitle")}</h4>
+
+                                {/* Intro */}
+                                <p className="text-sm text-gray-300 leading-relaxed font-medium italic" style={{ borderLeft: `3px solid ${state.color}`, paddingLeft: 12 }}>
+                                  {t("stateDirectionReadMoreP1")}
+                                </p>
+
+                                {/* Body */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateDirectionReadMoreP2")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateDirectionReadMoreP3")}</p>
+
+                                {/* Structural clarity */}
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateDirectionReadMoreP4")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Prediction */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateDirectionReadMoreP5")}</p>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateDirectionReadMoreP6")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Tagline */}
+                                <motion.p
+                                  className="text-sm font-black text-center pt-2"
+                                  style={{ color: state.color }}
+                                  animate={{ scale: [1, 1.02, 1] }}
+                                  transition={{ duration: 3, repeat: Infinity }}
+                                >
+                                  {t("stateDirectionReadMoreTagline")}
+                                </motion.p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Expandable Read More Content for ENVELOPE STATE */}
+                        <AnimatePresence>
+                          {i === 5 && expandedState === 5 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.4, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-5 pt-5 space-y-4" style={{ borderTop: `1px solid ${state.color}20` }}>
+                                {/* Title */}
+                                <h4 className="text-lg font-black" style={{ color: state.color }}>{t("stateEnvelopeReadMoreTitle")}</h4>
+
+                                {/* Intro */}
+                                <p className="text-sm text-gray-300 leading-relaxed font-medium italic" style={{ borderLeft: `3px solid ${state.color}`, paddingLeft: 12 }}>
+                                  {t("stateEnvelopeReadMoreP1")}
+                                </p>
+
+                                {/* Body */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateEnvelopeReadMoreP2")}</p>
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateEnvelopeReadMoreP3")}</p>
+
+                                {/* Structural clarity */}
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateEnvelopeReadMoreP4")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Energy dynamics */}
+                                <p className="text-sm text-gray-400 leading-relaxed">{t("stateEnvelopeReadMoreP5")}</p>
+                                <p className="text-sm font-bold" style={{ color: state.color }}>{t("stateEnvelopeReadMoreP6")}</p>
+
+                                {/* Divider */}
+                                <div className="h-[1px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${state.color}40, transparent)` }} />
+
+                                {/* Tagline */}
+                                <motion.p
+                                  className="text-sm font-black text-center pt-2"
+                                  style={{ color: state.color }}
+                                  animate={{ scale: [1, 1.02, 1] }}
+                                  transition={{ duration: 3, repeat: Infinity }}
+                                >
+                                  {t("stateEnvelopeReadMoreTagline")}
+                                </motion.p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                   </div>
@@ -565,7 +944,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
             <AnimatePresence mode="wait">
               <motion.div key={currentScreenshot} initial={{ opacity: 0, x: 80 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -80 }} transition={{ duration: 0.4 }}>
                 <div className="rounded-2xl overflow-hidden relative" style={{ border: `1px solid ${accentG}0.12)`, boxShadow: `0 20px 60px rgba(0,0,0,0.4), 0 0 40px ${accentG}0.05)` }}>
-                  <img src={screenshots[currentScreenshot].url} alt={screenshots[currentScreenshot].title} className="w-full h-[450px] object-cover" />
+                  <img src={screenshots[currentScreenshot].url} alt={screenshots[currentScreenshot].title} className="w-full object-contain" style={{ maxHeight: "500px" }} />
                   <div className="absolute bottom-0 left-0 right-0 p-6" style={{ background: "linear-gradient(to top, rgba(6,10,16,0.95) 0%, transparent 100%)" }}>
                     <h3 className="text-xl font-black text-white mb-1">{screenshots[currentScreenshot].title}</h3>
                     <p className="text-sm text-gray-400">{screenshots[currentScreenshot].description}</p>
@@ -592,6 +971,68 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                   style={{ width: i === currentScreenshot ? 32 : 10, height: 10, background: i === currentScreenshot ? accent : "rgba(255,255,255,0.1)" }} />
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ BROKER PARTNERS ═══════════ */}
+      <section className="py-20 relative z-10">
+        <div className="container mx-auto px-4">
+          <SectionTitle sub={t("brokerPartnersSub")}>
+            {t("brokerPartnersTitle")}
+          </SectionTitle>
+
+          <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {[
+              { name: "IC Markets", discount: "25%", url: "https://t.me/PhaseX_Ai", bg: "#fff", text: "#0a1628" },
+              { name: "PrimeXBT", discount: "50%", url: "https://t.me/PhaseX_Ai", bg: "#1a2332", text: "#fff" },
+              { name: "OctaFX", discount: "50%", url: "https://t.me/PhaseX_Ai", bg: "#00a651", text: "#fff" },
+              { name: "eToro", discount: "20%", url: "https://t.me/PhaseX_Ai", bg: "#6bbd46", text: "#fff" },
+              { name: "Vantage FX", discount: "30%", url: "https://t.me/PhaseX_Ai", bg: "#e8380d", text: "#fff" },
+              { name: "Windsor Brokers", discount: "25%", url: "https://t.me/PhaseX_Ai", bg: "#1a3a5c", text: "#fff" },
+              { name: "Exness", discount: "40%", url: "https://t.me/PhaseX_Ai", bg: "#facc15", text: "#000" },
+              { name: "LiteForex", discount: "30%", url: "https://t.me/PhaseX_Ai", bg: "#003d7a", text: "#fff" },
+              { name: "IUX", discount: "35%", url: "https://t.me/PhaseX_Ai", bg: "#1c1c2e", text: "#fff" },
+              { name: "Swissquote", discount: "20%", url: "https://t.me/PhaseX_Ai", bg: "#e4002b", text: "#fff" },
+              { name: "FxPro", discount: "30%", url: "https://t.me/PhaseX_Ai", bg: "#ff5722", text: "#fff" },
+              { name: "iFOREX", discount: "25%", url: "https://t.me/PhaseX_Ai", bg: "#0054a6", text: "#fff" },
+              { name: "FP Markets", discount: "35%", url: "https://t.me/PhaseX_Ai", bg: "#00295b", text: "#fff" },
+              { name: "RoboForex", discount: "30%", url: "https://t.me/PhaseX_Ai", bg: "#2196f3", text: "#fff" },
+              { name: "XM", discount: "50%", url: "https://t.me/PhaseX_Ai", bg: "#c4161c", text: "#fff" },
+            ].map((broker, i) => (
+              <div key={i} className="relative cursor-pointer" style={{ perspective: "800px", height: "140px" }}
+                onClick={() => setFlippedBroker(flippedBroker === i ? null : i)}>
+                {/* Card container with 3D flip */}
+                <div className="w-full h-full relative transition-transform duration-500" style={{ transformStyle: "preserve-3d", transform: flippedBroker === i ? "rotateY(180deg)" : "rotateY(0deg)" }}>
+                  
+                  {/* FRONT FACE */}
+                  <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-2 border border-[#1c2230] hover:border-gray-600 transition-colors"
+                    style={{ backfaceVisibility: "hidden", background: "#10141d" }}>
+                    <Logo size="sm" showText={false} animated={false} />
+                    <span className="text-[11px] font-black text-white tracking-wide">{broker.name}</span>
+                    <div className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ background: `${accent}15`, color: accent }}>
+                      {broker.discount} {t("brokerDiscount")}
+                    </div>
+                    <p className="text-[9px] text-gray-600 font-medium">{t("brokerClickToReveal")}</p>
+                  </div>
+                  
+                  {/* BACK FACE */}
+                  <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3 border p-4"
+                    style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(135deg, #10141d, #161c2a)", borderColor: `${accent}40` }}>
+                    <div className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: `${accent}15`, color: accent }}>
+                      {t("brokerReferralOffer")}
+                    </div>
+                    <div className="text-2xl font-black" style={{ color: accent }}>{broker.discount}</div>
+                    <a href={broker.url} target="_blank" rel="noopener noreferrer"
+                      className="w-full py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-center text-black transition-transform hover:scale-105 no-underline block"
+                      style={{ background: accent }}
+                      onClick={(e) => e.stopPropagation()}>
+                      {t("brokerSignUp")}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

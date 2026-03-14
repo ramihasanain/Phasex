@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type SubscriptionStatus = 'none' | 'pending' | 'active';
-export type SubscriptionPlan = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'none';
+export type SubscriptionPlan = 'core' | 'trader' | 'professional' | 'institutional' | 'none';
 
 export interface User {
   id: string;
@@ -10,12 +10,23 @@ export interface User {
   avatar?: string;
 }
 
+export interface ReferralEntry {
+  name: string;
+  email: string;
+  plan: string;
+  date: string;
+  earned: number;
+}
+
 export interface AuthState {
   user: User | null;
   subscriptionStatus: SubscriptionStatus;
   subscriptionPlan: SubscriptionPlan;
   hasAIAccess: boolean;
   aiTokens: number;
+  referralCode: string;
+  referralBalance: number;
+  referralHistory: ReferralEntry[];
 }
 
 interface AuthContextType extends AuthState {
@@ -25,9 +36,17 @@ interface AuthContextType extends AuthState {
   activateSubscription: (plan: SubscriptionPlan, includeAI: boolean) => void;
   consumeTokens: (amount: number) => boolean;
   addTokens: (amount: number) => void;
+  applyReferralCode: (code: string) => { valid: boolean; discount: number };
+  addReferralEarning: (entry: ReferralEntry) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function generateCode(name: string): string {
+  const prefix = name.replace(/[^a-zA-Z]/g, '').substring(0, 4).toUpperCase() || 'USER';
+  const suffix = Math.floor(1000 + Math.random() * 9000);
+  return `PX-${prefix}${suffix}`;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>(() => {
@@ -35,7 +54,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem('phasex_auth');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          referralCode: parsed.referralCode || '',
+          referralBalance: parsed.referralBalance || 0,
+          referralHistory: parsed.referralHistory || [],
+        };
       } catch (e) {
         console.error("Failed to parse auth state", e);
       }
@@ -46,6 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscriptionPlan: 'none',
       hasAIAccess: false,
       aiTokens: 0,
+      referralCode: '',
+      referralBalance: 0,
+      referralHistory: [],
     };
   });
 
@@ -54,10 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [state]);
 
   const login = (email: string, name: string = 'Trader') => {
-    setState(prev => ({
-      ...prev,
-      user: { id: Date.now().toString(), name, email }
-    }));
+    setState(prev => {
+      const code = prev.referralCode || generateCode(name);
+      return {
+        ...prev,
+        user: { id: Date.now().toString(), name, email },
+        referralCode: code,
+      };
+    });
   };
 
   const logout = () => {
@@ -67,6 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscriptionPlan: 'none',
       hasAIAccess: false,
       aiTokens: 0,
+      referralCode: '',
+      referralBalance: 0,
+      referralHistory: [],
     });
   };
 
@@ -108,8 +143,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const applyReferralCode = (code: string): { valid: boolean; discount: number } => {
+    // Validate: code must match PX-XXXX#### format and not be user's own code
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed || trimmed.length < 6) return { valid: false, discount: 0 };
+    if (trimmed === state.referralCode) return { valid: false, discount: 0 };
+    if (!trimmed.startsWith('PX-')) return { valid: false, discount: 0 };
+    // Valid referral — 10% discount
+    return { valid: true, discount: 0.1 };
+  };
+
+  const addReferralEarning = (entry: ReferralEntry) => {
+    setState(prev => ({
+      ...prev,
+      referralBalance: prev.referralBalance + entry.earned,
+      referralHistory: [entry, ...prev.referralHistory],
+    }));
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, submitReceipt, activateSubscription, consumeTokens, addTokens }}>
+    <AuthContext.Provider value={{ ...state, login, logout, submitReceipt, activateSubscription, consumeTokens, addTokens, applyReferralCode, addReferralEarning }}>
       {children}
     </AuthContext.Provider>
   );

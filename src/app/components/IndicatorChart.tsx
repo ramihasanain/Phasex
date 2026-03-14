@@ -286,6 +286,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [showChartInfo, setShowChartInfo] = useState(false);
   const [candleLimit, setCandleLimit] = useState<number | "Auto">("Auto");
   const isRTL = language === "ar";
   const tk = useThemeTokens();
@@ -812,9 +813,17 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               transition={{ duration: 3, repeat: Infinity }}>
               <Activity className="w-4 h-4" style={{ color: tk.info }} />
             </motion.div>
-            <div>
+            <div className="flex items-center gap-1.5">
               <span className="text-[12px] font-black tracking-[0.15em] uppercase" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
-              <span className="text-[10px] mx-2" style={{ color: tk.textDim }}>•</span>
+              <button
+                onClick={() => setShowChartInfo(true)}
+                className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-all flex-shrink-0"
+                style={{ background: tk.infoBg, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.15)'}`, color: tk.info }}
+                title={isRTL ? 'معلومات المؤشر' : 'Indicator Info'}
+              >
+                <Info className="w-3 h-3" />
+              </button>
+              <span className="text-[10px] mx-1" style={{ color: tk.textDim }}>•</span>
               <span className="text-[10px] font-bold" style={{ color: tk.textMuted }}>{currency.symbol}</span>
             </div>
           </div>
@@ -1520,6 +1529,49 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               <div className="px-6 py-4 flex justify-end" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "rgba(0,0,0,0.2)" }}>
                 <button onClick={() => setShowInfoPopup(false)} className="px-6 py-2 rounded-lg font-bold text-sm bg-indigo-500 hover:bg-indigo-600 text-white transition-colors">
                   Got it
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Chart Info Popup */}
+      <AnimatePresence>
+        {showChartInfo && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}
+            onClick={() => setShowChartInfo(false)}>
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              className="max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl relative"
+              style={{ background: tk.isDark ? '#0f172a' : tk.surfaceElevated, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.15)' : tk.border}` }}
+              onClick={(e) => e.stopPropagation()} dir={isRTL ? "rtl" : "ltr"}>
+              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.1)' : tk.border}` }}>
+                <h3 className="text-lg font-black flex items-center gap-2" style={{ color: tk.textPrimary }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${indicator.color}15`, border: `1px solid ${indicator.color}25` }}>
+                    <Activity className="w-4 h-4" style={{ color: indicator.color }} />
+                  </div>
+                  {isRTL ? indicator.name : indicator.nameEn}
+                </h3>
+                <button onClick={() => setShowChartInfo(false)} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors" style={{ color: tk.textMuted, background: tk.surfaceHover }}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-sm md:text-base leading-relaxed" style={{ color: tk.textMuted }}>
+                  {indicator.id === 'phase' ? t('chartInfoPhase')
+                    : indicator.id === 'displacement' ? t('chartInfoDisplacement')
+                    : indicator.id === 'reference' ? t('chartInfoReference')
+                    : indicator.id === 'oscillation' ? t('chartInfoOscillation')
+                    : indicator.id === 'direction' ? t('chartInfoDirection')
+                    : indicator.id === 'envelop' ? t('chartInfoEnvelope')
+                    : t('chartInfoPhase')}
+                </p>
+              </div>
+              <div className="px-6 py-4 flex justify-end" style={{ borderTop: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}`, background: tk.isDark ? 'rgba(0,0,0,0.2)' : tk.surfaceHover }}>
+                <button onClick={() => setShowChartInfo(false)} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer transition-colors" style={{ background: indicator.color, color: '#fff' }}>
+                  {isRTL ? 'فهمت' : 'Got it'}
                 </button>
               </div>
             </motion.div>

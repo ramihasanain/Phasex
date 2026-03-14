@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { MarketList, Asset } from "./MarketList";
 import { IndicatorChart, Indicator } from "./IndicatorChart";
+import { Logo } from "./Logo";
 import { SubscriptionPanel } from "./SubscriptionPanel";
 import { AdSpace } from "./AdSpace";
 import { TradingSignalsTable } from "./TradingSignalsTable";
@@ -433,22 +434,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
         <div className="flex items-center justify-between px-5 py-2.5 relative z-10">
           {/* Logo */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3">
-            <motion.div className="relative"
-              whileHover={{ scale: 1.05 }}
-              style={{ 
-                background: tk.isDark ? 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 100%)' : 'linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.06) 100%)', 
-                padding: "7px 20px", 
-                borderRadius: 12,
-                border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.25)' : 'rgba(79,70,229,0.2)'}`,
-                boxShadow: tk.isDark ? '0 4px 20px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.05)' : '0 2px 10px rgba(79,70,229,0.06)'
-              }}>
-              <span style={{ color: tk.isDark ? '#fff' : '#4f46e5', fontWeight: 900, fontSize: 15, letterSpacing: 3.5 }}>PHASE X</span>
-              {/* Orbiting dot */}
-              <motion.div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
-                style={{ background: tk.info, boxShadow: `0 0 8px ${tk.info}` }}
-                animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 2, repeat: Infinity }} />
-            </motion.div>
+            <Logo size="sm" showText={false} animated={false} />
             <div className="hidden sm:block">
               <span className="text-[8px] font-bold tracking-[0.25em] uppercase" style={{ color: tk.isDark ? 'rgba(99,102,241,0.4)' : 'rgba(79,70,229,0.35)' }}>
                 STRUCTURAL DYNAMICS
