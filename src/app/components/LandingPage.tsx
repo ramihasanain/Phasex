@@ -140,7 +140,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
   );
 
   return (
-    <div className="min-h-screen relative" dir={isRTL ? "rtl" : "ltr"} style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen relative overflow-x-hidden" dir={isRTL ? "rtl" : "ltr"} style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* ═══ SPACE BACKGROUND ═══ */}
       {/* Starfield */}
@@ -332,6 +332,22 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                       </a>
                     );
                   })}
+                  {/* Mobile Language Selector */}
+                  <div className="pt-2 border-t border-white/5 md:hidden">
+                    <div className="flex flex-wrap gap-2 px-4 py-2">
+                      {languageOptions.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => { setLanguageKey(lang.code as any); setMobileMenuOpen(false); }}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${language === lang.code ? "bg-white/10 text-white font-bold" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}`}
+                          style={{ border: language === lang.code ? `1px solid ${accent}40` : "1px solid rgba(255,255,255,0.05)" }}
+                        >
+                          <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-4 h-auto rounded-sm" />
+                          <span>{lang.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="pt-2 border-t border-white/5">
                     <button onClick={onGetStarted} className="w-full py-2.5 rounded-lg text-sm font-bold cursor-pointer" style={{ background: accent, color: "#060a10" }}>
                       {t("loginBtn")}
@@ -382,7 +398,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
             animate={{ scale: [1.2, 1, 1.2] }} transition={{ duration: 12, repeat: Infinity }} />
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 py-24 md:py-32">
+        <div className="relative z-10 container mx-auto px-4 py-16 md:py-32">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-center max-w-4xl mx-auto">
 
             <motion.div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-8"
@@ -397,13 +413,13 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
               </span>
             </motion.div>
 
-            <motion.h1 className="text-6xl md:text-8xl font-black mb-5"
+            <motion.h1 className="text-4xl md:text-8xl font-black mb-5"
               animate={{ textShadow: [`0 0 30px ${accentG}0.2)`, `0 0 60px ${accentG}0.35)`, `0 0 30px ${accentG}0.2)`] }}
               transition={{ duration: 3, repeat: Infinity }}>
               <span style={{ color: accent }}>PHASE X AI</span>
             </motion.h1>
 
-            <h2 className="text-2xl md:text-4xl mb-8 text-gray-500 font-light">{t("theMarketRewritten")}</h2>
+            <h2 className="text-xl md:text-4xl mb-8 text-gray-500 font-light">{t("theMarketRewritten")}</h2>
 
             <motion.div className="h-[2px] w-24 mx-auto mb-8" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }}
               animate={{ width: ["96px", "200px", "96px"] }} transition={{ duration: 2.5, repeat: Infinity }} />
@@ -422,7 +438,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
 
             <motion.button onClick={onGetStarted} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               animate={{ y: [0, -8, 0] }} transition={{ y: { duration: 2.5, repeat: Infinity } }}
-              className="text-lg px-10 py-5 rounded-2xl font-black tracking-wider relative overflow-hidden cursor-pointer"
+              className="text-base px-7 py-4 md:text-lg md:px-10 md:py-5 rounded-2xl font-black tracking-wider relative overflow-hidden cursor-pointer"
               style={{ background: `linear-gradient(135deg, ${accent}, #00c890)`, color: "#060a10", boxShadow: `0 15px 50px ${accentG}0.3), 0 0 80px ${accentG}0.1)` }}>
               <motion.div className="absolute inset-0 pointer-events-none"
                 style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)" }}
@@ -444,7 +460,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           </SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-4xl mx-auto mb-10">
-            <GlassCard className="p-10 text-center">
+            <GlassCard className="p-6 md:p-10 text-center">
               <p className="text-lg text-gray-300 leading-relaxed mb-4">{t("insteadOfCharts")}</p>
               <p className="text-base text-gray-500">{t("eachStateAnswers")}</p>
             </GlassCard>
@@ -479,7 +495,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           <SectionTitle>{t("whyPhaseXExists")}</SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-5xl mx-auto mb-10">
-            <GlassCard glow="#ff1744" className="p-8">
+            <GlassCard glow="#ff1744" className="p-5 md:p-8">
               <div className="text-center mb-6">
                 <div className="inline-flex w-14 h-14 rounded-xl items-center justify-center mb-3" style={{ background: "rgba(255,23,68,0.12)" }}>
                   <BarChart3 className="w-7 h-7" style={{ color: "#ff1744" }} />
@@ -510,7 +526,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
-            <GlassCard glow={accent} className="p-10 text-center">
+            <GlassCard glow={accent} className="p-6 md:p-10 text-center">
               <p className="text-2xl font-black text-white mb-3">{t("marketsComplex")}</p>
               <p className="text-xl font-light" style={{ color: accent }}>{t("representationShouldntBe")}</p>
             </GlassCard>
@@ -536,21 +552,21 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                     boxShadow: `0 10px 40px rgba(0,0,0,0.2)`,
                   }}>
                     <div className="flex flex-col md:flex-row">
-                      <div className="md:w-1/3 p-6 flex items-center justify-center relative overflow-hidden"
+                      <div className="md:w-1/3 p-4 md:p-6 flex items-center justify-center relative overflow-hidden"
                         style={{ background: `linear-gradient(135deg, ${state.color}15, ${state.color}05)` }}>
                         <motion.div className="absolute inset-0 pointer-events-none"
                           style={{ background: `radial-gradient(circle at 50% 50%, ${state.color}10 0%, transparent 70%)` }}
                           animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 4, repeat: Infinity }} />
                         <div className="text-center relative z-10">
-                          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-3 mx-auto"
+                          <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl flex items-center justify-center mb-3 mx-auto"
                             style={{ background: `${state.color}15`, border: `1px solid ${state.color}30`, boxShadow: `0 0 25px ${state.color}15` }}>
-                            <Icon className="w-10 h-10" style={{ color: state.color }} />
+                            <Icon className="w-7 h-7 md:w-10 md:h-10" style={{ color: state.color }} />
                           </div>
                           <h3 className="text-lg font-black text-white mb-1">{state.name}</h3>
                           <p className="text-xs text-gray-500">{state.nameAr}</p>
                         </div>
                       </div>
-                      <div className="md:w-2/3 p-6">
+                      <div className="md:w-2/3 p-4 md:p-6">
                         <p className="text-base font-bold mb-3" style={{ color: state.color }}>{state.question}</p>
                         <p className="text-sm text-gray-400 leading-relaxed mb-4">{state.description}</p>
                         {(i === 0 || i === 1 || i === 2 || i === 3 || i === 4 || i === 5) && (
@@ -950,7 +966,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           </SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-4xl mx-auto">
-            <GlassCard glow={accent} className="p-10 md:p-14">
+            <GlassCard glow={accent} className="p-5 md:p-14">
               <div className="mb-8 flex justify-center">
                 <div className="w-20 h-20 rounded-2xl flex items-center justify-center relative overflow-hidden"
                   style={{ background: `linear-gradient(135deg, ${accentG}0.15), ${accentG}0.02))` }}>
@@ -985,7 +1001,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
             <AnimatePresence mode="wait">
               <motion.div key={currentScreenshot} initial={{ opacity: 0, x: 80 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -80 }} transition={{ duration: 0.4 }}>
                 <div className="rounded-2xl overflow-hidden relative" style={{ border: `1px solid ${accentG}0.12)`, boxShadow: `0 20px 60px rgba(0,0,0,0.4), 0 0 40px ${accentG}0.05)` }}>
-                  <img src={screenshots[currentScreenshot].url} alt={screenshots[currentScreenshot].title} className="w-full object-contain" style={{ maxHeight: "500px" }} />
+                  <img src={screenshots[currentScreenshot].url} alt={screenshots[currentScreenshot].title} className="w-full object-contain max-h-[300px] md:max-h-[500px]" />
                   <div className="absolute bottom-0 left-0 right-0 p-6" style={{ background: "linear-gradient(to top, rgba(6,10,16,0.95) 0%, transparent 100%)" }}>
                     <h3 className="text-xl font-black text-white mb-1">{screenshots[currentScreenshot].title}</h3>
                     <p className="text-sm text-gray-400">{screenshots[currentScreenshot].description}</p>
@@ -995,12 +1011,12 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
             </AnimatePresence>
 
             <button onClick={() => setCurrentScreenshot(p => (p - 1 + screenshots.length) % screenshots.length)}
-              className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-3" : "left-3"} w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-all cursor-pointer`}
+              className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "right-2 md:right-3" : "left-2 md:left-3"} w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center hover:scale-110 transition-all cursor-pointer`}
               style={{ background: "rgba(6,10,16,0.8)", border: `1px solid ${accentG}0.15)` }}>
               {isRTL ? <ChevronRight className="w-5 h-5 text-white" /> : <ChevronLeft className="w-5 h-5 text-white" />}
             </button>
             <button onClick={() => setCurrentScreenshot(p => (p + 1) % screenshots.length)}
-              className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "left-3" : "right-3"} w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-all cursor-pointer`}
+              className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "left-2 md:left-3" : "right-2 md:right-3"} w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center hover:scale-110 transition-all cursor-pointer`}
               style={{ background: "rgba(6,10,16,0.8)", border: `1px solid ${accentG}0.15)` }}>
               {isRTL ? <ChevronLeft className="w-5 h-5 text-white" /> : <ChevronRight className="w-5 h-5 text-white" />}
             </button>
@@ -1088,7 +1104,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-5 mb-10">
             {/* Does NOT */}
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-              <GlassCard glow="#ff1744" className="p-8 h-full">
+              <GlassCard glow="#ff1744" className="p-5 md:p-8 h-full">
                 <div className="text-center mb-6">
                   <motion.div className="inline-flex w-16 h-16 rounded-xl items-center justify-center mb-3" style={{ background: "rgba(255,23,68,0.12)" }}
                     animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
@@ -1119,7 +1135,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
 
             {/* DOES */}
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-              <GlassCard glow={accent} className="p-8 h-full">
+              <GlassCard glow={accent} className="p-5 md:p-8 h-full">
                 <div className="text-center mb-6">
                   <motion.div className="inline-flex w-16 h-16 rounded-xl items-center justify-center mb-3"
                     style={{ background: `${accentG}0.12)` }}
@@ -1153,7 +1169,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           </div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
-            <GlassCard glow="#a855f7" className="p-10 text-center">
+            <GlassCard glow="#a855f7" className="p-6 md:p-10 text-center">
               <motion.div animate={{ scale: [1, 1.03, 1] }} transition={{ duration: 3, repeat: Infinity }}>
                 <p className="text-2xl font-black text-white mb-3">{t("youRemainDecisionMaker")}</p>
                 <p className="text-lg font-light" style={{ color: "#a855f7" }}>{t("phaseXRemovesFog")}</p>
@@ -1212,7 +1228,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
           </SectionTitle>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-4xl mx-auto">
-            <GlassCard glow="#a855f7" className="p-10">
+            <GlassCard glow="#a855f7" className="p-6 md:p-10">
               <div className="text-center mb-8">
                 <div className="inline-flex w-16 h-16 rounded-xl items-center justify-center mb-4"
                   style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)", boxShadow: "0 10px 30px rgba(168,85,247,0.25)" }}>
@@ -1265,7 +1281,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
       <section className="py-20 relative z-10">
         <div className="container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
-            <GlassCard className="p-14 text-center space-y-8">
+            <GlassCard className="p-8 md:p-14 text-center space-y-8">
               <div className="space-y-3">
                 <p className="text-xl md:text-2xl text-gray-400">{t("marketsDontNeedMoreIndicators")}</p>
                 <p className="text-2xl md:text-3xl font-black" style={{ color: accent }}>{t("needBetterRepresentation")}</p>
