@@ -22,6 +22,7 @@ export interface AuthState {
   user: User | null;
   subscriptionStatus: SubscriptionStatus;
   subscriptionPlan: SubscriptionPlan;
+  hasMT5Access: boolean;
   hasAIAccess: boolean;
   aiTokens: number;
   referralCode: string;
@@ -32,8 +33,9 @@ export interface AuthState {
 interface AuthContextType extends AuthState {
   login: (email: string, name?: string) => void;
   logout: () => void;
-  submitReceipt: (plan: SubscriptionPlan, includeAI: boolean) => void;
-  activateSubscription: (plan: SubscriptionPlan, includeAI: boolean) => void;
+  submitReceipt: (plan: SubscriptionPlan, includeAI: boolean, includeMT5: boolean) => void;
+  activateSubscription: (plan: SubscriptionPlan, includeAI: boolean, includeMT5: boolean) => void;
+  activateMT5: () => void;
   consumeTokens: (amount: number) => boolean;
   addTokens: (amount: number) => void;
   applyReferralCode: (code: string) => { valid: boolean; discount: number };
@@ -69,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: null,
       subscriptionStatus: 'none',
       subscriptionPlan: 'none',
+      hasMT5Access: false,
       hasAIAccess: false,
       aiTokens: 0,
       referralCode: '',
@@ -97,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: null,
       subscriptionStatus: 'none',
       subscriptionPlan: 'none',
+      hasMT5Access: false,
       hasAIAccess: false,
       aiTokens: 0,
       referralCode: '',
@@ -105,22 +109,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const submitReceipt = (plan: SubscriptionPlan, includeAI: boolean) => {
+  const submitReceipt = (plan: SubscriptionPlan, includeAI: boolean, includeMT5: boolean = false) => {
     setState(prev => ({
       ...prev,
       subscriptionStatus: 'pending',
       subscriptionPlan: plan,
       hasAIAccess: includeAI,
+      hasMT5Access: includeMT5,
     }));
   };
 
-  const activateSubscription = (plan: SubscriptionPlan, includeAI: boolean) => {
+  const activateSubscription = (plan: SubscriptionPlan, includeAI: boolean, includeMT5: boolean = false) => {
     setState(prev => ({
       ...prev,
       subscriptionStatus: 'active',
       subscriptionPlan: plan,
       hasAIAccess: includeAI,
-      aiTokens: includeAI ? prev.aiTokens + 3000 : prev.aiTokens,
+      hasMT5Access: includeMT5,
+      aiTokens: includeAI ? prev.aiTokens + 700 : prev.aiTokens,
     }));
   };
 
@@ -143,6 +149,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const activateMT5 = () => {
+    setState(prev => ({
+      ...prev,
+      hasMT5Access: true
+    }));
+  };
+
   const applyReferralCode = (code: string): { valid: boolean; discount: number } => {
     // Validate: code must match PX-XXXX#### format and not be user's own code
     const trimmed = code.trim().toUpperCase();
@@ -162,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, submitReceipt, activateSubscription, consumeTokens, addTokens, applyReferralCode, addReferralEarning }}>
+    <AuthContext.Provider value={{ ...state, login, logout, submitReceipt, activateSubscription, activateMT5, consumeTokens, addTokens, applyReferralCode, addReferralEarning }}>
       {children}
     </AuthContext.Provider>
   );

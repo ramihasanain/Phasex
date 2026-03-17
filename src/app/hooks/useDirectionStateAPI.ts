@@ -71,26 +71,10 @@ function transformCandles(apiCandles: APICandle[]): ChartCandle[] {
     let prevDay = "";
 
     return sorted.map((c, idx) => {
-        const isLast = idx === sorted.length - 1;
-        let date: Date;
-        let display: string;
-        let full: string;
-
-        if (isLast) {
-            date = new Date();
-            const dd = date.getDate().toString().padStart(2, "0");
-            const mo = (date.getMonth() + 1).toString().padStart(2, "0");
-            const yr = date.getFullYear();
-            const hh = date.getHours().toString().padStart(2, "0");
-            const mm = date.getMinutes().toString().padStart(2, "0");
-            display = `${hh}:${mm}`;
-            full = `${dd}/${mo}/${yr} ${hh}:${mm}`;
-        } else {
-            const parsed = parseAPITime(c.time);
-            date = parsed.date;
-            display = parsed.display;
-            full = parsed.full;
-        }
+        const parsed = parseAPITime(c.time);
+        const date = parsed.date;
+        const display = parsed.display;
+        const full = parsed.full;
 
         const dd = date.getDate().toString().padStart(2, "0");
         const mo = (date.getMonth() + 1).toString().padStart(2, "0");

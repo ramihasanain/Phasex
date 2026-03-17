@@ -14,6 +14,8 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
   const { user, subscriptionPlan, subscriptionStatus, aiTokens, hasAIAccess, submitReceipt, applyReferralCode } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [aiAddon, setAiAddon] = useState(false);
+  const [mt5Addon, setMt5Addon] = useState(false);
+  const [mt5TermsAccepted, setMt5TermsAccepted] = useState(false);
   const [step, setStep] = useState<"plans" | "payment" | "pending">("plans");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [referralInput, setReferralInput] = useState("");
@@ -80,12 +82,13 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
 
   const handleFinish = () => {
       if (!selectedPlan) return;
-      submitReceipt(selectedPlan as any, aiAddon);
+      submitReceipt(selectedPlan as any, aiAddon, mt5Addon);
       setStep("pending");
       setTimeout(() => {
           onClose();
           setStep("plans");
           setAiAddon(false);
+          setMt5Addon(false);
           setSelectedPlan(null);
       }, 3000);
   };
@@ -96,7 +99,7 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
 
   const currentPlan = subscriptionPlans.find(p => p.id === selectedPlan);
   const getPrice = (basePrice: number) => billingCycle === "yearly" ? Math.round(basePrice * 12 * 0.8) : basePrice;
-  const subtotal = (currentPlan ? getPrice(currentPlan.price) : 0) + (aiAddon ? (billingCycle === "yearly" ? Math.round(20 * 12 * 0.8) : 20) : 0);
+  const subtotal = (currentPlan ? getPrice(currentPlan.price) : 0) + (aiAddon ? (billingCycle === "yearly" ? Math.round(20 * 12 * 0.8) : 20) : 0) + (mt5Addon ? (billingCycle === "yearly" ? Math.round(30 * 12 * 0.8) : 30) : 0);
   const referralDiscountAmount = referralApplied ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
   const totalAmount = subtotal - referralDiscountAmount;
 
@@ -365,6 +368,56 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
                                 </div>
                             </motion.div>
 
+                            {/* MT5 Add-on Section */}
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                                className="mt-4 p-6 md:p-8 rounded-[24px] flex flex-col md:flex-row items-center justify-between cursor-pointer border transition-all relative z-10"
+                                onClick={() => setMt5Addon(!mt5Addon)}
+                                style={{
+                                    backgroundColor: mt5Addon ? `rgba(99, 102, 241, 0.05)` : "#10141d",
+                                    borderColor: mt5Addon ? "#6366f1" : "#1c2230",
+                                    boxShadow: mt5Addon ? `0 10px 40px rgba(99,102,241,0.15), inset 0 0 20px rgba(99,102,241,0.05)` : 'none'
+                                }}
+                            >
+                                <div className="flex items-center gap-6 md:gap-8">
+                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] flex items-center justify-center relative bg-[#0b0e14] border border-[#6366f1]/30 shrink-0">
+                                        {mt5Addon && <motion.div className="absolute inset-0 rounded-[20px] border-2 border-dashed border-[#6366f1]/50" animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} />}
+                                        <Activity size={32} color={mt5Addon ? "#6366f1" : "#4b5563"} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl md:text-2xl font-black text-white mb-2 flex items-center gap-2">
+                                            {t("mt5IntegrationTitle")}
+                                        </h3>
+                                        <p className="text-sm md:text-base font-medium text-gray-400 max-w-2xl leading-relaxed">
+                                            {t("mt5IntegrationDesc")}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6 mt-6 md:mt-0 shrink-0 self-end md:self-auto">
+                                    <div className="text-right">
+                                        <div className="text-3xl md:text-4xl font-black text-[#6366f1]">$30</div>
+                                        <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500 mt-1">{t("perMonth")}</div>
+                                    </div>
+                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-colors ${mt5Addon ? 'border-[#6366f1] bg-[#6366f1]/20 text-[#6366f1]' : 'border-[#4b5563] text-transparent'}`}>
+                                        <Check size={20} strokeWidth={4} />
+                                    </div>
+                                </div>
+                            </motion.div>
+                            {mt5Addon && (
+                                <div className="mt-4 flex items-center gap-3">
+                                    <input 
+                                        type="checkbox" 
+                                        id="mt5TermsPanel" 
+                                        checked={mt5TermsAccepted} 
+                                        onChange={(e) => setMt5TermsAccepted(e.target.checked)} 
+                                        className="w-5 h-5 rounded border-gray-600 bg-[#0b0e14] checked:bg-[#6366f1] focus:ring-0 cursor-pointer accent-[#6366f1]"
+                                    />
+                                    <label htmlFor="mt5TermsPanel" className="text-sm font-medium text-gray-400 cursor-pointer select-none">
+                                        {t("mt5TermsAgreement")}
+                                    </label>
+                                </div>
+                            )}
+
                             {/* Referral Code Input */}
                             <div className="w-full max-w-[1400px] mx-auto mt-6 p-5 rounded-[24px] relative z-10" style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)" }}>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-[#a855f7] mb-3">{t("referralCodeInput")}</p>
@@ -404,8 +457,14 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
                                 <div className="font-bold text-lg md:text-xl text-gray-400 mb-6 sm:mb-0 text-center sm:text-left">
                                     {t("totalDue")} <span className="text-3xl md:text-4xl font-black text-white ml-2 block sm:inline mt-2 sm:mt-0">${totalAmount.toFixed(2)}</span>
                                 </div>
-                                <button onClick={() => setStep("payment")}
-                                    className="px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform hover:scale-[1.02] text-base md:text-lg w-full sm:w-auto cursor-pointer"
+                                <button onClick={() => {
+                                        if (mt5Addon && !mt5TermsAccepted) {
+                                            alert(language === 'ar' ? "يرجى الموافقة على الشروط والأحكام الخاصة بـ MT5 قبل المتابعة." : "Please agree to the MT5 Terms & Conditions before proceeding.");
+                                            return;
+                                        }
+                                        setStep("payment");
+                                    }}
+                                    className={`px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform ${(mt5Addon && !mt5TermsAccepted) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] cursor-pointer'} text-base md:text-lg w-full sm:w-auto`}
                                     style={{ background: `linear-gradient(90deg, #00e5a0, #00b37e)`, boxShadow: `0 10px 30px rgba(0,229,160,0.3)` }}>
                                     {t("checkoutPlan")} <ArrowRight size={20} />
                                 </button>
@@ -427,9 +486,12 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
                         <h2 className="text-3xl font-black text-white">{t("confirmPayment")}</h2>
                         <p className="text-gray-400 mt-2 text-base">{t("confirmPaymentDesc")}</p>
                         {currentPlan && (
-                          <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl" style={{ background: `${currentPlan.iconColor}10`, border: `1px solid ${currentPlan.iconColor}20` }}>
-                            <span className="text-sm font-black" style={{ color: currentPlan.iconColor }}>{currentPlan.name}</span>
-                            {aiAddon && <span className="text-xs font-bold text-[#00e5a0]">+ AI Insight</span>}
+                          <div className="flex flex-col items-center gap-2 mt-4 px-4 py-3 rounded-xl" style={{ background: `${currentPlan.iconColor}10`, border: `1px solid ${currentPlan.iconColor}20` }}>
+                            <div className="inline-flex gap-2 items-center">
+                                <span className="text-sm font-black" style={{ color: currentPlan.iconColor }}>{currentPlan.name}</span>
+                                {aiAddon && <span className="text-xs font-bold text-[#00e5a0]">| + AI Insight</span>}
+                                {mt5Addon && <span className="text-xs font-bold text-[#6366f1]">| + MT5 Integration</span>}
+                            </div>
                           </div>
                         )}
                     </div>

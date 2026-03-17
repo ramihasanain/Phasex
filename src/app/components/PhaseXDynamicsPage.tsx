@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Fragment } from "react";
 
 import { motion, AnimatePresence } from "motion/react";
 
@@ -409,7 +409,7 @@ function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTab; symb
     const cellBorderC = d ? "rgba(255,255,255,0.03)" : tk.border;
 
     const tvTab = (v: string) => {
-        switch(v) {
+        switch (v) {
             case "Vector Core": return t.vectorCore;
             case "Delta Engine": return t.deltaEngine;
             case "Pulse Matrix": return t.pulseMatrix;
@@ -568,10 +568,10 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
     const score = layerData.globalScorePct / 100;
 
     const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : v;
-    
+
     const tvTeam = (v: string) => {
         if (lang === "en") return v;
-        switch(v) {
+        switch (v) {
             case "Short Term": return t.shortTerm;
             case "Medium Term": return t.mediumTerm;
             case "Long Term": return t.longTerm;
@@ -582,7 +582,7 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
     };
 
     const tvTab = (v: string) => {
-        switch(v) {
+        switch (v) {
             case "Vector Core": return t.vectorCore;
             case "Delta Engine": return t.deltaEngine;
             case "Pulse Matrix": return t.pulseMatrix;
@@ -621,7 +621,8 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
     const borderC = d ? "rgba(255,255,255,0.06)" : tk.border;
     const tableBg = d ? "rgba(10,16,28,0.98)" : tk.surfaceElevated;
     return (
-        <div className="space-y-5">
+        <div className="flex justify-center w-full pb-8">
+            <div className="w-[95%] max-w-[1400px] xl:max-w-6xl space-y-6 px-2 lg:px-0">
             {/* ═══ Summary Cards Above Tables ═══ */}
             <div className="grid grid-cols-12 gap-4">
                 {/* ALL Summary Card */}
@@ -694,7 +695,8 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                 </div>
             </div>
             {/* ═══ Table 1: Indicator × Team ═══ */}
-            <Panel accent={`${accentG}0.04)`}>
+
+                    <Panel accent={`${accentG}0.04)`}>
                 <div className="p-5">
                     <div className="flex items-center gap-2.5 mb-4">
                         <motion.span className="text-xl" animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 3, repeat: Infinity }}> </motion.span>
@@ -752,8 +754,10 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                     </div>
                 </div>
             </Panel>
+
             {/* ═══ Table 2: Team × Indicator ═══ */}
-            <Panel accent={`${accentG}0.04)`}>
+
+                    <Panel accent={`${accentG}0.04)`}>
                 <div className="p-5">
                     <div className="flex items-center gap-2.5 mb-4">
                         <motion.span className="text-xl" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
@@ -773,17 +777,18 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                             </thead>
                             <tbody>
                                 {layerData.byTeam.map((tm, ti) => (
-                                    <>{tm.indicators.map((ind, ii) => (
-                                        <motion.tr key={`${ti}-${ii}`} className={d ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.02]'} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: (ti * 6 + ii) * 0.025 }}>
-                                            {ii === 0 && <td rowSpan={6} className="text-[14px] font-black py-3 px-4 border-r border-b" style={{ borderColor: borderC, background: d ? "rgba(0,200,255,0.04)" : "rgba(8,145,178,0.03)", verticalAlign: "middle", color: tk.textPrimary }}>{tvTeam(tm.team)}</td>}
-                                            <td className="text-[13px] font-semibold py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, color: tk.textMuted }}>{tvTab(ind.indicator)}</td>
-                                            <td className={tdCls} style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{ind.buy}</td>
-                                            <td className={tdCls} style={{ color: d ? "#ff1744" : "#dc2626", borderColor: borderC }}>{ind.sell}</td>
-                                            <td className={tdCls} style={{ ...cellStyle(ind.net), borderColor: borderC }}>{ind.net}</td>
-                                            <td className={tdCls} style={{ ...cellStyle(ind.dsr), borderColor: borderC }}>{(ind.dsr * 100).toFixed(0)}%</td>
-                                            <td className={tdClsLast} style={{ ...classStyle(ind.classification), borderColor: borderC }}>{tv(ind.classification)}</td>
-                                        </motion.tr>
-                                    ))}
+                                    <Fragment key={ti}>
+                                        {tm.indicators.map((ind, ii) => (
+                                            <motion.tr key={`${ti}-${ii}`} className={d ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.02]'} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: (ti * 6 + ii) * 0.025 }}>
+                                                {ii === 0 && <td rowSpan={6} className="text-[14px] font-black py-3 px-4 border-r border-b" style={{ borderColor: borderC, background: d ? "rgba(0,200,255,0.04)" : "rgba(8,145,178,0.03)", verticalAlign: "middle", color: tk.textPrimary }}>{tvTeam(tm.team)}</td>}
+                                                <td className="text-[13px] font-semibold py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, color: tk.textMuted }}>{tvTab(ind.indicator)}</td>
+                                                <td className={tdCls} style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{ind.buy}</td>
+                                                <td className={tdCls} style={{ color: d ? "#ff1744" : "#dc2626", borderColor: borderC }}>{ind.sell}</td>
+                                                <td className={tdCls} style={{ ...cellStyle(ind.net), borderColor: borderC }}>{ind.net}</td>
+                                                <td className={tdCls} style={{ ...cellStyle(ind.dsr), borderColor: borderC }}>{(ind.dsr * 100).toFixed(0)}%</td>
+                                                <td className={tdClsLast} style={{ ...classStyle(ind.classification), borderColor: borderC }}>{tv(ind.classification)}</td>
+                                            </motion.tr>
+                                        ))}
                                         <motion.tr style={{ background: "rgba(0,200,255,0.03)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: (ti * 6 + 5) * 0.025 }}>
                                             <td className="text-[13px] font-black py-2.5 px-4 border-r border-b" style={{ borderColor: borderC, color: d ? '#22d3ee' : '#0891b2' }}>{tvTeam("Over all")}</td>
                                             <td className={tdCls + " !font-black"} style={{ color: d ? "#00e676" : "#16a34a", borderColor: borderC }}>{tm.overall.buy}</td>
@@ -791,13 +796,15 @@ function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; isRTL: 
                                             <td className={tdCls + " !font-black"} style={{ ...cellStyle(tm.overall.net), borderColor: borderC }}>{tm.overall.net}</td>
                                             <td className={tdCls + " !font-black"} style={{ ...cellStyle(tm.overall.dsr), borderColor: borderC }}>{(tm.overall.dsr * 100).toFixed(0)}%</td>
                                             <td className={tdClsLast + " !font-black"} style={{ ...classStyle(tm.overall.classification), borderColor: borderC }}>{tv(tm.overall.classification)}</td>
-                                        </motion.tr></>
+                                        </motion.tr>
+                                    </Fragment>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </Panel>
+            </div>
         </div>
     );
 }
@@ -836,7 +843,7 @@ function TradingDecisionEngineTable({
     }) || [];
 
     const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : v;
-    
+
     // Translation logic for headers
     const tvh = (h: string) => {
         if (lang === "ar") {
@@ -937,114 +944,114 @@ function TradingDecisionEngineTable({
         <div className="flex justify-center w-full">
             <div className="w-full max-w-[1200px] space-y-4">
                 {/* Local Filters for Decision Engine */}
-            <div className="grid grid-cols-1 gap-4 mb-2">
-                {/* Market Filter */}
-                <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{lang === "ar" ? "السوق:" : lang === "ru" ? "РЫНОК:" : lang === "tr" ? "PİYASA:" : "MARKET:"}</span>
-                    {marketCategories.map(c => (
-                        <button key={c.name} onClick={() => onCategoryChange(c.name)}
-                            className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all
+                <div className="grid grid-cols-1 gap-4 mb-2">
+                    {/* Market Filter */}
+                    <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{lang === "ar" ? "السوق:" : lang === "ru" ? "РЫНОК:" : lang === "tr" ? "PİYASA:" : "MARKET:"}</span>
+                        {marketCategories.map(c => (
+                            <button key={c.name} onClick={() => onCategoryChange(c.name)}
+                                className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all
                                 ${category === c.name ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-transparent text-gray-400 hover:bg-white/5"}`}>
-                            <span className="text-sm">{c.icon}</span>
-                            <span>{lang === "ar" ? c.nameAr : lang === "ru" ? t[c.name.toLowerCase() as keyof typeof t] : lang === "tr" ? t[c.name.toLowerCase() as keyof typeof t] : c.name}</span>
-                        </button>
-                    ))}
-                </div>
-                {/* Decision Filter */}
-                <div className="p-3 rounded-xl flex items-center justify-between gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{globalT("decision")}:</span>
-                        {["ALL", "STRONG BUY", "BUY", "WEAK BUY", "NO TRADE", "WEAK SELL", "SELL", "STRONG SELL"].map(df => {
-                            let styleCls = "bg-transparent text-gray-400 hover:bg-white/5";
-                            if (decisionFilter === df) {
-                                switch (df) {
-                                    case "STRONG BUY": styleCls = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]"; break;
-                                    case "BUY": styleCls = "bg-lime-500/20 text-lime-400 border border-lime-500/30 shadow-[0_0_10px_rgba(132,204,22,0.15)]"; break;
-                                    case "WEAK BUY": styleCls = "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]"; break;
-                                    case "NO TRADE": styleCls = "bg-slate-500/20 text-slate-300 border border-slate-500/30 shadow-[0_0_10px_rgba(100,116,139,0.15)]"; break;
-                                    case "WEAK SELL": styleCls = "bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"; break;
-                                    case "SELL": styleCls = "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-[0_0_10px_rgba(225,29,72,0.15)]"; break;
-                                    case "STRONG SELL": styleCls = "bg-red-500/20 text-red-400 border border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.25)]"; break;
-                                    case "ALL": styleCls = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]"; break;
+                                <span className="text-sm">{c.icon}</span>
+                                <span>{lang === "ar" ? c.nameAr : lang === "ru" ? t[c.name.toLowerCase() as keyof typeof t] : lang === "tr" ? t[c.name.toLowerCase() as keyof typeof t] : c.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                    {/* Decision Filter */}
+                    <div className="p-3 rounded-xl flex items-center justify-between gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{globalT("decision")}:</span>
+                            {["ALL", "STRONG BUY", "BUY", "WEAK BUY", "NO TRADE", "WEAK SELL", "SELL", "STRONG SELL"].map(df => {
+                                let styleCls = "bg-transparent text-gray-400 hover:bg-white/5";
+                                if (decisionFilter === df) {
+                                    switch (df) {
+                                        case "STRONG BUY": styleCls = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]"; break;
+                                        case "BUY": styleCls = "bg-lime-500/20 text-lime-400 border border-lime-500/30 shadow-[0_0_10px_rgba(132,204,22,0.15)]"; break;
+                                        case "WEAK BUY": styleCls = "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]"; break;
+                                        case "NO TRADE": styleCls = "bg-slate-500/20 text-slate-300 border border-slate-500/30 shadow-[0_0_10px_rgba(100,116,139,0.15)]"; break;
+                                        case "WEAK SELL": styleCls = "bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]"; break;
+                                        case "SELL": styleCls = "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-[0_0_10px_rgba(225,29,72,0.15)]"; break;
+                                        case "STRONG SELL": styleCls = "bg-red-500/20 text-red-400 border border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.25)]"; break;
+                                        case "ALL": styleCls = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]"; break;
+                                    }
                                 }
-                            }
-                            
-                            const getDecLabel = (d: string) => {
-                                if (lang === "ar") return { "ALL": "الكل", "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" }[d] || d;
-                                if (lang === "ru") return { "ALL": "Все", "STRONG BUY": "СИЛЬНО ПОКУПАТЬ", "BUY": "ПОКУПАТЬ", "WEAK BUY": "СЛАБО ПОКУПАТЬ", "NO TRADE": "ВНЕ РЫНКА", "WEAK SELL": "СЛАБО ПРОДАВАТЬ", "SELL": "ПРОДАВАТЬ", "STRONG SELL": "СИЛЬНО ПРОДАВАТЬ" }[d] || d;
-                                if (lang === "tr") return { "ALL": "Tümü", "STRONG BUY": "GÜÇLÜ AL", "BUY": "AL", "WEAK BUY": "ZAYIF AL", "NO TRADE": "İŞLEM YOK", "WEAK SELL": "ZAYIF SAT", "SELL": "SAT", "STRONG SELL": "GÜÇLÜ SAT" }[d] || d;
-                                if (lang === "fr") return { "ALL": "Tout", "STRONG BUY": "ACHAT FORT", "BUY": "ACHAT", "WEAK BUY": "ACHAT FAIBLE", "NO TRADE": "AUCUN TRADE", "WEAK SELL": "VENTE FAIBLE", "SELL": "VENTE", "STRONG SELL": "VENTE FORTE" }[d] || d;
-                                if (lang === "es") return { "ALL": "Todo", "STRONG BUY": "COMPRA FUERTE", "BUY": "COMPRA", "WEAK BUY": "COMPRA DÉBIL", "NO TRADE": "SIN TRADE", "WEAK SELL": "VENTA DÉBIL", "SELL": "VENTA", "STRONG SELL": "VENTA FUERTE" }[d] || d;
-                                return d;
-                            };
-                            
-                            const count = df === "ALL" ? rows.length : rows.filter(r => r.decision === df).length;
 
-                            return (
-                                <button key={df} onClick={() => setDecisionFilter(df as any)}
-                                    className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-1.5 ${styleCls} ${count === 0 ? "opacity-50" : ""}`}>
-                                    <span>{getDecLabel(df)}</span>
-                                    <span className="bg-black/20 px-1.5 py-0.5 rounded text-[10px] ml-1">{count}</span>
-                                </button>
-                            );
-                        })}
+                                const getDecLabel = (d: string) => {
+                                    if (lang === "ar") return { "ALL": "الكل", "STRONG BUY": "شراء قوي", "BUY": "شراء", "WEAK BUY": "شراء ضعيف", "NO TRADE": "لا تداول", "WEAK SELL": "بيع ضعيف", "SELL": "بيع", "STRONG SELL": "بيع قوي" }[d] || d;
+                                    if (lang === "ru") return { "ALL": "Все", "STRONG BUY": "СИЛЬНО ПОКУПАТЬ", "BUY": "ПОКУПАТЬ", "WEAK BUY": "СЛАБО ПОКУПАТЬ", "NO TRADE": "ВНЕ РЫНКА", "WEAK SELL": "СЛАБО ПРОДАВАТЬ", "SELL": "ПРОДАВАТЬ", "STRONG SELL": "СИЛЬНО ПРОДАВАТЬ" }[d] || d;
+                                    if (lang === "tr") return { "ALL": "Tümü", "STRONG BUY": "GÜÇLÜ AL", "BUY": "AL", "WEAK BUY": "ZAYIF AL", "NO TRADE": "İŞLEM YOK", "WEAK SELL": "ZAYIF SAT", "SELL": "SAT", "STRONG SELL": "GÜÇLÜ SAT" }[d] || d;
+                                    if (lang === "fr") return { "ALL": "Tout", "STRONG BUY": "ACHAT FORT", "BUY": "ACHAT", "WEAK BUY": "ACHAT FAIBLE", "NO TRADE": "AUCUN TRADE", "WEAK SELL": "VENTE FAIBLE", "SELL": "VENTE", "STRONG SELL": "VENTE FORTE" }[d] || d;
+                                    if (lang === "es") return { "ALL": "Todo", "STRONG BUY": "COMPRA FUERTE", "BUY": "COMPRA", "WEAK BUY": "COMPRA DÉBIL", "NO TRADE": "SIN TRADE", "WEAK SELL": "VENTA DÉBIL", "SELL": "VENTA", "STRONG SELL": "VENTA FUERTE" }[d] || d;
+                                    return d;
+                                };
+
+                                const count = df === "ALL" ? rows.length : rows.filter(r => r.decision === df).length;
+
+                                return (
+                                    <button key={df} onClick={() => setDecisionFilter(df as any)}
+                                        className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-1.5 ${styleCls} ${count === 0 ? "opacity-50" : ""}`}>
+                                        <span>{getDecLabel(df)}</span>
+                                        <span className="bg-black/20 px-1.5 py-0.5 rounded text-[10px] ml-1">{count}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid rgba(0, 200, 255, 0.15)` }}>
-                <table className="w-full border-collapse whitespace-nowrap">
-                    <thead>
-                        <tr style={{ background: "rgba(10,16,28,0.98)" }}>
-                            {["Symbol", "Primary Trend", "Structural Bias", "Momentum", "Phase", "Volatility", "Reversal Risk", "Confidence", "Market Phase", "Decision"].map((h, i) => (
-                                <th key={i} className="text-left py-2 px-3 text-[10px] font-black tracking-widest uppercase text-cyan-400 border-r border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }} dir="auto">
-                                    {tvh(h)}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredRows.map((r, i) => (
-                            <motion.tr key={r.sym}
-                                onClick={() => onSymbolSelect(r.sym)}
-                                className={`cursor-pointer transition-colors ${selectedSymbol === r.sym ? "bg-cyan-500/10" : "hover:bg-white/[0.04]"}`}
-                                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold text-white flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                                    <span className="text-base">{symbolIcons[r.sym]?.icon || '📈'}</span> {r.sym}
-                                </td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.primaryTrendFull) }}>{tv(r.primaryTrendFull)}</td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.structuralBias) }}>{tv(r.structuralBias)}</td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.momentumState) }}>{tv(r.momentumState)}</td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.phase === "Directional" ? "#00e676" : r.phase === "Developing" ? "#ffc400" : "#ff1744" }}>{tv(r.phase)}</td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.volatility === "Elevated" ? "#ff1744" : r.volatility === "Moderate" ? "#ffc400" : "#00e676" }}>{tv(r.volatility)}</td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.reversalRisk === "Low" ? "#00e676" : r.reversalRisk === "Moderate" ? "#ffc400" : "#ff1744" }}>{tv(r.reversalRisk)}</td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.confidence >= 70 ? "#00e5ff" : r.confidence >= 40 ? "#ffab00" : "#ff6e40" }}>
-                                    {lang === "en" ? r.confStr : r.confidence >= 70 ? t.aiHigh : r.confidence >= 40 ? t.aiMed : t.aiLow}
-                                </td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.marketPhase) }}>{tv(r.marketPhase)}</td>
-                                <td className="py-2 px-3 border-r border-b text-[11px] font-black tracking-wider" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                                    {r.decision === "STRONG BUY" && <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-md shadow-[0_0_15px_rgba(16,185,129,0.4)] block text-center min-w-[75px] border border-emerald-500/40">{globalT("strongBuyStr")}</span>}
-                                    {r.decision === "BUY" && <span className="bg-lime-500/20 text-lime-400 px-2 py-1 rounded-md shadow-[0_0_10px_rgba(132,204,22,0.2)] block text-center min-w-[75px] border border-lime-500/30">{globalT("buyStr")}</span>}
-                                    {r.decision === "WEAK BUY" && <span className="bg-yellow-500/15 text-yellow-500 px-2 py-1 rounded-md block text-center min-w-[75px] border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]">{globalT("weakBuyStr")}</span>}
-                                    {r.decision === "STRONG SELL" && <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-md shadow-[0_0_15px_rgba(239,68,68,0.4)] block text-center min-w-[75px] border border-red-500/40">{globalT("strongSellStr")}</span>}
-                                    {r.decision === "SELL" && <span className="bg-rose-500/20 text-rose-400 px-2 py-1 rounded-md shadow-[0_0_10px_rgba(225,29,72,0.2)] block text-center min-w-[75px] border border-rose-500/30">{globalT("sellStr")}</span>}
-                                    {r.decision === "WEAK SELL" && <span className="bg-orange-500/15 text-orange-500 px-2 py-1 rounded-md block text-center min-w-[75px] border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]">{globalT("weakSellStr")}</span>}
-                                    {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-400 px-2 py-1 rounded-md block text-center min-w-[75px] border border-slate-500/30">{globalT("noTradeStr")}</span>}
-                                </td>
-                            </motion.tr>
-                        ))}
-                        {filteredRows.length === 0 && (
-                            <tr>
-                                <td colSpan={10} className="py-8 text-center text-gray-500 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                                    {lang === "ar" ? "لا يوجد بيانات لهذه التصفية" : lang === "ru" ? "Нет данных по этому фильтру" : lang === "tr" ? "Bu filtreyle eşleşen veri yok" : "No symbols match this filter"}
-                                </td>
+                {/* Table */}
+                <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid rgba(0, 200, 255, 0.15)` }}>
+                    <table className="w-full border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr style={{ background: "rgba(10,16,28,0.98)" }}>
+                                {["Symbol", "Primary Trend", "Structural Bias", "Momentum", "Phase", "Volatility", "Reversal Risk", "Confidence", "Market Phase", "Decision"].map((h, i) => (
+                                    <th key={i} className="text-left py-2 px-3 text-[10px] font-black tracking-widest uppercase text-cyan-400 border-r border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }} dir="auto">
+                                        {tvh(h)}
+                                    </th>
+                                ))}
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredRows.map((r, i) => (
+                                <motion.tr key={r.sym}
+                                    onClick={() => onSymbolSelect(r.sym)}
+                                    className={`cursor-pointer transition-colors ${selectedSymbol === r.sym ? "bg-cyan-500/10" : "hover:bg-white/[0.04]"}`}
+                                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold text-white flex items-center gap-2" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                        <span className="text-base">{symbolIcons[r.sym]?.icon || '📈'}</span> {r.sym}
+                                    </td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.primaryTrendFull) }}>{tv(r.primaryTrendFull)}</td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.structuralBias) }}>{tv(r.structuralBias)}</td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.momentumState) }}>{tv(r.momentumState)}</td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.phase === "Directional" ? "#00e676" : r.phase === "Developing" ? "#ffc400" : "#ff1744" }}>{tv(r.phase)}</td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.volatility === "Elevated" ? "#ff1744" : r.volatility === "Moderate" ? "#ffc400" : "#00e676" }}>{tv(r.volatility)}</td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.reversalRisk === "Low" ? "#00e676" : r.reversalRisk === "Moderate" ? "#ffc400" : "#ff1744" }}>{tv(r.reversalRisk)}</td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: r.confidence >= 70 ? "#00e5ff" : r.confidence >= 40 ? "#ffab00" : "#ff6e40" }}>
+                                        {lang === "en" ? r.confStr : r.confidence >= 70 ? t.aiHigh : r.confidence >= 40 ? t.aiMed : t.aiLow}
+                                    </td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-bold" style={{ borderColor: 'rgba(255,255,255,0.06)', color: getTrendColor(r.marketPhase) }}>{tv(r.marketPhase)}</td>
+                                    <td className="py-2 px-3 border-r border-b text-[11px] font-black tracking-wider" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                        {r.decision === "STRONG BUY" && <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-md shadow-[0_0_15px_rgba(16,185,129,0.4)] block text-center min-w-[75px] border border-emerald-500/40">{globalT("strongBuyStr")}</span>}
+                                        {r.decision === "BUY" && <span className="bg-lime-500/20 text-lime-400 px-2 py-1 rounded-md shadow-[0_0_10px_rgba(132,204,22,0.2)] block text-center min-w-[75px] border border-lime-500/30">{globalT("buyStr")}</span>}
+                                        {r.decision === "WEAK BUY" && <span className="bg-yellow-500/15 text-yellow-500 px-2 py-1 rounded-md block text-center min-w-[75px] border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]">{globalT("weakBuyStr")}</span>}
+                                        {r.decision === "STRONG SELL" && <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded-md shadow-[0_0_15px_rgba(239,68,68,0.4)] block text-center min-w-[75px] border border-red-500/40">{globalT("strongSellStr")}</span>}
+                                        {r.decision === "SELL" && <span className="bg-rose-500/20 text-rose-400 px-2 py-1 rounded-md shadow-[0_0_10px_rgba(225,29,72,0.2)] block text-center min-w-[75px] border border-rose-500/30">{globalT("sellStr")}</span>}
+                                        {r.decision === "WEAK SELL" && <span className="bg-orange-500/15 text-orange-500 px-2 py-1 rounded-md block text-center min-w-[75px] border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]">{globalT("weakSellStr")}</span>}
+                                        {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-400 px-2 py-1 rounded-md block text-center min-w-[75px] border border-slate-500/30">{globalT("noTradeStr")}</span>}
+                                    </td>
+                                </motion.tr>
+                            ))}
+                            {filteredRows.length === 0 && (
+                                <tr>
+                                    <td colSpan={10} className="py-8 text-center text-gray-500 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                        {lang === "ar" ? "لا يوجد بيانات لهذه التصفية" : lang === "ru" ? "Нет данных по этому фильтру" : lang === "tr" ? "Bu filtreyle eşleşen veri yok" : "No symbols match this filter"}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
         </div>
     );
 }
@@ -1084,10 +1091,10 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
 
     const t = i18n[lang];
 
-    const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : lang === "fr" ? ((trendFr as Record<string,string>)[v] || v) : lang === "es" ? ((trendEs as Record<string,string>)[v] || v) : v;
+    const tv = (v: string) => lang === "ar" ? (trendAr[v] || v) : lang === "ru" ? (trendRu[v] || v) : lang === "tr" ? (trendTr[v] || v) : lang === "fr" ? ((trendFr as Record<string, string>)[v] || v) : lang === "es" ? ((trendEs as Record<string, string>)[v] || v) : v;
 
     const tvTab = (v: string) => {
-        switch(v) {
+        switch (v) {
             case "Vector Core": return t.vectorCore;
             case "Delta Engine": return t.deltaEngine;
             case "Pulse Matrix": return t.pulseMatrix;
@@ -1194,6 +1201,56 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
                     if (!res.ok) return;
                     const data = await res.json();
                     if (!data?.files) return;
+
+                    // Dynamically map symbols from the fast endpoint (idx === 0)
+                    if (idx === 0) {
+                        const firstFile = data.files[0];
+                        if (firstFile?.payload) {
+                            const keys = Object.keys(firstFile.payload);
+                            if (keys.length > 0) {
+                                const catMap: Record<string, Set<string>> = {
+                                    "Forex": new Set(),
+                                    "Commodities": new Set(),
+                                    "Indices": new Set(),
+                                    "Crypto": new Set(),
+                                    "Other": new Set()
+                                };
+
+                                keys.forEach(k => {
+                                    const parts = k.split(" - ");
+                                    if (parts.length === 2) {
+                                        const rawSymbol = parts[0];
+                                        const rawCat = parts[1];
+                                        // Extract base symbol (e.g., USDCAD from USDCAD.sd)
+                                        const sym = rawSymbol.split(".")[0];
+                                        
+                                        // Update the global lookup map
+                                        symbolToJsonKey[sym] = k;
+
+                                        let targetCat = "Other";
+                                        if (rawCat === "FOREX") targetCat = "Forex";
+                                        else if (rawCat === "COMMODITY") targetCat = "Commodities";
+                                        else if (rawCat === "INDEX") targetCat = "Indices";
+                                        else if (rawCat === "CRYPTO") targetCat = "Crypto";
+
+                                        catMap[targetCat].add(sym);
+                                    }
+                                });
+
+                                // Update the mutable marketCategories array
+                                marketCategories.forEach(mc => {
+                                    if (mc.name !== "All") {
+                                        mc.symbols = Array.from(catMap[mc.name as string] || []);
+                                    }
+                                });
+                                
+                                const allCat = marketCategories.find(c => c.name === "All");
+                                if (allCat) {
+                                    allCat.symbols = marketCategories.filter(c => c.name !== "All").flatMap(c => c.symbols);
+                                }
+                            }
+                        }
+                    }
 
                     for (const file of data.files) {
                         const tab = fileNameToTab(file.name);
@@ -1481,9 +1538,8 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                             setLanguageKey(lang.code as any);
                                                             setLangDropdownOpen(false);
                                                         }}
-                                                        className={`flex items-center gap-2 px-3 py-2.5 text-xs transition-colors text-left ${
-                                                            language === lang.code ? "bg-white/10 text-white font-bold" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
-                                                        }`}
+                                                        className={`flex items-center gap-2 px-3 py-2.5 text-xs transition-colors text-left ${language === lang.code ? "bg-white/10 text-white font-bold" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                                                            }`}
                                                     >
                                                         <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
                                                         <span>{lang.label}</span>
@@ -1505,7 +1561,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                     </div>
                 </div>
             </header>
-            
+
             {/* ═ ═ ═  BREAKING NEWS BAR ═ ═_═  */}
             <AnimatePresence>
                 {isNewsOpen && (
@@ -1608,7 +1664,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                     style={{ border: `1px solid ${accent}` }}
                                     animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
                                     transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 1 }} />
-                                
+
                                 <motion.button
                                     onClick={() => setIsAiPanelOpen(true)}
                                     className="w-14 h-14 rounded-full flex items-center justify-center relative overflow-hidden group hover:scale-110 transition-transform cursor-pointer"
@@ -1665,7 +1721,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                     {/* Sci-fi background grid */}
                                     <div className="absolute inset-0 pointer-events-none opacity-20"
                                         style={{ backgroundImage: `linear-gradient(${accent} 1px, transparent 1px), linear-gradient(90deg, ${accent} 1px, transparent 1px)`, backgroundSize: "30px 30px" }} />
-                                    
+
                                     <button onClick={() => setIsAiPanelOpen(false)} className={`absolute top-5 ${isRTL ? "left-5" : "right-5"} text-gray-400 hover:text-white transition-colors z-20`}>
                                         <X size={28} />
                                     </button>
@@ -1678,7 +1734,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                 animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} />
                                             <PhaseXBotIcon size={44} color={accent} style={{ filter: `drop-shadow(0 0 12px ${accent})` }} />
                                         </div>
-                                        
+
                                         <div className="flex-1">
                                             <h3 className="text-xl font-black mb-4 flex items-center gap-3 tracking-wider uppercase" style={{ color: accent }}>
                                                 <Zap size={20} />

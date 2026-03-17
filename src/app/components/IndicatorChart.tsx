@@ -492,8 +492,17 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     if (rawSlice.length > 0 && startIndex + rawSlice.length >= effectiveData.length) {
       const isExcludedTarget = isDisplacementIndicator || isReferenceIndicator || isOscillationIndicator || isEnvelopIndicator;
       if (!isExcludedTarget) {
-        const lastIdx = rawSlice.length - 1;
-        rawSlice[lastIdx] = { ...rawSlice[lastIdx], isLiveIndicator: true };
+        const lastCandle = rawSlice[rawSlice.length - 1];
+        rawSlice.push({
+          time: "Live\nNow",
+          value: lastCandle.close || lastCandle.value,
+          open: lastCandle.close || lastCandle.value,
+          high: lastCandle.close || lastCandle.value,
+          low: lastCandle.close || lastCandle.value,
+          close: lastCandle.close || lastCandle.value,
+          timestamp: Date.now(),
+          isLiveIndicator: true
+        });
       }
     }
     return rawSlice;

@@ -395,8 +395,15 @@ export const en = {
 
     // AI Add-on
     aiInsightTitle: "Phase-X AI Insight",
-    aiInsightDesc: "Unlock elite AI analytics. Get 3,000 AI Tokens to power live radar scans and conversational insights instantly.",
+    aiInsightDesc: "Unlock elite AI analytics. Get 700 AI Tokens to power live radar scans instantly.",
     aiAddonLabel: "/ Add-on",
+    
+    // MT5 Integration
+    mt5IntegrationTitle: "MT5 Protocol Integration",
+    mt5IntegrationDesc: "Connect directly to MetaTrader 5 via the Metaapai API for seamless trade execution. By enabling this, you agree that you are connecting to a third-party service provider (Metaapai) and understand that PHASEX serves solely as an intermediary interface.",
+    mt5PriceLabel: "$30 / month",
+    mt5TermsAgreement: "I agree to the MT5 Integration Privacy Policy and Terms & Conditions.",
+    mt5EnableBtn: "Enable MT5 Integration",
 
     // Billing Toggle
     billingMonthly: "Monthly",

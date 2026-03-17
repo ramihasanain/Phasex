@@ -24,11 +24,12 @@ import { useOscillationStateAPI } from "../hooks/useOscillationStateAPI";
 import { useDisplacementStateAPI } from "../hooks/useDisplacementStateAPI";
 import { useReferenceStateAPI } from "../hooks/useReferenceStateAPI";
 import { BreakingNews } from "./BreakingNews";
-import { AIChatBot } from "./AIChatBot";
+
 import { AITradeSignalWidget } from "./AITradeSignalWidget";
 import { UserProfile } from "./UserProfile";
 import { useAuth } from "../contexts/AuthContext";
-import { Bot, Sparkles } from "lucide-react";
+import { useMT5, MT5Credentials } from "../hooks/useMT5";
+import { Bot, Sparkles, Wifi, WifiOff, RefreshCw, ChevronUp, DollarSign, TrendingUp as TrendUp, ArrowUpDown, Eye, EyeOff, Server, CircleCheck, Check, Copy } from "lucide-react";
 
 /* ─── Types ─── */
 interface TradingDashboardProps {
@@ -180,7 +181,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
   const tk = useThemeTokens();
-  const { subscriptionStatus, subscriptionPlan } = useAuth();
+  const { subscriptionStatus, subscriptionPlan, hasMT5Access, activateMT5 } = useAuth();
   const { language, setLanguageKey, t } = useLanguage();
   const isRTL = language === "ar";
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -228,26 +229,65 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [liveChartData, setLiveChartData] = useState<any[]>([]);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(false);
   const [timeframe, setTimeframe] = useState<number>(15);
   const [mtfEnabled, setMtfEnabled] = useState(false);
+  const [isMT5PanelOpen, setIsMT5PanelOpen] = useState(true);
+  const [isMT5LoginOpen, setIsMT5LoginOpen] = useState(false);
+  const [isMT5SubscribeOpen, setIsMT5SubscribeOpen] = useState(false);
+  const [mt5SubscribeTermsAccepted, setMt5SubscribeTermsAccepted] = useState(false);
+  const [isMT5Processing, setIsMT5Processing] = useState(false);
+  const [isMT5Pending, setIsMT5Pending] = useState(false);
+  const [mt5Creds, setMT5Creds] = useState<MT5Credentials>({ login: '', password: '', server: '' });
+  const [showMT5Password, setShowMT5Password] = useState(false);
   const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<number>(5);
   const [mtfLargeTimeframe, setMtfLargeTimeframe] = useState<number>(240);
   const hasOpenedModalRef = useRef(false);
 
   useEffect(() => {
     if (subscriptionStatus === 'none' && !hasOpenedModalRef.current) {
-        setIsSubscriptionOpen(true);
-        hasOpenedModalRef.current = true;
+      setIsSubscriptionOpen(true);
+      hasOpenedModalRef.current = true;
     }
   }, [subscriptionStatus]);
 
   const subInfo = { isActive: subscriptionStatus === 'active', daysRemaining: subscriptionStatus === 'active' ? 14 : 0 };
 
+  // Derive list of symbol names from the active tab's backend data
+  const activeSymbols = useMemo(() => filteredAssets.map(a => a.symbol), [filteredAssets]);
+
   // Live WebSocket prices
-  const { prices: livePrices, initialPrices, connected: wsConnected } = useLivePrices();
+  const { prices: livePrices, initialPrices, connected: wsConnected } = useLivePrices(activeSymbols);
+
+  // MT5 Live Connection
+  const {
+    connected: mt5Connected,
+    connecting: mt5Connecting,
+    connectMT5,
+    disconnectMT5,
+    account: mt5Account,
+    positions: mt5Positions,
+    positionsLoading: mt5PositionsLoading,
+    error: mt5Error,
+    refreshAccount: refreshMT5Account,
+    refreshPositions: refreshMT5Positions,
+    executeTrade,
+    closePosition,
+    closeAllPositions,
+    symbolOverrides,
+    setSymbolOverride,
+    // Server-side auto-trade
+    serverAutoTrades,
+    addAutoTrade,
+    removeAutoTrade,
+    // Server-side trade history
+    serverTradeHistory,
+    fetchTradeHistory,
+    addTradeToHistory,
+    clearServerHistory,
+  } = useMT5();
 
   // WebSocket symbol aliases: WS name → API symbol code
   const WS_ALIASES: Record<string, string> = {
@@ -287,6 +327,20 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
           if (livePrices[alias]) {
             live = livePrices[alias];
             matchedKey = alias;
+            break;
+          }
+        }
+      }
+
+      // Dynamic Loose Match for new symbols (e.g. 'COFFEERoll' -> 'COFFEE', 'USCOCOARoll' -> 'COCOA')
+      if (!live) {
+        const cleanSymbol = asset.symbol.replace(/Roll$/i, "").toUpperCase();
+        const availableKeys = Object.keys(livePrices);
+        for (const wsKey of availableKeys) {
+          const cleanWsKey = wsKey.replace(/\.p$/i, "").toUpperCase();
+          if (cleanSymbol.includes(cleanWsKey) || cleanWsKey.includes(cleanSymbol)) {
+            live = livePrices[wsKey];
+            matchedKey = wsKey;
             break;
           }
         }
@@ -357,7 +411,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
     const liveMatch = liveAssets.find(a => a.id === selectedAsset.id);
     const p = liveMatch ? liveMatch.price : selectedAsset.price;
     const c = liveMatch ? liveMatch.changePercent : selectedAsset.changePercent;
-    
+
     // Get the latest reading from each state indicator
     const currentPhase = phaseCandles.length > 0 ? phaseCandles[phaseCandles.length - 1].value : 'No Data';
     const currentDir = dirCandles.length > 0 ? dirCandles[dirCandles.length - 1].value : 'No Data';
@@ -401,13 +455,13 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
     `.trim();
   }, [selectedAsset, liveAssets, timeframe, selectedIndicator, phaseCandles, dirCandles, oscCandles, dispCandles, refCandles, envCandles,
     liveChartData,
-  mtfEnabled, mtfLargeTimeframe, mtfSmallTimeframe, chartData]);
+    mtfEnabled, mtfLargeTimeframe, mtfSmallTimeframe, chartData]);
 
   return (
     <div className="min-h-screen overflow-x-hidden" dir={isRTL ? "rtl" : "ltr"} style={{ background: tk.bg, fontFamily: "'Inter', system-ui, sans-serif", transition: "background 0.3s" }}>
 
       {/* ═══════════════ HEADER ═══════════════ */}
-      <header className="relative z-40" style={{ 
+      <header className="relative z-40" style={{
         background: tk.isDark ? 'linear-gradient(180deg, rgba(6,10,16,0.95) 0%, rgba(6,10,16,0.85) 100%)' : tk.headerBg,
         backdropFilter: tk.isDark ? 'blur(20px)' : undefined,
         borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.headerBorder}`,
@@ -418,13 +472,13 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
           style={{ background: 'linear-gradient(90deg, transparent, #6366f1 30%, #a855f7 50%, #6366f1 70%, transparent)' }}
           animate={{ opacity: [0.3, 0.7, 0.3] }}
           transition={{ duration: 3, repeat: Infinity }} />}
-        
+
         {/* Subtle animated scan line — dark only */}
         {tk.isDark && <motion.div className="absolute inset-0 pointer-events-none z-0"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.03), transparent)', width: '30%' }}
           animate={{ x: ['-100%', '400%'] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'linear' }} />}
-        
+
         {/* Grid pattern — dark only */}
         {tk.isDark && <div className="absolute inset-0 pointer-events-none z-0" style={{
           backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)',
@@ -459,9 +513,49 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
               <span>{t("structuralDynamics")}</span>
             </motion.button>
 
+            {/* MT5 Connection Button */}
+            <motion.button
+              onClick={() => {
+                if (!hasMT5Access) {
+                  setIsMT5SubscribeOpen(true);
+                  return;
+                }
+                mt5Connected ? disconnectMT5() : setIsMT5LoginOpen(true);
+              }}
+              whileHover={{ scale: 1.04, boxShadow: mt5Connected ? '0 4px 15px rgba(16,185,129,0.15)' : '0 4px 15px rgba(239,68,68,0.15)' }}
+              whileTap={{ scale: 0.96 }}
+              disabled={mt5Connecting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer relative overflow-hidden"
+              style={{
+                color: mt5Connecting ? tk.warning : mt5Connected ? '#10b981' : '#ef4444',
+                background: mt5Connecting ? tk.warningBg : mt5Connected ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+                border: `1px solid ${mt5Connecting ? 'rgba(250,204,21,0.15)' : mt5Connected ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                backdropFilter: tk.isDark ? 'blur(8px)' : undefined,
+                opacity: mt5Connecting ? 0.8 : 1,
+              }}>
+              {mt5Connecting ? (
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </motion.div>
+              ) : mt5Connected ? (
+                <Wifi className="w-3.5 h-3.5" />
+              ) : (
+                <WifiOff className="w-3.5 h-3.5" />
+              )}
+              <span>{mt5Connecting ? 'Connecting...' : mt5Connected ? 'MT5 Live' : 'MT5 Connect'}</span>
+              {mt5Connected && (
+                <motion.div
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: '#10b981', boxShadow: '0 0 6px #10b981' }}
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              )}
+            </motion.button>
+
             <motion.button onClick={() => setIsNewsOpen(!isNewsOpen)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
-              style={{ 
+              style={{
                 color: isNewsOpen ? tk.negative : tk.textMuted,
                 background: isNewsOpen ? tk.negativeBg : tk.buttonGhost,
                 border: `1px solid ${isNewsOpen ? tk.negativeBorder : tk.buttonGhostBorder}`,
@@ -658,28 +752,30 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
                 const Icon = indicatorIcons[ind.icon] || Lock;
                 const active = selectedIndicator?.id === ind.id;
                 const isLocked = ind.locked === true;
+                const activeColor = ind.color || tk.info;
+                
                 return (
                   <motion.button key={ind.id} onClick={() => pickIndicator(ind)}
                     whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
                     className="flex-shrink-0 flex flex-row items-center justify-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all relative"
                     style={{
-                      background: active ? (isLocked ? 'rgba(148,163,184,0.06)' : tk.infoBg) : "transparent",
-                      border: active ? `1px solid ${isLocked ? 'rgba(148,163,184,0.15)' : (tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.2)')}` : "1px solid transparent",
-                      boxShadow: active && !isLocked && tk.isDark ? '0 2px 12px rgba(99,102,241,0.08)' : 'none',
+                      background: active ? (isLocked ? 'rgba(148,163,184,0.06)' : `${activeColor}1a`) : "transparent",
+                      border: `1px solid ${active ? (isLocked ? 'rgba(148,163,184,0.15)' : `${activeColor}40`) : "transparent"}`,
+                      boxShadow: active && !isLocked && tk.isDark ? `0 2px 12px ${activeColor}1a` : 'none',
                       minWidth: "140px",
                       opacity: isLocked ? 0.55 : 1
                     }}>
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 relative" style={{
-                      background: active ? (isLocked ? 'rgba(148,163,184,0.1)' : (tk.isDark ? 'rgba(99,102,241,0.15)' : 'rgba(79,70,229,0.1)')) : tk.surfaceHover,
-                      border: `1px solid ${active && !isLocked ? (tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.15)') : tk.border}`,
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 relative" style={{
+                      background: active ? (isLocked ? 'rgba(148,163,184,0.1)' : `${activeColor}33`) : tk.surfaceHover,
+                      border: `1px solid ${active && !isLocked ? `${activeColor}50` : tk.border}`,
                     }}>
-                      {isLocked ? <Lock className="w-3 h-3" style={{ color: tk.textDim }} /> : <Icon className="w-3 h-3" style={{ color: active ? tk.info : tk.textDim }} />}
+                      {isLocked ? <Lock className="w-3.5 h-3.5" style={{ color: tk.textMuted }} /> : <Icon className="w-4 h-4" style={{ color: active ? activeColor : tk.textMuted }} strokeWidth={active ? 2.5 : 2} />}
                     </div>
-                    <span className="text-[10px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: active ? (isLocked ? tk.textDim : tk.info) : tk.textDim }}>
+                    <span className="text-[11px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis transition-colors" style={{ color: active ? (isLocked ? tk.textDim : activeColor) : tk.textMuted }}>
                       {isRTL ? ind.name : ind.nameEn}
                     </span>
                     {isLocked && (
-                      <Lock className="w-3 h-3 flex-shrink-0" style={{ color: tk.textDim }} />
+                      <Lock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: tk.textDim }} />
                     )}
                   </motion.button>
                 );
@@ -695,156 +791,156 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
               const accentColor = isUpgrade ? '#fb923c' : '#6366f1';
               const accentRgb = isUpgrade ? '251,146,60' : '99,102,241';
               return (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-xl overflow-hidden"
-                style={{
-                  background: `radial-gradient(ellipse at 50% 30%, rgba(${accentRgb},0.06) 0%, rgba(6,10,16,0.95) 70%)`,
-                  backdropFilter: "blur(16px)",
-                  border: `1px solid rgba(${accentRgb},0.12)`,
-                }}
-              >
-                {/* Animated grid background */}
-                <div className="absolute inset-0 pointer-events-none" style={{
-                  backgroundImage: `linear-gradient(rgba(${accentRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${accentRgb},0.03) 1px, transparent 1px)`,
-                  backgroundSize: '40px 40px',
-                }} />
-
-                {/* Scan line effect */}
-                <motion.div className="absolute inset-0 pointer-events-none"
-                  style={{ background: `linear-gradient(transparent 0%, rgba(${accentRgb},0.03) 50%, transparent 100%)`, backgroundSize: '100% 4px' }}
-                  animate={{ backgroundPosition: ['0 0', '0 100%'] }}
-                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} />
-
-                {/* Outer orbital ring */}
-                <div className="absolute" style={{ width: '340px', height: '340px' }}>
-                  <motion.div className="w-full h-full rounded-full absolute"
-                    style={{ border: `1px dashed rgba(${accentRgb},0.15)` }}
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} />
-                </div>
-                {/* Middle orbital ring */}
-                <div className="absolute" style={{ width: '260px', height: '260px' }}>
-                  <motion.div className="w-full h-full rounded-full absolute"
-                    style={{ border: `1px solid rgba(${accentRgb},0.1)` }}
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} />
-                </div>
-
-                {/* Radial glow behind icon */}
-                <motion.div className="absolute rounded-full"
-                  style={{ width: '200px', height: '200px', background: `radial-gradient(circle, rgba(${accentRgb},0.12) 0%, transparent 70%)`, filter: 'blur(30px)' }}
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
-                  transition={{ duration: 4, repeat: Infinity }} />
-
-                {/* PHASE-X CORE brand tag */}
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 relative z-10"
-                  style={{ background: `rgba(${accentRgb},0.08)`, border: `1px solid rgba(${accentRgb},0.2)` }}>
-                  <motion.div className="w-2 h-2 rounded-full"
-                    style={{ background: accentColor, boxShadow: `0 0 8px ${accentColor}` }}
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }} />
-                  <span className="text-[10px] font-black tracking-[0.25em] uppercase" style={{ color: accentColor }}>
-                    PHASE-X CORE
-                  </span>
-                </motion.div>
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-xl overflow-hidden"
+                  style={{
+                    background: `radial-gradient(ellipse at 50% 30%, rgba(${accentRgb},0.06) 0%, rgba(6,10,16,0.95) 70%)`,
+                    backdropFilter: "blur(16px)",
+                    border: `1px solid rgba(${accentRgb},0.12)`,
+                  }}
+                >
+                  {/* Animated grid background */}
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                    backgroundImage: `linear-gradient(rgba(${accentRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${accentRgb},0.03) 1px, transparent 1px)`,
+                    backgroundSize: '40px 40px',
+                  }} />
 
-                {/* Main icon container with hexagonal feel */}
-                <motion.div
-                  animate={{ scale: [1, 1.04, 1] }}
-                  transition={{ duration: 4, repeat: Infinity }}
-                  className="relative z-10 w-28 h-28 flex items-center justify-center mb-6">
-                  {/* Spinning border */}
-                  <motion.div className="absolute inset-0 rounded-2xl"
-                    style={{ border: `2px solid rgba(${accentRgb},0.25)`, borderTopColor: accentColor, borderBottomColor: 'transparent' }}
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} />
-                  {/* Inner glow box */}
-                  <div className="absolute inset-2 rounded-xl"
-                    style={{ background: `linear-gradient(135deg, rgba(${accentRgb},0.1) 0%, rgba(${accentRgb},0.02) 100%)`, border: `1px solid rgba(${accentRgb},0.15)` }} />
-                  {/* Icon */}
-                  {isUpgrade
-                    ? <Crown size={40} style={{ color: accentColor, filter: `drop-shadow(0 0 12px rgba(${accentRgb},0.5))` }} className="relative z-10" />
-                    : <Lock size={40} style={{ color: accentColor, filter: `drop-shadow(0 0 12px rgba(${accentRgb},0.5))` }} className="relative z-10" />
-                  }
-                </motion.div>
+                  {/* Scan line effect */}
+                  <motion.div className="absolute inset-0 pointer-events-none"
+                    style={{ background: `linear-gradient(transparent 0%, rgba(${accentRgb},0.03) 50%, transparent 100%)`, backgroundSize: '100% 4px' }}
+                    animate={{ backgroundPosition: ['0 0', '0 100%'] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} />
 
-                {/* Indicator name */}
-                <motion.h3
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-2xl font-black text-white mb-1 relative z-10 tracking-wide"
-                  style={{ textShadow: `0 0 30px rgba(${accentRgb},0.3)` }}>
-                  {isRTL ? selectedIndicator.name : selectedIndicator.nameEn}
-                </motion.h3>
+                  {/* Outer orbital ring */}
+                  <div className="absolute" style={{ width: '340px', height: '340px' }}>
+                    <motion.div className="w-full h-full rounded-full absolute"
+                      style={{ border: `1px dashed rgba(${accentRgb},0.15)` }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} />
+                  </div>
+                  {/* Middle orbital ring */}
+                  <div className="absolute" style={{ width: '260px', height: '260px' }}>
+                    <motion.div className="w-full h-full rounded-full absolute"
+                      style={{ border: `1px solid rgba(${accentRgb},0.1)` }}
+                      animate={{ rotate: -360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} />
+                  </div>
 
-                {/* Status line */}
-                <div className="flex items-center gap-2 mb-5 relative z-10">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: isUpgrade ? '#f97316' : '#94a3b8' }} />
-                  <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: isUpgrade ? '#f97316' : '#94a3b8' }}>
-                    {isUpgrade
-                      ? (isRTL ? 'يتطلب ترقية' : 'UPGRADE REQUIRED')
-                      : (isRTL ? 'قيد التطوير' : 'IN DEVELOPMENT')
-                    }
-                  </span>
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: isUpgrade ? '#f97316' : '#94a3b8' }} />
-                </div>
+                  {/* Radial glow behind icon */}
+                  <motion.div className="absolute rounded-full"
+                    style={{ width: '200px', height: '200px', background: `radial-gradient(circle, rgba(${accentRgb},0.12) 0%, transparent 70%)`, filter: 'blur(30px)' }}
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
+                    transition={{ duration: 4, repeat: Infinity }} />
 
-                {/* Description */}
-                <p className="text-xs text-gray-500 max-w-xs text-center leading-relaxed mb-6 relative z-10 font-medium">
-                  {isUpgrade
-                    ? (isRTL ? 'هذا المؤشر متاح فقط للمشتركين المميزين. قم بترقية خطتك للوصول الكامل لجميع أدوات التحليل المتقدمة.' : 'This indicator is available exclusively for premium subscribers. Upgrade your plan to unlock all advanced analysis tools.')
-                    : (isRTL ? 'فريقنا يعمل على تطوير هذا المؤشر المتقدم. سيكون متاحاً قريباً ضمن منظومة Phase-X.' : 'Our team is developing this advanced indicator. It will be available soon within the Phase-X ecosystem.')
-                  }
-                </p>
-
-                {/* Action */}
-                {isUpgrade ? (
-                  <motion.button
-                    whileHover={{ scale: 1.05, boxShadow: `0 15px 40px rgba(${accentRgb},0.4)` }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative z-10 px-8 py-3 rounded-xl text-sm font-black uppercase tracking-[0.2em] cursor-pointer flex items-center gap-2"
-                    style={{ background: `linear-gradient(135deg, ${accentColor}, #f97316)`, color: '#000', boxShadow: `0 8px 30px rgba(${accentRgb},0.3)` }}>
-                    <motion.div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
-                      <motion.div className="absolute inset-0"
-                        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }}
-                        animate={{ x: ['-100%', '200%'] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'linear', delay: 1 }} />
-                    </motion.div>
-                    <Crown size={16} />
-                    {isRTL ? 'ترقية الاشتراك' : 'Upgrade Plan'}
-                  </motion.button>
-                ) : (
+                  {/* PHASE-X CORE brand tag */}
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="relative z-10 flex items-center gap-3 px-6 py-3 rounded-xl"
-                    style={{ background: `rgba(${accentRgb},0.06)`, border: `1px solid rgba(${accentRgb},0.15)` }}>
-                    <motion.div className="w-2.5 h-2.5 rounded-full"
-                      style={{ background: accentColor, boxShadow: `0 0 10px ${accentColor}` }}
-                      animate={{ scale: [1, 1.4, 1], opacity: [1, 0.4, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }} />
-                    <span className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: accentColor }}>
-                      {isRTL ? 'قريباً' : 'Coming Soon'}
+                    transition={{ delay: 0.3 }}
+                    className="flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 relative z-10"
+                    style={{ background: `rgba(${accentRgb},0.08)`, border: `1px solid rgba(${accentRgb},0.2)` }}>
+                    <motion.div className="w-2 h-2 rounded-full"
+                      style={{ background: accentColor, boxShadow: `0 0 8px ${accentColor}` }}
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }} />
+                    <span className="text-[10px] font-black tracking-[0.25em] uppercase" style={{ color: accentColor }}>
+                      PHASE-X CORE
                     </span>
                   </motion.div>
-                )}
 
-                {/* Bottom corner branding */}
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                  <span className="text-[9px] tracking-[0.4em] uppercase font-semibold" style={{ color: `rgba(${accentRgb},0.25)` }}>
-                    PHASE-X · STRUCTURAL DYNAMICS · CORE
-                  </span>
-                </div>
-              </motion.div>
+                  {/* Main icon container with hexagonal feel */}
+                  <motion.div
+                    animate={{ scale: [1, 1.04, 1] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                    className="relative z-10 w-28 h-28 flex items-center justify-center mb-6">
+                    {/* Spinning border */}
+                    <motion.div className="absolute inset-0 rounded-2xl"
+                      style={{ border: `2px solid rgba(${accentRgb},0.25)`, borderTopColor: accentColor, borderBottomColor: 'transparent' }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} />
+                    {/* Inner glow box */}
+                    <div className="absolute inset-2 rounded-xl"
+                      style={{ background: `linear-gradient(135deg, rgba(${accentRgb},0.1) 0%, rgba(${accentRgb},0.02) 100%)`, border: `1px solid rgba(${accentRgb},0.15)` }} />
+                    {/* Icon */}
+                    {isUpgrade
+                      ? <Crown size={40} style={{ color: accentColor, filter: `drop-shadow(0 0 12px rgba(${accentRgb},0.5))` }} className="relative z-10" />
+                      : <Lock size={40} style={{ color: accentColor, filter: `drop-shadow(0 0 12px rgba(${accentRgb},0.5))` }} className="relative z-10" />
+                    }
+                  </motion.div>
+
+                  {/* Indicator name */}
+                  <motion.h3
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-2xl font-black text-white mb-1 relative z-10 tracking-wide"
+                    style={{ textShadow: `0 0 30px rgba(${accentRgb},0.3)` }}>
+                    {isRTL ? selectedIndicator.name : selectedIndicator.nameEn}
+                  </motion.h3>
+
+                  {/* Status line */}
+                  <div className="flex items-center gap-2 mb-5 relative z-10">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: isUpgrade ? '#f97316' : '#94a3b8' }} />
+                    <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: isUpgrade ? '#f97316' : '#94a3b8' }}>
+                      {isUpgrade
+                        ? (isRTL ? 'يتطلب ترقية' : 'UPGRADE REQUIRED')
+                        : (isRTL ? 'قيد التطوير' : 'IN DEVELOPMENT')
+                      }
+                    </span>
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: isUpgrade ? '#f97316' : '#94a3b8' }} />
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-xs text-gray-500 max-w-xs text-center leading-relaxed mb-6 relative z-10 font-medium">
+                    {isUpgrade
+                      ? (isRTL ? 'هذا المؤشر متاح فقط للمشتركين المميزين. قم بترقية خطتك للوصول الكامل لجميع أدوات التحليل المتقدمة.' : 'This indicator is available exclusively for premium subscribers. Upgrade your plan to unlock all advanced analysis tools.')
+                      : (isRTL ? 'فريقنا يعمل على تطوير هذا المؤشر المتقدم. سيكون متاحاً قريباً ضمن منظومة Phase-X.' : 'Our team is developing this advanced indicator. It will be available soon within the Phase-X ecosystem.')
+                    }
+                  </p>
+
+                  {/* Action */}
+                  {isUpgrade ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05, boxShadow: `0 15px 40px rgba(${accentRgb},0.4)` }}
+                      whileTap={{ scale: 0.95 }}
+                      className="relative z-10 px-8 py-3 rounded-xl text-sm font-black uppercase tracking-[0.2em] cursor-pointer flex items-center gap-2"
+                      style={{ background: `linear-gradient(135deg, ${accentColor}, #f97316)`, color: '#000', boxShadow: `0 8px 30px rgba(${accentRgb},0.3)` }}>
+                      <motion.div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
+                        <motion.div className="absolute inset-0"
+                          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }}
+                          animate={{ x: ['-100%', '200%'] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'linear', delay: 1 }} />
+                      </motion.div>
+                      <Crown size={16} />
+                      {isRTL ? 'ترقية الاشتراك' : 'Upgrade Plan'}
+                    </motion.button>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="relative z-10 flex items-center gap-3 px-6 py-3 rounded-xl"
+                      style={{ background: `rgba(${accentRgb},0.06)`, border: `1px solid rgba(${accentRgb},0.15)` }}>
+                      <motion.div className="w-2.5 h-2.5 rounded-full"
+                        style={{ background: accentColor, boxShadow: `0 0 10px ${accentColor}` }}
+                        animate={{ scale: [1, 1.4, 1], opacity: [1, 0.4, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }} />
+                      <span className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: accentColor }}>
+                        {isRTL ? 'قريباً' : 'Coming Soon'}
+                      </span>
+                    </motion.div>
+                  )}
+
+                  {/* Bottom corner branding */}
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                    <span className="text-[9px] tracking-[0.4em] uppercase font-semibold" style={{ color: `rgba(${accentRgb},0.25)` }}>
+                      PHASE-X · STRUCTURAL DYNAMICS · CORE
+                    </span>
+                  </div>
+                </motion.div>
               );
             })()}
             <AnimatePresence mode="wait">
@@ -860,74 +956,351 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
             </AnimatePresence>
           </div>
 
+
           {/* ═══ SIGNALS TABLE (Centered and Resized) ═══ */}
           <div className="flex justify-center w-full">
-            <div className="w-full max-w-[1000px]">
-               <TradingSignalsTable />
+            <div className="w-full max-w-[1400px]">
+              <TradingSignalsTable mt5Connected={mt5Connected} executeTrade={executeTrade} mt5Positions={mt5Positions} closePosition={closePosition} closeAllPositions={closeAllPositions} symbolOverrides={symbolOverrides} setSymbolOverride={setSymbolOverride} mt5Account={mt5Account} serverAutoTrades={serverAutoTrades} addAutoTrade={addAutoTrade} removeAutoTrade={removeAutoTrade} serverTradeHistory={serverTradeHistory} addTradeToHistory={addTradeToHistory} clearServerHistory={clearServerHistory} fetchTradeHistory={fetchTradeHistory} />
             </div>
           </div>
+          {/* MT5 Error Display */}
+          {mt5Error && !mt5Connected && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl p-3 flex items-center gap-2 mt-2"
+              style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}
+            >
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: '#ef4444' }} />
+              <span className="text-[11px] font-bold" style={{ color: '#ef4444' }}>{mt5Error}</span>
+            </motion.div>
+          )}
         </div>
 
         {/* ── RIGHT: AI Scanner & Ads ── */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
           className="w-64 ml-4 flex-shrink-0 hidden xl:flex flex-col gap-4 sticky top-0 self-start" style={{ height: "calc(100vh - 64px)" }}>
           {/* Sci-Fi AI Trader Scanner */}
-          <AITradeSignalWidget 
-            marketContext={aiMarketContext} 
-            assetSymbol={selectedAsset?.symbol} 
-            timeframe={timeframe} 
+          <AITradeSignalWidget
+            marketContext={aiMarketContext}
+            assetSymbol={selectedAsset?.symbol}
+            timeframe={timeframe}
             mtfEnabled={mtfEnabled}
             mtfSmallTimeframe={mtfSmallTimeframe}
             mtfLargeTimeframe={mtfLargeTimeframe}
             indicatorName={selectedIndicator?.nameEn}
           />
-          
+
           <AdSpace />
         </motion.div>
       </div>
 
       <SubscriptionPanel isOpen={isSubscriptionOpen} onClose={() => setIsSubscriptionOpen(false)} />
-      
-      {/* ═══ AI ChatBot Floating Button & Widget ═══ */}
-      <AnimatePresence>
-        {!isChatOpen && (
-          <motion.button
-             initial={{ scale: 0, opacity: 0 }}
-             animate={{ scale: 1, opacity: 1 }}
-             exit={{ scale: 0, opacity: 0 }}
-             onClick={() => setIsChatOpen(true)}
-             whileHover={{ scale: 1.05 }}
-             whileTap={{ scale: 0.95 }}
-             className="fixed bottom-6 z-40 rounded-full flex items-center justify-center cursor-pointer shadow-2xl"
-             style={{
-                width: 56, height: 56,
-                right: isRTL ? 'auto' : '24px', left: isRTL ? '24px' : 'auto',
-                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                border: '2px solid rgba(255,255,255,0.1)'
-             }}
-          >
-             <Bot className="w-7 h-7 text-white" />
-             <motion.div 
-               className="absolute -top-1 -right-1"
-               animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
-               transition={{ duration: 2, repeat: Infinity }}
-             >
-                <Sparkles className="w-4 h-4 text-emerald-300" />
-             </motion.div>
-          </motion.button>
-        )}
-      </AnimatePresence>
 
-      <AIChatBot 
-        isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)} 
-        marketContext={aiMarketContext}
-        assetSymbol={selectedAsset?.symbol}
-      />
+
 
       <AnimatePresence>
         {isProfileOpen && (
           <UserProfile onClose={() => setIsProfileOpen(false)} onTopUp={() => { setIsProfileOpen(false); setIsSubscriptionOpen(true); }} />
+        )}
+      </AnimatePresence>
+
+      {/* ═══ MT5 LOGIN MODAL ═══ */}
+      <AnimatePresence>
+        {isMT5LoginOpen && !mt5Connected && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setIsMT5LoginOpen(false); }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full max-w-md mx-4 rounded-2xl overflow-hidden relative"
+              style={{
+                background: tk.isDark ? 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.06) 0%, rgba(6,10,16,0.98) 60%)' : tk.surfaceElevated,
+                border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.15)' : tk.border}`,
+                boxShadow: tk.isDark ? '0 25px 80px rgba(0,0,0,0.5)' : '0 25px 60px rgba(0,0,0,0.15)',
+              }}
+            >
+              {/* Grid pattern bg */}
+              {tk.isDark && <div className="absolute inset-0 pointer-events-none z-0" style={{
+                backgroundImage: 'linear-gradient(rgba(99,102,241,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.02) 1px, transparent 1px)',
+                backgroundSize: '30px 30px',
+              }} />}
+
+              {/* Header */}
+              <div className="relative z-10 p-6 pb-4">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: tk.isDark ? 'rgba(99,102,241,0.1)' : tk.infoBg, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.15)'}` }}>
+                      <Server className="w-5 h-5" style={{ color: tk.info }} />
+                    </div>
+                    <div>
+                      <h3 className="text-[16px] font-black tracking-wide" style={{ color: tk.textPrimary }}>MetaTrader 5</h3>
+                      <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: tk.textDim }}>LIVE CONNECTION</p>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setIsMT5LoginOpen(false)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
+                    style={{ background: tk.surfaceHover, border: `1px solid ${tk.border}` }}
+                  >
+                    <X className="w-4 h-4" style={{ color: tk.textDim }} />
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Form */}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await connectMT5(mt5Creds);
+                  if (!mt5Error) setIsMT5LoginOpen(false);
+                }}
+                className="relative z-10 px-6 pb-6 flex flex-col gap-3"
+              >
+                {/* Server */}
+                <div>
+                  <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: tk.textDim }}>Server</label>
+                  <input
+                    type="text"
+                    value={mt5Creds.server}
+                    onChange={(e) => setMT5Creds({ ...mt5Creds, server: e.target.value })}
+                    placeholder="e.g. EquitiBrokerageSC-Demo"
+                    className="w-full px-3 py-2.5 rounded-xl text-[13px] font-medium outline-none transition-colors"
+                    style={{
+                      background: tk.inputBg,
+                      border: `1px solid ${tk.inputBorder}`,
+                      color: tk.inputText,
+                    }}
+                    required
+                  />
+                </div>
+
+                {/* Login */}
+                <div>
+                  <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: tk.textDim }}>Login</label>
+                  <input
+                    type="text"
+                    value={mt5Creds.login}
+                    onChange={(e) => setMT5Creds({ ...mt5Creds, login: e.target.value })}
+                    placeholder="e.g. 1110835"
+                    className="w-full px-3 py-2.5 rounded-xl text-[13px] font-medium outline-none transition-colors"
+                    style={{
+                      background: tk.inputBg,
+                      border: `1px solid ${tk.inputBorder}`,
+                      color: tk.inputText,
+                    }}
+                    required
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: tk.textDim }}>Password</label>
+                  <div className="relative">
+                    <input
+                      type={showMT5Password ? 'text' : 'password'}
+                      value={mt5Creds.password}
+                      onChange={(e) => setMT5Creds({ ...mt5Creds, password: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2.5 rounded-xl text-[13px] font-medium outline-none transition-colors"
+                      style={{
+                        background: tk.inputBg,
+                        border: `1px solid ${tk.inputBorder}`,
+                        color: tk.inputText,
+                        paddingRight: '40px',
+                      }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMT5Password(!showMT5Password)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer"
+                      style={{ color: tk.textDim }}
+                    >
+                      {showMT5Password ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Error message */}
+                {mt5Error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                    style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#ef4444' }} />
+                    <span className="text-[11px] font-bold" style={{ color: '#ef4444' }}>{mt5Error}</span>
+                  </motion.div>
+                )}
+
+                {/* Connect Button */}
+                <motion.button
+                  type="submit"
+                  disabled={mt5Connecting || !mt5Creds.login || !mt5Creds.password || !mt5Creds.server}
+                  whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(99,102,241,0.25)' }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-xl text-[13px] font-black tracking-wider uppercase cursor-pointer flex items-center justify-center gap-2 mt-1 relative overflow-hidden"
+                  style={{
+                    background: mt5Connecting ? tk.surfaceHover : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                    color: mt5Connecting ? tk.textDim : '#fff',
+                    border: `1px solid ${mt5Connecting ? tk.border : 'rgba(99,102,241,0.3)'}`,
+                    opacity: (!mt5Creds.login || !mt5Creds.password || !mt5Creds.server) ? 0.5 : 1,
+                  }}
+                >
+                  {/* Shimmer */}
+                  <motion.div className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }}
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }} />
+                  {mt5Connecting ? (
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                      <RefreshCw className="w-4 h-4" />
+                    </motion.div>
+                  ) : (
+                    <Wifi className="w-4 h-4" />
+                  )}
+                  <span className="relative z-10">{mt5Connecting ? 'Connecting...' : 'Connect to MT5'}</span>
+                </motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ MT5 SUBSCRIBE MODAL ═══ */}
+      <AnimatePresence>
+        {isMT5SubscribeOpen && !hasMT5Access && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setIsMT5SubscribeOpen(false); }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full max-w-md mx-4 rounded-[24px] overflow-hidden relative"
+              style={{
+                background: tk.isDark ? 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.06) 0%, rgba(6,10,16,0.98) 60%)' : tk.surfaceElevated,
+                border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.15)' : tk.border}`,
+                boxShadow: tk.isDark ? '0 30px 80px rgba(0,0,0,0.8)' : '0 25px 60px rgba(0,0,0,0.15)',
+              }}
+            >
+              {/* Grid pattern bg */}
+              {tk.isDark && <div className="absolute inset-0 pointer-events-none z-0" style={{
+                backgroundImage: 'linear-gradient(rgba(99,102,241,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.02) 1px, transparent 1px)',
+                backgroundSize: '30px 30px',
+              }} />}
+
+              <div className="relative z-10 p-6">
+                {!isMT5Pending ? (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: tk.isDark ? 'rgba(99,102,241,0.1)' : tk.infoBg, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.15)'}` }}>
+                          <Crown className="w-6 h-6" style={{ color: tk.info }} />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black tracking-wide leading-tight" style={{ color: tk.textPrimary }}>{t("mt5Title")}</h3>
+                          <p className="text-[10px] font-bold tracking-widest uppercase mt-0.5" style={{ color: tk.textDim }}>Integration Add-on</p>
+                        </div>
+                      </div>
+                      <motion.button onClick={() => setIsMT5SubscribeOpen(false)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer" style={{ background: tk.surfaceHover, border: `1px solid ${tk.border}` }}>
+                        <X className="w-4 h-4" style={{ color: tk.textDim }} />
+                      </motion.button>
+                    </div>
+
+                    <div className="p-4 rounded-xl mb-5" style={{ background: tk.isDark ? 'rgba(99,102,241,0.05)' : tk.surfaceHover, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.1)' : tk.border}` }}>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-sm font-bold" style={{ color: tk.textPrimary }}>{t("mt5Price")}</span>
+                      </div>
+                      <p className="text-xs leading-relaxed font-medium" style={{ color: tk.textDim }}>{t("mt5Desc")}</p>
+                    </div>
+
+                    <div className="mb-6 flex flex-col gap-3">
+                       <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: tk.textPrimary }}>Payment Instructions</h4>
+                       <p className="text-xs leading-relaxed" style={{ color: tk.textDim }}>
+                            Send <strong className="text-white">$30</strong> via <a href="https://t.me/PhaseX_Ai" target="_blank" rel="noopener noreferrer" className="text-[#0088cc] font-bold no-underline hover:underline">Telegram</a> or USDT TRC20 to the following address:
+                       </p>
+                       <div className="flex items-center justify-between p-3 rounded-xl border cursor-pointer hover:border-[#f7931a]/40 transition-colors group" onClick={() => navigator.clipboard.writeText("TQwFCKK5JjZACHdE888zG5iUx8wQ2RtnAV")} style={{ background: tk.surface, borderColor: tk.border }}>
+                            <span className="font-mono text-xs break-all pr-3" style={{ color: tk.textMuted }}>TQwFCKK5JjZACHdE888zG5iUx8wQ2RtnAV</span>
+                            <span className="text-[#f7931a] group-hover:text-white group-hover:bg-[#f7931a] transition-colors p-2 bg-[#f7931a]/15 rounded-lg shrink-0"><Copy size={14} /></span>
+                       </div>
+                    </div>
+
+                    <label className="flex items-start gap-3 p-4 rounded-xl cursor-pointer mb-6 transition-colors" style={{ background: tk.surfaceHover, border: `1px solid ${mt5SubscribeTermsAccepted ? '#6366f1' : tk.border}` }}>
+                      <div className="pt-0.5 relative shrink-0">
+                        <input type="checkbox" checked={mt5SubscribeTermsAccepted} onChange={(e) => setMt5SubscribeTermsAccepted(e.target.checked)} className="peer sr-only" />
+                        <div className="w-5 h-5 rounded flex items-center justify-center transition-colors" style={{ border: `2px solid ${mt5SubscribeTermsAccepted ? '#6366f1' : tk.border}`, background: mt5SubscribeTermsAccepted ? '#6366f1' : 'transparent' }}>
+                          <Check className={`w-3.5 h-3.5 text-white transition-opacity ${mt5SubscribeTermsAccepted ? 'opacity-100' : 'opacity-0'}`} strokeWidth={3} />
+                        </div>
+                      </div>
+                      <span className="text-xs leading-relaxed font-medium" style={{ color: tk.textMuted }}>
+                        {t("mt5Terms")}
+                      </span>
+                    </label>
+                    
+                    <motion.button
+                      disabled={!mt5SubscribeTermsAccepted || isMT5Processing}
+                      onClick={() => {
+                        setIsMT5Processing(true);
+                        setTimeout(() => {
+                          setIsMT5Processing(false);
+                          setIsMT5Pending(true);
+                        }, 1500);
+                      }}
+                      whileHover={mt5SubscribeTermsAccepted && !isMT5Processing ? { scale: 1.02, boxShadow: '0 8px 30px rgba(99,102,241,0.25)' } : {}}
+                      whileTap={mt5SubscribeTermsAccepted && !isMT5Processing ? { scale: 0.98 } : {}}
+                      className={`w-full py-4 rounded-xl text-sm font-black uppercase tracking-widest cursor-pointer transition-all flex items-center justify-center gap-2 ${(!mt5SubscribeTermsAccepted || isMT5Processing) ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                      style={{ background: tk.info, color: '#fff', boxShadow: mt5SubscribeTermsAccepted && !isMT5Processing ? `0 8px 30px ${tk.isDark ? 'rgba(99,102,241,0.25)' : 'rgba(79,70,229,0.25)'}` : 'none' }}
+                    >
+                      {isMT5Processing ? <><RefreshCw className="w-4 h-4 animate-spin" /> Processing...</> : <><CircleCheck className="w-5 h-5" /> I Have Paid $30</>}
+                    </motion.button>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <motion.div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 relative"
+                        style={{ background: `linear-gradient(135deg, rgba(250,204,21,0.15) 0%, transparent 100%)` }}>
+                        <motion.div className="absolute inset-0 border-4 rounded-full border-t-[#facc15] border-r-transparent border-b-[#facc15] border-l-transparent" 
+                            animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+                        <Clock size={32} color="#facc15" />
+                    </motion.div>
+                    <h2 className="text-2xl font-black mb-2" style={{ color: tk.textPrimary }}>Payment Pending</h2>
+                    <p className="text-sm max-w-[280px] mx-auto leading-relaxed font-medium" style={{ color: tk.textDim }}>
+                        Your payment is being verified by the administration. This may take a few minutes.
+                    </p>
+                    <button 
+                        onClick={() => {
+                            setIsMT5SubscribeOpen(false);
+                            // Optionally reset states so next time they open it's initially pending or fresh? 
+                            // The user requested it stays pending, so we will not reset isMT5Pending here.
+                        }}
+                        className="mt-8 px-6 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                        style={{ background: tk.surfaceHover, border: `1px solid ${tk.border}`, color: tk.textPrimary }}
+                    >
+                        Close Window
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -395,8 +395,15 @@ export const ar = {
 
     // AI Add-on
     aiInsightTitle: "مستكشف الذكاء الاصطناعي Phase-X AI",
-    aiInsightDesc: "احصل على 3000 نقطة ذكاء اصطناعي (AI Tokens) صالحة لمدة شهر واحد، تتيح لك تشغيل رادار السوق المباشر ومحادثة الشات بوت للحصول على تحليلات دقيقة ولحظية.",
+    aiInsightDesc: "احصل على 700 نقطة ذكاء اصطناعي (AI Tokens) صالحة لمدة شهر واحد، تتيح لك تشغيل رادار السوق المباشر للحصول على تحليلات دقيقة ولحظية.",
     aiAddonLabel: "/ إضافي شهرياً",
+
+    // MT5 Integration
+    mt5IntegrationTitle: "ربط بروتوكول MT5",
+    mt5IntegrationDesc: "اتصل مباشرة بمنصة MetaTrader 5 عبر واجهة برمجة تطبيقات Metaapai لتنفيذ الصفقات بسلاسة. بتفعيل هذا، فأنت توافق على أنك تتصل بمزود خدمة طرف ثالث (Metaapai) وتدرك أن PHASEX تعمل فقط كواجهة وسيطة.",
+    mt5PriceLabel: "30$ / شهرياً",
+    mt5TermsAgreement: "أوافق على سياسة الخصوصية والشروط والأحكام الخاصة بربط MT5.",
+    mt5EnableBtn: "تفعيل ربط MT5",
 
     // Billing Toggle
     billingMonthly: "شهري",

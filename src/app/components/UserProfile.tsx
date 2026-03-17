@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { User, Shield, CreditCard, Clock, Bot, Zap, ArrowRight, Settings, Check, Send, Coins, CircleCheck, ArrowLeft, Plus, Copy, X, Gift, Users, DollarSign, Crown, Star, Trophy, Sparkles } from "lucide-react";
+import { User, Shield, CreditCard, Clock, Bot, Zap, ArrowRight, Settings, Check, Send, Coins, CircleCheck, ArrowLeft, Plus, Copy, X, Gift, Users, DollarSign, Crown, Star, Trophy, Sparkles, Activity } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -28,10 +28,10 @@ const PlanIcon = ({ plan, size }: { plan: string; size: number }) => {
 
 export function UserProfile({ onClose, onTopUp }: UserProfileProps) {
     const { t, language } = useLanguage();
-    const { user, subscriptionPlan, subscriptionStatus, aiTokens, hasAIAccess, addTokens, referralCode, referralBalance, referralHistory } = useAuth();
+    const { user, subscriptionPlan, subscriptionStatus, aiTokens, hasAIAccess, hasMT5Access, addTokens, referralCode, referralBalance, referralHistory } = useAuth();
     
     const [view, setView] = useState<"dashboard" | "topup" | "pending" | "referral">("dashboard");
-    const [selectedPackage, setSelectedPackage] = useState<1000 | 3000 | 10000>(3000);
+    const [selectedPackage, setSelectedPackage] = useState<250 | 700 | 2000>(700);
     const [isProcessing, setIsProcessing] = useState(false);
     const [codeCopied, setCodeCopied] = useState(false);
 
@@ -146,6 +146,22 @@ export function UserProfile({ onClose, onTopUp }: UserProfileProps) {
                                         {subscriptionStatus === 'active' && (
                                             <div className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-[#00e5a0]/10 text-[#00e5a0]">Live</div>
                                         )}
+                                    </div>
+                                    
+                                    {/* MT5 Status Display in sidebar */}
+                                    <div className="mt-4 pt-4 border-t" style={{ borderColor: `${theme.color}10` }}>
+                                        <div className="text-[10px] font-black uppercase tracking-widest mb-2 text-gray-600">MT5 Integration</div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                 <Activity size={14} className={hasMT5Access ? "text-[#6366f1]" : "text-gray-500"} />
+                                                <span className="text-xs font-bold text-white">{hasMT5Access ? "Active" : "Inactive"}</span>
+                                            </div>
+                                            {hasMT5Access ? (
+                                                <div className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-[#6366f1]/10 text-[#6366f1]">Live</div>
+                                            ) : (
+                                                <div className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-gray-500/10 text-gray-500">Disabled</div>
+                                            )}
+                                        </div>
                                     </div>
                                     
                                     {/* Referral Code Display in sidebar */}
@@ -416,9 +432,9 @@ export function UserProfile({ onClose, onTopUp }: UserProfileProps) {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 relative z-10 max-w-3xl mx-auto w-full">
                                 {[
-                                    { tokens: 1000, price: 10, name: "Starter", color: "#64748b" },
-                                    { tokens: 3000, price: 20, name: "Pro", color: "#00c3ff", popular: true },
-                                    { tokens: 10000, price: 50, name: "Max", color: "#a855f7" },
+                                    { tokens: 250, price: 10, name: "Starter", color: "#64748b" },
+                                    { tokens: 700, price: 20, name: "Pro", color: "#00c3ff", popular: true },
+                                    { tokens: 2000, price: 50, name: "Max", color: "#a855f7" },
                                 ].map(pkg => (
                                     <motion.div key={pkg.tokens} 
                                          whileHover={{ y: -4 }}
@@ -449,7 +465,7 @@ export function UserProfile({ onClose, onTopUp }: UserProfileProps) {
                                 <div className="flex-1">
                                     <h4 className="font-bold text-white mb-3 flex items-center gap-2 text-sm"><Send size={16} className="text-[#00c3ff]" /> Payment Instructions</h4>
                                     <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                                        Send <strong className="text-white">${selectedPackage === 1000 ? 10 : selectedPackage === 3000 ? 20 : 50}</strong> via <a href="https://t.me/PhaseX_Ai" target="_blank" rel="noopener noreferrer" className="text-[#0088cc] font-bold no-underline hover:underline">Telegram</a> or USDT TRC20.
+                                        Send <strong className="text-white">${selectedPackage === 250 ? 10 : selectedPackage === 700 ? 20 : 50}</strong> via <a href="https://t.me/PhaseX_Ai" target="_blank" rel="noopener noreferrer" className="text-[#0088cc] font-bold no-underline hover:underline">Telegram</a> or USDT TRC20.
                                     </p>
                                     <div className="flex items-center justify-between p-3 bg-[#0b0e14] rounded-xl border border-[#1c2230] cursor-pointer hover:border-[#f7931a]/40 transition-colors group" onClick={() => copyToClipboard(walletAddress)}>
                                         <span className="font-mono text-xs text-gray-400 break-all pr-3">{walletAddress}</span>
@@ -463,7 +479,7 @@ export function UserProfile({ onClose, onTopUp }: UserProfileProps) {
                                         disabled={isProcessing}
                                         className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-black transition-all flex items-center justify-center gap-2 text-sm cursor-pointer ${isProcessing ? 'opacity-70' : 'hover:scale-[1.02]'}`}
                                         style={{ background: "#00c3ff", boxShadow: `0 8px 30px rgba(0,195,255,0.25)` }}>
-                                        {isProcessing ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> Processing...</span> : <><CircleCheck size={18} /> I Have Paid ${selectedPackage === 1000 ? 10 : selectedPackage === 3000 ? 20 : 50}</>}
+                                        {isProcessing ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> Processing...</span> : <><CircleCheck size={18} /> I Have Paid ${selectedPackage === 250 ? 10 : selectedPackage === 700 ? 20 : 50}</>}
                                     </button>
                                 </div>
                             </div>

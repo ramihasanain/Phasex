@@ -22,7 +22,7 @@ export type LivePriceMap = Record<string, PriceData>;
  *  - Single WebSocket connection with exponential backoff reconnect
  *  - Proper cleanup on unmount (no reconnect, no state updates)
  */
-export function useLivePrices(): {
+export function useLivePrices(subscribeSymbols: string[] = []): {
     prices: LivePriceMap;
     initialPrices: Record<string, number>;
     connected: boolean;
@@ -41,6 +41,7 @@ export function useLivePrices(): {
     const dirtyRef = useRef(false);
     const flushScheduled = useRef(false);
     const lastFlush = useRef(0);
+    const hasLoggedKeys = useRef(false);
 
     // Flush buffer → React state (throttled)
     const flush = useCallback(() => {
@@ -71,7 +72,15 @@ export function useLivePrices(): {
             const ws = new WebSocket(WS_URL);
 
             ws.onopen = () => {
-                if (mountedRef.current) setConnected(true);
+                if (mountedRef.current) {
+                    setConnected(true);
+                    if (subscribeSymbols.length > 0) {
+                        ws.send(JSON.stringify({
+                            action: "subscribe",
+                            symbols: subscribeSymbols
+                        }));
+                    }
+                }
             };
 
             ws.onmessage = (event) => {
@@ -142,6 +151,17 @@ export function useLivePrices(): {
             }
         };
     }, [connect]);
+
+    // Send updated subscription list if symbols change while connected
+    useEffect(() => {
+        const ws = wsRef.current;
+        if (connected && ws && ws.readyState === WebSocket.OPEN && subscribeSymbols.length > 0) {
+            ws.send(JSON.stringify({
+                action: "subscribe",
+                symbols: subscribeSymbols
+            }));
+        }
+    }, [subscribeSymbols.join(","), connected]);
 
     return { prices, initialPrices, connected };
 }
