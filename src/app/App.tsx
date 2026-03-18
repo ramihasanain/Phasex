@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { LandingPage } from "./components/LandingPage";
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
@@ -9,58 +9,100 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
-function AppContent() {
+function LandingRoute() {
+  const navigate = useNavigate();
+  return (
+    <LandingPage
+      onGetStarted={() => navigate("/login")}
+      onRegister={() => navigate("/register")}
+      onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "landing" } })}
+    />
+  );
+}
+
+function LoginRoute() {
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const [currentPage, setCurrentPage] = useState<"landing" | "login" | "register" | "dashboard" | "phasex-dynamics">(() => user ? "dashboard" : "landing");
-  const [lastMainPage, setLastMainPage] = useState<"landing" | "dashboard">(() => user ? "dashboard" : "landing");
-  const [isNewRegistration, setIsNewRegistration] = useState(false);
-  const { subscriptionStatus } = useAuth();
+  if (user) return <Navigate to="/dashboard" replace />;
+  return (
+    <LoginPage
+      onLogin={() => navigate("/dashboard")}
+      onRegister={() => navigate("/register")}
+    />
+  );
+}
+
+function RegisterRoute() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  if (user) return <Navigate to="/dashboard" replace />;
+  return (
+    <RegisterPage
+      onRegister={() => navigate("/dashboard", { state: { fromRegister: true } })}
+      onBackToLogin={() => navigate("/login")}
+    />
+  );
+}
+
+function DashboardRoute() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, subscriptionStatus, logout } = useAuth();
+  const fromRegister = location.state?.fromRegister === true;
+
+  if (!user) return <Navigate to="/" replace />;
+
+  if (fromRegister && subscriptionStatus === "none") {
+    return (
+      <SubscriptionOnboarding
+        onComplete={() => navigate("/dashboard", { replace: true, state: {} })}
+      />
+    );
+  }
 
   return (
-    <>
-      {currentPage === "landing" && (
-        <LandingPage
-          onGetStarted={() => setCurrentPage("login")}
-          onRegister={() => setCurrentPage("register")}
-          onOpenDynamics={() => { setLastMainPage("landing"); setCurrentPage("phasex-dynamics"); }}
-        />
-      )}
-      {currentPage === "login" && (
-        <LoginPage
-          onLogin={() => { setIsNewRegistration(false); setCurrentPage("dashboard"); }}
-          onRegister={() => setCurrentPage("register")}
-        />
-      )}
-      {currentPage === "register" && (
-        <RegisterPage
-          onRegister={() => { setIsNewRegistration(true); setCurrentPage("dashboard"); }}
-          onBackToLogin={() => setCurrentPage("login")}
-        />
-      )}
-      {currentPage === "dashboard" && isNewRegistration && subscriptionStatus === "none" && (
-        <SubscriptionOnboarding onComplete={() => { setIsNewRegistration(false); window.location.reload(); }} />
-      )}
-      {currentPage === "dashboard" && !(isNewRegistration && subscriptionStatus === "none") && (
-        <TradingDashboard
-          onLogout={() => { setIsNewRegistration(false); setCurrentPage("landing"); }}
-          onOpenDynamics={() => { setLastMainPage("dashboard"); setCurrentPage("phasex-dynamics"); }}
-        />
-      )}
-      {currentPage === "phasex-dynamics" && (
-        <PhaseXDynamicsPage onBack={() => setCurrentPage(lastMainPage)} />
-      )}
-    </>
+    <TradingDashboard
+      onLogout={() => {
+        logout();
+        navigate("/");
+      }}
+      onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "dashboard" } })}
+    />
+  );
+}
+
+function PhaseXDynamicsRoute() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state?.from as string) || "landing";
+  const backPath = from === "dashboard" ? "/dashboard" : "/";
+
+  return <PhaseXDynamicsPage onBack={() => navigate(backPath)} />;
+}
+
+function AppContent() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingRoute />} />
+      <Route path="/login" element={<LoginRoute />} />
+      <Route path="/register" element={<RegisterRoute />} />
+      <Route path="/dashboard" element={<DashboardRoute />} />
+      <Route path="/phasex-dynamics" element={<PhaseXDynamicsRoute />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <LanguageProvider>
-          <AppContent />
-        </LanguageProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AppContent />
+          </LanguageProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
