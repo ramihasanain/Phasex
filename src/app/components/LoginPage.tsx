@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
-import { Lock, Mail, ArrowRight, Zap, Globe, ChevronDown } from "lucide-react";
+import { Lock, Mail, ArrowRight, Zap, Globe, ChevronDown, Loader2, AlertCircle, X } from "lucide-react";
 import { Logo } from "./Logo";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion } from "motion/react";
 import { TermsModal } from "./TermsAndConditions";
 import { useThemeTokens } from "../hooks/useThemeTokens";
+import { useAuth } from "../contexts/AuthContext";
+import { loginUser } from "../api/authApi";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -13,12 +15,15 @@ interface LoginPageProps {
 
 export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const { t, language, setLanguageKey } = useLanguage();
+  const { loginWithApi } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [focused, setFocused] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const languageOptions = [
     { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png" },
@@ -30,10 +35,22 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   ];
   const currentLangObj = languageOptions.find(l => l.code === language) || languageOptions[0];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isRTL = language === "ar";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
+    if (!email || !password) return;
+    setApiLoading(true);
+    setApiError(null);
+    try {
+      const res = await loginUser(email, password);
+      loginWithApi(res.user, res.access, res.refresh);
       onLogin();
+    } catch (err: any) {
+      const msg = err.message || "";
+      setApiError(msg || (isRTL ? "فشل تسجيل الدخول" : "Login failed. Please try again."));
+    } finally {
+      setApiLoading(false);
     }
   };
 
@@ -281,23 +298,42 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                 </div>
               </div>
 
+              {/* Error Banner */}
+              {apiError && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-xl flex items-center gap-3"
+                  style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  <p className="text-xs font-bold text-red-400">{apiError}</p>
+                  <button type="button" onClick={() => setApiError(null)} className="ml-auto text-red-400 hover:text-red-300 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+                </motion.div>
+              )}
+
               {/* Login Button */}
-              <motion.button type="submit"
-                className="w-full py-4 rounded-xl text-[15px] font-black tracking-wider uppercase flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer"
+              <motion.button type="submit" disabled={apiLoading}
+                className="w-full py-4 rounded-xl text-[15px] font-black tracking-wider uppercase flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer disabled:opacity-60"
                 style={{
                   background: `linear-gradient(135deg, ${accent} 0%, #00c890 100%)`,
                   color: "#060a10",
                   boxShadow: `0 8px 30px ${accentG}0.3), 0 0 40px ${accentG}0.15)`,
                 }}
-                whileHover={{ scale: 1.02, boxShadow: `0 12px 40px ${accentG}0.4), 0 0 60px ${accentG}0.2)` }}
-                whileTap={{ scale: 0.98 }}>
-                <motion.div className="absolute inset-0 pointer-events-none"
-                  style={{ background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)` }}
-                  animate={{ left: ["-100%", "200%"] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
-                <Zap className="w-5 h-5" />
-                {t("loginWrap")}
-                <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+                whileHover={!apiLoading ? { scale: 1.02, boxShadow: `0 12px 40px ${accentG}0.4), 0 0 60px ${accentG}0.2)` } : {}}
+                whileTap={!apiLoading ? { scale: 0.98 } : {}}>
+                {apiLoading ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" />{isRTL ? "جاري الدخول..." : "Logging in..."}</>
+                ) : (
+                  <>
+                    {!apiLoading && (
+                      <motion.div className="absolute inset-0 pointer-events-none"
+                        style={{ background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)` }}
+                        animate={{ left: ["-100%", "200%"] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
+                    )}
+                    <Zap className="w-5 h-5" />
+                    {t("loginWrap")}
+                    <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+                  </>
+                )}
               </motion.button>
 
               {/* Divider */}

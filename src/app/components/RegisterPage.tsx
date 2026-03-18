@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Logo } from "./Logo";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -20,10 +20,17 @@ import {
   Send,
   Clock,
   CircleCheck,
-  X
+  X,
+  MailCheck,
+  RefreshCw,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
+import { registerUser, resendVerification, getMe, loginUser } from "../api/authApi";
+import { getPlans, getAddons, checkoutSubmit } from "../api/subscriptionsApi";
+import type { APIPlan, APIAddon } from "../api/subscriptionsApi";
 
 interface RegisterPageProps {
   onRegister: () => void;
@@ -32,7 +39,7 @@ interface RegisterPageProps {
 
 export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const { language, t } = useLanguage();
-  const { login, submitReceipt, applyReferralCode } = useAuth();
+  const { loginWithApi, submitReceipt, applyReferralCode, accessToken, setEmailVerified } = useAuth();
   const isRTL = language === "ar";
 
   const [step, setStep] = useState(1);
@@ -53,6 +60,19 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   });
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
+  // API states
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [verifyChecking, setVerifyChecking] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Dynamic plans/addons from API
+  const [apiPlans, setApiPlans] = useState<APIPlan[]>([]);
+  const [apiAddons, setApiAddons] = useState<APIAddon[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+
   const languageOptions = [
     { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png" },
     { code: "ar", label: "العربية", flag: "https://flagcdn.com/w40/sa.png" },
@@ -69,97 +89,99 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const walletAddress = "TQwFCKK5JjZACHdE888zG5iUx8wQ2RtnAV";
 
   const countries = [
-    { value: "ae", label: isRTL ? "الإمارات" : "UAE" },
-    { value: "sa", label: isRTL ? "السعودية" : "Saudi Arabia" },
-    { value: "eg", label: isRTL ? "مصر" : "Egypt" },
-    { value: "jo", label: isRTL ? "الأردن" : "Jordan" },
-    { value: "lb", label: isRTL ? "لبنان" : "Lebanon" },
-    { value: "kw", label: isRTL ? "الكويت" : "Kuwait" },
-    { value: "qa", label: isRTL ? "قطر" : "Qatar" },
-    { value: "bh", label: isRTL ? "البحرين" : "Bahrain" },
-    { value: "om", label: isRTL ? "عُمان" : "Oman" },
-    { value: "iq", label: isRTL ? "العراق" : "Iraq" },
-    { value: "sy", label: isRTL ? "سوريا" : "Syria" },
-    { value: "ye", label: isRTL ? "اليمن" : "Yemen" },
-    { value: "ps", label: isRTL ? "فلسطين" : "Palestine" },
-    { value: "ma", label: isRTL ? "المغرب" : "Morocco" },
-    { value: "dz", label: isRTL ? "الجزائر" : "Algeria" },
-    { value: "tn", label: isRTL ? "تونس" : "Tunisia" },
-    { value: "ly", label: isRTL ? "ليبيا" : "Libya" },
-    { value: "sd", label: isRTL ? "السودان" : "Sudan" },
-    { value: "us", label: isRTL ? "أمريكا" : "USA" },
-    { value: "gb", label: isRTL ? "بريطانيا" : "UK" },
-    { value: "tr", label: isRTL ? "تركيا" : "Turkey" },
-    { value: "other", label: isRTL ? "أخرى" : "Other" }
+    { value: "1", label: isRTL ? "الإمارات" : "UAE" },
+    { value: "2", label: isRTL ? "السعودية" : "Saudi Arabia" },
+    { value: "3", label: isRTL ? "مصر" : "Egypt" },
+    { value: "4", label: isRTL ? "الأردن" : "Jordan" },
+    { value: "5", label: isRTL ? "لبنان" : "Lebanon" },
+    { value: "6", label: isRTL ? "الكويت" : "Kuwait" },
+    { value: "7", label: isRTL ? "قطر" : "Qatar" },
+    { value: "8", label: isRTL ? "البحرين" : "Bahrain" },
+    { value: "9", label: isRTL ? "عُمان" : "Oman" },
+    { value: "10", label: isRTL ? "العراق" : "Iraq" },
+    { value: "11", label: isRTL ? "سوريا" : "Syria" },
+    { value: "12", label: isRTL ? "اليمن" : "Yemen" },
+    { value: "13", label: isRTL ? "فلسطين" : "Palestine" },
+    { value: "14", label: isRTL ? "المغرب" : "Morocco" },
+    { value: "15", label: isRTL ? "الجزائر" : "Algeria" },
+    { value: "16", label: isRTL ? "تونس" : "Tunisia" },
+    { value: "17", label: isRTL ? "ليبيا" : "Libya" },
+    { value: "18", label: isRTL ? "السودان" : "Sudan" },
+    { value: "19", label: isRTL ? "أمريكا" : "USA" },
+    { value: "20", label: isRTL ? "بريطانيا" : "UK" },
+    { value: "21", label: isRTL ? "تركيا" : "Turkey" },
+    { value: "22", label: isRTL ? "أخرى" : "Other" }
   ];
 
-  const subscriptionTypes = [
-    {
-      id: "core",
-      name: t("planCoreName"),
-      price: 29,
-      frequency: t("perMonth"),
-      color: "#3b82f6",
-      icon: Zap,
-      save: "",
-      charts: ["Phase State", "Direction State"],
-      features: [t("planCoreF1"), t("planCoreF2"), t("planCoreF3"), t("planCoreF4")],
-      limitations: [t("planCoreL1"), t("planCoreL2")],
-      description: t("planCoreDesc"),
-      suitable: t("planCoreSuitable"),
-    },
-    {
-      id: "trader",
-      name: t("planTraderName"),
-      price: 49,
-      frequency: t("perMonth"),
-      color: accent,
-      icon: Star,
-      popular: true,
-      save: "",
-      badge: t("planTraderBadge"),
-      charts: ["Phase State", "Direction State", "Oscillation State"],
-      features: [t("planTraderF1"), t("planTraderF2"), t("planTraderF3"), t("planTraderF4")],
-      limitations: null,
-      description: t("planTraderDesc"),
-      suitable: t("planTraderSuitable"),
-    },
-    {
-      id: "professional",
-      name: t("planProName"),
-      price: 89,
-      frequency: t("perMonth"),
-      color: "#a855f7",
-      icon: Crown,
-      save: "",
-      badge: t("planProBadge"),
-      charts: ["Phase State", "Direction State", "Oscillation State", "Reference State", "Displacement State"],
-      features: [t("planProF1"), t("planProF2"), t("planProF3"), t("planProF4")],
-      limitations: null,
-      description: t("planProDesc"),
-      suitable: t("planProSuitable"),
-    },
-    {
-      id: "institutional",
-      name: t("planInstName"),
-      price: 149,
-      frequency: t("perMonth"),
-      color: "#facc15",
-      icon: Trophy,
-      save: "",
-      badge: t("planInstBadge"),
-      charts: ["Phase State", "Direction State", "Oscillation State", "Reference State", "Displacement State", "Envelope State"],
-      features: [t("planInstF1"), t("planInstF2"), t("planInstF3"), t("planInstF4"), t("planInstF5")],
-      limitations: null,
-      description: t("planInstDesc"),
-      suitable: t("planInstSuitable"),
-    }
-  ];
+  // Plan color/icon mapping
+  const planColorMap: Record<string, { color: string; icon: any }> = {
+    "core": { color: "#3b82f6", icon: Zap },
+    "trader": { color: accent, icon: Star },
+    "professional": { color: "#a855f7", icon: Crown },
+    "institutional": { color: "#facc15", icon: Trophy },
+  };
+
+  const getPlanKey = (name: string): string => {
+    const lower = name.toLowerCase();
+    if (lower.includes("core")) return "core";
+    if (lower.includes("trader")) return "trader";
+    if (lower.includes("professional") || lower.includes("pro")) return "professional";
+    if (lower.includes("institutional") || lower.includes("inst")) return "institutional";
+    return "core";
+  };
+
+  const subscriptionTypes = apiPlans.map(plan => {
+    const key = getPlanKey(plan.name);
+    const mapping = planColorMap[key] || { color: "#3b82f6", icon: Zap };
+    return {
+      id: String(plan.id),
+      apiId: plan.id,
+      name: plan.name,
+      priceMonthly: parseFloat(plan.price_monthly),
+      priceAnnualMonthly: parseFloat(plan.price_annual_monthly),
+      priceAnnualTotal: parseFloat(plan.price_annual_total),
+      savePercentage: parseFloat(plan.save_percentage),
+      color: mapping.color,
+      icon: mapping.icon,
+      popular: plan.is_popular,
+      charts: plan.indicators.map(ind => ind.name),
+      features: plan.features,
+      limitations: plan.limitations,
+      description: plan.description,
+    };
+  });
+
+  // AI Addon from API
+  const aiAddonData = apiAddons.find(a => a.code === "ai_insight");
+  const aiAddonPriceMonthly = aiAddonData ? parseFloat(aiAddonData.base_price_monthly) : 20;
+  const aiAddonPriceAnnual = aiAddonData ? parseFloat(aiAddonData.base_price_annual_monthly) * 12 : Math.round(20 * 12 * 0.8);
 
   const selectedSub = subscriptionTypes.find(s => s.id === formData.subscriptionType);
-  const getPrice = (basePrice: number) => billingCycle === "yearly" ? Math.round(basePrice * 12 * 0.8) : basePrice;
-  const displayPrice = (basePrice: number) => billingCycle === "yearly" ? `$${getPrice(basePrice)}` : `$${basePrice}`;
-  const subtotal = (selectedSub ? getPrice(selectedSub.price) : 0) + (aiAddon ? (billingCycle === "yearly" ? Math.round(20 * 12 * 0.8) : 20) : 0);
+  const getPrice = (sub: typeof subscriptionTypes[0]) => billingCycle === "yearly" ? sub.priceAnnualTotal : sub.priceMonthly;
+  const displayPrice = (sub: typeof subscriptionTypes[0]) => billingCycle === "yearly" ? `$${sub.priceAnnualTotal}` : `$${sub.priceMonthly}`;
+  const subtotal = (selectedSub ? getPrice(selectedSub) : 0) + (aiAddon ? (billingCycle === "yearly" ? aiAddonPriceAnnual : aiAddonPriceMonthly) : 0);
+  // Fetch plans & addons when step reaches 4
+  useEffect(() => {
+    if (step === 4 && apiPlans.length === 0 && !plansLoading) {
+      setPlansLoading(true);
+      Promise.all([getPlans(), getAddons()])
+        .then(([plans, addons]) => {
+          setApiPlans(plans);
+          setApiAddons(addons);
+          // Auto-select first plan if none selected
+          if (plans.length > 0 && !formData.subscriptionType) {
+            const popular = plans.find(p => p.is_popular);
+            setFormData(prev => ({ ...prev, subscriptionType: String(popular?.id || plans[0].id) }));
+          }
+        })
+        .catch(err => {
+          console.error('[PhaseX] Failed to load plans:', err);
+          setApiError(isRTL ? "فشل تحميل الباقات" : "Failed to load plans.");
+        })
+        .finally(() => setPlansLoading(false));
+    }
+  }, [step]);
+
   const referralDiscountAmount = referralApplied ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
   const totalAmount = subtotal - referralDiscountAmount;
 
@@ -181,43 +203,138 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
     setReferralError(false);
   };
 
-  const stepColors = ["#448aff", accent, "#ffc400", accent, "#00e5a0"];
+  const stepColors = ["#448aff", accent, "#a855f7", "#ffc400", accent, "#00e5a0"];
 
   const steps = [
     { id: 1, title: isRTL ? "البيانات" : "Personal", icon: User },
     { id: 2, title: isRTL ? "الحساب" : "Account", icon: Mail },
-    { id: 3, title: isRTL ? "الباقة" : "Plan", icon: Crown },
-    { id: 4, title: isRTL ? "الدفع" : "Payment", icon: Send },
-    { id: 5, title: isRTL ? "الانتظار" : "Pending", icon: Clock },
+    { id: 3, title: isRTL ? "التحقق" : "Verify", icon: MailCheck },
+    { id: 4, title: isRTL ? "الباقة" : "Plan", icon: Crown },
+    { id: 5, title: isRTL ? "الدفع" : "Payment", icon: Send },
+    { id: 6, title: isRTL ? "الانتظار" : "Pending", icon: Clock },
   ];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1) {
       if (!formData.firstName || !formData.lastName) {
-        alert(isRTL ? "يرجى إدخال الاسم الكامل" : "Please enter your full name");
+        setApiError(isRTL ? "يرجى إدخال الاسم الكامل" : "Please enter your full name");
         return;
       }
-    } else if (step === 2) {
+      setApiError(null);
+      setStep(2);
+      return;
+    }
+    if (step === 2) {
       if (!formData.email || !formData.password || !formData.confirmPassword || !formData.country) {
-        alert(isRTL ? "يرجى إكمال جميع الحقول" : "Please complete all fields");
+        setApiError(isRTL ? "يرجى إكمال جميع الحقول" : "Please complete all fields");
         return;
       }
       if (formData.password !== formData.confirmPassword) {
-        alert(isRTL ? "كلمتا المرور غير متطابقتين" : "Passwords do not match");
+        setApiError(isRTL ? "كلمتا المرور غير متطابقتين" : "Passwords do not match");
         return;
       }
       if (formData.password.length < 6) {
-        alert(isRTL ? "كلمة المرور قصيرة جداً" : "Password too short");
+        setApiError(isRTL ? "كلمة المرور قصيرة جداً" : "Password too short");
         return;
       }
+      // Call Registration API
+      setApiLoading(true);
+      setApiError(null);
+      try {
+        const res = await registerUser({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          country_id: parseInt(formData.country, 10),
+        });
+        // Store tokens and user in context
+        loginWithApi(res.user, res.access, res.refresh);
+        setStep(3); // go to email verification step
+      } catch (err: any) {
+        const msg = err.message || "";
+        if (msg.includes("already exists")) {
+          setApiError(isRTL ? "هذا البريد الإلكتروني مسجل مسبقاً" : "An account with this email already exists.");
+        } else {
+          setApiError(msg || (isRTL ? "حدث خطأ أثناء التسجيل" : "Registration failed. Please try again."));
+        }
+      } finally {
+        setApiLoading(false);
+      }
+      return;
     }
+    setApiError(null);
     setStep(step + 1);
   };
 
-  const handleConfirmPayment = () => {
-    login(formData.email, `${formData.firstName} ${formData.lastName}`);
-    submitReceipt(formData.subscriptionType as any, aiAddon);
-    setStep(5);
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0) return;
+    try {
+      await resendVerification(formData.email);
+      setResendSuccess(true);
+      setResendCooldown(60);
+      const interval = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) { clearInterval(interval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+      setTimeout(() => setResendSuccess(false), 4000);
+    } catch {
+      setApiError(isRTL ? "فشل إعادة إرسال رسالة التحقق" : "Failed to resend verification email.");
+    }
+  };
+
+  const handleCheckVerification = useCallback(async () => {
+    setVerifyChecking(true);
+    setApiError(null);
+    try {
+      // Login with the credentials to check email_verified status
+      const res = await loginUser(formData.email, formData.password);
+      console.log('[PhaseX] Login check response:', res);
+      const userData = res.user;
+      if (userData.email_verified) {
+        // Email is verified! Store tokens and proceed
+        loginWithApi(res.user, res.access, res.refresh);
+        setEmailVerified();
+        if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+        setStep(4); // go to plan selection
+      } else {
+        setApiError(isRTL ? "البريد لم يتم تفعيله بعد، تحقق من بريدك الإلكتروني" : "Email not verified yet. Please check your inbox.");
+      }
+    } catch (err: any) {
+      console.error('[PhaseX] Verification check error:', err);
+      const msg = err.message || "";
+      if (msg.toLowerCase().includes("verified") || msg.toLowerCase().includes("verify")) {
+        setApiError(isRTL ? "البريد لم يتم تفعيله بعد، تحقق من بريدك الإلكتروني" : "Email not verified yet. Please check your inbox.");
+      } else {
+        setApiError(msg || (isRTL ? "فشل التحقق من حالة البريد" : "Failed to check verification status."));
+      }
+    } finally {
+      setVerifyChecking(false);
+    }
+  }, [formData.email, formData.password, isRTL, loginWithApi, setEmailVerified]);
+
+  const handleConfirmPayment = async () => {
+    const token = accessToken;
+    if (token && selectedSub) {
+      try {
+        setApiLoading(true);
+        const addonIds = aiAddon && aiAddonData ? [aiAddonData.id] : [];
+        await checkoutSubmit(token, {
+          plan_id: selectedSub.apiId,
+          period: billingCycle === "yearly" ? 360 : 30,
+          addon_ids: addonIds,
+        });
+      } catch (err: any) {
+        console.error('[PhaseX] Checkout submit error:', err);
+        // Continue to pending step even if API fails — manual verification will follow
+      } finally {
+        setApiLoading(false);
+      }
+    }
+    submitReceipt(formData.subscriptionType as any, aiAddon, false);
+    setStep(6);
   };
 
   const copyToClipboard = (text: string) => {
@@ -336,7 +453,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
       <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7, type: "spring", stiffness: 100 }}
-        className={`w-full relative z-10 ${step <= 2 ? 'max-w-2xl' : 'max-w-4xl'}`}>
+        className={`w-full relative z-10 ${step <= 3 ? 'max-w-2xl' : 'max-w-4xl'}`}>
 
         {/* Main Card */}
         <div className="rounded-2xl overflow-hidden relative"
@@ -344,7 +461,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
             background: "linear-gradient(160deg, rgba(14,20,33,0.92) 0%, rgba(8,12,22,0.96) 100%)",
             border: `1px solid ${currentColor}18`,
             boxShadow: `0 25px 80px rgba(0,0,0,0.5), 0 0 60px ${currentColor}08, inset 0 1px 0 rgba(255,255,255,0.04)`,
-            maxHeight: step === 5 ? "auto" : "85vh",
+            maxHeight: step === 6 ? "auto" : "85vh",
             overflowY: "auto"
           }}>
 
@@ -426,6 +543,17 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
             </div>
           </div>
 
+          {/* Error Banner */}
+          {apiError && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              className="mx-8 mb-3 p-3 rounded-xl flex items-center gap-3"
+              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <p className="text-xs font-bold text-red-400">{apiError}</p>
+              <button onClick={() => setApiError(null)} className="ml-auto text-red-400 hover:text-red-300 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+            </motion.div>
+          )}
+
           {/* Content */}
           <div className="px-8 pb-6">
             <AnimatePresence mode="wait">
@@ -504,8 +632,81 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                 </motion.div>
               )}
 
-              {/* Step 3 - Choose Plan + AI Addon */}
+              {/* Step 3 - Email Verification */}
               {step === 3 && (
+                <motion.div key="s3verify" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}
+                  className="flex flex-col items-center justify-center py-8 text-center space-y-5">
+
+                  {/* Mail icon animation */}
+                  <motion.div className="w-24 h-24 rounded-full flex items-center justify-center relative"
+                    style={{ background: `linear-gradient(135deg, rgba(168,85,247,0.15) 0%, transparent 100%)` }}>
+                    <motion.div className="absolute inset-0 rounded-full"
+                      style={{ border: "3px solid rgba(168,85,247,0.2)" }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                      transition={{ duration: 2.5, repeat: Infinity }} />
+                    <MailCheck size={44} color="#a855f7" />
+                  </motion.div>
+
+                  <div>
+                    <h2 className="text-xl font-black text-white mb-2">
+                      {isRTL ? "تحقق من بريدك الإلكتروني" : "Verify Your Email"}
+                    </h2>
+                    <p className="text-sm text-gray-400 max-w-sm mx-auto leading-relaxed font-medium">
+                      {isRTL
+                        ? `أرسلنا رابط تحقق إلى ${formData.email}. يرجى فتح بريدك والضغط على الرابط لتفعيل حسابك.`
+                        : `We sent a verification link to ${formData.email}. Please check your inbox and click the link to activate your account.`}
+                    </p>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="space-y-3 w-full max-w-xs">
+                    {/* Check verification */}
+                    <motion.button type="button" onClick={handleCheckVerification} disabled={verifyChecking}
+                      className="w-full py-3.5 rounded-xl text-sm font-black tracking-wider uppercase flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer disabled:opacity-60"
+                      style={{ background: `linear-gradient(135deg, #a855f7, #9333ea)`, color: "#fff", boxShadow: `0 8px 30px rgba(168,85,247,0.3)` }}
+                      whileHover={!verifyChecking ? { scale: 1.02 } : {}}
+                      whileTap={!verifyChecking ? { scale: 0.98 } : {}}>
+                      {verifyChecking ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" />{isRTL ? "جاري التحقق..." : "Checking..."}</>
+                      ) : (
+                        <><CheckCircle2 className="w-4 h-4" />{isRTL ? "لقد فعّلت بريدي" : "I've Verified My Email"}</>
+                      )}
+                    </motion.button>
+
+                    {/* Resend */}
+                    <motion.button type="button" onClick={handleResendVerification}
+                      disabled={resendCooldown > 0}
+                      className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 transition-all"
+                      style={{ background: "rgba(255,255,255,0.03)", color: resendCooldown > 0 ? "#6b7280" : "#a855f7", border: `1px solid ${resendCooldown > 0 ? "rgba(255,255,255,0.06)" : "rgba(168,85,247,0.25)"}` }}
+                      whileHover={resendCooldown === 0 ? { background: "rgba(168,85,247,0.08)" } : {}}
+                      whileTap={resendCooldown === 0 ? { scale: 0.98 } : {}}>
+                      <RefreshCw className="w-4 h-4" />
+                      {resendCooldown > 0
+                        ? (isRTL ? `إعادة إرسال (${resendCooldown}s)` : `Resend (${resendCooldown}s)`)
+                        : (isRTL ? "إعادة إرسال رابط التحقق" : "Resend Verification Link")}
+                    </motion.button>
+                  </div>
+
+                  {resendSuccess && (
+                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      className="text-xs font-bold text-[#00e5a0]">
+                      {isRTL ? "تم إرسال رابط التحقق مجدداً!" : "Verification link resent!"}
+                    </motion.p>
+                  )}
+
+                  {/* Tip */}
+                  <div className="p-3 rounded-xl max-w-xs" style={{ background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.15)" }}>
+                    <p className="text-[11px] text-gray-400">
+                      {isRTL
+                        ? "💡 تحقق من مجلد الرسائل غير المرغوب فيها (Spam) إذا لم تجد الرسالة."
+                        : "💡 Check your spam/junk folder if you don't see the email."}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 4 - Choose Plan + AI Addon */}
+              {step === 4 && (
                 <motion.div key="s3" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="space-y-4">
                   <div className="text-center mb-4">
                     <motion.div className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
@@ -542,11 +743,23 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                     )}
                   </div>
 
+                  {plansLoading ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#a855f7]" />
+                      <p className="text-sm text-gray-400 font-medium">{isRTL ? "جاري تحميل الباقات..." : "Loading plans..."}</p>
+                    </div>
+                  ) : subscriptionTypes.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <AlertCircle className="w-8 h-8 text-red-400" />
+                      <p className="text-sm text-gray-400 font-medium">{isRTL ? "لا توجد باقات متاحة" : "No plans available"}</p>
+                    </div>
+                  ) : null}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {subscriptionTypes.map((sub) => {
                       const Icon = sub.icon;
                       const isSelected = formData.subscriptionType === sub.id;
-                      const price = getPrice(sub.price);
+                      const price = billingCycle === "yearly" ? sub.priceAnnualTotal : sub.priceMonthly;
                       return (
                         <motion.button key={sub.id} type="button"
                           onClick={() => setFormData({ ...formData, subscriptionType: sub.id })}
@@ -566,7 +779,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                               <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider text-black"
                                 style={{ background: `linear-gradient(90deg, ${accent}, #00c890)`, boxShadow: `0 0 15px ${accent}50` }}>
                                 <Star className="w-2.5 h-2.5" />
-                                {sub.badge || t("planTraderBadge")}
+                                {t("planTraderBadge")}
                               </div>
                             </div>
                           )}
@@ -601,11 +814,11 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                             <span className="text-xl font-black" style={{ color: sub.color }}>${price}</span>
                             <span className="text-[10px] text-gray-500 font-medium">/{billingCycle === "yearly" ? t("perYear") : t("perMonth")}</span>
                             {billingCycle === "yearly" && (
-                              <span className="text-[9px] text-gray-600 line-through ml-1">${sub.price * 12}</span>
+                              <span className="text-[9px] text-gray-600 line-through ml-1">${sub.priceMonthly * 12}</span>
                             )}
                           </div>
                           {billingCycle === "yearly" && (
-                            <p className="text-[9px] text-[#00e5a0] font-bold mb-2">{t("billedAnnually")} — {t("save20")}</p>
+                            <p className="text-[9px] text-[#00e5a0] font-bold mb-2">{t("billedAnnually")} — {isRTL ? `وفّر ${sub.savePercentage}%` : `Save ${sub.savePercentage}%`}</p>
                           )}
 
                           {/* Divider */}
@@ -684,7 +897,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-sm font-black text-[#00e5a0]">{billingCycle === "yearly" ? `$${Math.round(20 * 12 * 0.8)}/${t("perYear")}` : `$20/${t("perMonth")}`}</span>
+                      <span className="text-sm font-black text-[#00e5a0]">{billingCycle === "yearly" ? `$${aiAddonPriceAnnual}/${t("perYear")}` : `$${aiAddonPriceMonthly}/${t("perMonth")}`}</span>
                       <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${aiAddon ? 'border-[#00e5a0] bg-[#00e5a0]/20 text-[#00e5a0]' : 'border-[#4b5563] text-transparent'}`}>
                         <Check size={16} strokeWidth={4} />
                       </div>
@@ -733,8 +946,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                 </motion.div>
               )}
 
-              {/* Step 4 - Payment */}
-              {step === 4 && (
+              {/* Step 5 - Payment */}
+              {step === 5 && (
                 <motion.div key="s4" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="space-y-4">
                   <div className="text-center mb-3">
                     <div className="w-16 h-16 bg-[#00e5a0]/10 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-[#00e5a0]/30 shadow-[0_0_20px_rgba(0,229,160,0.2)]">
@@ -783,9 +996,9 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                 </motion.div>
               )}
 
-              {/* Step 5 - Pending */}
-              {step === 5 && (
-                <motion.div key="s5" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              {/* Step 6 - Pending */}
+              {step === 6 && (
+                <motion.div key="s6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center justify-center py-10 text-center">
                   <motion.div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 relative"
                     style={{ background: `linear-gradient(135deg, rgba(0,229,160,0.2) 0%, transparent 100%)` }}>
@@ -808,11 +1021,22 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
               )}
             </AnimatePresence>
 
-            {/* Buttons (steps 1-4 only) */}
-            {step <= 4 && (
+            {/* Buttons (steps 1-2 and 4-5 only, step 3 has its own buttons) */}
+            {(step <= 2 || (step >= 4 && step <= 5)) && (
               <div className="flex gap-3 mt-6">
-                {step > 1 && (
+                {step > 1 && step <= 2 && (
                   <motion.button type="button" onClick={() => setStep(step - 1)}
+                    className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+                    style={{ background: "rgba(255,255,255,0.03)", color: "#9ca3af", border: "1px solid rgba(255,255,255,0.08)" }}
+                    whileHover={{ background: "rgba(255,255,255,0.06)", scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}>
+                    <ArrowLeft className={`w-4 h-4 transition-transform ${isRTL ? "rotate-180" : ""}`} />
+                    {isRTL ? "رجوع" : "Back"}
+                  </motion.button>
+                )}
+
+                {step === 4 && (
+                  <motion.button type="button" onClick={() => setStep(3)}
                     className="flex-1 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
                     style={{ background: "rgba(255,255,255,0.03)", color: "#9ca3af", border: "1px solid rgba(255,255,255,0.08)" }}
                     whileHover={{ background: "rgba(255,255,255,0.06)", scale: 1.02 }}
@@ -833,20 +1057,25 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                 )}
 
                 {step < 3 ? (
-                  <motion.button type="button" onClick={handleNext}
-                    className="flex-1 py-3.5 rounded-xl text-sm font-black tracking-wider uppercase flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer"
+                  <motion.button type="button" onClick={handleNext} disabled={apiLoading}
+                    className="flex-1 py-3.5 rounded-xl text-sm font-black tracking-wider uppercase flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer disabled:opacity-60"
                     style={{ background: `linear-gradient(135deg, ${currentColor}, ${currentColor}cc)`, color: "#060a10", boxShadow: `0 8px 30px ${currentColor}30` }}
-                    whileHover={{ scale: 1.02, boxShadow: `0 12px 40px ${currentColor}40` }}
-                    whileTap={{ scale: 0.98 }}>
-                    <motion.div className="absolute inset-0 pointer-events-none"
-                      style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)" }}
-                      animate={{ left: ["-100%", "200%"] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
-                    {isRTL ? "التالي" : "Next"}
-                    <ArrowRight className={`w-4 h-4 transition-transform ${isRTL ? "rotate-180" : ""}`} />
+                    whileHover={!apiLoading ? { scale: 1.02, boxShadow: `0 12px 40px ${currentColor}40` } : {}}
+                    whileTap={!apiLoading ? { scale: 0.98 } : {}}>
+                    {apiLoading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" />{isRTL ? "جاري التسجيل..." : "Registering..."}</>
+                    ) : (
+                      <>{isRTL ? "التالي" : "Next"}<ArrowRight className={`w-4 h-4 transition-transform ${isRTL ? "rotate-180" : ""}`} /></>
+                    )}
+                    {!apiLoading && (
+                      <motion.div className="absolute inset-0 pointer-events-none"
+                        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)" }}
+                        animate={{ left: ["-100%", "200%"] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1 }} />
+                    )}
                   </motion.button>
-                ) : step === 3 ? (
-                  <motion.button type="button" onClick={() => setStep(4)}
+                ) : step === 4 ? (
+                  <motion.button type="button" onClick={() => setStep(5)}
                     className="flex-1 py-3.5 rounded-xl text-sm font-black tracking-wider uppercase flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer"
                     style={{ background: `linear-gradient(135deg, #facc15, #f59e0b)`, color: "#060a10", boxShadow: `0 8px 30px rgba(250,204,21,0.3)` }}
                     whileHover={{ scale: 1.02, boxShadow: `0 12px 40px rgba(250,204,21,0.4)` }}
@@ -858,7 +1087,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                     <Send className="w-4 h-4" />
                     {isRTL ? "متابعة الدفع" : "Proceed to Pay"}
                   </motion.button>
-                ) : (
+                ) : step === 5 ? (
                   <motion.button type="button" onClick={handleConfirmPayment}
                     className="flex-1 py-3.5 rounded-xl text-sm font-black tracking-wider uppercase flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer"
                     style={{ background: `linear-gradient(135deg, ${accent}, #00c890)`, color: "#060a10", boxShadow: `0 8px 30px ${accentG}0.3)` }}
@@ -871,7 +1100,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
                     <CircleCheck className="w-4 h-4" />
                     {isRTL ? "أؤكد تحويل المبلغ" : "Confirm Payment Sent"}
                   </motion.button>
-                )}
+                ) : null}
               </div>
             )}
           </div>

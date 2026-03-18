@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { APIUser } from '../api/authApi';
 
 export type SubscriptionStatus = 'none' | 'pending' | 'active';
 export type SubscriptionPlan = 'core' | 'trader' | 'professional' | 'institutional' | 'none';
@@ -8,6 +9,11 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  firstName?: string;
+  lastName?: string;
+  countryId?: number;
+  emailVerified?: boolean;
+  referralCodeFromApi?: string;
 }
 
 export interface ReferralEntry {
@@ -20,6 +26,8 @@ export interface ReferralEntry {
 
 export interface AuthState {
   user: User | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   subscriptionStatus: SubscriptionStatus;
   subscriptionPlan: SubscriptionPlan;
   hasMT5Access: boolean;
@@ -32,6 +40,7 @@ export interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (email: string, name?: string) => void;
+  loginWithApi: (apiUser: APIUser, access: string, refresh: string) => void;
   logout: () => void;
   submitReceipt: (plan: SubscriptionPlan, includeAI: boolean, includeMT5: boolean) => void;
   activateSubscription: (plan: SubscriptionPlan, includeAI: boolean, includeMT5: boolean) => void;
@@ -40,6 +49,7 @@ interface AuthContextType extends AuthState {
   addTokens: (amount: number) => void;
   applyReferralCode: (code: string) => { valid: boolean; discount: number };
   addReferralEarning: (entry: ReferralEntry) => void;
+  setEmailVerified: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           referralCode: parsed.referralCode || '',
           referralBalance: parsed.referralBalance || 0,
           referralHistory: parsed.referralHistory || [],
+          accessToken: parsed.accessToken || null,
+          refreshToken: parsed.refreshToken || null,
         };
       } catch (e) {
         console.error("Failed to parse auth state", e);
@@ -69,6 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     return {
       user: null,
+      accessToken: null,
+      refreshToken: null,
       subscriptionStatus: 'none',
       subscriptionPlan: 'none',
       hasMT5Access: false,
@@ -95,9 +109,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const loginWithApi = (apiUser: APIUser, access: string, refresh: string) => {
+    setState(prev => {
+      const name = `${apiUser.first_name} ${apiUser.last_name}`;
+      const code = apiUser.referral_code || prev.referralCode || generateCode(name);
+      return {
+        ...prev,
+        user: {
+          id: String(apiUser.id),
+          name,
+          email: apiUser.email,
+          firstName: apiUser.first_name,
+          lastName: apiUser.last_name,
+          countryId: apiUser.country_id,
+          emailVerified: apiUser.email_verified,
+          referralCodeFromApi: apiUser.referral_code,
+        },
+        accessToken: access,
+        refreshToken: refresh,
+        referralCode: code,
+      };
+    });
+  };
+
+  const setEmailVerified = () => {
+    setState(prev => {
+      if (!prev.user) return prev;
+      return {
+        ...prev,
+        user: { ...prev.user, emailVerified: true },
+      };
+    });
+  };
+
   const logout = () => {
     setState({
       user: null,
+      accessToken: null,
+      refreshToken: null,
       subscriptionStatus: 'none',
       subscriptionPlan: 'none',
       hasMT5Access: false,
@@ -161,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const trimmed = code.trim().toUpperCase();
     if (!trimmed || trimmed.length < 6) return { valid: false, discount: 0 };
     if (trimmed === state.referralCode) return { valid: false, discount: 0 };
-    if (!trimmed.startsWith('PX-')) return { valid: false, discount: 0 };
+    if (!trimmed.startsWith('PX-') && !trimmed.startsWith('PHASE-')) return { valid: false, discount: 0 };
     // Valid referral — 10% discount
     return { valid: true, discount: 0.1 };
   };
@@ -175,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, submitReceipt, activateSubscription, activateMT5, consumeTokens, addTokens, applyReferralCode, addReferralEarning }}>
+    <AuthContext.Provider value={{ ...state, login, loginWithApi, logout, submitReceipt, activateSubscription, activateMT5, consumeTokens, addTokens, applyReferralCode, addReferralEarning, setEmailVerified }}>
       {children}
     </AuthContext.Provider>
   );
