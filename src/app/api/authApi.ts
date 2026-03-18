@@ -1,5 +1,12 @@
 const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/accounts";
 
+/* ─── Country Type ─── */
+export interface APICountry {
+  id: number;
+  name_en: string;
+  name_ar: string;
+}
+
 /* ─── Types ─── */
 export interface RegisterPayload {
   first_name: string;
@@ -83,4 +90,12 @@ export async function getMe(accessToken: string): Promise<APIUser> {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return handleResponse<APIUser>(res);
+}
+
+/* ─── Get Countries ─── */
+export async function getCountries(): Promise<APICountry[]> {
+  const res = await fetch(`${API_BASE}/countries/`);
+  const data = await res.json();
+  if (!res.ok) throw new Error((data as any).detail || `API error: ${res.status}`);
+  return (data as any).countries || data;
 }

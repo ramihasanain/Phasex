@@ -10,8 +10,9 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState<"landing" | "login" | "register" | "dashboard" | "phasex-dynamics">("landing");
-  const [lastMainPage, setLastMainPage] = useState<"landing" | "dashboard">("landing");
+  const { user } = useAuth();
+  const [currentPage, setCurrentPage] = useState<"landing" | "login" | "register" | "dashboard" | "phasex-dynamics">(() => user ? "dashboard" : "landing");
+  const [lastMainPage, setLastMainPage] = useState<"landing" | "dashboard">(() => user ? "dashboard" : "landing");
   const [isNewRegistration, setIsNewRegistration] = useState(false);
   const { subscriptionStatus } = useAuth();
 

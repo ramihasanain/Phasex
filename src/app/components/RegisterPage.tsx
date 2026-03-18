@@ -28,7 +28,8 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
-import { registerUser, resendVerification, getMe, loginUser } from "../api/authApi";
+import { registerUser, resendVerification, getMe, loginUser, getCountries } from "../api/authApi";
+import type { APICountry } from "../api/authApi";
 import { getPlans, getAddons, checkoutSubmit } from "../api/subscriptionsApi";
 import type { APIPlan, APIAddon } from "../api/subscriptionsApi";
 
@@ -73,6 +74,16 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const [apiAddons, setApiAddons] = useState<APIAddon[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
 
+  // Dynamic countries from API
+  const [apiCountries, setApiCountries] = useState<APICountry[]>([]);
+
+  // Fetch countries on mount
+  useEffect(() => {
+    getCountries()
+      .then(list => setApiCountries(list))
+      .catch(err => console.error('[PhaseX] Failed to load countries:', err));
+  }, []);
+
   const languageOptions = [
     { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png" },
     { code: "ar", label: "العربية", flag: "https://flagcdn.com/w40/sa.png" },
@@ -88,30 +99,10 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const accentG = "rgba(0,229,160,";
   const walletAddress = "TQwFCKK5JjZACHdE888zG5iUx8wQ2RtnAV";
 
-  const countries = [
-    { value: "1", label: isRTL ? "الإمارات" : "UAE" },
-    { value: "2", label: isRTL ? "السعودية" : "Saudi Arabia" },
-    { value: "3", label: isRTL ? "مصر" : "Egypt" },
-    { value: "4", label: isRTL ? "الأردن" : "Jordan" },
-    { value: "5", label: isRTL ? "لبنان" : "Lebanon" },
-    { value: "6", label: isRTL ? "الكويت" : "Kuwait" },
-    { value: "7", label: isRTL ? "قطر" : "Qatar" },
-    { value: "8", label: isRTL ? "البحرين" : "Bahrain" },
-    { value: "9", label: isRTL ? "عُمان" : "Oman" },
-    { value: "10", label: isRTL ? "العراق" : "Iraq" },
-    { value: "11", label: isRTL ? "سوريا" : "Syria" },
-    { value: "12", label: isRTL ? "اليمن" : "Yemen" },
-    { value: "13", label: isRTL ? "فلسطين" : "Palestine" },
-    { value: "14", label: isRTL ? "المغرب" : "Morocco" },
-    { value: "15", label: isRTL ? "الجزائر" : "Algeria" },
-    { value: "16", label: isRTL ? "تونس" : "Tunisia" },
-    { value: "17", label: isRTL ? "ليبيا" : "Libya" },
-    { value: "18", label: isRTL ? "السودان" : "Sudan" },
-    { value: "19", label: isRTL ? "أمريكا" : "USA" },
-    { value: "20", label: isRTL ? "بريطانيا" : "UK" },
-    { value: "21", label: isRTL ? "تركيا" : "Turkey" },
-    { value: "22", label: isRTL ? "أخرى" : "Other" }
-  ];
+  const countries = apiCountries.map(c => ({
+    value: String(c.id),
+    label: isRTL ? c.name_ar : c.name_en,
+  }));
 
   // Plan color/icon mapping
   const planColorMap: Record<string, { color: string; icon: any }> = {
@@ -322,14 +313,19 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
       try {
         setApiLoading(true);
         const addonIds = aiAddon && aiAddonData ? [aiAddonData.id] : [];
-        await checkoutSubmit(token, {
+        const payload = {
           plan_id: selectedSub.apiId,
-          period: billingCycle === "yearly" ? 360 : 30,
+          period: (billingCycle === "yearly" ? 360 : 30) as 30 | 360,
           addon_ids: addonIds,
-        });
+        };
+        console.log('[PhaseX] Checkout submit payload:', payload);
+        console.log('[PhaseX] Displayed total:', totalAmount);
+        const result = await checkoutSubmit(token, payload);
+        console.log('[PhaseX] Checkout submit result:', result);
       } catch (err: any) {
         console.error('[PhaseX] Checkout submit error:', err);
-        // Continue to pending step even if API fails — manual verification will follow
+        setApiError(err.message || (isRTL ? "فشل إرسال الاشتراك" : "Checkout failed."));
+        return; // Don't proceed if checkout fails
       } finally {
         setApiLoading(false);
       }
