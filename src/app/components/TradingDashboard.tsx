@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { upgradeSubscription, getAddons } from "../api/subscriptionsApi";
 import { MarketList, Asset } from "./MarketList";
 import { IndicatorChart, Indicator } from "./IndicatorChart";
 import { Logo } from "./Logo";
@@ -2508,12 +2509,27 @@ export function TradingDashboard({
 
                     <motion.button
                       disabled={!mt5SubscribeTermsAccepted || isMT5Processing}
-                      onClick={() => {
+                      onClick={async () => {
                         setIsMT5Processing(true);
-                        setTimeout(() => {
+                        try {
+                          // Fetch addons to get mt5_inte ID
+                          const addons = await getAddons(accessToken || undefined);
+                          const mt5Addon = addons.find((a: any) => a.code === 'mt5_intgration');
+                          if (mt5Addon && accessToken) {
+                            const result = await upgradeSubscription(accessToken, {
+                              addon_ids: [mt5Addon.id],
+                            });
+                            console.log('[PhaseX] MT5 upgrade submitted:', result);
+                          } else {
+                            console.warn('[PhaseX] mt5_inte addon not found or no token');
+                          }
                           setIsMT5Processing(false);
                           setIsMT5Pending(true);
-                        }, 1500);
+                        } catch (err: any) {
+                          console.error('[PhaseX] MT5 upgrade error:', err);
+                          setIsMT5Processing(false);
+                          alert(err?.message || 'Failed to submit MT5 upgrade request');
+                        }
                       }}
                       whileHover={
                         mt5SubscribeTermsAccepted && !isMT5Processing

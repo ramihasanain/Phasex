@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Check, Shield, Zap, Copy, Send, ArrowRight, CreditCard, Bot, Coins, Crown, Star, Trophy, CircleCheck, X, Activity } from "lucide-react";
 import { useAuth, SubscriptionPlan } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import { getAddons, getPlans, checkoutSubmit, checkoutPreview } from "../api/subscriptionsApi";
+import type { APIAddon, APIPlan } from "../api/subscriptionsApi";
 
 interface SubscriptionOnboardingProps {
     onComplete: () => void;
@@ -10,7 +12,7 @@ interface SubscriptionOnboardingProps {
 
 export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingProps) {
     const { t, language } = useLanguage();
-    const { submitReceipt, applyReferralCode } = useAuth();
+    const { submitReceipt, applyReferralCode, accessToken } = useAuth();
     
     const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>("trader");
     const [aiAddon, setAiAddon] = useState(false);
@@ -21,16 +23,67 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
     const [referralInput, setReferralInput] = useState("");
     const [referralApplied, setReferralApplied] = useState(false);
     const [referralError, setReferralError] = useState(false);
+    const [apiAddons, setApiAddons] = useState<APIAddon[]>([]);
+    const [apiPlans, setApiPlans] = useState<APIPlan[]>([]);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
     
     const isRTL = language === "ar";
     
     const walletAddress = "TQwFCKK5JjZACHdE888zG5iUx8wQ2RtnAV";
 
+    // Fetch add-ons and plans from backend API
+    useEffect(() => {
+        getAddons(accessToken || undefined)
+            .then(addons => {
+                console.log('[PhaseX] Loaded addons:', addons);
+                setApiAddons(addons);
+            })
+            .catch(err => console.error('[PhaseX] Failed to load addons:', err));
+        getPlans(accessToken || undefined)
+            .then(plans => {
+                console.log('[PhaseX] Loaded plans:', plans);
+                setApiPlans(plans);
+            })
+            .catch(err => console.error('[PhaseX] Failed to load plans:', err));
+    }, [accessToken]);
+
+    // Find MT5 addon from API
+    const mt5ApiAddon = apiAddons.find(a => a.code === 'mt5_intgration');
+    // Find AI addon from API (if exists)
+    const aiApiAddon = apiAddons.find(a => a.code === 'ai_insight' || a.code === 'ai_addon');
+
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
     };
 
-    const handleFinish = () => {
+    const handleFinish = async () => {
+        // Collect selected addon IDs
+        const addonIds: number[] = [];
+        if (mt5Addon && mt5ApiAddon) addonIds.push(mt5ApiAddon.id);
+        if (aiAddon && aiApiAddon) addonIds.push(aiApiAddon.id);
+
+        // Find the matching API plan ID
+        const matchedPlan = apiPlans.find(p => p.name.toLowerCase().includes(selectedPlan));
+        const planId = matchedPlan?.id;
+
+        // Submit to backend API
+        if (accessToken && planId) {
+            setCheckoutLoading(true);
+            try {
+                const result = await checkoutSubmit(accessToken, {
+                    plan_id: planId,
+                    billing_cycle: billingCycle === 'yearly' ? 'annual' : 'monthly',
+                    addon_ids: addonIds.length > 0 ? addonIds : undefined,
+                });
+                console.log('[PhaseX] Checkout submitted:', result);
+            } catch (err: any) {
+                console.error('[PhaseX] Checkout error:', err);
+            } finally {
+                setCheckoutLoading(false);
+            }
+        }
+
+        // Update local state
         submitReceipt(selectedPlan, aiAddon, mt5Addon);
         setStep("pending");
         setTimeout(() => {
@@ -91,7 +144,11 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
 
     const currentPlan = plans.find(p => p.id === selectedPlan)!;
     const getPrice = (basePrice: number) => billingCycle === "yearly" ? Math.round(basePrice * 12 * 0.8) : basePrice;
-    const subtotal = (currentPlan ? getPrice(currentPlan.price) : 0) + (aiAddon ? (billingCycle === "yearly" ? Math.round(20 * 12 * 0.8) : 20) : 0) + (mt5Addon ? (billingCycle === "yearly" ? Math.round(30 * 12 * 0.8) : 30) : 0);
+    const mt5MonthlyPrice = mt5ApiAddon ? parseFloat(mt5ApiAddon.base_price_monthly) : 30;
+    const mt5AnnualPrice = mt5ApiAddon ? parseFloat(mt5ApiAddon.base_price_annual_monthly) : Math.round(30 * 12 * 0.8);
+    const aiMonthlyPrice = aiApiAddon ? parseFloat(aiApiAddon.base_price_monthly) : 20;
+    const aiAnnualPrice = aiApiAddon ? parseFloat(aiApiAddon.base_price_annual_monthly) : Math.round(20 * 12 * 0.8);
+    const subtotal = (currentPlan ? getPrice(currentPlan.price) : 0) + (aiAddon ? (billingCycle === "yearly" ? aiAnnualPrice : aiMonthlyPrice) : 0) + (mt5Addon ? (billingCycle === "yearly" ? mt5AnnualPrice : mt5MonthlyPrice) : 0);
     const referralDiscountAmount = referralApplied ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
     const totalAmount = subtotal - referralDiscountAmount;
 
@@ -323,7 +380,7 @@ export function SubscriptionOnboarding({ onComplete }: SubscriptionOnboardingPro
                                 </div>
                                 <div className="flex items-center gap-6 mt-6 md:mt-0 shrink-0 self-end md:self-auto">
                                     <div className="text-right">
-                                        <div className="text-3xl md:text-4xl font-black text-[#6366f1]">$30</div>
+                                        <div className="text-3xl md:text-4xl font-black text-[#6366f1]">${mt5MonthlyPrice}</div>
                                         <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-500 mt-1">{t("perMonth")}</div>
                                     </div>
                                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-colors ${mt5Addon ? 'border-[#6366f1] bg-[#6366f1]/20 text-[#6366f1]' : 'border-[#4b5563] text-transparent'}`}>

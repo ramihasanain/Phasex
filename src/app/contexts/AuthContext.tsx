@@ -116,12 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         else if (planName.includes('institutional')) plan = 'institutional';
         // Check if AI addon is in allowed indicators
         const indicators: string[] = data.allowed_indicators || [];
-        const hasAI = indicators.length > 4; // institutional level
+        // Check allowed addons from API (string array like ["ai_insight", "mt5_intgration"])
+        const allowedAddons: string[] = data.allowed_addons || [];
+        const hasMT5 = allowedAddons.includes('mt5_intgration');
+        const hasAI = allowedAddons.includes('ai_insight') || indicators.length > 4;
+        console.log('[PhaseX] Addon check:', { allowedAddons, hasMT5, hasAI });
         setState(prev => ({
           ...prev,
           subscriptionStatus: 'active' as SubscriptionStatus,
           subscriptionPlan: plan,
           hasAIAccess: prev.hasAIAccess || hasAI,
+          hasMT5Access: prev.hasMT5Access || hasMT5,
         }));
       } else if (data.subscription && data.subscription.status === 'pending_payment') {
         setState(prev => ({ ...prev, subscriptionStatus: 'pending' as SubscriptionStatus }));

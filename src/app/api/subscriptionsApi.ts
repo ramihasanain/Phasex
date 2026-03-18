@@ -105,6 +105,23 @@ export async function checkoutSubmit(accessToken: string, payload: CheckoutSubmi
   return handleResponse<any>(res);
 }
 
+/* ─── Upgrade Subscription (Add Add-ons) ─── */
+export interface UpgradePayload {
+  addon_ids: number[];
+}
+
+export async function upgradeSubscription(accessToken: string, payload: UpgradePayload): Promise<any> {
+  const res = await fetch(`${API_BASE}/upgrade/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<any>(res);
+}
+
 /* ─── Get My Subscription ─── */
 export async function getMySubscription(accessToken: string): Promise<any> {
   const res = await fetch(`${API_BASE}/me/`, {
