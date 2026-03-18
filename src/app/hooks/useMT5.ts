@@ -172,7 +172,7 @@ export function useMT5(): UseMT5Result {
         } catch (err: any) {
             if (mountedRef.current) {
                 setConnected(false);
-                setError("Cannot reach MT5 backend. Make sure the Django server is running on port 8000.");
+                setError("Cannot reach MT5 backend. Check server status or CORS settings.");
             }
         } finally {
             if (mountedRef.current) setConnecting(false);
