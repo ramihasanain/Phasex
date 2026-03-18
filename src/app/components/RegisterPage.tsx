@@ -256,6 +256,12 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
       }
       return;
     }
+    // Step 3: Email verification — must verify before proceeding
+    if (step === 3) {
+      // Don't advance directly, use verification check
+      await handleCheckVerification();
+      return;
+    }
     // Step 4 → Step 5: call checkout/preview to get backend-calculated total
     if (step === 4 && selectedSub) {
       const token = accessToken;
