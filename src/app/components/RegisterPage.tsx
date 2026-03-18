@@ -313,13 +313,28 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
     setVerifyChecking(true);
     setApiError(null);
     try {
-      // Login with the credentials to check email_verified status
-      const res = await loginUser(formData.email, formData.password);
-      console.log('[PhaseX] Login check response:', res);
-      const userData = res.user;
+      let userData: any;
+      let tokens: { access: string; refresh: string } | null = null;
+
+      // Try getMe first if we already have a token (from registration)
+      if (accessToken) {
+        console.log('[PhaseX] Checking verification via getMe...');
+        userData = await getMe(accessToken);
+        console.log('[PhaseX] getMe response:', userData);
+      } else {
+        // Fallback: login again to get fresh data
+        console.log('[PhaseX] Checking verification via loginUser...');
+        const res = await loginUser(formData.email, formData.password);
+        console.log('[PhaseX] Login check response:', res);
+        userData = res.user;
+        tokens = { access: res.access, refresh: res.refresh };
+      }
+
       if (userData.email_verified) {
-        // Email is verified! Store tokens and proceed
-        loginWithApi(res.user, res.access, res.refresh);
+        // Email is verified! Update tokens if we got new ones
+        if (tokens) {
+          loginWithApi(userData, tokens.access, tokens.refresh);
+        }
         setEmailVerified();
         if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
         setStep(4); // go to plan selection
@@ -337,7 +352,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
     } finally {
       setVerifyChecking(false);
     }
-  }, [formData.email, formData.password, isRTL, loginWithApi, setEmailVerified]);
+  }, [formData.email, formData.password, isRTL, loginWithApi, setEmailVerified, accessToken]);
 
   const handleConfirmPayment = async () => {
     const token = accessToken;
