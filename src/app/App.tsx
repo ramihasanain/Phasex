@@ -34,8 +34,8 @@ function LoginRoute() {
 
 function RegisterRoute() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  if (user) return <Navigate to="/dashboard" replace />;
+  // Don't redirect to dashboard when user exists —
+  // the user needs to complete email verification + plan selection steps
   return (
     <RegisterPage
       onRegister={() => navigate("/dashboard", { state: { fromRegister: true } })}
