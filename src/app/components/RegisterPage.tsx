@@ -164,7 +164,8 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   useEffect(() => {
     if (step === 4 && apiPlans.length === 0 && !plansLoading) {
       setPlansLoading(true);
-      Promise.all([getPlans(), getAddons()])
+      const token = accessToken || undefined;
+      Promise.all([getPlans(token), getAddons(token)])
         .then(([plans, addons]) => {
           setApiPlans(plans);
           setApiAddons(addons);

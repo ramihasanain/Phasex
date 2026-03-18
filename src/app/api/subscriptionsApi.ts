@@ -63,15 +63,19 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return data as T;
 }
 
-/* ─── Get Plans (public) ─── */
-export async function getPlans(): Promise<APIPlan[]> {
-  const res = await fetch(`${API_BASE}/plans/`);
+/* ─── Get Plans ─── */
+export async function getPlans(accessToken?: string): Promise<APIPlan[]> {
+  const headers: Record<string, string> = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  const res = await fetch(`${API_BASE}/plans/`, { headers });
   return handleResponse<APIPlan[]>(res);
 }
 
-/* ─── Get Addons (public) ─── */
-export async function getAddons(): Promise<APIAddon[]> {
-  const res = await fetch(`${API_BASE}/addons/`);
+/* ─── Get Addons ─── */
+export async function getAddons(accessToken?: string): Promise<APIAddon[]> {
+  const headers: Record<string, string> = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  const res = await fetch(`${API_BASE}/addons/`, { headers });
   return handleResponse<APIAddon[]>(res);
 }
 
