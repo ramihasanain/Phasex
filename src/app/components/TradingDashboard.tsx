@@ -181,7 +181,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
   const tk = useThemeTokens();
-  const { subscriptionStatus, subscriptionPlan, hasMT5Access, activateMT5 } = useAuth();
+  const { subscriptionStatus, subscriptionPlan, hasMT5Access, activateMT5, accessToken } = useAuth();
   const { language, setLanguageKey, t } = useLanguage();
   const isRTL = language === "ar";
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -221,7 +221,7 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
     setSelectedMarket,
     filteredAssets,
     symbolsLoading,
-  } = useMarketsAPI();
+  } = useMarketsAPI(accessToken);
 
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
@@ -407,12 +407,12 @@ export function TradingDashboard({ onLogout, onOpenDynamics }: TradingDashboardP
   const aiTf1 = mtfEnabled ? formatTfStr(mtfLargeTimeframe) : formatTfStr(timeframe >= 60 ? timeframe : 60);
   const aiTf2 = mtfEnabled ? formatTfStr(mtfSmallTimeframe) : formatTfStr(timeframe);
 
-  const { candles: phaseCandles } = usePhaseStateAPI(selectedAsset?.symbol, aiTf1, aiTf2, true);
-  const { candles: dirCandles } = useDirectionStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
-  const { candles: oscCandles } = useOscillationStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
-  const { candles: dispCandles } = useDisplacementStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
-  const { candles: refCandles } = useReferenceStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
-  const { candles: envCandles } = useEnvelopStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true);
+  const { candles: phaseCandles } = usePhaseStateAPI(selectedAsset?.symbol, aiTf1, aiTf2, true, accessToken);
+  const { candles: dirCandles } = useDirectionStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true, accessToken);
+  const { candles: oscCandles } = useOscillationStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true, accessToken);
+  const { candles: dispCandles } = useDisplacementStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true, accessToken);
+  const { candles: refCandles } = useReferenceStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true, accessToken);
+  const { candles: envCandles } = useEnvelopStateAPI(selectedAsset?.symbol, mtfEnabled ? mtfSmallTimeframe : timeframe, true, accessToken);
 
   // Generate dynamic market context for the AI
   const aiMarketContext = useMemo(() => {

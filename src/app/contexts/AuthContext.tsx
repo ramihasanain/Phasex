@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { APIUser } from '../api/authApi';
+import { getMySubscription } from '../api/subscriptionsApi';
 
 export type SubscriptionStatus = 'none' | 'pending' | 'active';
 export type SubscriptionPlan = 'core' | 'trader' | 'professional' | 'institutional' | 'none';
@@ -50,6 +51,7 @@ interface AuthContextType extends AuthState {
   applyReferralCode: (code: string) => { valid: boolean; discount: number };
   addReferralEarning: (entry: ReferralEntry) => void;
   setEmailVerified: () => void;
+  syncSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -97,6 +99,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('phasex_auth', JSON.stringify(state));
   }, [state]);
+
+  // Sync subscription status from API when we have a token
+  const syncSubscription = useCallback(async () => {
+    const token = state.accessToken;
+    if (!token) return;
+    try {
+      const data = await getMySubscription(token);
+      console.log('[PhaseX] Subscription sync:', data);
+      if (data.subscription && data.subscription.active_now) {
+        const planName = (data.plan?.name || '').toLowerCase();
+        let plan: SubscriptionPlan = 'none';
+        if (planName.includes('core')) plan = 'core';
+        else if (planName.includes('trader')) plan = 'trader';
+        else if (planName.includes('professional')) plan = 'professional';
+        else if (planName.includes('institutional')) plan = 'institutional';
+        // Check if AI addon is in allowed indicators
+        const indicators: string[] = data.allowed_indicators || [];
+        const hasAI = indicators.length > 4; // institutional level
+        setState(prev => ({
+          ...prev,
+          subscriptionStatus: 'active' as SubscriptionStatus,
+          subscriptionPlan: plan,
+          hasAIAccess: prev.hasAIAccess || hasAI,
+        }));
+      } else if (data.subscription && data.subscription.status === 'pending_payment') {
+        setState(prev => ({ ...prev, subscriptionStatus: 'pending' as SubscriptionStatus }));
+      }
+    } catch (err) {
+      console.log('[PhaseX] No active subscription or error:', err);
+    }
+  }, [state.accessToken]);
+
+  // Auto-sync on mount/login when token is available
+  useEffect(() => {
+    if (state.accessToken && state.subscriptionStatus !== 'active') {
+      syncSubscription();
+    }
+  }, [state.accessToken]);
 
   const login = (email: string, name: string = 'Trader') => {
     setState(prev => {
@@ -224,7 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, loginWithApi, logout, submitReceipt, activateSubscription, activateMT5, consumeTokens, addTokens, applyReferralCode, addReferralEarning, setEmailVerified }}>
+    <AuthContext.Provider value={{ ...state, login, loginWithApi, logout, submitReceipt, activateSubscription, activateMT5, consumeTokens, addTokens, applyReferralCode, addReferralEarning, setEmailVerified, syncSubscription }}>
       {children}
     </AuthContext.Provider>
   );

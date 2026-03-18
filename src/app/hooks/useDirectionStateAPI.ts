@@ -121,7 +121,8 @@ function getTimeframeStateKey(tf: number): string {
 export function useDirectionStateAPI(
     symbol: string | undefined,
     timeframe: number,
-    enabled: boolean
+    enabled: boolean,
+    accessToken?: string | null
 ): UseDirectionStateAPIResult {
     const [candles, setCandles] = useState<ChartCandle[]>([]);
     const [loading, setLoading] = useState(false);
@@ -145,9 +146,12 @@ export function useDirectionStateAPI(
             const m5StateKey = "direction_m5";
             const m5Url = `${API_BASE}?symbol=${cleanSym}&state_key=${m5StateKey}&limit=2`;
 
+            const authHeaders: Record<string, string> = {};
+            if (accessToken) authHeaders["Authorization"] = `Bearer ${accessToken}`;
+
             const [res, m5Res] = await Promise.all([
-                fetch(url, { signal: controller.signal }),
-                stateKey !== m5StateKey ? fetch(m5Url, { signal: controller.signal }).catch(() => null) : Promise.resolve(null)
+                fetch(url, { signal: controller.signal, headers: authHeaders }),
+                stateKey !== m5StateKey ? fetch(m5Url, { signal: controller.signal, headers: authHeaders }).catch(() => null) : Promise.resolve(null)
             ]);
 
             if (!res.ok) throw new Error(`API error: ${res.status}`);

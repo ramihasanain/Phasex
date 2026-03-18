@@ -125,7 +125,8 @@ function getTimeframeStateKey(tf: number): string {
 export function useEnvelopStateAPI(
     symbol: string | undefined,
     timeframe: number,
-    enabled: boolean
+    enabled: boolean,
+    accessToken?: string | null
 ): UseEnvelopStateAPIResult {
     const [candles, setCandles] = useState<ChartCandle[]>([]);
     const [loading, setLoading] = useState(false);
@@ -146,7 +147,9 @@ export function useEnvelopStateAPI(
             const stateKey = getTimeframeStateKey(tf);
             const url = `${API_BASE}?symbol=${cleanSym}&state_key=${stateKey}&limit=50000`;
 
-            const res = await fetch(url, { signal: controller.signal });
+            const authHeaders: Record<string, string> = {};
+            if (accessToken) authHeaders["Authorization"] = `Bearer ${accessToken}`;
+            const res = await fetch(url, { signal: controller.signal, headers: authHeaders });
 
             if (!res.ok) throw new Error(`API error: ${res.status}`);
             const json = await res.json();

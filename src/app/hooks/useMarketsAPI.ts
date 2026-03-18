@@ -124,7 +124,7 @@ export interface UseMarketsAPIResult {
 }
 
 /* ─── Hook ─── */
-export function useMarketsAPI(): UseMarketsAPIResult {
+export function useMarketsAPI(accessToken?: string | null): UseMarketsAPIResult {
     // Markets state
     const [markets, setMarkets] = useState<MarketInfo[]>([]);
     const [marketsLoading, setMarketsLoading] = useState(true);
@@ -147,7 +147,9 @@ export function useMarketsAPI(): UseMarketsAPIResult {
         let cancelled = false;
         async function fetchMarkets() {
             try {
-                const res = await fetch(`${API_BASE}/markets`);
+                const headers: Record<string, string> = {};
+                if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+                const res = await fetch(`${API_BASE}/markets`, { headers });
                 if (!res.ok) throw new Error(`Markets API error: ${res.status}`);
                 const json = await res.json();
                 if (cancelled) return;
@@ -170,7 +172,7 @@ export function useMarketsAPI(): UseMarketsAPIResult {
         }
         fetchMarkets();
         return () => { cancelled = true; };
-    }, []);
+    }, [accessToken]);
 
     // ─── Step 2: Fetch SYMBOLS whenever selectedMarket changes ───
     useEffect(() => {
@@ -185,7 +187,9 @@ export function useMarketsAPI(): UseMarketsAPIResult {
             setSymbolsLoading(true);
             setSymbolsError(null);
             try {
-                const res = await fetch(`${API_BASE}/symbols`, { signal: controller.signal });
+                const headers: Record<string, string> = {};
+                if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+                const res = await fetch(`${API_BASE}/symbols`, { signal: controller.signal, headers });
                 if (!res.ok) throw new Error(`Symbols API error: ${res.status}`);
                 const json = await res.json();
                 if (controller.signal.aborted) return;

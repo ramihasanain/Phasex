@@ -30,7 +30,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { registerUser, resendVerification, getMe, loginUser, getCountries } from "../api/authApi";
 import type { APICountry } from "../api/authApi";
-import { getPlans, getAddons, checkoutSubmit } from "../api/subscriptionsApi";
+import { getPlans, getAddons, checkoutSubmit, checkoutPreview } from "../api/subscriptionsApi";
 import type { APIPlan, APIAddon } from "../api/subscriptionsApi";
 
 interface RegisterPageProps {
@@ -73,6 +73,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   const [apiPlans, setApiPlans] = useState<APIPlan[]>([]);
   const [apiAddons, setApiAddons] = useState<APIAddon[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
+  const [previewTotal, setPreviewTotal] = useState<number | null>(null);
 
   // Dynamic countries from API
   const [apiCountries, setApiCountries] = useState<APICountry[]>([]);
@@ -255,6 +256,31 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
       }
       return;
     }
+    // Step 4 → Step 5: call checkout/preview to get backend-calculated total
+    if (step === 4 && selectedSub) {
+      const token = accessToken;
+      if (token) {
+        setApiLoading(true);
+        setApiError(null);
+        try {
+          const addonIds = aiAddon && aiAddonData ? [aiAddonData.id] : [];
+          const preview = await checkoutPreview(token, {
+            plan_id: selectedSub.apiId,
+            billing_cycle: billingCycle === "yearly" ? "annual" : "monthly",
+            addon_ids: addonIds,
+          });
+          console.log('[PhaseX] Checkout preview:', preview);
+          const total = parseFloat(preview.total) || totalAmount;
+          setPreviewTotal(total);
+        } catch (err: any) {
+          console.error('[PhaseX] Preview error:', err);
+          // Fallback to frontend-calculated total
+          setPreviewTotal(totalAmount);
+        } finally {
+          setApiLoading(false);
+        }
+      }
+    }
     setApiError(null);
     setStep(step + 1);
   };
@@ -315,7 +341,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
         const addonIds = aiAddon && aiAddonData ? [aiAddonData.id] : [];
         const payload = {
           plan_id: selectedSub.apiId,
-          period: (billingCycle === "yearly" ? 360 : 30) as 30 | 360,
+          billing_cycle: (billingCycle === "yearly" ? "annual" : "monthly") as "monthly" | "annual",
           addon_ids: addonIds,
         };
         console.log('[PhaseX] Checkout submit payload:', payload);
@@ -956,7 +982,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
 
                   <div className="p-4 rounded-xl flex justify-between items-center bg-[#0b0e14] border border-[#1c2230]">
                     <span className="font-black text-gray-400 uppercase tracking-widest text-xs">{t("amountDue")}</span>
-                    <span className="text-3xl font-black text-[#00e5a0]">${totalAmount.toFixed(2)}</span>
+                    <span className="text-3xl font-black text-[#00e5a0]">${(previewTotal ?? totalAmount).toFixed(2)}</span>
                   </div>
 
                   {/* Telegram */}

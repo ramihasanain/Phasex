@@ -35,7 +35,7 @@ export interface APIAddon {
 
 export interface CheckoutPreviewPayload {
   plan_id: number;
-  period: 30 | 360;
+  billing_cycle: "monthly" | "annual";
   addon_ids?: number[];
 }
 
@@ -50,7 +50,7 @@ export interface CheckoutPreviewResponse {
 
 export interface CheckoutSubmitPayload {
   plan_id: number;
-  period: 30 | 360;
+  billing_cycle: "monthly" | "annual";
   addon_ids?: number[];
 }
 

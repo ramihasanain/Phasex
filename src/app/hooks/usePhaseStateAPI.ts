@@ -163,7 +163,8 @@ export function usePhaseStateAPI(
     symbol: string | undefined,
     mainTF: string,
     subTF: string,
-    enabled: boolean
+    enabled: boolean,
+    accessToken?: string | null
 ): UsePhaseStateAPIResult {
     const [candles, setCandles] = useState<ChartCandle[]>([]);
     const [loading, setLoading] = useState(false);
@@ -190,9 +191,12 @@ export function usePhaseStateAPI(
             const h1m5StateKey = "H1_from_M5";
             const h1m5Url = `${API_BASE}?symbol=${cleanSym}&state_key=${h1m5StateKey}&limit=2`;
 
+            const authHeaders: Record<string, string> = {};
+            if (accessToken) authHeaders["Authorization"] = `Bearer ${accessToken}`;
+
             const [res, h1m5Res] = await Promise.all([
-                fetch(url, { signal: controller.signal }),
-                stateKey !== h1m5StateKey ? fetch(h1m5Url, { signal: controller.signal }).catch(() => null) : Promise.resolve(null)
+                fetch(url, { signal: controller.signal, headers: authHeaders }),
+                stateKey !== h1m5StateKey ? fetch(h1m5Url, { signal: controller.signal, headers: authHeaders }).catch(() => null) : Promise.resolve(null)
             ]);
 
             if (!res.ok) throw new Error(`API error: ${res.status}`);
