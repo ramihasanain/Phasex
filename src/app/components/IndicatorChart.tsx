@@ -44,6 +44,7 @@ interface IndicatorChartProps {
   generateCandlesFromReal?: (real: PhaseCandle, count?: number) => any[];
   onLiveChartData?: (data: any[]) => void;
   renderTradeButtons?: () => React.ReactNode;
+  accessToken?: string | null;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -279,12 +280,13 @@ function CandleLimitSelector({ value, onChange, isRTL, tk, color, compact = fals
   );
 }
 
-export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange,  onMtfSmallTimeframeChange,
+export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange,
   onMtfLargeTimeframeChange,
   phaseStateData,
   generateCandlesFromReal,
   onLiveChartData,
   renderTradeButtons,
+  accessToken,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -363,42 +365,48 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     currency?.symbol,
     mainTF,
     subTF,
-    !!isPhaseIndicator
+    !!isPhaseIndicator,
+    accessToken
   );
 
   const isDirectionIndicator = indicator?.id === "direction";
   const { candles: dirCandles, loading: dirLoading, error: dirError } = useDirectionStateAPI(
     currency?.symbol,
     timeframe,
-    !!isDirectionIndicator
+    !!isDirectionIndicator,
+    accessToken
   );
 
   const isOscillationIndicator = indicator?.id === "oscillation";
   const { candles: oscCandles, loading: oscLoading, error: oscError } = useOscillationStateAPI(
     currency?.symbol,
     timeframe,
-    !!isOscillationIndicator
+    !!isOscillationIndicator,
+    accessToken
   );
 
   const isDisplacementIndicator = indicator?.id === "displacement";
   const { candles: dispCandles, loading: dispLoading, error: dispError } = useDisplacementStateAPI(
     currency?.symbol,
     timeframe,
-    !!isDisplacementIndicator
+    !!isDisplacementIndicator,
+    accessToken
   );
 
   const isReferenceIndicator = indicator?.id === "reference";
   const { candles: refCandles, loading: refLoading, error: refError } = useReferenceStateAPI(
     currency?.symbol,
     timeframe,
-    !!isReferenceIndicator
+    !!isReferenceIndicator,
+    accessToken
   );
 
   const isEnvelopIndicator = indicator?.id === "envelop";
   const { candles: envCandles, loading: envLoading, error: envError } = useEnvelopStateAPI(
     currency?.symbol,
     timeframe,
-    !!isEnvelopIndicator
+    !!isEnvelopIndicator,
+    accessToken
   );
 
   // Drawing tools — only for fullscreen

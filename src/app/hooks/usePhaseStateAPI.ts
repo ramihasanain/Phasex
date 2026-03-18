@@ -229,7 +229,7 @@ export function usePhaseStateAPI(
         } finally {
             if (isInitial) setLoading(false);
         }
-    }, []);
+    }, [accessToken]);
 
     useEffect(() => {
         // Clear timer on any change
