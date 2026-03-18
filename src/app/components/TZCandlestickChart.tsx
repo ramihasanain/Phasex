@@ -63,9 +63,14 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(900);
   const margin = { top: 15, right: 55, bottom: 45, left: 5 };
+  
+  // Allocate space for the info bar at the bottom
+  const INFO_BAR_HEIGHT = 56;
+  const chartHeight = Math.max(height - INFO_BAR_HEIGHT, 150);
+
   const chartWidth = containerWidth;
   const innerWidth = chartWidth - margin.left - margin.right;
-  const innerHeight = height - margin.top - margin.bottom;
+  const innerHeight = chartHeight - margin.top - margin.bottom;
 
   // Measure container width on mount and resize
   useEffect(() => {
@@ -170,7 +175,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const scaleX = chartWidth / rect.width;
-    const scaleYFactor = height / rect.height;
+    const scaleYFactor = chartHeight / rect.height;
     const mouseX = (e.clientX - rect.left) * scaleX - margin.left;
     const idx = Math.round(mouseX / gap - 0.5);
     if (idx >= 0 && idx < candlestickData.length) {
@@ -184,7 +189,7 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
       setHoveredIndex(-1);
       setTooltip(null);
     }
-  }, [candlestickData, gap, chartWidth, height, margin.left]);
+  }, [candlestickData, gap, chartWidth, chartHeight, margin.left]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredIndex(-1);
@@ -201,9 +206,9 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
       <svg
         ref={svgRef}
         width={chartWidth}
-        height={height}
+        height={chartHeight}
         className="w-full"
-        style={{ height: `${height}px`, background: bgColor, display: 'block' }}
+        style={{ height: `${chartHeight}px`, background: bgColor, display: 'block' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
@@ -316,11 +321,11 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
 
             // ── NaN candle → show "no data" placeholder ──
             if (candle.isNaNCandle) {
-              const midY = height / 2;
+              const midY = chartHeight / 2;
               return (
                 <g key={`candle-${i}`}>
                   {/* Dashed line */}
-                  <line x1={cx} y1={margin.top + 10} x2={cx} y2={height - margin.bottom - 5}
+                  <line x1={cx} y1={margin.top + 10} x2={cx} y2={chartHeight - margin.bottom - 5}
                     stroke="#475569" strokeWidth={1} strokeDasharray="4 3" opacity={0.5} />
                   {/* No-data icon */}
                   <text x={cx} y={midY} textAnchor="middle" dominantBaseline="middle"
@@ -613,50 +618,47 @@ export const TZCandlestickChart = React.memo(function TZCandlestickChart({ data,
         </defs>
       </svg>
 
-      {/* Tooltip */}
-      {tooltip && tooltip.data && (() => {
-        // Auto-detect decimal precision from the values
-        const val = tooltip.data.close;
+      {/* Candle Info Bar (Below Chart) */}
+      {(() => {
+        const activeData = tooltip?.data || (candlestickData.length > 0 ? candlestickData[candlestickData.length - 1] : null);
+        if (!activeData || activeData.isNaNCandle) return <div className="h-8 mt-2" />; // placeholder
+        
+        const val = activeData.close;
         const dec = val < 1 ? 5 : val < 100 ? 4 : val < 1000 ? 2 : val < 10000 ? 1 : 0;
+        
         return (
-          <div
-            className="absolute pointer-events-none z-50"
-            style={{
-              left: `${Math.min(tooltip.x / chartWidth * 100, 75)}%`,
-              top: `${Math.max(tooltip.y / height * 100 - 15, 5)}%`,
-              transform: 'translateX(-50%)',
-            }}
-          >
-            <div className="p-3 rounded-xl border shadow-2xl backdrop-blur-sm" style={{ background: tk.tooltipBg, borderColor: tk.tooltipBorder }}>
-              <p className="text-xs mb-1.5 font-mono flex items-center gap-1.5" style={{ color: tk.textDim }}>
-                📅 {tooltip.data.fullTime || tooltip.data.time}
-                {tooltip.data.isReal && <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: tk.accentGlow15, color: tk.accent }}>★ JSON</span>}
-              </p>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-bold px-2 py-0.5 rounded" style={{
-                  background: tooltip.data.isGreen ? tk.positiveBg : tk.negativeBg,
-                  color: tooltip.data.isGreen ? tk.chartCandleGreen : tk.chartCandleRed
-                }}>
-                  {tooltip.data.isGreen ? '▲ Bullish' : '▼ Bearish'}
-                </span>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-4 px-3 py-2 rounded-xl border text-xs shadow-sm"
+               style={{ background: tk.tooltipBg, borderColor: tk.tooltipBorder }}>
+               
+            <div className="flex items-center gap-3">
+              <span className="font-mono font-bold flex items-center gap-1.5" style={{ color: tk.textDim }}>
+                📅 {activeData.fullTime || activeData.time}
+                {activeData.isReal && <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: tk.accentGlow15, color: tk.accent }}>★ JSON</span>}
+              </span>
+              <span className="font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider" style={{
+                background: activeData.isGreen ? tk.positiveBg : tk.negativeBg,
+                color: activeData.isGreen ? tk.chartCandleGreen : tk.chartCandleRed
+              }}>
+                {activeData.isGreen ? '▲ Bullish' : '▼ Bearish'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 xl:gap-6 font-mono font-medium" style={{ color: tk.textSecondary }}>
+              <div className="flex items-center gap-1.5">
+                <span style={{ opacity: 0.5 }}>O:</span>
+                <span style={{ color: tk.textBright }}>{activeData.open.toFixed(dec)}</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-5 gap-y-1.5 text-xs" style={{ color: tk.textSecondary }}>
-                <div className="flex justify-between gap-3">
-                  <span style={{ opacity: 0.5 }}>Open</span>
-                  <span className="font-mono font-bold" style={{ color: tk.textBright }}>{tooltip.data.open.toFixed(dec)}</span>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <span style={{ opacity: 0.5 }}>High</span>
-                  <span className="font-mono font-bold" style={{ color: tk.positive }}>{tooltip.data.high.toFixed(dec)}</span>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <span style={{ opacity: 0.5 }}>Low</span>
-                  <span className="font-mono font-bold" style={{ color: tk.negative }}>{tooltip.data.low.toFixed(dec)}</span>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <span style={{ opacity: 0.5 }}>Close</span>
-                  <span className="font-mono font-bold" style={{ color: tk.textBright }}>{tooltip.data.close.toFixed(dec)}</span>
-                </div>
+              <div className="flex items-center gap-1.5">
+                <span style={{ opacity: 0.5 }}>H:</span>
+                <span style={{ color: tk.positive }}>{activeData.high.toFixed(dec)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span style={{ opacity: 0.5 }}>L:</span>
+                <span style={{ color: tk.negative }}>{activeData.low.toFixed(dec)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span style={{ opacity: 0.5 }}>C:</span>
+                <span style={{ color: tk.textBright }}>{activeData.close.toFixed(dec)}</span>
               </div>
             </div>
           </div>

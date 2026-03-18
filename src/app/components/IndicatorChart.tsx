@@ -43,6 +43,7 @@ interface IndicatorChartProps {
   phaseStateData?: PhaseStateDataMap;
   generateCandlesFromReal?: (real: PhaseCandle, count?: number) => any[];
   onLiveChartData?: (data: any[]) => void;
+  renderTradeButtons?: () => React.ReactNode;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -283,6 +284,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   phaseStateData,
   generateCandlesFromReal,
   onLiveChartData,
+  renderTradeButtons,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -854,8 +856,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
               >
                 <Info className="w-3 h-3" />
               </button>
-              <span className="text-[10px] mx-1" style={{ color: tk.textDim }}>•</span>
-              <span className="text-[10px] font-bold" style={{ color: tk.textMuted }}>{currency.symbol}</span>
+              {renderTradeButtons && renderTradeButtons()}
             </div>
           </div>
           

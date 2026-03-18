@@ -19,6 +19,7 @@ ACCOUNTS_FILE = os.path.join(_DIR, 'metaapi_accounts.json')
 
 # ─── In-memory state ───
 _accounts = {}   # login_key → { metaapi_account_id, login, server, name }
+_symbol_cache = {}  # "account_id:BTCUSD" → "BTCUSD.raw" (resolved broker name)
 _api = None
 _lock = threading.Lock()
 
@@ -172,16 +173,17 @@ def provision_account(login, password, server, name="PhaseX User"):
 # ═══════════ Connection Management ═══════════
 
 _connections = {}
+_connection_accounts = {}  # account_id → account object (for reconnect)
 
-async def _get_connection_async(account_id):
-    """Get or create an RPC connection for an account. Reuse to prevent hanging."""
-    global _connections
+async def _get_connection_async(account_id, force_new=False):
+    """Get or create an RPC connection for an account. Reuses cached connections for speed."""
+    global _connections, _connection_accounts
 
-    # If we already have a connection, return it
-    # (The SDK handles auto-reconnect internally after we call connect() once)
-    if account_id in _connections:
+    # Return cached connection immediately (no health check = fast)
+    if not force_new and account_id in _connections:
         return _connections[account_id]
 
+    # Create or re-create connection
     api = _get_api()
     account = await api.metatrader_account_api.get_account(account_id)
 
@@ -194,7 +196,20 @@ async def _get_connection_async(account_id):
     await connection.wait_synchronized()
 
     _connections[account_id] = connection
+    _connection_accounts[account_id] = account
+    print(f"[MetaAPI] ✓ Connection established for {account_id}")
     return connection
+
+
+async def _safe_call(account_id, async_fn):
+    """Call async_fn(connection). If it fails, reconnect and retry once."""
+    connection = await _get_connection_async(account_id)
+    try:
+        return await async_fn(connection)
+    except Exception as e:
+        print(f"[MetaAPI] Call failed, reconnecting... ({e})")
+        connection = await _get_connection_async(account_id, force_new=True)
+        return await async_fn(connection)
 
 
 # ═══════════ Account Info ═══════════
@@ -273,21 +288,38 @@ async def _place_order_async(account_id, symbol, action, volume, sl=None, tp=Non
     if comment:
         options['comment'] = comment
 
-    try:
-        spec = await connection.get_symbol_specification(symbol)
-        min_vol = spec.get('minVolume', 0.01)
-        # Ensure we round correctly based on the symbol's volume step if available, else 2
-        clean_volume = round(float(volume), 2)
-        if clean_volume < min_vol:
-            raise ValueError(f"Volume {clean_volume} is too small. Minimum volume for {symbol} is {min_vol}. Check if you need a suffix like .raw")
-    except Exception as e:
-        if "Too small" not in str(e):
-            raise ValueError(f"Invalid symbol '{symbol}'. Please configure the correct suffix (e.g. {symbol}.raw) in Symbol Overrides.")
-        raise
+    # ── Symbol Resolution with Cache ──
+    cache_key = f"{account_id}:{symbol}"
+    resolved_symbol = _symbol_cache.get(cache_key)
+
+    if not resolved_symbol:
+        suffixes_to_try = ['', '.raw', 'm', '.p', '.sd', '.lv', 'micro', '.', '_']
+        for suffix in suffixes_to_try:
+            candidate = f"{symbol}{suffix}" if suffix else symbol
+            try:
+                spec = await connection.get_symbol_specification(candidate)
+                if spec:
+                    resolved_symbol = candidate
+                    _symbol_cache[cache_key] = resolved_symbol
+                    if suffix:
+                        print(f"[MetaAPI] Symbol resolved & cached: {symbol} → {resolved_symbol}")
+                    break
+            except Exception:
+                continue
+
+        if not resolved_symbol:
+            raise ValueError(f"Invalid symbol '{symbol}'. Could not find it on this broker.")
+
+    # Get spec for min volume (use cached symbol)
+    spec = await connection.get_symbol_specification(resolved_symbol)
+    min_vol = spec.get('minVolume', 0.01)
+    clean_volume = round(float(volume), 2)
+    if clean_volume < min_vol:
+        clean_volume = min_vol
 
     if action.upper() == 'BUY':
         result = await connection.create_market_buy_order(
-            symbol=symbol,
+            symbol=resolved_symbol,
             volume=clean_volume,
             stop_loss=sl if sl else None,
             take_profit=tp if tp else None,
@@ -295,7 +327,7 @@ async def _place_order_async(account_id, symbol, action, volume, sl=None, tp=Non
         )
     elif action.upper() == 'SELL':
         result = await connection.create_market_sell_order(
-            symbol=symbol,
+            symbol=resolved_symbol,
             volume=clean_volume,
             stop_loss=sl if sl else None,
             take_profit=tp if tp else None,

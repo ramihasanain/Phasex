@@ -14,8 +14,9 @@ interface AITradeSignalWidgetProps {
   mtfSmallTimeframe: number;
   mtfLargeTimeframe: number;
   indicatorName?: string;
+  onExecuteTrade?: (action: string, sl?: number, tp?: number) => void;
 }
-export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, indicatorName }: AITradeSignalWidgetProps) {
+export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, indicatorName, onExecuteTrade }: AITradeSignalWidgetProps) {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const tk = useThemeTokens();
@@ -480,6 +481,32 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
           </motion.button>
         )}
       </div>
+
+      {/* Execute AI Trade Button */}
+      {signal && !isScanning && signal.action !== 'HOLD' && onExecuteTrade && (
+        <div className="px-3 pb-3">
+          <motion.button
+            whileHover={{ scale: 1.02, boxShadow: `0 8px 30px rgba(${colors.rgb},0.3)` }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              const slVal = signal.targets?.sl ? parseFloat(String(signal.targets.sl)) : undefined;
+              const tpVal = signal.targets?.tp1 ? parseFloat(String(signal.targets.tp1)) : undefined;
+              onExecuteTrade(signal.action, isNaN(slVal!) ? undefined : slVal, isNaN(tpVal!) ? undefined : tpVal);
+            }}
+            className="w-full py-2.5 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase flex items-center justify-center gap-2 cursor-pointer"
+            style={{
+              background: signal.action === 'BUY' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+              border: `1px solid ${signal.action === 'BUY' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              color: signal.action === 'BUY' ? '#34d399' : '#f87171',
+            }}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            Execute {signal.action}
+            {signal.targets?.sl && <span className="opacity-60">SL:{signal.targets.sl}</span>}
+            {signal.targets?.tp1 && <span className="opacity-60">TP:{signal.targets.tp1}</span>}
+          </motion.button>
+        </div>
+      )}
 
           </motion.div>
         )}
