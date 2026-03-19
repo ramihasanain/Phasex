@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Crown, Calendar, Clock, Send, Check, ShieldAlert, Zap, X, Shield, Star, Trophy, ArrowRight, CircleCheck, Layers, Activity, Navigation, Target, Move, Gauge } from "lucide-react";
+import { Crown, Calendar, Clock, Send, Check, ShieldAlert, Zap, X, Shield, Star, Trophy, ArrowRight, CircleCheck, Layers, Activity, Navigation, Target, Move, Gauge, ArrowUpCircle, ArrowDownCircle, Loader2, AlertCircle, ChevronRight } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
+import { getPlans, getAddons, upgradeSubscription, downgradeRequest, type APIPlan, type APIAddon } from "../api/subscriptionsApi";
 
 interface SubscriptionPanelProps {
   isOpen: boolean;
@@ -16,17 +17,35 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
   const [aiAddon, setAiAddon] = useState(false);
   const [mt5Addon, setMt5Addon] = useState(false);
   const [mt5TermsAccepted, setMt5TermsAccepted] = useState(false);
-  const [step, setStep] = useState<"plans" | "payment" | "pending">("plans");
+  const [step, setStep] = useState<"plans" | "payment" | "pending" | "confirm-change">("plans");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [referralInput, setReferralInput] = useState("");
   const [referralApplied, setReferralApplied] = useState(false);
   const [referralError, setReferralError] = useState(false);
   const isRTL = language === "ar";
 
+  // Upgrade/Downgrade states
+  const [apiPlans, setApiPlans] = useState<APIPlan[]>([]);
+  const [apiAddons, setApiAddons] = useState<APIAddon[]>([]);
+  const [changeLoading, setChangeLoading] = useState(false);
+  const [changeError, setChangeError] = useState<string | null>(null);
+  const [changeSuccess, setChangeSuccess] = useState(false);
+
+  // Plan tier hierarchy for upgrade/downgrade detection
+  const PLAN_TIERS: Record<string, number> = { core: 1, trader: 2, professional: 3, institutional: 4 };
+
   // Re-sync subscription data when panel opens
   useEffect(() => {
     if (isOpen && accessToken) {
       syncSubscription();
+      // Fetch API plans to get real IDs
+      getPlans(accessToken).then(plans => setApiPlans(plans)).catch(() => {});
+      getAddons(accessToken).then(addons => setApiAddons(addons)).catch(() => {});
+    }
+    if (isOpen) {
+      setStep("plans");
+      setChangeSuccess(false);
+      setChangeError(null);
     }
   }, [isOpen]);
 
@@ -86,6 +105,68 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
       suitableFor: t("planInstSuitable"),
     },
   ];
+
+  // Map local plan ID to API plan ID
+  const getApiPlanId = (localId: string): number | null => {
+    const nameMap: Record<string, string> = {
+      core: 'core', trader: 'trader', professional: 'professional', institutional: 'institutional'
+    };
+    const match = apiPlans.find(p => p.name.toLowerCase().includes(nameMap[localId] || ''));
+    return match?.id || null;
+  };
+
+  // Get addon IDs from selected state
+  const getSelectedAddonIds = (): number[] => {
+    const ids: number[] = [];
+    if (aiAddon) {
+      const aiAd = apiAddons.find(a => a.code?.toLowerCase().includes('ai'));
+      if (aiAd) ids.push(aiAd.id);
+    }
+    if (mt5Addon) {
+      const mt5Ad = apiAddons.find(a => a.code?.toLowerCase().includes('mt5'));
+      if (mt5Ad) ids.push(mt5Ad.id);
+    }
+    return ids;
+  };
+
+  // Determine if this is an upgrade or downgrade
+  const isUpgrade = selectedPlan ? (PLAN_TIERS[selectedPlan] || 0) > (PLAN_TIERS[subscriptionPlan] || 0) : false;
+  const isDowngrade = selectedPlan ? (PLAN_TIERS[selectedPlan] || 0) < (PLAN_TIERS[subscriptionPlan] || 0) : false;
+  const isSamePlan = selectedPlan === subscriptionPlan;
+  const hasActiveSub = subscriptionStatus === 'active' && subscriptionPlan !== 'none';
+
+  const handlePlanChange = async () => {
+    if (!selectedPlan || !accessToken) return;
+    const apiPlanId = getApiPlanId(selectedPlan);
+    if (!apiPlanId) {
+      setChangeError(isRTL ? 'لم يتم العثور على الخطة. حاول مرة أخرى.' : 'Plan not found. Please try again.');
+      return;
+    }
+    setChangeLoading(true);
+    setChangeError(null);
+    try {
+      const addonIds = getSelectedAddonIds();
+      if (isUpgrade || isSamePlan) {
+        await upgradeSubscription(accessToken, {
+          plan_id: apiPlanId,
+          addon_ids: addonIds,
+          addons_mode: 'set',
+        });
+      } else {
+        await downgradeRequest(accessToken, {
+          plan_id: apiPlanId,
+          addon_ids: addonIds,
+          addons_mode: 'add',
+        });
+      }
+      setChangeSuccess(true);
+      await syncSubscription();
+    } catch (err: any) {
+      setChangeError(err.message || (isRTL ? 'فشل تحديث الاشتراك' : 'Failed to update subscription.'));
+    } finally {
+      setChangeLoading(false);
+    }
+  };
 
   const handleFinish = () => {
       if (!selectedPlan) return;
@@ -480,17 +561,49 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
                                 <div className="font-bold text-lg md:text-xl text-gray-400 mb-6 sm:mb-0 text-center sm:text-left">
                                     {t("totalDue")} <span className="text-3xl md:text-4xl font-black text-white ml-2 block sm:inline mt-2 sm:mt-0">${totalAmount.toFixed(2)}</span>
                                 </div>
-                                <button onClick={() => {
-                                        if (mt5Addon && !mt5TermsAccepted) {
-                                            alert(language === 'ar' ? "يرجى الموافقة على الشروط والأحكام الخاصة بـ MT5 قبل المتابعة." : "Please agree to the MT5 Terms & Conditions before proceeding.");
-                                            return;
-                                        }
-                                        setStep("payment");
-                                    }}
-                                    className={`px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform ${(mt5Addon && !mt5TermsAccepted) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] cursor-pointer'} text-base md:text-lg w-full sm:w-auto`}
-                                    style={{ background: `linear-gradient(90deg, #00e5a0, #00b37e)`, boxShadow: `0 10px 30px rgba(0,229,160,0.3)` }}>
-                                    {t("checkoutPlan")} <ArrowRight size={20} />
-                                </button>
+                                {hasActiveSub ? (
+                                    /* Active sub → Upgrade/Downgrade/Change addons button */
+                                    <button onClick={() => {
+                                            if (mt5Addon && !mt5TermsAccepted) {
+                                                alert(language === 'ar' ? "يرجى الموافقة على الشروط والأحكام الخاصة بـ MT5 قبل المتابعة." : "Please agree to the MT5 Terms & Conditions before proceeding.");
+                                                return;
+                                            }
+                                            setStep("confirm-change");
+                                            setChangeSuccess(false);
+                                            setChangeError(null);
+                                        }}
+                                        className={`px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform ${(mt5Addon && !mt5TermsAccepted) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] cursor-pointer'} text-base md:text-lg w-full sm:w-auto`}
+                                        style={{
+                                            background: isDowngrade
+                                                ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                                                : 'linear-gradient(90deg, #6366f1, #4f46e5)',
+                                            boxShadow: isDowngrade
+                                                ? '0 10px 30px rgba(245,158,11,0.3)'
+                                                : '0 10px 30px rgba(99,102,241,0.3)',
+                                        }}>
+                                        {isUpgrade ? (
+                                            <><ArrowUpCircle size={20} />{isRTL ? 'ترقية الخطة' : 'Upgrade Plan'}</>
+                                        ) : isDowngrade ? (
+                                            <><ArrowDownCircle size={20} />{isRTL ? 'تخفيض الخطة' : 'Downgrade Plan'}</>
+                                        ) : (
+                                            <><Zap size={20} />{isRTL ? 'تحديث الإضافات' : 'Update Add-ons'}</>
+                                        )}
+                                        <ChevronRight size={18} />
+                                    </button>
+                                ) : (
+                                    /* No active sub → normal checkout */
+                                    <button onClick={() => {
+                                            if (mt5Addon && !mt5TermsAccepted) {
+                                                alert(language === 'ar' ? "يرجى الموافقة على الشروط والأحكام الخاصة بـ MT5 قبل المتابعة." : "Please agree to the MT5 Terms & Conditions before proceeding.");
+                                                return;
+                                            }
+                                            setStep("payment");
+                                        }}
+                                        className={`px-8 md:px-12 py-4 md:py-5 rounded-xl font-black uppercase tracking-wide md:tracking-widest flex items-center justify-center gap-3 text-black transition-transform ${(mt5Addon && !mt5TermsAccepted) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] cursor-pointer'} text-base md:text-lg w-full sm:w-auto`}
+                                        style={{ background: `linear-gradient(90deg, #00e5a0, #00b37e)`, boxShadow: `0 10px 30px rgba(0,229,160,0.3)` }}>
+                                        {t("checkoutPlan")} <ArrowRight size={20} />
+                                    </button>
+                                )}
                             </div>
                         </>
                     )}
@@ -569,6 +682,147 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
                     </div>
                 </div>
             )}
+
+            {step === "confirm-change" && (() => {
+                const currentPlanObj = subscriptionPlans.find(p => p.id === subscriptionPlan);
+                const newPlanObj = subscriptionPlans.find(p => p.id === selectedPlan);
+                const changeColor = isUpgrade ? '#6366f1' : isDowngrade ? '#f59e0b' : '#00e5a0';
+                const changeBg = isUpgrade ? 'rgba(99,102,241,' : isDowngrade ? 'rgba(245,158,11,' : 'rgba(0,229,160,';
+                return (
+                    <div className="p-10 relative">
+                        <button onClick={() => setStep("plans")} className="absolute top-8 left-8 text-gray-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-widest cursor-pointer">
+                            {isRTL ? '← العودة' : '← Back'}
+                        </button>
+
+                        {changeSuccess ? (
+                            /* ── Success ── */
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center text-center py-16">
+                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}
+                                    className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
+                                    style={{ background: `${changeBg}0.15)`, border: `3px solid ${changeColor}` }}>
+                                    <Check size={48} color={changeColor} />
+                                </motion.div>
+                                <h2 className="text-3xl font-black text-white mb-3">
+                                    {isUpgrade ? (isRTL ? 'تمت الترقية بنجاح! 🎉' : 'Upgrade Successful! 🎉')
+                                        : isDowngrade ? (isRTL ? 'تم طلب التخفيض' : 'Downgrade Requested')
+                                        : (isRTL ? 'تم التحديث بنجاح!' : 'Updated Successfully!')}
+                                </h2>
+                                <p className="text-gray-400 text-base max-w-md leading-relaxed mb-8">
+                                    {isUpgrade ? (isRTL ? 'تم ترقية اشتراكك فوراً. استمتع بالميزات الجديدة!' : 'Your subscription has been upgraded instantly. Enjoy the new features!')
+                                        : isDowngrade ? (isRTL ? 'تم تقديم طلب التخفيض. سيتم تطبيقه في نهاية دورة الفوترة الحالية.' : 'Your downgrade request has been submitted. It will take effect at the end of the current billing cycle.')
+                                        : (isRTL ? 'تم تحديث إضافات اشتراكك.' : 'Your subscription add-ons have been updated.')}
+                                </p>
+                                <button onClick={() => { onClose(); setStep("plans"); setSelectedPlan(null); }}
+                                    className="px-10 py-4 rounded-xl font-black text-black text-lg cursor-pointer hover:scale-[1.02] transition-transform"
+                                    style={{ background: changeColor, boxShadow: `0 8px 30px ${changeBg}0.3)` }}>
+                                    {isRTL ? 'تم' : 'Done'}
+                                </button>
+                            </motion.div>
+                        ) : (
+                            /* ── Confirmation Form ── */
+                            <div className="max-w-2xl mx-auto mt-8">
+                                {/* Header */}
+                                <div className="text-center mb-10">
+                                    <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5"
+                                        style={{ background: `${changeBg}0.1)`, border: `2px solid ${changeBg}0.3)`, boxShadow: `0 0 30px ${changeBg}0.15)` }}>
+                                        {isUpgrade ? <ArrowUpCircle size={40} color={changeColor} /> : isDowngrade ? <ArrowDownCircle size={40} color={changeColor} /> : <Zap size={40} color={changeColor} />}
+                                    </div>
+                                    <h2 className="text-3xl font-black text-white mb-2">
+                                        {isUpgrade ? (isRTL ? 'تأكيد الترقية' : 'Confirm Upgrade')
+                                            : isDowngrade ? (isRTL ? 'تأكيد التخفيض' : 'Confirm Downgrade')
+                                            : (isRTL ? 'تأكيد التحديث' : 'Confirm Update')}
+                                    </h2>
+                                    <p className="text-gray-400 text-sm">
+                                        {isRTL ? 'راجع التغييرات قبل التأكيد' : 'Review the changes before confirming'}
+                                    </p>
+                                </div>
+
+                                {/* Current → New comparison */}
+                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
+                                    {/* Current Plan */}
+                                    <div className="flex-1 w-full p-5 rounded-2xl border border-[#1c2230] bg-[#10141d]">
+                                        <div className="text-[10px] uppercase tracking-widest font-black text-gray-500 mb-3">{isRTL ? 'الخطة الحالية' : 'Current Plan'}</div>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            {currentPlanObj ? (
+                                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${currentPlanObj.iconColor}20`, border: `1px solid ${currentPlanObj.iconColor}40` }}>
+                                                    {currentPlanObj.icon}
+                                                </div>
+                                            ) : <div className="w-8 h-8 rounded-lg bg-gray-800" />}
+                                            <span className="text-lg font-black text-white capitalize">{currentPlanObj?.name || subscriptionPlan}</span>
+                                        </div>
+                                        <div className="text-2xl font-black text-gray-400">${currentPlanObj ? getPrice(currentPlanObj.price) : 0}<span className="text-xs text-gray-600 font-bold">/{billingCycle === 'yearly' ? (isRTL ? 'سنة' : 'yr') : (isRTL ? 'شهر' : 'mo')}</span></div>
+                                    </div>
+
+                                    {/* Arrow */}
+                                    <motion.div animate={{ x: [0, 5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                                        <ChevronRight size={32} color={changeColor} className="rotate-0 sm:rotate-0" />
+                                    </motion.div>
+
+                                    {/* New Plan */}
+                                    <div className="flex-1 w-full p-5 rounded-2xl relative overflow-hidden"
+                                        style={{ background: `${changeBg}0.05)`, border: `2px solid ${changeColor}`, boxShadow: `0 0 20px ${changeBg}0.1)` }}>
+                                        <div className="text-[10px] uppercase tracking-widest font-black mb-3" style={{ color: changeColor }}>{isRTL ? 'الخطة الجديدة' : 'New Plan'}</div>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            {newPlanObj && (
+                                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${newPlanObj.iconColor}20`, border: `1px solid ${newPlanObj.iconColor}40` }}>
+                                                    {newPlanObj.icon}
+                                                </div>
+                                            )}
+                                            <span className="text-lg font-black text-white capitalize">{newPlanObj?.name || selectedPlan}</span>
+                                        </div>
+                                        <div className="text-2xl font-black" style={{ color: changeColor }}>${newPlanObj ? getPrice(newPlanObj.price) : 0}<span className="text-xs text-gray-500 font-bold">/{billingCycle === 'yearly' ? (isRTL ? 'سنة' : 'yr') : (isRTL ? 'شهر' : 'mo')}</span></div>
+                                        {/* Add-ons */}
+                                        {(aiAddon || mt5Addon) && (
+                                            <div className="mt-3 pt-3 border-t" style={{ borderColor: `${changeBg}0.2)` }}>
+                                                <div className="text-[9px] uppercase tracking-widest font-black text-gray-500 mb-1">{isRTL ? 'الإضافات' : 'Add-ons'}</div>
+                                                {aiAddon && <div className="text-xs font-bold text-[#00e5a0]">+ AI Insight ($20/mo)</div>}
+                                                {mt5Addon && <div className="text-xs font-bold text-[#6366f1]">+ MT5 Integration ($30/mo)</div>}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Warning for downgrade */}
+                                {isDowngrade && (
+                                    <div className="p-4 rounded-xl mb-6 flex items-start gap-3" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                                        <AlertCircle className="w-5 h-5 text-[#f59e0b] flex-shrink-0 mt-0.5" />
+                                        <p className="text-sm text-gray-300 leading-relaxed">
+                                            {isRTL ? 'سيتم تطبيق التخفيض في نهاية دورة الفوترة الحالية. ستظل تستمتع بخطتك الحالية حتى ذلك الحين.' : 'The downgrade will take effect at the end of your current billing cycle. You will continue to enjoy your current plan until then.'}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Error */}
+                                {changeError && (
+                                    <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                                        className="p-4 rounded-xl mb-6 flex items-center gap-3"
+                                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                                        <p className="text-sm font-bold text-red-400">{changeError}</p>
+                                        <button onClick={() => setChangeError(null)} className="ml-auto text-red-400 cursor-pointer"><X size={16} /></button>
+                                    </motion.div>
+                                )}
+
+                                {/* Action buttons */}
+                                <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 border-t border-[#1c2230] pt-8">
+                                    <button onClick={() => setStep("plans")} className="font-bold text-gray-500 hover:text-white transition-colors px-6 py-4 w-full sm:w-auto cursor-pointer">
+                                        {isRTL ? 'إلغاء' : 'Cancel'}
+                                    </button>
+                                    <button onClick={handlePlanChange} disabled={changeLoading}
+                                        className="px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-black transition-transform hover:scale-[1.03] flex items-center justify-center gap-3 w-full sm:w-auto cursor-pointer disabled:opacity-60"
+                                        style={{ background: changeColor, boxShadow: `0 10px 40px ${changeBg}0.3)` }}>
+                                        {changeLoading ? (
+                                            <><Loader2 size={22} className="animate-spin" />{isRTL ? 'جاري التنفيذ...' : 'Processing...'}</>
+                                        ) : (
+                                            <><CircleCheck size={22} />{isUpgrade ? (isRTL ? 'تأكيد الترقية' : 'Confirm Upgrade') : isDowngrade ? (isRTL ? 'تأكيد التخفيض' : 'Confirm Downgrade') : (isRTL ? 'تأكيد التحديث' : 'Confirm Update')}</>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
 
             {step === "pending" && (
                 <div className="flex-1 flex flex-col items-center justify-center p-16 text-center h-[600px] relative z-20">
