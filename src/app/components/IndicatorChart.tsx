@@ -1471,7 +1471,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         <table className="w-full text-center border-collapse">
                           <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: "rgba(15, 23, 42, 0.85)", borderBottom: `1px solid ${tk.border}` }}>
                             <tr>
-                              {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", ...(mt5Connected ? ["Lot", "Execute"] : [])].map((head, idx) => (
+                              {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", "Lot", "Execute"].map((head, idx) => (
                                 <th key={idx} className="p-3 text-[14px] font-bold text-white border border-slate-700/50 whitespace-nowrap"
                                   style={head === "Lot" ? { color: '#fbbf24', borderLeft: '2px solid rgba(245,158,11,0.3)' } : head === "Execute" ? { color: '#818cf8' } : {}}
                                 >
@@ -1493,7 +1493,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                           <tbody>
                             {directionsData && directionsData.rows.length === 0 ? (
                               <tr>
-                                <td colSpan={mt5Connected ? 9 : 7} className="p-4 text-sm text-slate-500">No data available for directions.</td>
+                                <td colSpan={9} className="p-4 text-sm text-slate-500">No data available for directions.</td>
                               </tr>
                             ) : (
                               directionsData && directionsData.rows.map((row: any) => {
@@ -1534,8 +1534,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                     <td className="p-3 text-[14px] font-bold font-mono" style={{ color: "#10b981" }}>
                                       {row.profit.toFixed(decimals)}
                                     </td>
-                                    {mt5Connected && (
-                                      <>
+                                    <>
                                         <td className="p-3" style={{ borderLeft: '2px solid rgba(245,158,11,0.2)' }}>
                                           <input
                                             type="number" step="0.01" min="0.01" max="100"
@@ -1569,8 +1568,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                             {dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                           </button>
                                         </td>
-                                      </>
-                                    )}
+                                    </>
                                   </tr>
                                 );
                               })
