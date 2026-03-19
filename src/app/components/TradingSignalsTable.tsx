@@ -1036,21 +1036,21 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                 {/* ═══ TABLE ═══ */}
                 <div className="overflow-auto">
                     <table className="w-full" style={{ borderCollapse: "collapse" }}>
-                        <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? "#080c15" : tk.surface }}>
-                            <tr style={{ borderBottom: "1px solid rgba(99,102,241,0.08)" }}>
-                                <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: tk.textMuted }}>{t("assetCol")}</th>
-                                <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: tk.textMuted }}>{t("actionStr")}</th>
-                                <th className="p-3 text-[13px] font-black text-left tracking-wider" style={{ color: tk.textMuted }}>{t("timeStr")}</th>
-                                <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.textMuted }}>{t("priceStr")}</th>
-                                <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.negative }}>SL</th>
-                                <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.positive }}>TP</th>
-                                <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.textSecondary }}>m.PRICE</th>
-                                <th className="p-3 text-[13px] font-black text-right tracking-wider" style={{ color: tk.warning }}>{t("profitStr")}</th>
+                        <thead className="sticky top-0 z-10">
+                            <tr style={{ borderBottom: "2px solid rgba(99,102,241,0.3)", background: tk.isDark ? 'linear-gradient(180deg, rgba(10,16,30,1) 0%, rgba(6,10,20,0.98) 100%)' : tk.surface }}>
+                                <th className="p-3 text-[13px] font-black text-left tracking-wider uppercase" style={{ color: '#818cf8', textShadow: '0 0 12px rgba(99,102,241,0.3)' }}>{t("assetCol")}</th>
+                                <th className="p-3 text-[13px] font-black text-center tracking-wider uppercase" style={{ color: '#818cf8', textShadow: '0 0 12px rgba(99,102,241,0.3)' }}>{t("actionStr")}</th>
+                                <th className="p-3 text-[13px] font-black text-left tracking-wider uppercase" style={{ color: '#818cf8', textShadow: '0 0 12px rgba(99,102,241,0.3)' }}>{t("timeStr")}</th>
+                                <th className="p-3 text-[13px] font-black text-right tracking-wider uppercase" style={{ color: '#818cf8', textShadow: '0 0 12px rgba(99,102,241,0.3)' }}>{t("priceStr")}</th>
+                                <th className="p-3 text-[13px] font-black text-right tracking-wider uppercase" style={{ color: '#ef4444', textShadow: '0 0 10px rgba(239,68,68,0.25)' }}>SL</th>
+                                <th className="p-3 text-[13px] font-black text-right tracking-wider uppercase" style={{ color: '#10b981', textShadow: '0 0 10px rgba(16,185,129,0.25)' }}>TP</th>
+                                <th className="p-3 text-[13px] font-black text-right tracking-wider uppercase" style={{ color: '#38bdf8', textShadow: '0 0 10px rgba(56,189,248,0.2)' }}>m.PRICE</th>
+                                <th className="p-3 text-[13px] font-black text-right tracking-wider uppercase" style={{ color: '#f59e0b', textShadow: '0 0 10px rgba(245,158,11,0.25)' }}>{t("profitStr")}</th>
                                 {mt5Connected && (
                                     <>
-                                        <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: '#f59e0b' }}>Lot</th>
-                                        <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: '#6366f1' }}>Execute</th>
-                                        <th className="p-3 text-[13px] font-black text-center tracking-wider" style={{ color: '#a855f7' }}>Auto</th>
+                                        <th className="p-3 text-[13px] font-black text-center tracking-wider uppercase" style={{ color: '#fbbf24', textShadow: '0 0 10px rgba(251,191,36,0.3)', borderLeft: '2px solid rgba(245,158,11,0.25)' }}>Lot</th>
+                                        <th className="p-3 text-[13px] font-black text-center tracking-wider uppercase" style={{ color: '#818cf8', textShadow: '0 0 10px rgba(99,102,241,0.3)' }}>Execute</th>
+                                        <th className="p-3 text-[13px] font-black text-center tracking-wider uppercase" style={{ color: '#a855f7', textShadow: '0 0 10px rgba(168,85,247,0.3)' }}>Auto</th>
                                     </>
                                 )}
                             </tr>
@@ -1273,16 +1273,16 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                         return (
                                                             <>
                                                                 {/* Lot */}
-                                                                <td className="p-2.5 text-center">
+                                                                <td className="p-2.5 text-center" style={{ borderLeft: '2px solid rgba(245,158,11,0.2)' }}>
                                                                     <input
                                                                         type="number" step="0.01" min="0.01" max="100"
                                                                         value={lotVal}
                                                                         onChange={(e) => setLotSizes(prev => ({ ...prev, [rowKey]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                                                         className="w-16 text-center text-[11px] font-bold font-mono py-1 px-1 rounded-lg outline-none"
                                                                         style={{
-                                                                            background: tk.inputBg,
-                                                                            border: `1px solid ${tk.inputBorder}`,
-                                                                            color: '#f59e0b',
+                                                                            background: 'rgba(245,158,11,0.08)',
+                                                                            border: '1px solid rgba(245,158,11,0.25)',
+                                                                            color: '#fbbf24',
                                                                         }}
                                                                         onClick={(e) => e.stopPropagation()}
                                                                     />
