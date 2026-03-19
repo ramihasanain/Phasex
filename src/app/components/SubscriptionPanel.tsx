@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Crown, Calendar, Clock, Send, Check, ShieldAlert, Zap, X, Shield, Star, Trophy, ArrowRight, CircleCheck, Layers, Activity, Navigation, Target, Move, Gauge } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -11,7 +11,7 @@ interface SubscriptionPanelProps {
 
 export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
   const { language, t } = useLanguage();
-  const { user, subscriptionPlan, subscriptionStatus, aiTokens, hasAIAccess, submitReceipt, applyReferralCode } = useAuth();
+  const { user, subscriptionPlan, subscriptionStatus, subscriptionDetails, aiTokens, hasAIAccess, submitReceipt, applyReferralCode, accessToken, syncSubscription } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [aiAddon, setAiAddon] = useState(false);
   const [mt5Addon, setMt5Addon] = useState(false);
@@ -22,6 +22,13 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
   const [referralApplied, setReferralApplied] = useState(false);
   const [referralError, setReferralError] = useState(false);
   const isRTL = language === "ar";
+
+  // Re-sync subscription data when panel opens
+  useEffect(() => {
+    if (isOpen && accessToken) {
+      syncSubscription();
+    }
+  }, [isOpen]);
 
   const walletAddress = "TQwFCKK5JjZACHdE888zG5iUx8wQ2RtnAV";
 
@@ -114,8 +121,22 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
   if (!isOpen) return null;
 
   const isActive = subscriptionStatus === "active";
-  const daysRemaining = isActive ? 14 : 0;
-  const progressPercent = isActive ? 60 : 0;
+
+  // Calculate real days remaining from subscription end_date
+  let daysRemaining = 0;
+  let progressPercent = 0;
+  let endDateFormatted = '';
+  let billingLabel = '';
+  if (isActive && subscriptionDetails) {
+    const now = new Date();
+    const end = new Date(subscriptionDetails.endDate);
+    const start = new Date(subscriptionDetails.startDate);
+    const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    daysRemaining = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    progressPercent = Math.max(0, Math.min(100, ((totalDays - daysRemaining) / totalDays) * 100));
+    endDateFormatted = end.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    billingLabel = subscriptionDetails.billingCycle === 'annual' ? (isRTL ? 'سنوي' : 'Annual') : (isRTL ? 'شهري' : 'Monthly');
+  }
 
   return (
     <AnimatePresence>
@@ -179,15 +200,17 @@ export function SubscriptionPanel({ isOpen, onClose }: SubscriptionPanelProps) {
                             )}
                         </div>
 
-                        {isActive && (
-                            <div className="flex items-center gap-6 p-6 rounded-2xl bg-[#0b0e14] border border-[#1c2230] shrink-0">
-                                <div className="text-center px-4">
-                                    <Clock className="w-6 h-6 text-gray-500 mx-auto mb-2" />
-                                    <div className="text-xs text-gray-400 uppercase tracking-widest font-black">{t("validUntil")}</div>
-                                    <div className="text-white font-bold mt-1">Dec 31, 2026</div>
+                                
+                            {isActive && subscriptionDetails && (
+                                <div className="flex items-center gap-6 p-6 rounded-2xl bg-[#0b0e14] border border-[#1c2230] shrink-0">
+                                    <div className="text-center px-4">
+                                        <Clock className="w-6 h-6 text-gray-500 mx-auto mb-2" />
+                                        <div className="text-xs text-gray-400 uppercase tracking-widest font-black">{t("validUntil")}</div>
+                                        <div className="text-white font-bold mt-1">{endDateFormatted}</div>
+                                        <div className="text-[10px] text-gray-500 mt-1 font-bold">{billingLabel}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
                     </div>
 
                     <div className="flex items-center justify-between mb-6">

@@ -105,9 +105,11 @@ export async function checkoutSubmit(accessToken: string, payload: CheckoutSubmi
   return handleResponse<any>(res);
 }
 
-/* ─── Upgrade Subscription (Add Add-ons) ─── */
+/* ─── Upgrade Subscription ─── */
 export interface UpgradePayload {
-  addon_ids: number[];
+  plan_id: number;
+  addon_ids?: number[];
+  addons_mode?: "add" | "set";
 }
 
 export async function upgradeSubscription(accessToken: string, payload: UpgradePayload): Promise<any> {
@@ -122,10 +124,51 @@ export async function upgradeSubscription(accessToken: string, payload: UpgradeP
   return handleResponse<any>(res);
 }
 
-/* ─── Get My Subscription ─── */
-export async function getMySubscription(accessToken: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/me/`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+/* ─── Downgrade Request ─── */
+export interface DowngradePayload {
+  plan_id: number;
+  addon_ids?: number[];
+  addons_mode?: "add" | "remove";
+}
+
+export async function downgradeRequest(accessToken: string, payload: DowngradePayload): Promise<any> {
+  const res = await fetch(`${API_BASE}/downgrade-request/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
   });
   return handleResponse<any>(res);
 }
+
+/* ─── Get My Subscription ─── */
+export interface SubscriptionMeResponse {
+  subscription: {
+    id: number;
+    status: string;
+    billing_cycle: string;
+    start_date: string;
+    end_date: string;
+    active_now: boolean;
+  } | null;
+  plan: {
+    id: number;
+    name: string;
+    description?: string;
+    price_monthly?: string;
+    price_annual_monthly?: string;
+  } | null;
+  allowed_indicators?: string[];
+  allowed_addons?: string[];
+  active_addons?: { id: number; code: string; name: string }[];
+}
+
+export async function getMySubscription(accessToken: string): Promise<SubscriptionMeResponse> {
+  const res = await fetch(`${API_BASE}/me/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return handleResponse<SubscriptionMeResponse>(res);
+}
+

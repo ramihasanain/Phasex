@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { APIUser } from '../api/authApi';
-import { getMySubscription } from '../api/subscriptionsApi';
+import { getMySubscription, type SubscriptionMeResponse } from '../api/subscriptionsApi';
 
 export type SubscriptionStatus = 'none' | 'pending' | 'active';
 export type SubscriptionPlan = 'core' | 'trader' | 'professional' | 'institutional' | 'none';
@@ -25,12 +25,27 @@ export interface ReferralEntry {
   earned: number;
 }
 
+export interface SubscriptionDetails {
+  id: number;
+  status: string;
+  billingCycle: string;
+  startDate: string;
+  endDate: string;
+  activeNow: boolean;
+  planId: number | null;
+  planName: string;
+  activeAddons: { id: number; code: string; name: string }[];
+  allowedAddons: string[];
+  allowedIndicators: string[];
+}
+
 export interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
   subscriptionStatus: SubscriptionStatus;
   subscriptionPlan: SubscriptionPlan;
+  subscriptionDetails: SubscriptionDetails | null;
   hasMT5Access: boolean;
   hasAIAccess: boolean;
   aiTokens: number;
@@ -87,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshToken: null,
       subscriptionStatus: 'none',
       subscriptionPlan: 'none',
+      subscriptionDetails: null,
       hasMT5Access: false,
       hasAIAccess: false,
       aiTokens: 0,
@@ -114,10 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         else if (planName.includes('trader')) plan = 'trader';
         else if (planName.includes('professional')) plan = 'professional';
         else if (planName.includes('institutional')) plan = 'institutional';
-        // Check if AI addon is in allowed indicators
-        const indicators: string[] = data.allowed_indicators || [];
-        // Check allowed addons from API (string array like ["ai_insight", "mt5_intgration"])
         const allowedAddons: string[] = data.allowed_addons || [];
+        const indicators: string[] = data.allowed_indicators || [];
+        const activeAddons = data.active_addons || [];
         const hasMT5 = allowedAddons.includes('mt5_intgration');
         const hasAI = allowedAddons.includes('ai_insight') || indicators.length > 4;
         console.log('[PhaseX] Addon check:', { allowedAddons, hasMT5, hasAI });
@@ -125,6 +140,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...prev,
           subscriptionStatus: 'active' as SubscriptionStatus,
           subscriptionPlan: plan,
+          subscriptionDetails: {
+            id: data.subscription!.id,
+            status: data.subscription!.status,
+            billingCycle: data.subscription!.billing_cycle,
+            startDate: data.subscription!.start_date,
+            endDate: data.subscription!.end_date,
+            activeNow: data.subscription!.active_now,
+            planId: data.plan?.id || null,
+            planName: data.plan?.name || '',
+            activeAddons,
+            allowedAddons,
+            allowedIndicators: indicators,
+          },
           hasAIAccess: prev.hasAIAccess || hasAI,
           hasMT5Access: prev.hasMT5Access || hasMT5,
         }));
@@ -138,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Auto-sync on mount/login when token is available
   useEffect(() => {
-    if (state.accessToken && state.subscriptionStatus !== 'active') {
+    if (state.accessToken && (state.subscriptionStatus !== 'active' || !state.subscriptionDetails)) {
       syncSubscription();
     }
   }, [state.accessToken]);
@@ -194,6 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshToken: null,
       subscriptionStatus: 'none',
       subscriptionPlan: 'none',
+      subscriptionDetails: null,
       hasMT5Access: false,
       hasAIAccess: false,
       aiTokens: 0,
