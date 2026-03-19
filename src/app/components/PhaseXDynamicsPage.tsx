@@ -856,13 +856,14 @@ function TradingDecisionEngineTable({
     onSymbolSelect: (s: string) => void;
     isRTL: boolean;
     sources: Record<AnalysisTab, any[]>;
-    onExecuteAction?: (symbol: string, decision: string) => void;
+    onExecuteAction?: (symbol: string, decision: string, lot?: number) => void;
 }) {
     const { language, t: globalT } = useLanguage();
     const { prices: livePrices } = useLivePrices();
     const lang = ["ar", "ru", "tr", "fr", "es"].includes(language) ? language : "en";
     const t = i18n[lang];
     const [decisionFilter, setDecisionFilter] = useState<"ALL" | "STRONG BUY" | "BUY" | "WEAK BUY" | "NO TRADE" | "WEAK SELL" | "SELL" | "STRONG SELL">("ALL");
+    const [lotSizes, setLotSizes] = useState<Record<string, number>>({});
 
     const cat = marketCategories.find(c => c.name === category);
     const symbols = cat?.symbols.filter(sym => {
@@ -884,31 +885,31 @@ function TradingDecisionEngineTable({
             return {
                 "Symbol": "الرمز", "Primary Trend": "الاتجاه الرئيسي", "Structural Bias": "الانحياز الهيكلي",
                 "Momentum": "الزخم", "Phase": "المرحلة", "Volatility": "التذبذب", "Reversal Risk": "مخاطر الانعكاس",
-                "Confidence": "الثقة", "Market Phase": "مرحلة السوق", "Decision": "القرار"
+                "Confidence": "الثقة", "Market Phase": "مرحلة السوق", "Decision": "القرار", "Lot": "اللوت"
             }[h] || h;
         } else if (lang === "ru") {
             return {
                 "Symbol": "Символ", "Primary Trend": "Основной тренд", "Structural Bias": "Структ. смещение",
                 "Momentum": "Импульс", "Phase": "Фаза", "Volatility": "Волатильность", "Reversal Risk": "Риск разворота",
-                "Confidence": "Уверенность", "Market Phase": "Фаза рынка", "Decision": "Решение"
+                "Confidence": "Уверенность", "Market Phase": "Фаза рынка", "Decision": "Решение", "Lot": "Лот"
             }[h] || h;
         } else if (lang === "tr") {
             return {
                 "Symbol": "Sembol", "Primary Trend": "Ana Trend", "Structural Bias": "Yapısal Eğilim",
                 "Momentum": "İvme", "Phase": "Aşama", "Volatility": "Volatilite", "Reversal Risk": "Dönüş Riski",
-                "Confidence": "Güven", "Market Phase": "Piyasa Aşaması", "Decision": "Karar"
+                "Confidence": "Güven", "Market Phase": "Piyasa Aşaması", "Decision": "Karar", "Lot": "Lot"
             }[h] || h;
         } else if (lang === "fr") {
             return {
                 "Symbol": "Symbole", "Primary Trend": "Tendance Principale", "Structural Bias": "Biais Structurel",
                 "Momentum": "Dynamique", "Phase": "Phase", "Volatility": "Volatilité", "Reversal Risk": "Risque Renvers.",
-                "Confidence": "Confiance", "Market Phase": "Phase du Marché", "Decision": "Décision"
+                "Confidence": "Confiance", "Market Phase": "Phase du Marché", "Decision": "Décision", "Lot": "Lot"
             }[h] || h;
         } else if (lang === "es") {
             return {
                 "Symbol": "Símbolo", "Primary Trend": "Tendencia Primaria", "Structural Bias": "Sesgo Estructural",
                 "Momentum": "Impulso", "Phase": "Fase", "Volatility": "Volatilidad", "Reversal Risk": "Riesgo Revers.",
-                "Confidence": "Confianza", "Market Phase": "Fase del Mercado", "Decision": "Decisión"
+                "Confidence": "Confianza", "Market Phase": "Fase del Mercado", "Decision": "Decisión", "Lot": "Lote"
             }[h] || h;
         }
         return h;
@@ -1038,7 +1039,7 @@ function TradingDecisionEngineTable({
                     <table className="w-full border-collapse whitespace-nowrap">
                         <thead>
                             <tr style={{ background: "rgba(10,16,28,0.98)" }}>
-                                {["Symbol", "Primary Trend", "Structural Bias", "Momentum", "Phase", "Volatility", "Reversal Risk", "Confidence", "Market Phase", "m.PRICE", "Decision", "Execute"].map((h, i) => (
+                                {["Symbol", "Primary Trend", "Structural Bias", "Momentum", "Phase", "Volatility", "Reversal Risk", "Confidence", "Market Phase", "m.PRICE", "Decision", "Lot", "Execute"].map((h, i) => (
                                     <th key={i} className="text-left py-2 px-3 text-[10px] font-black tracking-widest uppercase text-cyan-400 border-r border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }} dir="auto">
                                         {tvh(h)}
                                     </th>
@@ -1104,6 +1105,23 @@ function TradingDecisionEngineTable({
                                         {r.decision === "WEAK SELL" && <span className="bg-orange-500/15 text-orange-500 px-2 py-1 rounded-md block text-center min-w-[75px] border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.15)]">{globalT("weakSellStr")}</span>}
                                         {r.decision === "NO TRADE" && <span className="bg-slate-500/20 text-slate-400 px-2 py-1 rounded-md block text-center min-w-[75px] border border-slate-500/30">{globalT("noTradeStr")}</span>}
                                     </td>
+                                    <td className="py-2 px-3 border-r border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0.01"
+                                            max="100"
+                                            value={lotSizes[r.sym] ?? 0.1}
+                                            onChange={(e) => setLotSizes(prev => ({ ...prev, [r.sym]: Math.max(0.01, parseFloat(e.target.value) || 0.1) }))}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="w-16 px-2 py-1 rounded-lg text-[11px] font-black text-center outline-none"
+                                            style={{
+                                                background: 'rgba(245,158,11,0.08)',
+                                                border: '1px solid rgba(245,158,11,0.25)',
+                                                color: '#fbbf24',
+                                            }}
+                                        />
+                                    </td>
                                     <td className="py-2 px-3 border-r border-b text-center relative z-50 pointer-events-auto" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                                         <button
                                             disabled={r.decision === "NO TRADE" || !onExecuteAction}
@@ -1111,7 +1129,7 @@ function TradingDecisionEngineTable({
                                                 e.preventDefault();
                                                 e.stopPropagation();
                                                 if (r.decision !== "NO TRADE" && onExecuteAction) {
-                                                    onExecuteAction(r.sym, r.decision);
+                                                    onExecuteAction(r.sym, r.decision, lotSizes[r.sym] ?? 0.1);
                                                 }
                                             }}
                                             className="execute-btn px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 mx-auto disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-500/20"
@@ -1126,7 +1144,7 @@ function TradingDecisionEngineTable({
                             ))}
                             {filteredRows.length === 0 && (
                                 <tr>
-                                    <td colSpan={11} className="py-8 text-center text-gray-500 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                    <td colSpan={13} className="py-8 text-center text-gray-500 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                                         {lang === "ar" ? "لا يوجد بيانات لهذه التصفية" : lang === "ru" ? "Нет данных по этому фильтру" : lang === "tr" ? "Bu filtreyle eşleşen veri yok" : "No symbols match this filter"}
                                     </td>
                                 </tr>
@@ -1163,6 +1181,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const [tradeTP, setTradeTP] = useState("");
     const [tradeError, setTradeError] = useState<string | null>(null);
     const [isExecuting, setIsExecuting] = useState(false);
+    const [tradeLot, setTradeLot] = useState("0.1");
     const executedTradesRef = useRef<Set<string>>(new Set());
 
     const tk: any = {}; // Fallback if needed, we'll rely on local styling
@@ -2394,9 +2413,10 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             onSymbolSelect={setSelectedSymbol} 
                             isRTL={isRTL} 
                             sources={sources} 
-                            onExecuteAction={(symbol, decision) => {
+                            onExecuteAction={(symbol, decision, lot) => {
                                 setTradeModalState({ isOpen: true, symbol, decision });
                                 setTradeSymbolOverride(symbol);
+                                if (lot) setTradeLot(String(lot));
                                 setTradeSL("");
                                 setTradeTP("");
                                 setTradeError(null);
@@ -2764,7 +2784,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                 const res = await executeTrade(
                                                     symbolToSend, 
                                                     action, 
-                                                    0.01,
+                                                    parseFloat(tradeLot) || 0.1,
                                                     tradeSL ? parseFloat(tradeSL) : 0, 
                                                     tradeTP ? parseFloat(tradeTP) : 0
                                                 );
@@ -2784,7 +2804,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             {/* Info Box */}
                                             <div className="p-3 rounded-xl mb-4 text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                                                 <p className="text-gray-400 leading-relaxed">
-                                                    You are about to execute a <strong className={tradeModalState.decision.includes("BUY") ? "text-emerald-400" : "text-red-400"}>{tradeModalState.decision.includes("BUY") ? "BUY" : "SELL"}</strong> exacted on <strong className="text-white">{tradeModalState.symbol}</strong>. Volume defaults to 0.01.
+                                                    You are about to execute a <strong className={tradeModalState.decision.includes("BUY") ? "text-emerald-400" : "text-red-400"}>{tradeModalState.decision.includes("BUY") ? "BUY" : "SELL"}</strong> on <strong className="text-white">{tradeModalState.symbol}</strong> with <strong className="text-amber-400">{tradeLot || "0.1"}</strong> lot.
                                                 </p>
                                             </div>
 
@@ -2794,6 +2814,12 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                 <input disabled={isExecuting} value={tradeSymbolOverride} onChange={e => setTradeSymbolOverride(e.target.value)} type="text" placeholder={tradeModalState.symbol}
                                                     className="w-full bg-white/5 border border-indigo-500/20 rounded-xl px-4 py-2.5 text-sm font-bold text-indigo-300 focus:outline-none focus:border-indigo-500/50 placeholder-gray-600" />
                                                 <p className="text-[9px] text-gray-600 ml-1">e.g. BTCUSD.raw, BTCUSDm, BTCUSD.p — depends on your broker</p>
+                                            </div>
+
+                                            {/* Lot Size */}
+                                            <div className="space-y-1.5 mb-3">
+                                                <label className="text-[10px] font-black tracking-wider uppercase text-gray-500 ml-1">Lot Size</label>
+                                                <input disabled={isExecuting} value={tradeLot} onChange={e => setTradeLot(e.target.value)} type="number" step="0.01" min="0.01" max="100" className="w-full bg-white/5 border border-amber-500/20 rounded-xl px-4 py-2.5 text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-500/50" />
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-3">

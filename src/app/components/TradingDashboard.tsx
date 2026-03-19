@@ -448,6 +448,7 @@ export function TradingDashboard({
   const [qtSymbol, setQtSymbol] = useState("");
   const [qtError, setQtError] = useState<string | null>(null);
   const [qtExecuting, setQtExecuting] = useState(false);
+  const [qtLot, setQtLot] = useState("0.1");
   const executedTradesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -1809,11 +1810,12 @@ export function TradingDashboard({
             mtfSmallTimeframe={mtfSmallTimeframe}
             mtfLargeTimeframe={mtfLargeTimeframe}
             indicatorName={selectedIndicator?.nameEn}
-            onExecuteTrade={(action: string, sl?: number, tp?: number) => {
+            onExecuteTrade={(action: string, sl?: number, tp?: number, lot?: number) => {
               if (!selectedAsset) return;
               setQuickTradeModal({ symbol: selectedAsset.symbol, action });
               setQtSL(sl ? String(sl) : "");
               setQtTP(tp ? String(tp) : "");
+              if (lot) setQtLot(String(lot));
               setQtSymbol(selectedAsset.symbol);
               setQtError(null);
             }}
@@ -1913,7 +1915,7 @@ export function TradingDashboard({
                       await executeTrade(
                         qtSymbol,
                         actionType,
-                        0.01,
+                        parseFloat(qtLot) || 0.1,
                         slVal,
                         tpVal,
                       );
@@ -1934,6 +1936,25 @@ export function TradingDashboard({
                       type="text"
                       value={qtSymbol}
                       onChange={(e) => setQtSymbol(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl text-[13px] font-bold outline-none"
+                      style={{
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "#fff",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold tracking-widest uppercase mb-1 block text-gray-500">
+                      Lot Size
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      max="100"
+                      value={qtLot}
+                      onChange={(e) => setQtLot(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl text-[13px] font-bold outline-none"
                       style={{
                         background: "rgba(255,255,255,0.05)",

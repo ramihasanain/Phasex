@@ -14,7 +14,7 @@ interface AITradeSignalWidgetProps {
   mtfSmallTimeframe: number;
   mtfLargeTimeframe: number;
   indicatorName?: string;
-  onExecuteTrade?: (action: string, sl?: number, tp?: number) => void;
+  onExecuteTrade?: (action: string, sl?: number, tp?: number, lot?: number) => void;
 }
 export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, indicatorName, onExecuteTrade }: AITradeSignalWidgetProps) {
   const { language } = useLanguage();
@@ -36,6 +36,7 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
   const [scanProgress, setScanProgress] = useState(0);
   const [isExpanded, setIsExpanded] = useState(true);
   const [tokenError, setTokenError] = useState(false);
+  const [aiLot, setAiLot] = useState("0.1");
 
   useEffect(() => {
     let interval: any;
@@ -484,14 +485,34 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
 
       {/* Execute AI Trade Button */}
       {signal && !isScanning && signal.action !== 'HOLD' && onExecuteTrade && (
-        <div className="px-3 pb-3">
+      <div className="px-3 pb-3 space-y-2">
+          {/* Lot Size Input */}
+          <div className="flex items-center gap-2">
+            <label className="text-[8px] font-black tracking-[0.15em] uppercase whitespace-nowrap" style={{ color: tk.textDim }}>LOT</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              max="100"
+              value={aiLot}
+              onChange={(e) => setAiLot(e.target.value)}
+              className="flex-1 px-2.5 py-1.5 rounded-lg text-[12px] font-black text-center outline-none"
+              style={{
+                background: 'rgba(245,158,11,0.08)',
+                border: '1px solid rgba(245,158,11,0.25)',
+                color: '#fbbf24',
+                width: '60px',
+              }}
+            />
+          </div>
           <motion.button
             whileHover={{ scale: 1.02, boxShadow: `0 8px 30px rgba(${colors.rgb},0.3)` }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               const slVal = signal.targets?.sl ? parseFloat(String(signal.targets.sl)) : undefined;
               const tpVal = signal.targets?.tp1 ? parseFloat(String(signal.targets.tp1)) : undefined;
-              onExecuteTrade(signal.action, isNaN(slVal!) ? undefined : slVal, isNaN(tpVal!) ? undefined : tpVal);
+              const lotVal = parseFloat(aiLot) || 0.1;
+              onExecuteTrade(signal.action, isNaN(slVal!) ? undefined : slVal, isNaN(tpVal!) ? undefined : tpVal, lotVal);
             }}
             className="w-full py-2.5 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase flex items-center justify-center gap-2 cursor-pointer"
             style={{
