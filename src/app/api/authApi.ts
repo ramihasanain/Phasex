@@ -109,3 +109,13 @@ export async function requestPasswordReset(email: string): Promise<any> {
   });
   return handleResponse<any>(res);
 }
+
+/* ─── Password Reset Confirm ─── */
+export async function confirmPasswordReset(uid: string, token: string, new_password: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/password-reset/confirm/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid, token, new_password }),
+  });
+  return handleResponse<any>(res);
+}

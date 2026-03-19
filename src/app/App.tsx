@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { LandingPage } from "./components/LandingPage";
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
+import { ResetPasswordPage } from "./components/ResetPasswordPage";
 import { PhaseXDynamicsPage } from "./components/PhaseXDynamicsPage";
 import { TradingDashboard } from "./components/TradingDashboard";
 import { SubscriptionOnboarding } from "./components/SubscriptionOnboarding";
@@ -86,6 +87,7 @@ function AppContent() {
       <Route path="/" element={<LandingRoute />} />
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/register" element={<RegisterRoute />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/dashboard" element={<DashboardRoute />} />
       <Route path="/phasex-dynamics" element={<PhaseXDynamicsRoute />} />
       <Route path="*" element={<Navigate to="/" replace />} />
