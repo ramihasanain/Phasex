@@ -1104,8 +1104,12 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                   <table className="w-full text-center border-collapse">
                     <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: tk.isDark ? 'rgba(15,23,42,0.85)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
                       <tr>
-                        {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit"].map((head, idx) => (
-                          <th key={idx} className="p-2 text-[12px] font-bold whitespace-nowrap" style={{ color: tk.textPrimary, border: `1px solid ${tk.isDark ? 'rgba(100,116,139,0.3)' : tk.border}` }}>
+                        {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", "Lot", "Execute"].map((head, idx) => (
+                          <th key={idx} className="p-2 text-[12px] font-bold whitespace-nowrap" style={{
+                            color: head === "Lot" ? '#fbbf24' : head === "Execute" ? '#818cf8' : tk.textPrimary,
+                            border: `1px solid ${tk.isDark ? 'rgba(100,116,139,0.3)' : tk.border}`,
+                            ...(head === "Lot" ? { borderLeft: '2px solid rgba(245,158,11,0.3)' } : {}),
+                          }}>
                             {isRTL ? (
                               head === "Current Price" ? "السعر الحالي" :
                                 head === "High Price" ? "أعلى سعر" :
@@ -1113,7 +1117,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                     head === "Candles" ? "الشموع" :
                                       head === "Entry" ? "الدخول" :
                                         head === "Direction" ? "الاتجاه" :
-                                          "الربح"
+                                          head === "Profit" ? "الربح" :
+                                            head === "Lot" ? "اللوت" :
+                                              head === "Execute" ? "تنفيذ" : head
                             ) : head}
                           </th>
                         ))}
@@ -1122,7 +1128,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                     <tbody>
                       {directionsData && directionsData.rows.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="p-4 text-sm text-slate-500">No data available for directions.</td>
+                          <td colSpan={9} className="p-4 text-sm text-slate-500">No data available for directions.</td>
                         </tr>
                       ) : (
                         directionsData && directionsData.rows.map((row: any) => {
@@ -1164,6 +1170,39 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                               </td>
                               <td className="p-2 text-[13px] font-bold font-mono" style={{ color: tk.positive }}>
                                 {row.profit.toFixed(decimals)}
+                              </td>
+                              <td className="p-2" style={{ borderLeft: '2px solid rgba(245,158,11,0.2)' }}>
+                                <input
+                                  type="number" step="0.01" min="0.01" max="100"
+                                  value={dirLotSizes[row.windowSize] ?? 0.1}
+                                  onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.1) }))}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="w-14 text-center text-[11px] font-black font-mono py-1 px-1 rounded-lg outline-none mx-auto block"
+                                  style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
+                                />
+                              </td>
+                              <td className="p-2 text-center">
+                                <button
+                                  disabled={dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!executeTradeFromChart || !currency) return;
+                                    const lot = dirLotSizes[row.windowSize] ?? 0.1;
+                                    setDirExecuting(prev => new Set(prev).add(row.windowSize));
+                                    try {
+                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot);
+                                    } catch (err) { console.error(err); }
+                                    setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                  style={{
+                                    color: dirExecuting.has(row.windowSize) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                    background: dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                    border: `1px solid ${dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                  }}
+                                >
+                                  {dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                </button>
                               </td>
                             </tr>
                           );
