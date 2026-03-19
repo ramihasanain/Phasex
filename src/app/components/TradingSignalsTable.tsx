@@ -885,8 +885,12 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                 )}
 
                 {/* ═══ FILTERS ═══ */}
-                <div className="px-5 py-3 flex flex-wrap items-center gap-2.5" style={{
-                    borderBottom: "1px solid rgba(99,102,241,0.06)", background: "rgba(99,102,241,0.015)",
+                <div className="px-5 py-4 mt-2 flex flex-wrap items-center gap-2.5 rounded-lg mx-2" style={{
+                    borderTop: "2px solid rgba(99,102,241,0.2)",
+                    borderBottom: "2px solid rgba(99,102,241,0.2)",
+                    background: "linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(168,85,247,0.02) 50%, rgba(99,102,241,0.04) 100%)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.15)",
+                    marginBottom: "6px",
                 }}>
                     {/* Search */}
                     <div className="relative flex-shrink-0" style={{ width: 180 }}>

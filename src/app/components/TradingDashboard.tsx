@@ -1690,6 +1690,8 @@ export function TradingDashboard({
                 generateCandlesFromReal={generateCandlesFromReal}
                 onLiveChartData={setLiveChartData}
                 accessToken={accessToken}
+                mt5Connected={mt5Connected}
+                executeTrade={executeTrade}
                 renderTradeButtons={
                   selectedAsset
                     ? () => (
