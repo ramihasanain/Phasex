@@ -99,3 +99,13 @@ export async function getCountries(): Promise<APICountry[]> {
   if (!res.ok) throw new Error((data as any).detail || `API error: ${res.status}`);
   return (data as any).countries || data;
 }
+
+/* ─── Password Reset Request ─── */
+export async function requestPasswordReset(email: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/password-reset/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return handleResponse<any>(res);
+}

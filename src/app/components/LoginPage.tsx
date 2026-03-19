@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import { Lock, Mail, ArrowRight, Zap, Globe, ChevronDown, Loader2, AlertCircle, X } from "lucide-react";
+import { Lock, Mail, ArrowRight, Zap, Globe, ChevronDown, Loader2, AlertCircle, X, KeyRound, CheckCircle } from "lucide-react";
 import { Logo } from "./Logo";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion } from "motion/react";
 import { TermsModal } from "./TermsAndConditions";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 import { useAuth } from "../contexts/AuthContext";
-import { loginUser } from "../api/authApi";
+import { loginUser, requestPasswordReset } from "../api/authApi";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -24,6 +24,28 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [apiLoading, setApiLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Forgot password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) return;
+    setResetLoading(true);
+    setResetError(null);
+    try {
+      await requestPasswordReset(resetEmail);
+      setResetSuccess(true);
+    } catch (err: any) {
+      setResetError(err.message || (isRTL ? "فشل إرسال رابط إعادة التعيين" : "Failed to send reset link."));
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const languageOptions = [
     { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png" },
@@ -296,6 +318,16 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
                   <Lock className={`absolute ltr:left-4 rtl:right-4 top-1/2 -translate-y-1/2 w-4 h-4 rtl:right-4`}
                     style={{ color: focused === "password" ? accent : "#4b5563" }} />
                 </div>
+                <div className="flex justify-end mt-1">
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPassword(true); setResetEmail(email); setResetSuccess(false); setResetError(null); }}
+                    className="text-[11px] font-bold cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ color: accent }}
+                  >
+                    {isRTL ? "نسيت كلمة السر؟" : "Forgot password?"}
+                  </button>
+                </div>
               </div>
 
               {/* Error Banner */}
@@ -408,6 +440,119 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
       </motion.div>
 
       <TermsModal isOpen={termsOpen} onClose={() => setTermsOpen(false)} />
+
+      {/* ═══ FORGOT PASSWORD MODAL ═══ */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowForgotPassword(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-md mx-4 rounded-2xl overflow-hidden relative"
+            style={{
+              background: 'linear-gradient(135deg, #0a0e18 0%, #0d1225 50%, #0a0f1a 100%)',
+              border: `1px solid ${accentG}0.15)`,
+              boxShadow: `0 25px 60px rgba(0,0,0,0.5), 0 0 40px ${accentG}0.08)`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top LED */}
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent 5%, ${accent} 30%, ${accent} 70%, transparent 95%)`, opacity: 0.6 }} />
+
+            <div className="px-8 py-8">
+              {/* Close button */}
+              <button onClick={() => setShowForgotPassword(false)} className="absolute top-4 right-4 cursor-pointer" style={{ color: '#6b7280' }}>
+                <X className="w-5 h-5" />
+              </button>
+
+              {resetSuccess ? (
+                /* ── Success State ── */
+                <div className="text-center py-4">
+                  <motion.div
+                    initial={{ scale: 0 }} animate={{ scale: 1 }}
+                    className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+                    style={{ background: `${accentG}0.1)`, border: `2px solid ${accentG}0.3)` }}>
+                    <CheckCircle className="w-8 h-8" style={{ color: accent }} />
+                  </motion.div>
+                  <h3 className="text-xl font-black mb-2" style={{ color: accent }}>
+                    {isRTL ? 'تم الإرسال!' : 'Email Sent!'}
+                  </h3>
+                  <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                    {isRTL
+                      ? `تم إرسال رابط إعادة تعيين كلمة السر إلى ${resetEmail}. تحقق من بريدك الإلكتروني.`
+                      : `A password reset link has been sent to ${resetEmail}. Check your inbox.`}
+                  </p>
+                  <motion.button
+                    onClick={() => setShowForgotPassword(false)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-8 py-3 rounded-xl text-sm font-bold cursor-pointer"
+                    style={{ background: `${accentG}0.1)`, color: accent, border: `1px solid ${accentG}0.25)` }}>
+                    {isRTL ? 'حسناً' : 'Got it'}
+                  </motion.button>
+                </div>
+              ) : (
+                /* ── Form State ── */
+                <>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${accentG}0.1)`, border: `1px solid ${accentG}0.2)` }}>
+                      <KeyRound className="w-5 h-5" style={{ color: accent }} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black" style={{ color: accent }}>
+                        {isRTL ? 'نسيت كلمة السر؟' : 'Forgot Password?'}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        {isRTL ? 'أدخل إيميلك وسنرسل لك رابط إعادة التعيين' : "Enter your email and we'll send you a reset link"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <div className="relative">
+                      <input
+                        type="email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        placeholder={isRTL ? 'أدخل بريدك الإلكتروني' : 'Enter your email address'}
+                        required
+                        dir="auto"
+                        className="w-full bg-[rgba(255,255,255,0.03)] text-white placeholder:text-gray-600 rounded-xl py-3.5 px-10 text-sm font-medium outline-none"
+                        style={{ border: `1px solid ${accentG}0.15)` }}
+                      />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#4b5563' }} />
+                    </div>
+
+                    {resetError && (
+                      <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                        className="p-3 rounded-xl flex items-center gap-2"
+                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                        <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                        <p className="text-xs font-bold text-red-400">{resetError}</p>
+                      </motion.div>
+                    )}
+
+                    <motion.button type="submit" disabled={resetLoading || !resetEmail}
+                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      className="w-full py-3.5 rounded-xl text-sm font-black tracking-wider flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      style={{
+                        background: `linear-gradient(135deg, ${accent} 0%, #00c890 100%)`,
+                        color: '#060a10',
+                        boxShadow: `0 6px 25px ${accentG}0.25)`,
+                      }}>
+                      {resetLoading ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" />{isRTL ? 'جاري الإرسال...' : 'Sending...'}</>
+                      ) : (
+                        <>{isRTL ? 'إرسال رابط إعادة التعيين' : 'Send Reset Link'}<ArrowRight className="w-4 h-4 rtl:rotate-180" /></>
+                      )}
+                    </motion.button>
+                  </form>
+                </>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Version badge */}
       <motion.div className="absolute bottom-6 text-center z-10"
