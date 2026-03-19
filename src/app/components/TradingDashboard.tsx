@@ -355,6 +355,7 @@ export function TradingDashboard({
   const {
     subscriptionStatus,
     subscriptionPlan,
+    subscriptionDetails,
     hasMT5Access,
     activateMT5,
     accessToken,
@@ -458,7 +459,9 @@ export function TradingDashboard({
 
   const subInfo = {
     isActive: subscriptionStatus === "active",
-    daysRemaining: subscriptionStatus === "active" ? 14 : 0,
+    daysRemaining: subscriptionStatus === "active" && subscriptionDetails
+      ? Math.max(0, Math.ceil((new Date(subscriptionDetails.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : 0,
   };
 
   // Derive list of symbol names from the active tab's backend data
@@ -2517,7 +2520,9 @@ export function TradingDashboard({
                           const mt5Addon = addons.find((a: any) => a.code === 'mt5_intgration');
                           if (mt5Addon && accessToken) {
                             const result = await upgradeSubscription(accessToken, {
+                              plan_id: subscriptionDetails?.planId || 0,
                               addon_ids: [mt5Addon.id],
+                              addons_mode: 'add',
                             });
                             console.log('[PhaseX] MT5 upgrade submitted:', result);
                           } else {

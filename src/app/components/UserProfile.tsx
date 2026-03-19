@@ -28,7 +28,7 @@ const PlanIcon = ({ plan, size }: { plan: string; size: number }) => {
 
 export function UserProfile({ onClose, onTopUp }: UserProfileProps) {
     const { t, language } = useLanguage();
-    const { user, subscriptionPlan, subscriptionStatus, aiTokens, hasAIAccess, hasMT5Access, addTokens, referralCode, referralBalance, referralHistory } = useAuth();
+    const { user, subscriptionPlan, subscriptionStatus, subscriptionDetails, aiTokens, hasAIAccess, hasMT5Access, addTokens, referralCode, referralBalance, referralHistory } = useAuth();
     
     const [view, setView] = useState<"dashboard" | "topup" | "pending" | "referral">("dashboard");
     const [selectedPackage, setSelectedPackage] = useState<250 | 700 | 2000>(700);
@@ -284,7 +284,7 @@ export function UserProfile({ onClose, onTopUp }: UserProfileProps) {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-bold text-white text-sm">Billing Cycle</h4>
-                                            <p className="text-[11px] text-gray-500 mt-0.5 truncate">{subscriptionPlan === 'none' ? 'No active plan.' : 'Next payment due in 14 days.'}</p>
+                                            <p className="text-[11px] text-gray-500 mt-0.5 truncate">{subscriptionPlan === 'none' ? 'No active plan.' : subscriptionDetails ? `${Math.max(0, Math.ceil((new Date(subscriptionDetails.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days remaining` : 'Loading...'}</p>
                                         </div>
                                         <button className="p-2.5 rounded-xl hover:bg-white/5 text-gray-500 transition-colors shrink-0 cursor-pointer">
                                             <Settings size={18} />
