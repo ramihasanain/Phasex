@@ -428,10 +428,13 @@ export function TradingDashboard({
     useState(false);
   const [isMT5Processing, setIsMT5Processing] = useState(false);
   const [isMT5Pending, setIsMT5Pending] = useState(false);
-  const [mt5Creds, setMT5Creds] = useState<MT5Credentials>({
-    login: "",
-    password: "",
-    server: "",
+  const [isMT5DisconnectOpen, setIsMT5DisconnectOpen] = useState(false);
+  const [mt5Creds, setMT5Creds] = useState<MT5Credentials>(() => {
+    try {
+      const saved = localStorage.getItem("mt5_credentials");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { login: "", password: "", server: "" };
   });
   const [showMT5Password, setShowMT5Password] = useState(false);
   const [mtfSmallTimeframe, setMtfSmallTimeframe] = useState<number>(5);
@@ -917,7 +920,7 @@ export function TradingDashboard({
                   setIsMT5SubscribeOpen(true);
                   return;
                 }
-                mt5Connected ? disconnectMT5() : setIsMT5LoginOpen(true);
+                mt5Connected ? setIsMT5DisconnectOpen(true) : setIsMT5LoginOpen(true);
               }}
               whileHover={{
                 scale: 1.04,
@@ -2184,6 +2187,9 @@ export function TradingDashboard({
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
+                  try {
+                    localStorage.setItem("mt5_credentials", JSON.stringify(mt5Creds));
+                  } catch {}
                   await connectMT5(mt5Creds);
                   if (!mt5Error) setIsMT5LoginOpen(false);
                 }}
@@ -2363,6 +2369,68 @@ export function TradingDashboard({
                   </span>
                 </motion.button>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ MT5 DISCONNECT CONFIRMATION MODAL ═══ */}
+      <AnimatePresence>
+        {isMT5DisconnectOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            style={{
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(8px)",
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsMT5DisconnectOpen(false);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="w-full max-w-md mx-4 rounded-2xl overflow-hidden relative p-6"
+              style={{
+                background: tk.isDark ? "radial-gradient(ellipse at 50% 0%, rgba(239,68,68,0.06) 0%, rgba(6,10,16,0.98) 60%)" : tk.surfaceElevated,
+                border: `1px solid ${tk.isDark ? "rgba(239,68,68,0.15)" : tk.border}`,
+                boxShadow: "0 25px 80px rgba(0,0,0,0.5)",
+              }}
+            >
+              <h3 className="text-lg font-black mb-2" style={{ color: tk.textPrimary }}>
+                {isRTL ? "تأكيد قطع الاتصال" : "Confirm Disconnect"}
+              </h3>
+              <p className="text-sm mb-6 leading-relaxed" style={{ color: tk.textSecondary }}>
+                {isRTL 
+                  ? "هل أنت متأكد أنك تريد فصل الاتصال عن MT5؟ الصفقات التي تعمل حالياً لن تتأثر وستظل شغالة."
+                  : "Are you sure you want to disconnect from MT5? Running trades will not be affected and will keep running."}
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsMT5DisconnectOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl font-bold cursor-pointer transition-colors"
+                  style={{ background: tk.surfaceHover, color: tk.textPrimary, border: `1px solid ${tk.border}` }}
+                >
+                  {isRTL ? "إلغاء" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    disconnectMT5();
+                    setIsMT5DisconnectOpen(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl font-bold cursor-pointer transition-colors flex items-center justify-center gap-2"
+                  style={{ background: "#ef4444", color: "#fff", border: "1px solid rgba(239,68,68,0.5)" }}
+                >
+                  <LogOut className="w-4 h-4" />
+                  {isRTL ? "فصل الاتصال" : "Disconnect"}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

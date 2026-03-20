@@ -1183,8 +1183,15 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
     const [isMT5SubscribeOpen, setIsMT5SubscribeOpen] = useState(false); // Can reuse standard subscription modal or trigger specific intent
     const [isMT5LoginOpen, setIsMT5LoginOpen] = useState(false);
+    const [isMT5DisconnectOpen, setIsMT5DisconnectOpen] = useState(false);
     const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false); // Modal to prompt login when trying to trade
-    const [mt5Creds, setMT5Creds] = useState({ server: '', login: '', password: '' });
+    const [mt5Creds, setMT5Creds] = useState(() => {
+        try {
+            const saved = localStorage.getItem("mt5_credentials");
+            if (saved) return JSON.parse(saved);
+        } catch {}
+        return { login: '', password: '', server: '' };
+    });
     const [showMT5Password, setShowMT5Password] = useState(false);
     const [mt5Error, setMT5Error] = useState<string | null>(null);
 
@@ -1635,7 +1642,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                         setIsSubscriptionOpen(true);
                                         return;
                                     }
-                                    mt5Connected ? disconnectMT5() : setIsMT5LoginOpen(true);
+                                    mt5Connected ? setIsMT5DisconnectOpen(true) : setIsMT5LoginOpen(true);
                                 }}
                                 whileHover={{ scale: 1.04 }}
                                 whileTap={{ scale: 0.96 }}
@@ -2655,6 +2662,9 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             e.preventDefault();
                                             setMT5Error(null);
                                             try {
+                                                localStorage.setItem("mt5_credentials", JSON.stringify(mt5Creds));
+                                            } catch {}
+                                            try {
                                                 await connectMT5(mt5Creds);
                                                 setIsMT5LoginOpen(false);
                                             } catch (err: any) {
@@ -2754,6 +2764,65 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                     </AnimatePresence>
                 </>
             )}
+
+            {/* ═══ MT5 DISCONNECT CONFIRMATION MODAL ═══ */}
+            <AnimatePresence>
+                {isMT5DisconnectOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) setIsMT5DisconnectOpen(false);
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="w-full max-w-md mx-4 rounded-2xl overflow-hidden relative p-6"
+                            style={{
+                                background: tk.isDark ? 'radial-gradient(ellipse at 50% 0%, rgba(239,68,68,0.06) 0%, rgba(6,10,16,0.98) 60%)' : '#fff',
+                                border: `1px solid ${tk.isDark ? 'rgba(239,68,68,0.15)' : 'rgba(0,0,0,0.1)'}`,
+                                boxShadow: '0 25px 80px rgba(0,0,0,0.5)',
+                            }}
+                        >
+                            <h3 className="text-lg font-black mb-2" style={{ color: tk.textPrimary }}>
+                                {lang === "ar" ? "تأكيد قطع الاتصال" : "Confirm Disconnect"}
+                            </h3>
+                            <p className="text-sm mb-6 leading-relaxed" style={{ color: tk.textSecondary }}>
+                                {lang === "ar"
+                                    ? "هل أنت متأكد أنك تريد فصل الاتصال عن MT5؟ الصفقات التي تعمل حالياً لن تتأثر وستظل شغالة."
+                                    : "Are you sure you want to disconnect from MT5? Running trades will not be affected and will keep running."}
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMT5DisconnectOpen(false)}
+                                    className="flex-1 py-2.5 rounded-xl font-bold cursor-pointer transition-colors"
+                                    style={{ background: tk.surfaceHover, color: tk.textPrimary, border: `1px solid ${tk.border}` }}
+                                >
+                                    {lang === "ar" ? "إلغاء" : "Cancel"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        disconnectMT5();
+                                        setIsMT5DisconnectOpen(false);
+                                    }}
+                                    className="flex-1 py-2.5 rounded-xl font-bold cursor-pointer transition-colors flex items-center justify-center gap-2"
+                                    style={{ background: '#ef4444', color: '#fff', border: '1px solid rgba(239,68,68,0.5)' }}
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    {lang === "ar" ? "فصل الاتصال" : "Disconnect"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
                     {/* ═══ MT5 TRADE EXECUTION MODAL (always rendered) ═══ */}
                     <AnimatePresence>
