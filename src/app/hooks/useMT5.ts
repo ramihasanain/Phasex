@@ -4,6 +4,7 @@
  * account_id is obtained during connect (MetaAPI provisioning) and persisted in localStorage.
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { playTradeExecuted, playTradeFailed, playPositionClosed, playConnected } from "../utils/tradeSounds";
 
 const MT5_API_BASE = "https://seashell-app-cq4ql.ondigitalocean.app/api/mt5";
 
@@ -247,6 +248,7 @@ export function useMT5(): UseMT5Result {
                 if (data.session_token) setSessionToken(data.session_token);
                 if (data.account) setAccount(data.account);
                 setConnectStatus('');
+                playConnected();
             } else {
                 setConnected(false);
                 setError(data.error || "Failed to connect / provision account");
@@ -430,6 +432,7 @@ export function useMT5(): UseMT5Result {
             const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return null;
             if (data.success && data.order) {
+                playTradeExecuted();
                 refreshPositions();
                 refreshAccount();
                 return data.order as MT5TradeResult;
@@ -437,6 +440,7 @@ export function useMT5(): UseMT5Result {
                 const errMsg = data.error || 'Trade execution failed';
                 console.error('[MT5] Trade failed:', errMsg);
                 setError(errMsg);
+                playTradeFailed();
                 throw new Error(errMsg);
             }
         } catch (e: any) {
@@ -491,6 +495,7 @@ export function useMT5(): UseMT5Result {
             const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return false;
             if (data.success) {
+                playPositionClosed();
                 refreshPositions();
                 refreshAccount();
                 return true;
