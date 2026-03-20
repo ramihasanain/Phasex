@@ -1693,14 +1693,26 @@ export function TradingDashboard({
                 accessToken={accessToken}
                 mt5Connected={mt5Connected}
                 executeTrade={executeTrade}
+                mt5Positions={mt5Positions}
                 renderTradeButtons={
                   selectedAsset
-                    ? () => (
+                    ? () => {
+                        const sym = selectedAsset.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                        const hasPos = mt5Positions.some((p: any) => {
+                          const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                          if (ps !== sym && !ps.includes(sym) && !sym.includes(ps)) return false;
+                          const comment = (p.comment || '').toUpperCase();
+                          return comment.includes(`${timeframe}`);
+                        });
+                        return (
                         <div className="flex items-center gap-1.5 ml-2">
                           <motion.button
-                            whileHover={{ scale: 1.06 }}
-                            whileTap={{ scale: 0.94 }}
+                            whileHover={hasPos ? {} : { scale: 1.06 }}
+                            whileTap={hasPos ? {} : { scale: 0.94 }}
+                            disabled={hasPos}
+                            title={hasPos ? '✅ صفقة منفذة على هذا التايم فريم' : undefined}
                             onClick={() => {
+                              if (hasPos) return;
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "BUY",
@@ -1710,19 +1722,22 @@ export function TradingDashboard({
                               setQtSymbol(selectedAsset.symbol);
                               setQtError(null);
                             }}
-                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer"
+                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
-                              background: "rgba(16,185,129,0.15)",
-                              color: "#34d399",
-                              border: "1px solid rgba(16,185,129,0.3)",
+                              background: hasPos ? "rgba(100,116,139,0.08)" : "rgba(16,185,129,0.15)",
+                              color: hasPos ? "#64748b" : "#34d399",
+                              border: hasPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(16,185,129,0.3)",
                             }}
                           >
-                            BUY
+                            {hasPos ? '✅' : 'BUY'}
                           </motion.button>
                           <motion.button
-                            whileHover={{ scale: 1.06 }}
-                            whileTap={{ scale: 0.94 }}
+                            whileHover={hasPos ? {} : { scale: 1.06 }}
+                            whileTap={hasPos ? {} : { scale: 0.94 }}
+                            disabled={hasPos}
+                            title={hasPos ? '✅ صفقة منفذة على هذا التايم فريم' : undefined}
                             onClick={() => {
+                              if (hasPos) return;
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "SELL",
@@ -1732,17 +1747,18 @@ export function TradingDashboard({
                               setQtSymbol(selectedAsset.symbol);
                               setQtError(null);
                             }}
-                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer"
+                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
-                              background: "rgba(239,68,68,0.15)",
-                              color: "#f87171",
-                              border: "1px solid rgba(239,68,68,0.3)",
+                              background: hasPos ? "rgba(100,116,139,0.08)" : "rgba(239,68,68,0.15)",
+                              color: hasPos ? "#64748b" : "#f87171",
+                              border: hasPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(239,68,68,0.3)",
                             }}
                           >
-                            SELL
+                            {hasPos ? (language === 'ar' ? 'مُنفّذة' : 'Executed') : 'SELL'}
                           </motion.button>
                         </div>
-                      )
+                      );
+                      }
                     : undefined
                 }
               />

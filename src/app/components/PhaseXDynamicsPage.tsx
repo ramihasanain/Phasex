@@ -848,7 +848,8 @@ function TradingDecisionEngineTable({
     onSymbolSelect,
     isRTL,
     sources,
-    onExecuteAction
+    onExecuteAction,
+    mt5Positions,
 }: {
     category: MarketCategory;
     onCategoryChange: (c: MarketCategory) => void;
@@ -857,6 +858,7 @@ function TradingDecisionEngineTable({
     isRTL: boolean;
     sources: Record<AnalysisTab, any[]>;
     onExecuteAction?: (symbol: string, decision: string, lot?: number) => void;
+    mt5Positions?: any[];
 }) {
     const { language, t: globalT } = useLanguage();
     const { prices: livePrices } = useLivePrices();
@@ -1123,22 +1125,35 @@ function TradingDecisionEngineTable({
                                         />
                                     </td>
                                     <td className="py-2 px-3 border-r border-b text-center relative z-50 pointer-events-auto" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                        {(() => {
+                                            const sym = r.sym.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                                            const hasPos = (mt5Positions || []).some((p: any) => {
+                                                const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                                                return ps === sym || ps.includes(sym) || sym.includes(ps);
+                                            });
+                                            return (
                                         <button
-                                            disabled={r.decision === "NO TRADE" || !onExecuteAction}
+                                            disabled={hasPos || r.decision === "NO TRADE" || !onExecuteAction}
+                                            title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
-                                                if (r.decision !== "NO TRADE" && onExecuteAction) {
+                                                if (!hasPos && r.decision !== "NO TRADE" && onExecuteAction) {
                                                     onExecuteAction(r.sym, r.decision, lotSizes[r.sym] ?? 0.1);
                                                 }
                                             }}
                                             className="execute-btn px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 mx-auto disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-500/20"
-                                            style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)', position: 'relative', zIndex: 100 }}
+                                            style={hasPos ? { background: 'rgba(100,116,139,0.08)', color: '#64748b', border: '1px solid rgba(100,116,139,0.2)', position: 'relative', zIndex: 100 } : { background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)', position: 'relative', zIndex: 100 }}
                                             type="button"
                                         >
-                                            <Zap className="w-3 h-3 pointer-events-none" />
-                                            <span className="pointer-events-none">Execute</span>
+                                            {hasPos ? (
+                                                <><span className="pointer-events-none">✅</span><span className="pointer-events-none">مُنفَّذة</span></>
+                                            ) : (
+                                                <><Zap className="w-3 h-3 pointer-events-none" /><span className="pointer-events-none">Execute</span></>
+                                            )}
                                         </button>
+                                            );
+                                        })()}
                                     </td>
                                 </motion.tr>
                             ))}
@@ -1162,7 +1177,7 @@ function TradingDecisionEngineTable({
 export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const { user, logout, hasMT5Access } = useAuth();
     const isLoggedIn = !!user;
-    const { connected: mt5Connected, connectMT5, disconnectMT5, connecting: mt5Connecting, connectStatus: mt5ConnectStatus, executeTrade } = useMT5();
+    const { connected: mt5Connected, connectMT5, disconnectMT5, connecting: mt5Connecting, connectStatus: mt5ConnectStatus, executeTrade, positions: mt5Positions } = useMT5();
     
     // UI state for logged-in specific modals
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -2412,7 +2427,8 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                             selectedSymbol={selectedSymbol} 
                             onSymbolSelect={setSelectedSymbol} 
                             isRTL={isRTL} 
-                            sources={sources} 
+                            sources={sources}
+                            mt5Positions={mt5Positions}
                             onExecuteAction={(symbol, decision, lot) => {
                                 setTradeModalState({ isOpen: true, symbol, decision });
                                 setTradeSymbolOverride(symbol);

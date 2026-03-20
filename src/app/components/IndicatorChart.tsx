@@ -47,6 +47,7 @@ interface IndicatorChartProps {
   accessToken?: string | null;
   mt5Connected?: boolean;
   executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<any>;
+  mt5Positions?: any[];
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -291,6 +292,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   accessToken,
   mt5Connected,
   executeTrade: executeTradeFromChart,
+  mt5Positions,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -1182,28 +1184,40 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                 />
                               </td>
                               <td className="p-2 text-center">
-                                <button
-                                  disabled={dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    if (!executeTradeFromChart || !currency) return;
-                                    const lot = dirLotSizes[row.windowSize] ?? 0.1;
-                                    setDirExecuting(prev => new Set(prev).add(row.windowSize));
-                                    try {
-                                      const chartComment = `PX-Chart ${currency.symbol} ${timeframe} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
-                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
-                                    } catch (err) { console.error(err); }
-                                    setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
-                                  }}
-                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                  style={{
-                                    color: dirExecuting.has(row.windowSize) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                    background: dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                    border: `1px solid ${dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                                  }}
-                                >
-                                  {dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
-                                </button>
+                                {(() => {
+                                  const sym = currency?.symbol?.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '') || '';
+                                  const hasPos = (mt5Positions || []).some((p: any) => {
+                                    const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                                    if (ps !== sym && !ps.includes(sym) && !sym.includes(ps)) return false;
+                                    const comment = (p.comment || '').toUpperCase();
+                                    return comment.includes(`${timeframe}`) && comment.includes(row.isBuy ? 'BUY' : 'SELL');
+                                  });
+                                  return (
+                                    <button
+                                      disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                      title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (hasPos || !executeTradeFromChart || !currency) return;
+                                        const lot = dirLotSizes[row.windowSize] ?? 0.1;
+                                        setDirExecuting(prev => new Set(prev).add(row.windowSize));
+                                        try {
+                                          const chartComment = `PX-Chart ${currency.symbol} ${timeframe} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                          await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
+                                        } catch (err) { console.error(err); }
+                                        setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                      }}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                      style={{
+                                        color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                        background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                        border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                      }}
+                                    >
+                                      {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                    </button>
+                                  );
+                                })()}
                               </td>
                             </tr>
                           );
@@ -1586,11 +1600,21 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                           />
                                         </td>
                                         <td className="p-3 text-center">
+                                          {(() => {
+                                            const sym = currency?.symbol?.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '') || '';
+                                            const hasPos = (mt5Positions || []).some((p: any) => {
+                                              const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                                              if (ps !== sym && !ps.includes(sym) && !sym.includes(ps)) return false;
+                                              const comment = (p.comment || '').toUpperCase();
+                                              return comment.includes(`${timeframe}`) && comment.includes(row.isBuy ? 'BUY' : 'SELL');
+                                            });
+                                            return (
                                           <button
-                                            disabled={dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                            disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                            title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
                                             onClick={async (e) => {
                                               e.stopPropagation();
-                                              if (!executeTradeFromChart || !currency) return;
+                                              if (hasPos || !executeTradeFromChart || !currency) return;
                                               const lot = dirLotSizes[row.windowSize] ?? 0.1;
                                               setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                               try {
@@ -1601,13 +1625,15 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                             }}
                                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                             style={{
-                                              color: dirExecuting.has(row.windowSize) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                              background: dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                              border: `1px solid ${dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                              color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                              background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                              border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                                             }}
                                           >
-                                            {dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                            {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                           </button>
+                                            );
+                                          })()}
                                         </td>
                                     </>
                                   </tr>
