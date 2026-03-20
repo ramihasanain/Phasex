@@ -1,6 +1,5 @@
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Asset } from "./MarketList";
-import { MT5Position } from "../hooks/useMT5";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
 import { TrendingUp, TrendingDown, Activity, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, ChevronDown, Check, Table, BarChart3, Maximize2, Minimize2, ListOrdered, Edit3 } from "lucide-react";
@@ -48,7 +47,6 @@ interface IndicatorChartProps {
   accessToken?: string | null;
   mt5Connected?: boolean;
   executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<any>;
-  mt5Positions?: MT5Position[];
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -293,22 +291,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   accessToken,
   mt5Connected,
   executeTrade: executeTradeFromChart,
-  mt5Positions = [],
 }: IndicatorChartProps) {
-  // Check if a position exists for a specific window + symbol combination
-  const hasPositionForWindow = useCallback((windowSize: number, sym: string) => {
-    const symUp = sym.toUpperCase();
-    const symBase = symUp.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-    return mt5Positions.some(p => {
-      const pSym = p.symbol.toUpperCase();
-      const pBase = pSym.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-      const symbolMatch = pSym === symUp || pBase === symBase;
-      if (!symbolMatch) return false;
-      // Check if position comment contains W:{windowSize}
-      const comment = (p.comment || '').toUpperCase();
-      return comment.includes(`W:${windowSize}`);
-    });
-  }, [mt5Positions]);
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showChartInfo, setShowChartInfo] = useState(false);
@@ -1199,36 +1182,28 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                 />
                               </td>
                               <td className="p-2 text-center">
-                                {(() => {
-                                  const sym = currency?.symbol || '';
-                                  const hasPosition = currency ? hasPositionForWindow(row.windowSize, sym) : false;
-                                  const isDisabled = dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency || hasPosition;
-                                  return (
-                                    <button
-                                      disabled={isDisabled}
-                                      title={hasPosition ? (language === 'ar' ? '✅ تم تنفيذ صفقة على هذه الشمعة - انتظر إغلاقها' : '✅ Trade already executed on this candle - wait for it to close') : undefined}
-                                      onClick={async (e) => {
-                                        e.stopPropagation();
-                                        if (!executeTradeFromChart || !currency || hasPosition) return;
-                                        const lot = dirLotSizes[row.windowSize] ?? 0.1;
-                                        setDirExecuting(prev => new Set(prev).add(row.windowSize));
-                                        try {
-                                          const chartComment = `PhaseX|Chart|${currency.symbol}|TF:${timeframe}|W:${row.windowSize}|${row.isBuy ? 'BUY' : 'SELL'}`;
-                                          await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
-                                        } catch (err) { console.error(err); }
-                                        setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
-                                      }}
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                      style={{
-                                        color: hasPosition ? '#64748b' : dirExecuting.has(row.windowSize) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                        background: hasPosition ? 'rgba(100,116,139,0.08)' : dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                        border: `1px solid ${hasPosition ? 'rgba(100,116,139,0.2)' : dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                                      }}
-                                    >
-                                      {hasPosition ? (language === 'ar' ? '✅ مُنفّذة' : '✅ Executed') : dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
-                                    </button>
-                                  );
-                                })()}
+                                <button
+                                  disabled={dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!executeTradeFromChart || !currency) return;
+                                    const lot = dirLotSizes[row.windowSize] ?? 0.1;
+                                    setDirExecuting(prev => new Set(prev).add(row.windowSize));
+                                    try {
+                                      const chartComment = `PhaseX|Chart|${currency.symbol}|TF:${timeframe}|W:${row.windowSize}|${row.isBuy ? 'BUY' : 'SELL'}`;
+                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
+                                    } catch (err) { console.error(err); }
+                                    setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                  style={{
+                                    color: dirExecuting.has(row.windowSize) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                    background: dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                    border: `1px solid ${dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                  }}
+                                >
+                                  {dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                </button>
                               </td>
                             </tr>
                           );
@@ -1611,36 +1586,28 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                           />
                                         </td>
                                         <td className="p-3 text-center">
-                                          {(() => {
-                                            const sym = currency?.symbol || '';
-                                            const hasPosition = currency ? hasPositionForWindow(row.windowSize, sym) : false;
-                                            const isDisabled = dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency || hasPosition;
-                                            return (
-                                              <button
-                                                disabled={isDisabled}
-                                                title={hasPosition ? (language === 'ar' ? '✅ تم تنفيذ صفقة على هذه الشمعة - انتظر إغلاقها' : '✅ Trade already executed on this candle - wait for it to close') : undefined}
-                                                onClick={async (e) => {
-                                                  e.stopPropagation();
-                                                  if (!executeTradeFromChart || !currency || hasPosition) return;
-                                                  const lot = dirLotSizes[row.windowSize] ?? 0.1;
-                                                  setDirExecuting(prev => new Set(prev).add(row.windowSize));
-                                                  try {
-                                                    const chartComment = `PhaseX|Chart|${currency.symbol}|TF:${timeframe}|W:${row.windowSize}|${row.isBuy ? 'BUY' : 'SELL'}`;
-                                                    await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
-                                                  } catch (err) { console.error(err); }
-                                                  setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
-                                                }}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                                style={{
-                                                  color: hasPosition ? '#64748b' : dirExecuting.has(row.windowSize) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                                  background: hasPosition ? 'rgba(100,116,139,0.08)' : dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                                  border: `1px solid ${hasPosition ? 'rgba(100,116,139,0.2)' : dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                                                }}
-                                              >
-                                                {hasPosition ? (language === 'ar' ? '✅ مُنفّذة' : '✅ Executed') : dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
-                                              </button>
-                                            );
-                                          })()}
+                                          <button
+                                            disabled={dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              if (!executeTradeFromChart || !currency) return;
+                                              const lot = dirLotSizes[row.windowSize] ?? 0.1;
+                                              setDirExecuting(prev => new Set(prev).add(row.windowSize));
+                                              try {
+                                                const chartComment = `PhaseX|Chart|${currency.symbol}|TF:${timeframe}|W:${row.windowSize}|${row.isBuy ? 'BUY' : 'SELL'}`;
+                                                await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
+                                              } catch (err) { console.error(err); }
+                                              setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                            }}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                            style={{
+                                              color: dirExecuting.has(row.windowSize) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                              background: dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                              border: `1px solid ${dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                            }}
+                                          >
+                                            {dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                          </button>
                                         </td>
                                     </>
                                   </tr>
