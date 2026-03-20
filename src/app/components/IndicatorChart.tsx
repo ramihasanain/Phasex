@@ -1202,7 +1202,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         const lot = dirLotSizes[row.windowSize] ?? 0.1;
                                         setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                         try {
-                                          const chartComment = `PX-Chart ${currency.symbol} ${timeframe} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                          const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                           await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                         } catch (err) { console.error(err); }
                                         setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
@@ -1618,7 +1618,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                               const lot = dirLotSizes[row.windowSize] ?? 0.1;
                                               setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                               try {
-                                                const chartComment = `PX-Chart ${currency.symbol} ${timeframe} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                                const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                                 await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                               } catch (err) { console.error(err); }
                                               setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
