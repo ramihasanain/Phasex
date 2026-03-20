@@ -36,7 +36,7 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
   const [scanProgress, setScanProgress] = useState(0);
   const [isExpanded, setIsExpanded] = useState(true);
   const [tokenError, setTokenError] = useState(false);
-  const [aiLot, setAiLot] = useState("0.1");
+  const [aiLot, setAiLot] = useState("0.01");
 
   useEffect(() => {
     let interval: any;

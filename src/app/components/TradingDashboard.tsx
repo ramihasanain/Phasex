@@ -449,7 +449,7 @@ export function TradingDashboard({
   const [qtSymbol, setQtSymbol] = useState("");
   const [qtError, setQtError] = useState<string | null>(null);
   const [qtExecuting, setQtExecuting] = useState(false);
-  const [qtLot, setQtLot] = useState("0.1");
+  const [qtLot, setQtLot] = useState("0.01");
   const [recentlyExecuted, setRecentlyExecuted] = useState<Set<string>>(new Set());
   const executedTradesRef = useRef<Set<string>>(new Set());
 

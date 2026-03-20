@@ -1196,7 +1196,7 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const [tradeTP, setTradeTP] = useState("");
     const [tradeError, setTradeError] = useState<string | null>(null);
     const [isExecuting, setIsExecuting] = useState(false);
-    const [tradeLot, setTradeLot] = useState("0.1");
+    const [tradeLot, setTradeLot] = useState("0.01");
     const executedTradesRef = useRef<Set<string>>(new Set());
 
     const tk: any = {}; // Fallback if needed, we'll rely on local styling
@@ -2822,7 +2822,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             {/* Info Box */}
                                             <div className="p-3 rounded-xl mb-4 text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                                                 <p className="text-gray-400 leading-relaxed">
-                                                    You are about to execute a <strong className={tradeModalState.decision.includes("BUY") ? "text-emerald-400" : "text-red-400"}>{tradeModalState.decision.includes("BUY") ? "BUY" : "SELL"}</strong> on <strong className="text-white">{tradeModalState.symbol}</strong> with <strong className="text-amber-400">{tradeLot || "0.1"}</strong> lot.
+                                                    You are about to execute a <strong className={tradeModalState.decision.includes("BUY") ? "text-emerald-400" : "text-red-400"}>{tradeModalState.decision.includes("BUY") ? "BUY" : "SELL"}</strong> on <strong className="text-white">{tradeModalState.symbol}</strong> with <strong className="text-amber-400">{tradeLot || "0.01"}</strong> lot.
                                                 </p>
                                             </div>
 
