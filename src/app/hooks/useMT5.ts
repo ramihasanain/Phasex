@@ -410,12 +410,18 @@ export function useMT5(): UseMT5Result {
             return null;
         }
         try {
+            // ── Safeguard: clamp volume to 0.01–10 ──
+            const safeVolume = Math.max(0.01, Math.min(10, Number(volume) || 0.01));
+            if (safeVolume !== volume) {
+                console.warn(`[MT5] ⚠️ Volume was ${volume}, clamped to ${safeVolume}`);
+            }
+            console.log(`[MT5] Trade request: ${action} ${symbol} vol=${safeVolume} sl=${sl} tp=${tp} comment=${comment}`);
             const res = await fetch(`${MT5_API_BASE}/trade/`, {
                 method: 'POST',
                 headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                     account_id: aid,
-                    symbol, action, volume,
+                    symbol, action, volume: safeVolume,
                     sl: sl || undefined,
                     tp: tp || undefined,
                     comment: comment || 'PhaseX',
