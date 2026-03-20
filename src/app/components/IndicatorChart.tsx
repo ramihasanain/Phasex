@@ -672,7 +672,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     for (const row of directionsData.rows) {
       if (dirExecuting.has(row.windowSize)) continue;
       
-      const lot = dirLotSizes[row.windowSize] ?? 0.1;
+      const lot = dirLotSizes[row.windowSize] ?? 0.01;
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
@@ -1211,8 +1211,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                               <td className="p-2" style={{ borderLeft: '2px solid rgba(245,158,11,0.2)' }}>
                                 <input
                                   type="number" step="0.01" min="0.01" max="100"
-                                  value={dirLotSizes[row.windowSize] ?? 0.1}
-                                  onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.1) }))}
+                                  value={dirLotSizes[row.windowSize] ?? 0.01}
+                                  onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-14 text-center text-[11px] font-black font-mono py-1 px-1 rounded-lg outline-none mx-auto block"
                                   style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
@@ -1632,8 +1632,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         <td className="p-3" style={{ borderLeft: '2px solid rgba(245,158,11,0.2)' }}>
                                           <input
                                             type="number" step="0.01" min="0.01" max="100"
-                                            value={dirLotSizes[row.windowSize] ?? 0.1}
-                                            onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.1) }))}
+                                            value={dirLotSizes[row.windowSize] ?? 0.01}
+                                            onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                             onClick={(e) => e.stopPropagation()}
                                             className="w-16 text-center text-[12px] font-black font-mono py-1.5 px-1 rounded-lg outline-none mx-auto block"
                                             style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}

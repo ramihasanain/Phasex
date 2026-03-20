@@ -1948,7 +1948,7 @@ export function TradingDashboard({
                       await executeTrade(
                         qtSymbol,
                         actionType,
-                        parseFloat(qtLot) || 0.1,
+                        parseFloat(qtLot) || 0.01,
                         slVal,
                         tpVal,
                         dashComment,

@@ -511,7 +511,7 @@ export function AITradeSignalWidget({ marketContext, assetSymbol, timeframe, mtf
             onClick={() => {
               const slVal = signal.targets?.sl ? parseFloat(String(signal.targets.sl)) : undefined;
               const tpVal = signal.targets?.tp1 ? parseFloat(String(signal.targets.tp1)) : undefined;
-              const lotVal = parseFloat(aiLot) || 0.1;
+              const lotVal = parseFloat(aiLot) || 0.01;
               onExecuteTrade(signal.action, isNaN(slVal!) ? undefined : slVal, isNaN(tpVal!) ? undefined : tpVal, lotVal);
             }}
             className="w-full py-2.5 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase flex items-center justify-center gap-2 cursor-pointer"
