@@ -679,25 +679,48 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     if (!executeTradeFromChart || !currency) return;
     
     setIsExecutingAll(true);
-    for (const row of directionsData.rows) {
-      if (dirExecuting.has(row.windowSize)) continue;
-      
+    
+    const tradesToExecute = directionsData.rows.filter((row: any) => {
+      if (dirExecuting.has(row.windowSize)) return false;
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
-      if (hasPos) continue;
-      
+      return !hasPos;
+    });
+
+    if (tradesToExecute.length === 0) {
+      setIsExecutingAll(false);
+      return;
+    }
+
+    setDirExecuting(prev => {
+      const next = new Set(prev);
+      tradesToExecute.forEach((r: any) => next.add(r.windowSize));
+      return next;
+    });
+
+    const promises = tradesToExecute.map(async (row: any, index: number) => {
+      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const lot = dirLotSizes[row.windowSize] ?? 0.01;
-      setDirExecuting(prev => new Set(prev).add(row.windowSize));
+      
+      // Delay each execution slightly to avoid backend rate limits, while keeping UI parallel
+      if (index > 0) {
+        await new Promise(r => setTimeout(r, index * 75));
+      }
       
       try {
         await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-        await new Promise(r => setTimeout(r, 150));
       } catch (err) {
         console.error(err);
       } finally {
-        setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+        setDirExecuting(prev => {
+          const next = new Set(prev);
+          next.delete(row.windowSize);
+          return next;
+        });
       }
-    }
+    });
+
+    await Promise.allSettled(promises);
     setIsExecutingAll(false);
   };
 
