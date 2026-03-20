@@ -418,6 +418,16 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                     const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, `Auto ${tf}`);
                     if (res && res.ticket) {
                         ticket = String(res.ticket);
+                        addTradeToHistory?.({
+                            id: `auto-${Date.now()}-${key}`,
+                            symbol: asset, tf, action: direction,
+                            volume: lot, entryPrice: Number(res.price || 0),
+                            sl: entry.stop_loss || null, tp: entry.take_profit || null,
+                            ticket: Number(res.ticket), status: 'filled', 
+                            executedAt: new Date().toISOString(),
+                            signalPrice: entry.close,
+                            autoExecuted: true,
+                        });
                     }
                 }
             } catch (err: any) {
@@ -1385,7 +1395,20 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                             let ticket = '';
                                                                                             if (executeTrade) {
                                                                                                 executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, `Auto ${tf}`).then(res => {
-                                                                                                    if (res && res.ticket) ticket = String(res.ticket);
+                                                                                                    if (res && res.ticket) {
+                                                                                                        ticket = String(res.ticket);
+                                                                                                        addTradeToHistory?.({
+                                                                                                            id: `auto-${Date.now()}-${rowKey}`,
+                                                                                                            symbol: asset, tf, action: direction,
+                                                                                                            volume: lot, entryPrice: Number(res.price || 0),
+                                                                                                            sl: entry.stop_loss || null, tp: entry.take_profit || null,
+                                                                                                            ticket: Number(res.ticket), status: 'filled', 
+                                                                                                            executedAt: new Date().toISOString(),
+                                                                                                            signalPrice: entry.close,
+                                                                                                            autoExecuted: true,
+                                                                                                        });
+                                                                                                    }
+                                                                                                    
                                                                                                     addAutoTrade?.(
                                                                                                         rowKey, effectiveSymbol, tf, lot, direction, 
                                                                                                         entry.close, entry.stop_loss || null, entry.take_profit || null, 
