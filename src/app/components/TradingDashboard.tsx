@@ -1931,7 +1931,7 @@ export function TradingDashboard({
                         : "SELL";
                       const slVal = qtSL ? parseFloat(qtSL) : undefined;
                       const tpVal = qtTP ? parseFloat(qtTP) : undefined;
-                      const dashComment = `PX-Dash ${qtSymbol} ${actionType}`.slice(0, 31);
+                      const dashComment = `PX-Dash ${qtSymbol} ${timeframe} ${actionType}`.slice(0, 31);
                       await executeTrade(
                         qtSymbol,
                         actionType,
