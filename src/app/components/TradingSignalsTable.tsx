@@ -933,6 +933,66 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                     </div>
                 )}
 
+                {/* ═══ AUTO-TRADING HISTORY INLINE PANEL ═══ */}
+                {mt5Connected && showAutoTrades && tradeHistory && tradeHistory.some(th => th.autoExecuted) && (
+                    <div style={{ borderBottom: '1px solid rgba(168,85,247,0.08)', background: tk.isDark ? 'rgba(16,185,129,0.02)' : 'rgba(16,185,129,0.02)' }}>
+                        <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
+                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: tk.textDim }}>Auto Trading Trace History</span>
+                        </div>
+                        <div className="overflow-auto" style={{ maxHeight: 240 }}>
+                            <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                                <thead className="sticky top-0" style={{ background: tk.isDark ? '#080c15' : tk.surface }}>
+                                    <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
+                                        {['Symbol', 'TF', 'Action', 'Entry', 'Close', 'Profit', 'Ticket', 'Status', 'Time'].map(h => (
+                                            <th key={h} className="px-2.5 py-1.5 text-[9px] font-bold tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tradeHistory.filter(th => th.autoExecuted).slice(0, 30).map((th) => {
+                                        const isBuy = th.action === 'Buy';
+                                        return (
+                                            <tr key={th.id} style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'}` }}>
+                                                <td className="px-2.5 py-1.5 text-[11px] font-bold" style={{ color: tk.textPrimary }}>{th.symbol}</td>
+                                                <td className="px-2.5 py-1.5 text-[10px] font-bold" style={{ color: tk.textSecondary }}>{th.tf}</td>
+                                                <td className="px-2.5 py-1.5">
+                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
+                                                        color: isBuy ? '#10b981' : '#ef4444',
+                                                        background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                    }}>{th.action?.toUpperCase()}</span>
+                                                </td>
+                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{th.entryPrice ? fmt(th.entryPrice) : '—'}</td>
+                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{th.closePrice ? fmt(th.closePrice) : '—'}</td>
+                                                <td className="px-2.5 py-1.5">
+                                                    {th.profit != null ? (
+                                                        <span className="text-[10px] font-black font-mono" style={{ color: th.profit >= 0 ? '#10b981' : '#ef4444' }}>
+                                                            {th.profit >= 0 ? '+' : ''}{th.profit.toFixed(2)}$
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] font-mono" style={{ color: tk.textDim }}>—</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: '#6366f1' }}>{th.ticket || '—'}</td>
+                                                <td className="px-2.5 py-1.5">
+                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{
+                                                        color: th.status === 'filled' ? '#10b981' : th.status === 'closed' ? '#6366f1' : th.status === 'pending' ? '#f59e0b' : '#ef4444',
+                                                        background: th.status === 'filled' ? 'rgba(16,185,129,0.1)' : th.status === 'closed' ? 'rgba(99,102,241,0.1)' : th.status === 'pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
+                                                    }}>
+                                                        {th.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-2.5 py-1.5 text-[9px] font-mono" style={{ color: tk.textSecondary }}>
+                                                    {new Date(th.executedAt).toLocaleTimeString()}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
                 {/* ═══ FILTERS ═══ */}
                 <div className="px-5 py-4 mt-3 flex flex-wrap items-center gap-2.5 rounded-t-lg mx-0" style={{
                     borderTop: "2px solid rgba(99,102,241,0.25)",
