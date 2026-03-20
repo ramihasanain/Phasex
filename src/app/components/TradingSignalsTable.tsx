@@ -58,6 +58,7 @@ interface SignalEntry {
     net_signal: string;
     stop_loss: number; take_profit: number;
     market: string;
+    candles_showed?: string | number;
 }
 
 type AssetSignals = Record<string, Record<string, SignalEntry>>;
@@ -420,7 +421,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             let ticket = '';
             try {
                 if (executeTrade) {
-                    const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, `Auto ${tf}`);
+                    const tradeComment = `SD ${tf} ${entry.candles_showed || '31'}`;
+                    const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment);
                     if (res && res.ticket) {
                         ticket = String(res.ticket);
                         addTradeToHistory?.({
@@ -1405,7 +1407,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                             setExecutingTrades(prev => new Set(prev).add(rowKey));
                                                                                             let ticket = '';
                                                                                             if (executeTrade) {
-                                                                                                executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, `Auto ${tf}`).then(res => {
+                                                                                                const tradeComment = `SD ${tf} ${entry.candles_showed || '31'}`;
+                                                                                                executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment).then(res => {
                                                                                                     if (res && res.ticket) {
                                                                                                         ticket = String(res.ticket);
                                                                                                         addTradeToHistory?.({
