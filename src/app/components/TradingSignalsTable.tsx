@@ -406,6 +406,11 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             const entry = tfs[tf];
             if (!entry.net_signal) continue;
             const key = `${asset}-${tf}`;
+            
+            // PREVENT DUPLICATE TICKETS: Skip if already executing or if already in Auto Mode!
+            if (executingTrades.has(key)) continue;
+            if (serverAutoTrades[key]) continue;
+
             const lot = lotSizes[key] || 0.01;
             const effectiveSymbol = symbolOverrides[asset] || asset;
             const direction = entry.net_signal;
@@ -1383,11 +1388,17 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                 <motion.button
                                                                                     whileHover={{ scale: 1.05 }}
                                                                                     whileTap={{ scale: 0.95 }}
-                                                                                    onClick={(e) => {
+                                                                                    onClick={async (e) => {
                                                                                         e.stopPropagation();
+                                                                                        if (!mt5Connected) return;
+                                                                                        const rowKey = `${asset}-${tf}`;
+                                                                                        
                                                                                         if (isAuto) {
                                                                                             removeAutoTrade?.(rowKey);
                                                                                         } else {
+                                                                                            // PREVENT DUPLICATE EXECUTION: Skip if currently dispatching or already auto-trading from server!
+                                                                                            if (executingTrades.has(rowKey) || serverAutoTrades[rowKey]) return;
+                                                                                            
                                                                                             const lot = lotSizes[rowKey] || 0.01;
                                                                                             const direction = entry.net_signal || '';
                                                                                             

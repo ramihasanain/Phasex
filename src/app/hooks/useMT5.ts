@@ -587,12 +587,16 @@ export function useMT5(): UseMT5Result {
     const [serverTradeHistory, setServerTradeHistory] = useState<any[]>([]);
 
     const fetchAutoTrades = useCallback(async () => {
+        const aid = accountIdRef.current;
+        if (!connected || !aid) return;
         try {
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/`);
+            const res = await fetch(`${MT5_API_BASE}/auto-trades/?account_id=${aid}`, {
+                headers: getHeaders()
+            });
             const data = await safeJson(res);
             if (data.success) setServerAutoTrades(data.auto_trades || {});
         } catch { /* ignore */ }
-    }, []);
+    }, [connected, getHeaders, safeJson]);
 
     const addAutoTrade = useCallback(async (
         key: string, symbol: string, tf: string, lot: number,
@@ -600,10 +604,11 @@ export function useMT5(): UseMT5Result {
         ticket?: string
     ): Promise<boolean> => {
         const aid = accountIdRef.current;
+        if (!aid) return false;
         try {
             const res = await fetch(`${MT5_API_BASE}/auto-trades/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                     key, symbol, tf, lot, direction,
                     signal_price: signalPrice, sl, tp,
@@ -618,14 +623,16 @@ export function useMT5(): UseMT5Result {
             }
             return false;
         } catch { return false; }
-    }, []);
+    }, [getHeaders, safeJson]);
 
     const removeAutoTrade = useCallback(async (key: string): Promise<boolean> => {
+        const aid = accountIdRef.current;
+        if (!aid) return false;
         try {
             const res = await fetch(`${MT5_API_BASE}/auto-trades/`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key }),
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ key, account_id: aid }),
             });
             const data = await safeJson(res);
             if (data.success) {
@@ -634,22 +641,28 @@ export function useMT5(): UseMT5Result {
             }
             return false;
         } catch { return false; }
-    }, []);
+    }, [getHeaders, safeJson]);
 
     const fetchTradeHistory = useCallback(async () => {
+        const aid = accountIdRef.current;
+        if (!aid) return;
         try {
-            const res = await fetch(`${MT5_API_BASE}/trade-history/`);
+            const res = await fetch(`${MT5_API_BASE}/trade-history/?account_id=${aid}`, {
+                headers: getHeaders()
+            });
             const data = await safeJson(res);
             if (data.success) setServerTradeHistory(data.history || []);
         } catch { /* ignore */ }
-    }, []);
+    }, [getHeaders, safeJson]);
 
     const addTradeToHistory = useCallback(async (entry: any): Promise<boolean> => {
+        const aid = accountIdRef.current;
+        if (!aid) return false;
         try {
             const res = await fetch(`${MT5_API_BASE}/trade-history/add/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(entry),
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ ...entry, account_id: aid }),
             });
             const data = await safeJson(res);
             if (data.success) {
@@ -658,13 +671,16 @@ export function useMT5(): UseMT5Result {
             }
             return false;
         } catch { return false; }
-    }, [fetchTradeHistory]);
+    }, [fetchTradeHistory, getHeaders, safeJson]);
 
     const clearServerHistory = useCallback(async (): Promise<boolean> => {
+        const aid = accountIdRef.current;
+        if (!aid) return false;
         try {
             const res = await fetch(`${MT5_API_BASE}/trade-history/clear/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ account_id: aid }),
             });
             const data = await safeJson(res);
             if (data.success) {
@@ -673,7 +689,7 @@ export function useMT5(): UseMT5Result {
             }
             return false;
         } catch { return false; }
-    }, []);
+    }, [getHeaders, safeJson]);
 
     // Poll auto-trades & history when connected
     useEffect(() => {
