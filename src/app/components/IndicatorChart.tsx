@@ -1189,8 +1189,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                   const hasPos = (mt5Positions || []).some((p: any) => {
                                     const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
                                     if (ps !== sym && !ps.includes(sym) && !sym.includes(ps)) return false;
-                                    const comment = (p.comment || '').toUpperCase();
-                                    return comment.includes(`${timeframe}`) && comment.includes(row.isBuy ? 'BUY' : 'SELL');
+                                    // Check direction: position type 0=BUY, 1=SELL (MetaAPI)
+                                    const posBuy = p.type === 'POSITION_TYPE_BUY' || p.type === 0 || (p.type && String(p.type).toUpperCase().includes('BUY'));
+                                    return row.isBuy ? posBuy : !posBuy;
                                   });
                                   return (
                                     <button
@@ -1605,8 +1606,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                             const hasPos = (mt5Positions || []).some((p: any) => {
                                               const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
                                               if (ps !== sym && !ps.includes(sym) && !sym.includes(ps)) return false;
-                                              const comment = (p.comment || '').toUpperCase();
-                                              return comment.includes(`${timeframe}`) && comment.includes(row.isBuy ? 'BUY' : 'SELL');
+                                              const posBuy = p.type === 'POSITION_TYPE_BUY' || p.type === 0 || (p.type && String(p.type).toUpperCase().includes('BUY'));
+                                              return row.isBuy ? posBuy : !posBuy;
                                             });
                                             return (
                                           <button

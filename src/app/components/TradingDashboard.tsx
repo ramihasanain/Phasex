@@ -1700,9 +1700,7 @@ export function TradingDashboard({
                         const sym = selectedAsset.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
                         const hasPos = mt5Positions.some((p: any) => {
                           const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-                          if (ps !== sym && !ps.includes(sym) && !sym.includes(ps)) return false;
-                          const comment = (p.comment || '').toUpperCase();
-                          return comment.includes(`${timeframe}`);
+                          return ps === sym || ps.includes(sym) || sym.includes(ps);
                         });
                         return (
                         <div className="flex items-center gap-1.5 ml-2">
