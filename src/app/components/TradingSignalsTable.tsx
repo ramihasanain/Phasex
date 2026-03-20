@@ -1293,28 +1293,43 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                 </td>
                                                                 {/* Execute */}
                                                                 <td className="p-2.5 text-center">
+                                                                    {(() => {
+                                                                        const sym = effectiveSymbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                                                                        const hasPos = mt5Positions.some((p: any) => {
+                                                                            const ps = (p.symbol || '').toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                                                                            if (ps !== sym && !ps.includes(sym) && !sym.includes(ps)) return false;
+                                                                            // Check direction matches
+                                                                            const posBuy = p.type === 'BUY' || p.type === 'POSITION_TYPE_BUY';
+                                                                            return isBuy ? posBuy : !posBuy;
+                                                                        });
+                                                                        return (
                                                                     <motion.button
-                                                                        whileHover={{ scale: 1.1 }}
-                                                                        whileTap={{ scale: 0.9 }}
-                                                                        disabled={isExecuting}
-                                                                        onClick={(e) => { e.stopPropagation(); handleExecuteTrade(asset, tf, entry); }}
-                                                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer"
+                                                                        whileHover={hasPos ? {} : { scale: 1.1 }}
+                                                                        whileTap={hasPos ? {} : { scale: 0.9 }}
+                                                                        disabled={isExecuting || hasPos}
+                                                                        title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
+                                                                        onClick={(e) => { e.stopPropagation(); if (!hasPos) handleExecuteTrade(asset, tf, entry); }}
+                                                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer disabled:cursor-not-allowed"
                                                                         style={{
-                                                                            color: isExecuting ? tk.textDim : isBuy ? '#10b981' : '#ef4444',
-                                                                            background: isExecuting ? tk.surfaceHover : isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                                            border: `1px solid ${isExecuting ? tk.border : isBuy ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                                                                            opacity: isExecuting ? 0.6 : 1,
+                                                                            color: hasPos ? '#64748b' : isExecuting ? tk.textDim : isBuy ? '#10b981' : '#ef4444',
+                                                                            background: hasPos ? 'rgba(100,116,139,0.06)' : isExecuting ? tk.surfaceHover : isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                            border: `1px solid ${hasPos ? 'rgba(100,116,139,0.15)' : isExecuting ? tk.border : isBuy ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                                                                            opacity: (isExecuting || hasPos) ? 0.6 : 1,
                                                                         }}
                                                                     >
                                                                         {isExecuting ? (
                                                                             <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}>
                                                                                 <Zap className="w-3 h-3" />
                                                                             </motion.div>
+                                                                        ) : hasPos ? (
+                                                                            <CheckCircle className="w-3 h-3" />
                                                                         ) : (
                                                                             <Play className="w-3 h-3" />
                                                                         )}
-                                                                        {isExecuting ? '...' : isBuy ? 'BUY' : 'SELL'}
+                                                                        {isExecuting ? '...' : hasPos ? '✅' : isBuy ? 'BUY' : 'SELL'}
                                                                     </motion.button>
+                                                                        );
+                                                                    })()}
                                                                 </td>
                                                                 {/* Auto */}
                                                                 <td className="p-2.5 text-center" style={{ minWidth: 100 }}>
