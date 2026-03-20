@@ -1708,20 +1708,20 @@ export function TradingDashboard({
                 renderTradeButtons={
                   selectedAsset
                     ? () => {
-                        const sym = selectedAsset.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-                        const hasPos = mt5Positions.some((p: any) => {
-                          const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-                          return ps === sym || ps.includes(sym) || sym.includes(ps);
-                        }) || recentlyExecuted.has(sym);
+                        const buyComment = `PX-Chart ${selectedAsset.symbol} ${timeframe} BUY`.slice(0, 31);
+                        const sellComment = `PX-Chart ${selectedAsset.symbol} ${timeframe} SELL`.slice(0, 31);
+                        const hasBuyPos = mt5Positions.some((p: any) => p.comment === buyComment);
+                        const hasSellPos = mt5Positions.some((p: any) => p.comment === sellComment);
+
                         return (
                         <div className="flex items-center gap-1.5 ml-2">
                           <motion.button
-                            whileHover={hasPos ? {} : { scale: 1.06 }}
-                            whileTap={hasPos ? {} : { scale: 0.94 }}
-                            disabled={hasPos}
-                            title={hasPos ? '✅ صفقة منفذة على هذا التايم فريم' : undefined}
+                            whileHover={hasBuyPos ? {} : { scale: 1.06 }}
+                            whileTap={hasBuyPos ? {} : { scale: 0.94 }}
+                            disabled={hasBuyPos}
+                            title={hasBuyPos ? '✅ صفقة منفذة على هذا التايم فريم' : undefined}
                             onClick={() => {
-                              if (hasPos) return;
+                              if (hasBuyPos) return;
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "BUY",
@@ -1734,20 +1734,20 @@ export function TradingDashboard({
                             }}
                             className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
-                              background: hasPos ? "rgba(100,116,139,0.08)" : "rgba(16,185,129,0.15)",
-                              color: hasPos ? "#64748b" : "#34d399",
-                              border: hasPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(16,185,129,0.3)",
+                              background: hasBuyPos ? "rgba(100,116,139,0.08)" : "rgba(16,185,129,0.15)",
+                              color: hasBuyPos ? "#64748b" : "#34d399",
+                              border: hasBuyPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(16,185,129,0.3)",
                             }}
                           >
-                            {hasPos ? '✅' : 'BUY'}
+                            {hasBuyPos ? '✅' : 'BUY'}
                           </motion.button>
                           <motion.button
-                            whileHover={hasPos ? {} : { scale: 1.06 }}
-                            whileTap={hasPos ? {} : { scale: 0.94 }}
-                            disabled={hasPos}
-                            title={hasPos ? '✅ صفقة منفذة على هذا التايم فريم' : undefined}
+                            whileHover={hasSellPos ? {} : { scale: 1.06 }}
+                            whileTap={hasSellPos ? {} : { scale: 0.94 }}
+                            disabled={hasSellPos}
+                            title={hasSellPos ? '✅ صفقة منفذة على هذا التايم فريم' : undefined}
                             onClick={() => {
-                              if (hasPos) return;
+                              if (hasSellPos) return;
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "SELL",
@@ -1760,12 +1760,12 @@ export function TradingDashboard({
                             }}
                             className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
-                              background: hasPos ? "rgba(100,116,139,0.08)" : "rgba(239,68,68,0.15)",
-                              color: hasPos ? "#64748b" : "#f87171",
-                              border: hasPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(239,68,68,0.3)",
+                              background: hasSellPos ? "rgba(100,116,139,0.08)" : "rgba(239,68,68,0.15)",
+                              color: hasSellPos ? "#64748b" : "#f87171",
+                              border: hasSellPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(239,68,68,0.3)",
                             }}
                           >
-                            {hasPos ? (language === 'ar' ? 'مُنفّذة' : 'Executed') : 'SELL'}
+                            {hasSellPos ? (language === 'ar' ? 'مُنفّذة' : 'Executed') : 'SELL'}
                           </motion.button>
                         </div>
                       );

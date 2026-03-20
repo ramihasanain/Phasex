@@ -1126,11 +1126,10 @@ function TradingDecisionEngineTable({
                                     </td>
                                     <td className="py-2 px-3 border-r border-b text-center relative z-50 pointer-events-auto" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                                         {(() => {
-                                            const sym = r.sym.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-                                            const hasPos = (mt5Positions || []).some((p: any) => {
-                                                const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-                                                return ps === sym || ps.includes(sym) || sym.includes(ps);
-                                            });
+                                            let action = "BUY";
+                                            if (r.decision.includes("SELL")) action = "SELL";
+                                            const expectedComment = `PX-SD ${r.sym} ${action}`.slice(0, 31);
+                                            const hasPos = (mt5Positions || []).some((p: any) => p.comment === expectedComment);
                                             return (
                                         <button
                                             disabled={hasPos || r.decision === "NO TRADE" || !onExecuteAction}
@@ -2017,32 +2016,45 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             <div className="text-[12px] font-mono font-bold mt-0.5 tracking-widest relative z-10" style={{ color: accent, opacity: 0.8 }}>{selectedSymbol}</div>
                                             
                                             {/* Quick BUY / SELL buttons */}
-                                            <div className="flex items-center gap-1.5 mt-2 relative z-10">
-                                                <motion.button
-                                                    whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }}
-                                                    onClick={() => {
-                                                        if (!isLoggedIn) { setIsLoginPromptOpen(true); return; }
-                                                        setTradeModalState({ isOpen: true, symbol: selectedSymbol, decision: 'BUY' });
-                                                        setTradeSymbolOverride(selectedSymbol);
-                                                        setTradeSL(""); setTradeTP(""); setTradeError(null);
-                                                    }}
-                                                    className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer"
-                                                    style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' }}>
-                                                    BUY
-                                                </motion.button>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }}
-                                                    onClick={() => {
-                                                        if (!isLoggedIn) { setIsLoginPromptOpen(true); return; }
-                                                        setTradeModalState({ isOpen: true, symbol: selectedSymbol, decision: 'SELL' });
-                                                        setTradeSymbolOverride(selectedSymbol);
-                                                        setTradeSL(""); setTradeTP(""); setTradeError(null);
-                                                    }}
-                                                    className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer"
-                                                    style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
-                                                    SELL
-                                                </motion.button>
-                                            </div>
+                                            {(() => {
+                                                const buyComment = `PX-SD ${selectedSymbol} BUY`.slice(0, 31);
+                                                const sellComment = `PX-SD ${selectedSymbol} SELL`.slice(0, 31);
+                                                const hasBuyPos = (mt5Positions || []).some((p: any) => p.comment === buyComment);
+                                                const hasSellPos = (mt5Positions || []).some((p: any) => p.comment === sellComment);
+                                                
+                                                return (
+                                                <div className="flex items-center gap-1.5 mt-2 relative z-10">
+                                                    <motion.button
+                                                        disabled={hasBuyPos}
+                                                        whileHover={{ scale: hasBuyPos ? 1 : 1.08 }} whileTap={{ scale: hasBuyPos ? 1 : 0.94 }}
+                                                        onClick={() => {
+                                                            if (hasBuyPos) return;
+                                                            if (!isLoggedIn) { setIsLoginPromptOpen(true); return; }
+                                                            setTradeModalState({ isOpen: true, symbol: selectedSymbol, decision: 'BUY' });
+                                                            setTradeSymbolOverride(selectedSymbol);
+                                                            setTradeSL(""); setTradeTP(""); setTradeError(null);
+                                                        }}
+                                                        className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' }}>
+                                                        {hasBuyPos ? "BUY (Active)" : "BUY"}
+                                                    </motion.button>
+                                                    <motion.button
+                                                        disabled={hasSellPos}
+                                                        whileHover={{ scale: hasSellPos ? 1 : 1.08 }} whileTap={{ scale: hasSellPos ? 1 : 0.94 }}
+                                                        onClick={() => {
+                                                            if (hasSellPos) return;
+                                                            if (!isLoggedIn) { setIsLoginPromptOpen(true); return; }
+                                                            setTradeModalState({ isOpen: true, symbol: selectedSymbol, decision: 'SELL' });
+                                                            setTradeSymbolOverride(selectedSymbol);
+                                                            setTradeSL(""); setTradeTP(""); setTradeError(null);
+                                                        }}
+                                                        className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+                                                        {hasSellPos ? "SELL (Active)" : "SELL"}
+                                                    </motion.button>
+                                                </div>
+                                                );
+                                            })()}
                                         </motion.div>
                                     );
                                 })()}
@@ -2515,24 +2527,32 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                         {(() => {
                                             const dec = data.decision || "NO TRADE";
                                             if (dec === "NO TRADE") return null;
+                                            
+                                            let action = "BUY";
+                                            if (dec.includes("SELL")) action = "SELL";
+                                            const expectedComment = `PX-SD ${selectedSymbol} ${action}`.slice(0, 31);
+                                            const hasPos = (mt5Positions || []).some((p: any) => p.comment === expectedComment);
+
                                             return (
                                             <motion.button
-                                                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                                                disabled={hasPos}
+                                                whileHover={{ scale: hasPos ? 1 : 1.03 }} whileTap={{ scale: hasPos ? 1 : 0.97 }}
                                                 onClick={() => {
+                                                    if (hasPos) return;
                                                     setTradeModalState({ isOpen: true, symbol: selectedSymbol, decision: dec });
                                                     setTradeSymbolOverride(selectedSymbol);
                                                     setTradeSL("");
                                                     setTradeTP("");
                                                     setTradeError(null);
                                                 }}
-                                                className="w-full mt-4 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                                                className="w-full mt-4 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 style={{
                                                     background: dec.includes("BUY") ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
                                                     border: `1px solid ${dec.includes("BUY") ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
                                                     color: dec.includes("BUY") ? '#34d399' : '#f87171',
                                                 }}>
                                                 <Zap className="w-3.5 h-3.5" />
-                                                Execute {dec}
+                                                {hasPos ? `Execute ${dec} (Active)` : `Execute ${dec}`}
                                             </motion.button>
                                             );
                                         })()}
@@ -2851,9 +2871,19 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                 </div>
                                             )}
 
-                                            <button disabled={isExecuting} type="submit" className={`w-full py-3.5 rounded-xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 transition-colors ${tradeModalState.decision.includes("BUY") ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-red-600 hover:bg-red-500 text-white shadow-red-500/20'}`}>
-                                                {isExecuting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />} {isExecuting ? 'Executing...' : `Execute ${tradeModalState.decision.includes("BUY") ? "BUY" : "SELL"}`}
-                                            </button>
+                                            {(() => {
+                                                const symbolToSend = tradeSymbolOverride.trim() || tradeModalState.symbol;
+                                                let action = "BUY";
+                                                if (tradeModalState.decision.includes("SELL")) action = "SELL";
+                                                const currentAiComment = `PX-SD ${symbolToSend} ${action}`.slice(0, 31);
+                                                const isDuplicateModal = (mt5Positions || []).some((p: any) => p.comment === currentAiComment);
+                                                
+                                                return (
+                                                    <button disabled={isExecuting || isDuplicateModal} type="submit" className={`w-full py-3.5 rounded-xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(0,0,0,0.2)] disabled:opacity-50 transition-colors ${tradeModalState.decision.includes("BUY") ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-red-600 hover:bg-red-500 text-white shadow-red-500/20'}`}>
+                                                        {isExecuting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />} {isExecuting ? 'Executing...' : isDuplicateModal ? 'Duplicate Position Detected' : `Execute ${tradeModalState.decision.includes("BUY") ? "BUY" : "SELL"}`}
+                                                    </button>
+                                                );
+                                            })()}
                                         </form>
                                     </div>
                                 </motion.div>

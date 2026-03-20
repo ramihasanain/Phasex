@@ -334,6 +334,11 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     // Execute a trade from signal row
     const handleExecuteTrade = useCallback(async (asset: string, tf: string, entry: SignalEntry, isAuto = false) => {
         if (!executeTrade || !mt5Connected) return;
+
+        const tradeComment = `PX-Dash ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
+        const hasPos = mt5Positions?.some(p => p.comment === tradeComment) || false;
+        if (hasPos) return;
+
         const key = `${asset}-${tf}`;
         const lot = lotSizes[key] || 0.01;
 
@@ -350,7 +355,6 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
         };
 
         try {
-            const tradeComment = `PX-Dash ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
             const result = await executeTrade(
                 asset, entry.net_signal.toUpperCase(), lot,
                 entry.stop_loss || undefined, entry.take_profit || undefined,
@@ -370,10 +374,9 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             newEntry.error = err?.message || 'Unknown error';
         }
 
-        // Save to backend
         addTradeToHistory?.(newEntry);
         setExecutingTrades(prev => { const n = new Set(prev); n.delete(key); return n; });
-    }, [executeTrade, mt5Connected, lotSizes, addTradeToHistory]);
+    }, [executeTrade, mt5Connected, lotSizes, addTradeToHistory, mt5Positions]);
 
     // ─── Bulk Execution Handlers ───
     const handleExecuteAsset = async (asset: string) => {
@@ -1274,6 +1277,9 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                         const isExecuting = executingTrades.has(rowKey);
                                                         const isAuto = autoTrades.has(rowKey);
                                                         const lotVal = lotSizes[rowKey] ?? 0.01;
+                                                        const tradeComment = `PX-Dash ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
+                                                        const hasPos = mt5Positions?.some(p => p.comment === tradeComment) || false;
+                                                        const disableExec = isExecuting || hasPos;
                                                         return (
                                                             <>
                                                                 {/* Lot */}
@@ -1291,29 +1297,31 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                         onClick={(e) => e.stopPropagation()}
                                                                     />
                                                                 </td>
-                                                                {/* Execute */}
                                                                 <td className="p-2.5 text-center">
                                                                     <motion.button
                                                                         whileHover={{ scale: 1.1 }}
                                                                         whileTap={{ scale: 0.9 }}
-                                                                        disabled={isExecuting}
+                                                                        disabled={disableExec}
+                                                                        title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
                                                                         onClick={(e) => { e.stopPropagation(); handleExecuteTrade(asset, tf, entry); }}
                                                                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer"
                                                                         style={{
-                                                                            color: isExecuting ? tk.textDim : isBuy ? '#10b981' : '#ef4444',
-                                                                            background: isExecuting ? tk.surfaceHover : isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                                            border: `1px solid ${isExecuting ? tk.border : isBuy ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                                                                            opacity: isExecuting ? 0.6 : 1,
+                                                                            color: disableExec ? tk.textDim : isBuy ? '#10b981' : '#ef4444',
+                                                                            background: disableExec ? tk.surfaceHover : isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                            border: `1px solid ${disableExec ? tk.border : isBuy ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                                                                            opacity: disableExec ? 0.6 : 1,
                                                                         }}
                                                                     >
                                                                         {isExecuting ? (
                                                                             <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}>
                                                                                 <Zap className="w-3 h-3" />
                                                                             </motion.div>
+                                                                        ) : hasPos ? (
+                                                                            <CheckCircle className="w-3 h-3" />
                                                                         ) : (
                                                                             <Play className="w-3 h-3" />
                                                                         )}
-                                                                        {isExecuting ? '...' : isBuy ? 'BUY' : 'SELL'}
+                                                                        {isExecuting ? '...' : hasPos ? 'DONE' : isBuy ? 'BUY' : 'SELL'}
                                                                     </motion.button>
                                                                 </td>
                                                                 {/* Auto */}

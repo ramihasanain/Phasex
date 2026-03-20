@@ -672,11 +672,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     for (const row of directionsData.rows) {
       if (dirExecuting.has(row.windowSize)) continue;
       
+      const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+      const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+      if (hasPos) continue;
+      
       const lot = dirLotSizes[row.windowSize] ?? 0.01;
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
-        const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
         await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
         await new Promise(r => setTimeout(r, 150));
       } catch (err) {
@@ -1220,8 +1223,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                               </td>
                               <td className="p-2 text-center">
                                 {(() => {
-                                  const sym = currency?.symbol?.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '') || '';
-                                  const hasPos = false; // logic disabled by user request to allow duplicates
+                                  const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                  const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                   return (
                                     <button
                                       disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
@@ -1229,10 +1232,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                       onClick={async (e) => {
                                         e.stopPropagation();
                                         if (hasPos || !executeTradeFromChart || !currency) return;
-                                        const lot = dirLotSizes[row.windowSize] ?? 0.1;
+                                        const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                         setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                         try {
-                                          const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                           await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                         } catch (err) { console.error(err); }
                                         setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
@@ -1641,8 +1643,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         </td>
                                         <td className="p-3 text-center">
                                           {(() => {
-                                            const sym = currency?.symbol?.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '') || '';
-                                            const hasPos = false; // logic disabled by user request to allow duplicates
+                                            const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                            const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                             return (
                                           <button
                                             disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
@@ -1650,10 +1652,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                             onClick={async (e) => {
                                               e.stopPropagation();
                                               if (hasPos || !executeTradeFromChart || !currency) return;
-                                              const lot = dirLotSizes[row.windowSize] ?? 0.1;
+                                              const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                               setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                               try {
-                                                const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                                 await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                               } catch (err) { console.error(err); }
                                               setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
