@@ -680,7 +680,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
-        await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
+        await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
         await new Promise(r => setTimeout(r, 150));
       } catch (err) {
         console.error(err);
@@ -1235,7 +1235,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                         setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                         try {
-                                          await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
+                                          await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
                                         } catch (err) { console.error(err); }
                                         setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                       }}
@@ -1655,7 +1655,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                               const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                               setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                               try {
-                                                await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
+                                                await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
                                               } catch (err) { console.error(err); }
                                               setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                             }}
