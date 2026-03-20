@@ -127,6 +127,9 @@ export function useMT5(): UseMT5Result {
     const [accountId, setAccountId] = useState<string>(() => {
         try { return localStorage.getItem('phasex_account_id') || ''; } catch { return ''; }
     });
+    const [sessionToken, setSessionToken] = useState<string>(() => {
+        try { return localStorage.getItem('phasex_session_token') || ''; } catch { return ''; }
+    });
     const [account, setAccount] = useState<MT5Account | null>(null);
     const [accountLoading, setAccountLoading] = useState(false);
     const [positions, setPositions] = useState<MT5Position[]>([]);
@@ -141,14 +144,46 @@ export function useMT5(): UseMT5Result {
     const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const accountIdRef = useRef(accountId);
     accountIdRef.current = accountId;
+    const sessionTokenRef = useRef(sessionToken);
+    sessionTokenRef.current = sessionToken;
 
-    // Save account_id to localStorage
+    // Save account_id and session_token to localStorage
     useEffect(() => {
         try {
             if (accountId) localStorage.setItem('phasex_account_id', accountId);
             else localStorage.removeItem('phasex_account_id');
         } catch { /* ignore */ }
     }, [accountId]);
+
+    useEffect(() => {
+        try {
+            if (sessionToken) localStorage.setItem('phasex_session_token', sessionToken);
+            else localStorage.removeItem('phasex_session_token');
+        } catch { /* ignore */ }
+    }, [sessionToken]);
+
+    // ─── Helper: get headers with session token ───
+    const getHeaders = useCallback((extra?: Record<string, string>) => {
+        const headers: Record<string, string> = { ...extra };
+        const tok = sessionTokenRef.current;
+        if (tok) headers['X-Session-Token'] = tok;
+        return headers;
+    }, []);
+
+    // ─── Helper: handle session expired response ───
+    const handleSessionExpired = useCallback((data: any, res: Response) => {
+        if (res.status === 403 && data?.code === 'SESSION_EXPIRED') {
+            if (mountedRef.current) {
+                setConnected(false);
+                setAccount(null);
+                setPositions([]);
+                setError('تم فصل الجلسة — تم الاتصال من جهاز آخر');
+                setSessionToken('');
+            }
+            return true;
+        }
+        return false;
+    }, []);
 
     // ─── Connect to MT5 via MetaAPI provisioning ───
     const connectMT5 = useCallback(async (credentials: MT5Credentials) => {
@@ -192,6 +227,7 @@ export function useMT5(): UseMT5Result {
             if (data.connected && data.account_id) {
                 setConnected(true);
                 setAccountId(data.account_id);
+                if (data.session_token) setSessionToken(data.session_token);
                 if (data.account) setAccount(data.account);
                 setConnectStatus('');
             } else {
@@ -218,26 +254,31 @@ export function useMT5(): UseMT5Result {
 
     // ─── Disconnect ───
     const disconnectMT5 = useCallback(async () => {
+        const aid = accountIdRef.current;
         try {
-            await fetch(`${MT5_API_BASE}/disconnect/`);
+            await fetch(`${MT5_API_BASE}/disconnect/?account_id=${aid}`);
         } catch { /* ignore */ }
         if (mountedRef.current) {
             setConnected(false);
             setAccount(null);
             setPositions([]);
             setHistory([]);
+            setSessionToken('');
             // Keep accountId in localStorage so re-connect is faster
         }
     }, []);
 
-    // ─── Auto-reconnect if accountId exists ───
+    // ─── Auto-reconnect if accountId + sessionToken exist ───
     useEffect(() => {
-        if (accountId && !connected && !connecting) {
-            // Verify the account is still valid by fetching account info
+        if (accountId && sessionToken && !connected && !connecting) {
+            // Verify the account is still valid by fetching account info with session token
             (async () => {
                 try {
-                    const res = await fetch(`${MT5_API_BASE}/account/?account_id=${accountId}`);
+                    const res = await fetch(`${MT5_API_BASE}/account/?account_id=${accountId}`, {
+                        headers: { 'X-Session-Token': sessionToken },
+                    });
                     const data = await res.json();
+                    if (handleSessionExpired(data, res)) return;
                     if (mountedRef.current && data.account) {
                         setConnected(true);
                         setAccount(data.account);
@@ -253,14 +294,17 @@ export function useMT5(): UseMT5Result {
         if (!connected || !aid) return;
         setAccountLoading(true);
         try {
-            const res = await fetch(`${MT5_API_BASE}/account/?account_id=${aid}`);
+            const res = await fetch(`${MT5_API_BASE}/account/?account_id=${aid}`, {
+                headers: getHeaders(),
+            });
             const data = await res.json();
+            if (handleSessionExpired(data, res)) return;
             if (mountedRef.current && data.account) {
                 setAccount(data.account);
             }
         } catch { /* ignore */ }
         finally { if (mountedRef.current) setAccountLoading(false); }
-    }, [connected]);
+    }, [connected, getHeaders, handleSessionExpired]);
 
     // ─── Refresh Positions ───
     const refreshPositions = useCallback(async () => {
@@ -268,14 +312,17 @@ export function useMT5(): UseMT5Result {
         if (!connected || !aid) return;
         setPositionsLoading(true);
         try {
-            const res = await fetch(`${MT5_API_BASE}/positions/?account_id=${aid}`);
+            const res = await fetch(`${MT5_API_BASE}/positions/?account_id=${aid}`, {
+                headers: getHeaders(),
+            });
             const data = await res.json();
+            if (handleSessionExpired(data, res)) return;
             if (mountedRef.current && data.positions) {
                 setPositions(data.positions);
             }
         } catch { /* ignore */ }
         finally { if (mountedRef.current) setPositionsLoading(false); }
-    }, [connected]);
+    }, [connected, getHeaders, handleSessionExpired]);
 
     // ─── Refresh History ───
     const refreshHistory = useCallback(async (days: number = 30) => {
@@ -283,14 +330,17 @@ export function useMT5(): UseMT5Result {
         if (!connected || !aid) return;
         setHistoryLoading(true);
         try {
-            const res = await fetch(`${MT5_API_BASE}/history/?account_id=${aid}&days=${days}`);
+            const res = await fetch(`${MT5_API_BASE}/history/?account_id=${aid}&days=${days}`, {
+                headers: getHeaders(),
+            });
             const data = await res.json();
+            if (handleSessionExpired(data, res)) return;
             if (mountedRef.current && data.deals) {
                 setHistory(data.deals);
             }
         } catch { /* ignore */ }
         finally { if (mountedRef.current) setHistoryLoading(false); }
-    }, [connected]);
+    }, [connected, getHeaders, handleSessionExpired]);
 
     // ─── Auto-poll when connected (every 5s) ───
     useEffect(() => {
@@ -330,7 +380,7 @@ export function useMT5(): UseMT5Result {
         };
     }, []);
 
-    // ─── Execute Trade (with account_id) ───
+    // ─── Execute Trade (with account_id + session token) ───
     const executeTrade = useCallback(async (
         symbol: string, action: string, volume: number, sl?: number, tp?: number
     ): Promise<MT5TradeResult | null> => {
@@ -342,7 +392,7 @@ export function useMT5(): UseMT5Result {
         try {
             const res = await fetch(`${MT5_API_BASE}/trade/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                     account_id: aid,
                     symbol, action, volume,
@@ -351,6 +401,7 @@ export function useMT5(): UseMT5Result {
                 }),
             });
             const data = await res.json();
+            if (handleSessionExpired(data, res)) return null;
             if (data.success && data.order) {
                 refreshPositions();
                 refreshAccount();
@@ -368,9 +419,9 @@ export function useMT5(): UseMT5Result {
             setError('Failed to reach MT5 backend for trade execution');
             throw new Error('Failed to reach MT5 backend for trade execution');
         }
-    }, [connected, refreshPositions, refreshAccount]);
+    }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired]);
 
-    // ─── Close Position (with account_id) ───
+    // ─── Close Position (with account_id + session token) ───
     const closePosition = useCallback(async (ticket: number): Promise<boolean> => {
         const aid = accountIdRef.current;
         if (!connected || !aid) {
@@ -380,10 +431,11 @@ export function useMT5(): UseMT5Result {
         try {
             const res = await fetch(`${MT5_API_BASE}/close-position/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ account_id: aid, ticket }),
             });
             const data = await res.json();
+            if (handleSessionExpired(data, res)) return false;
             if (data.success) {
                 refreshPositions();
                 refreshAccount();
@@ -396,9 +448,9 @@ export function useMT5(): UseMT5Result {
             setError('Failed to reach MT5 backend');
             return false;
         }
-    }, [connected, refreshPositions, refreshAccount]);
+    }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired]);
 
-    // ─── Close All Positions (with account_id) ───
+    // ─── Close All Positions (with account_id + session token) ───
     const closeAllPositions = useCallback(async (): Promise<boolean> => {
         const aid = accountIdRef.current;
         if (!connected || !aid) {
@@ -408,10 +460,11 @@ export function useMT5(): UseMT5Result {
         try {
             const res = await fetch(`${MT5_API_BASE}/close-all-positions/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ account_id: aid }),
             });
             const data = await res.json();
+            if (handleSessionExpired(data, res)) return false;
             if (data.success) {
                 refreshPositions();
                 refreshAccount();
@@ -424,7 +477,7 @@ export function useMT5(): UseMT5Result {
             setError('Failed to reach MT5 backend');
             return false;
         }
-    }, [connected, refreshPositions, refreshAccount]);
+    }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired]);
 
     // ─── Symbol Overrides ───
     const fetchOverrides = useCallback(async () => {
