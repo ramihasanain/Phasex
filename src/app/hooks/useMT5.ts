@@ -268,14 +268,17 @@ export function useMT5(): UseMT5Result {
         }
     }, []);
 
-    // ─── Auto-reconnect if accountId + sessionToken exist ───
+    // ─── Auto-reconnect if accountId exists ───
     useEffect(() => {
-        if (accountId && sessionToken && !connected && !connecting) {
-            // Verify the account is still valid by fetching account info with session token
+        if (accountId && !connected && !connecting) {
+            // Verify the account is still valid by fetching account info
+            // Server allows through if no session exists (e.g. server restarted)
             (async () => {
                 try {
+                    const headers: Record<string, string> = {};
+                    if (sessionToken) headers['X-Session-Token'] = sessionToken;
                     const res = await fetch(`${MT5_API_BASE}/account/?account_id=${accountId}`, {
-                        headers: { 'X-Session-Token': sessionToken },
+                        headers,
                     });
                     const data = await res.json();
                     if (handleSessionExpired(data, res)) return;
