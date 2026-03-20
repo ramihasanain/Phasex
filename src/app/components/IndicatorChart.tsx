@@ -682,7 +682,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     for (const row of directionsData.rows) {
       if (dirExecuting.has(row.windowSize)) continue;
       
-      const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+      const chartComment = `PX-Chart-${currency.symbol}-${timeframe}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
       if (hasPos) continue;
       
@@ -1239,7 +1239,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                               </td>
                               <td className="p-2 text-center">
                                 {(() => {
-                                  const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                  const chartComment = `PX-Chart-${currency.symbol}-${timeframe}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                   return (
                                     <button
@@ -1665,7 +1665,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         </td>
                                         <td className="p-3 text-center">
                                           {(() => {
-                                            const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                            const chartComment = `PX-Chart-${currency.symbol}-${timeframe}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                             const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                             return (
                                           <button
