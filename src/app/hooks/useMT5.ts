@@ -109,7 +109,7 @@ export interface UseMT5Result {
     deleteSymbolOverride: (dashboardName: string) => Promise<boolean>;
     // Server-side Auto-Trade
     serverAutoTrades: Record<string, any>;
-    addAutoTrade: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null) => Promise<boolean>;
+    addAutoTrade: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
     removeAutoTrade: (key: string) => Promise<boolean>;
     fetchAutoTrades: () => Promise<void>;
     // Server-side Trade History
@@ -596,7 +596,8 @@ export function useMT5(): UseMT5Result {
 
     const addAutoTrade = useCallback(async (
         key: string, symbol: string, tf: string, lot: number,
-        direction: string, signalPrice: number, sl?: number | null, tp?: number | null
+        direction: string, signalPrice: number, sl?: number | null, tp?: number | null,
+        ticket?: string
     ): Promise<boolean> => {
         const aid = accountIdRef.current;
         try {
@@ -607,6 +608,7 @@ export function useMT5(): UseMT5Result {
                     key, symbol, tf, lot, direction,
                     signal_price: signalPrice, sl, tp,
                     account_id: aid,
+                    ticket: ticket,
                 }),
             });
             const data = await safeJson(res);
