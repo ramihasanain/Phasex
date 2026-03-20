@@ -2781,12 +2781,14 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             setTradeError(null);
                                             setIsExecuting(true);
                                             try {
+                                                const aiComment = `PhaseX|AI|${symbolToSend}|${action}|SL:${tradeSL || 0}|TP:${tradeTP || 0}|${tradeModalState.decision}`;
                                                 const res = await executeTrade(
                                                     symbolToSend, 
                                                     action, 
                                                     parseFloat(tradeLot) || 0.1,
                                                     tradeSL ? parseFloat(tradeSL) : 0, 
-                                                    tradeTP ? parseFloat(tradeTP) : 0
+                                                    tradeTP ? parseFloat(tradeTP) : 0,
+                                                    aiComment
                                                 );
                                                 
                                                 if (res) {

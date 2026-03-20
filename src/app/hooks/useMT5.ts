@@ -101,7 +101,7 @@ export interface UseMT5Result {
     refreshPositions: () => Promise<void>;
     refreshHistory: (days?: number) => Promise<void>;
     // Trade Execution
-    executeTrade: (symbol: string, action: string, volume: number, sl?: number, tp?: number) => Promise<MT5TradeResult | null>;
+    executeTrade: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<MT5TradeResult | null>;
     closePosition: (ticket: number) => Promise<boolean>;
     closeAllPositions: () => Promise<boolean>;
     // Symbol Overrides
@@ -385,7 +385,7 @@ export function useMT5(): UseMT5Result {
 
     // ─── Execute Trade (with account_id + session token) ───
     const executeTrade = useCallback(async (
-        symbol: string, action: string, volume: number, sl?: number, tp?: number
+        symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string
     ): Promise<MT5TradeResult | null> => {
         const aid = accountIdRef.current;
         if (!connected || !aid) {
@@ -401,6 +401,7 @@ export function useMT5(): UseMT5Result {
                     symbol, action, volume,
                     sl: sl || undefined,
                     tp: tp || undefined,
+                    comment: comment || 'PhaseX',
                 }),
             });
             const data = await res.json();

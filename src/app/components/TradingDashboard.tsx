@@ -1915,12 +1915,14 @@ export function TradingDashboard({
                         : "SELL";
                       const slVal = qtSL ? parseFloat(qtSL) : undefined;
                       const tpVal = qtTP ? parseFloat(qtTP) : undefined;
+                      const dashComment = `PhaseX|Dashboard|${qtSymbol}|${actionType}|SL:${slVal || 0}|TP:${tpVal || 0}`;
                       await executeTrade(
                         qtSymbol,
                         actionType,
                         parseFloat(qtLot) || 0.1,
                         slVal,
                         tpVal,
+                        dashComment,
                       );
                       setQuickTradeModal(null);
                     } catch (err: any) {

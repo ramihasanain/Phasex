@@ -146,7 +146,7 @@ interface TradeHistoryEntry {
 /* ═══════════ Props ═══════════ */
 interface TradingSignalsTableProps {
     mt5Connected?: boolean;
-    executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number) => Promise<MT5TradeResult | null>;
+    executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<MT5TradeResult | null>;
     mt5Positions?: MT5Position[];
     closePosition?: (ticket: number) => Promise<boolean>;
     closeAllPositions?: () => Promise<boolean>;
@@ -350,9 +350,11 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
         };
 
         try {
+            const tradeComment = `PhaseX|SD|${asset}|${tf}|${entry.net_signal}|SL:${entry.stop_loss || 0}|TP:${entry.take_profit || 0}|P:${entry.close}${isAuto ? '|AUTO' : ''}`;
             const result = await executeTrade(
                 asset, entry.net_signal.toUpperCase(), lot,
-                entry.stop_loss || undefined, entry.take_profit || undefined
+                entry.stop_loss || undefined, entry.take_profit || undefined,
+                tradeComment
             );
 
             if (result) {

@@ -46,7 +46,7 @@ interface IndicatorChartProps {
   renderTradeButtons?: () => React.ReactNode;
   accessToken?: string | null;
   mt5Connected?: boolean;
-  executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number) => Promise<any>;
+  executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<any>;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -1190,7 +1190,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                     const lot = dirLotSizes[row.windowSize] ?? 0.1;
                                     setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                     try {
-                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot);
+                                      const chartComment = `PhaseX|Chart|${currency.symbol}|TF:${timeframe}|W:${row.windowSize}|${row.isBuy ? 'BUY' : 'SELL'}`;
+                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                     } catch (err) { console.error(err); }
                                     setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                   }}
@@ -1593,7 +1594,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                               const lot = dirLotSizes[row.windowSize] ?? 0.1;
                                               setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                               try {
-                                                await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot);
+                                                const chartComment = `PhaseX|Chart|${currency.symbol}|TF:${timeframe}|W:${row.windowSize}|${row.isBuy ? 'BUY' : 'SELL'}`;
+                                                await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                               } catch (err) { console.error(err); }
                                               setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                             }}
