@@ -449,6 +449,7 @@ export function TradingDashboard({
   const [qtError, setQtError] = useState<string | null>(null);
   const [qtExecuting, setQtExecuting] = useState(false);
   const [qtLot, setQtLot] = useState("0.1");
+  const [recentlyExecuted, setRecentlyExecuted] = useState<Set<string>>(new Set());
   const executedTradesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -506,6 +507,15 @@ export function TradingDashboard({
     addTradeToHistory,
     clearServerHistory,
   } = useMT5();
+
+  // Clear recentlyExecuted entries once positions confirm them
+  useEffect(() => {
+    if (recentlyExecuted.size === 0 || mt5Positions.length === 0) return;
+    const posSyms = new Set(mt5Positions.map((p: any) => p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '')));
+    const toKeep = new Set<string>();
+    recentlyExecuted.forEach(s => { if (!posSyms.has(s)) toKeep.add(s); });
+    if (toKeep.size !== recentlyExecuted.size) setRecentlyExecuted(toKeep);
+  }, [mt5Positions, recentlyExecuted]);
 
   // WebSocket symbol aliases: WS name → API symbol code
   const WS_ALIASES: Record<string, string> = {
@@ -1701,7 +1711,7 @@ export function TradingDashboard({
                         const hasPos = mt5Positions.some((p: any) => {
                           const ps = p.symbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
                           return ps === sym || ps.includes(sym) || sym.includes(ps);
-                        });
+                        }) || recentlyExecuted.has(sym);
                         return (
                         <div className="flex items-center gap-1.5 ml-2">
                           <motion.button
@@ -1938,7 +1948,12 @@ export function TradingDashboard({
                         tpVal,
                         dashComment,
                       );
+                      // Track locally to prevent duplicate before positions refresh
+                      const exSym = qtSymbol.toUpperCase().replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                      setRecentlyExecuted(prev => new Set(prev).add(exSym));
                       setQuickTradeModal(null);
+                      // Force refresh positions immediately
+                      refreshMT5Positions();
                     } catch (err: any) {
                       setQtError(err.message || "Trade failed");
                     } finally {
