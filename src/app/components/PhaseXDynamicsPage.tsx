@@ -1162,7 +1162,7 @@ function TradingDecisionEngineTable({
 export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const { user, logout, hasMT5Access } = useAuth();
     const isLoggedIn = !!user;
-    const { connected: mt5Connected, connectMT5, disconnectMT5, connecting: mt5Connecting, executeTrade } = useMT5();
+    const { connected: mt5Connected, connectMT5, disconnectMT5, connecting: mt5Connecting, connectStatus: mt5ConnectStatus, executeTrade } = useMT5();
     
     // UI state for logged-in specific modals
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -2708,7 +2708,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                                 ) : (
                                                     <Wifi className="w-4 h-4" />
                                                 )}
-                                                <span className="relative z-10">{mt5Connecting ? 'Connecting...' : 'Connect to MT5'}</span>
+                                                <span className="relative z-10">{mt5Connecting ? (mt5ConnectStatus || 'Connecting...') : 'Connect to MT5'}</span>
                                             </motion.button>
                                         </form>
                                     </div>

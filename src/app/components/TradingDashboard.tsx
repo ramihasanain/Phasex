@@ -482,6 +482,7 @@ export function TradingDashboard({
   const {
     connected: mt5Connected,
     connecting: mt5Connecting,
+    connectStatus: mt5ConnectStatus,
     connectMT5,
     disconnectMT5,
     account: mt5Account,
@@ -946,7 +947,7 @@ export function TradingDashboard({
               )}
               <span>
                 {mt5Connecting
-                  ? "Connecting..."
+                  ? (mt5ConnectStatus || "Connecting...")
                   : mt5Connected
                     ? "MT5 Live"
                     : "MT5 Connect"}
@@ -2322,7 +2323,7 @@ export function TradingDashboard({
                     <Wifi className="w-4 h-4" />
                   )}
                   <span className="relative z-10">
-                    {mt5Connecting ? "Connecting..." : "Connect to MT5"}
+                    {mt5Connecting ? (mt5ConnectStatus || "Connecting...") : "Connect to MT5"}
                   </span>
                 </motion.button>
               </form>

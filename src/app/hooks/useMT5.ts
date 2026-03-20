@@ -81,6 +81,7 @@ export interface UseMT5Result {
     // Connection
     connected: boolean;
     connecting: boolean;
+    connectStatus: string;
     connectMT5: (credentials: MT5Credentials) => Promise<void>;
     disconnectMT5: () => Promise<void>;
     accountId: string;
@@ -133,6 +134,7 @@ export function useMT5(): UseMT5Result {
     const [history, setHistory] = useState<MT5Deal[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [connectStatus, setConnectStatus] = useState<string>('');
     const [symbolOverrides, setSymbolOverrides] = useState<Record<string, string>>({});
 
     const mountedRef = useRef(true);
@@ -152,12 +154,38 @@ export function useMT5(): UseMT5Result {
     const connectMT5 = useCallback(async (credentials: MT5Credentials) => {
         setConnecting(true);
         setError(null);
+        setConnectStatus('جاري الاتصال بالخادم...');
+
+        // AbortController with 120s timeout (MetaAPI provisioning can be slow)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120_000);
+
+        // Status messages that rotate while waiting
+        const statusMessages = [
+            'جاري تهيئة حساب MetaAPI...',
+            'جاري نشر الحساب على السحابة...',
+            'جاري الاتصال بخادم البروكر...',
+            'جاري المزامنة مع MT5...',
+            'الرجاء الانتظار، قد يستغرق هذا دقيقة...',
+            'لا يزال قيد الاتصال، جاري الانتظار...',
+        ];
+        let statusIdx = 0;
+        const statusTimer = setInterval(() => {
+            if (statusIdx < statusMessages.length) {
+                setConnectStatus(statusMessages[statusIdx]);
+                statusIdx++;
+            }
+        }, 8000);
+
         try {
             const res = await fetch(`${MT5_API_BASE}/connect/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(credentials),
+                signal: controller.signal,
             });
+            clearTimeout(timeoutId);
+            clearInterval(statusTimer);
             const data = await res.json();
             if (!mountedRef.current) return;
 
@@ -165,14 +193,23 @@ export function useMT5(): UseMT5Result {
                 setConnected(true);
                 setAccountId(data.account_id);
                 if (data.account) setAccount(data.account);
+                setConnectStatus('');
             } else {
                 setConnected(false);
                 setError(data.error || "Failed to connect / provision account");
+                setConnectStatus('');
             }
         } catch (err: any) {
+            clearTimeout(timeoutId);
+            clearInterval(statusTimer);
             if (mountedRef.current) {
                 setConnected(false);
-                setError("Cannot reach MT5 backend. Check server status or CORS settings.");
+                if (err.name === 'AbortError') {
+                    setError('انتهت مهلة الاتصال (120 ثانية). حاول مرة أخرى.');
+                } else {
+                    setError("Cannot reach MT5 backend. Check server status or CORS settings.");
+                }
+                setConnectStatus('');
             }
         } finally {
             if (mountedRef.current) setConnecting(false);
@@ -541,6 +578,7 @@ export function useMT5(): UseMT5Result {
     return {
         connected,
         connecting,
+        connectStatus,
         connectMT5,
         disconnectMT5,
         accountId,
