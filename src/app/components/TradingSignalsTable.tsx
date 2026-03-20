@@ -859,10 +859,16 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                     <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signalPrice ? fmt(autoTrade.signalPrice) : '—'}</td>
                                                     <td className="px-2.5 py-1.5 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{autoTrade.lot || 0.01}</td>
                                                     <td className="px-2.5 py-1.5">
-                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{
-                                                            color: autoTrade.status === 'executed' ? '#10b981' : '#a855f7',
-                                                            background: autoTrade.status === 'executed' ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)',
-                                                        }}>{autoTrade.status || 'watching'}</span>
+                                                        <span 
+                                                            className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-help" 
+                                                            title={autoTrade.last_error || 'No recent errors'}
+                                                            style={{
+                                                                color: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? '#10b981' : autoTrade.status?.startsWith('failed') ? '#ef4444' : '#a855f7',
+                                                                background: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? 'rgba(16,185,129,0.1)' : autoTrade.status?.startsWith('failed') ? 'rgba(239,68,68,0.1)' : 'rgba(168,85,247,0.1)',
+                                                            }}
+                                                        >
+                                                            {autoTrade.status || 'watching'}
+                                                        </span>
                                                     </td>
                                                     <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{autoTrade.ticket || '—'}</td>
                                                     <td className="px-2.5 py-1.5">
