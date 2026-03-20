@@ -877,7 +877,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                             background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                                                         }}>{autoTrade.direction?.toUpperCase() || 'UNKNOWN'}</span>
                                                     </td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signalPrice ? fmt(autoTrade.signalPrice) : '—'}</td>
+                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signal_price ? fmt(autoTrade.signal_price) : '—'}</td>
                                                     <td className="px-2.5 py-1.5 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{autoTrade.lot || 0.01}</td>
                                                     <td className="px-2.5 py-1.5">
                                                         <span 
@@ -891,7 +891,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                             {autoTrade.status || 'watching'}
                                                         </span>
                                                     </td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{autoTrade.ticket || '—'}</td>
+                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{autoTrade.active_ticket || autoTrade.ticket || '—'}</td>
                                                     <td className="px-2.5 py-1.5">
                                                         <motion.button
                                                             whileTap={{ scale: 0.95 }}
