@@ -679,25 +679,47 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     if (!executeTradeFromChart || !currency) return;
     
     setIsExecutingAll(true);
-    for (const row of directionsData.rows) {
-      if (dirExecuting.has(row.windowSize)) continue;
+    const retryRows: typeof directionsData.rows = [];
+
+    const executeRow = async (row: any, isRetry: boolean = false) => {
+      if (!isRetry && dirExecuting.has(row.windowSize)) return;
       
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
-      if (hasPos) continue;
+      if (hasPos) return;
       
       const lot = dirLotSizes[row.windowSize] ?? 0.01;
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
-        await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-        await new Promise(r => setTimeout(r, 150));
-      } catch (err) {
-        console.error(err);
+        const executePromise = executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("EXECUTION_TIMEOUT")), 2000));
+        
+        await Promise.race([executePromise, timeoutPromise]);
+        await new Promise(r => setTimeout(r, 150)); // Small delay between executions
+      } catch (err: any) {
+        console.error("Trade execution error or timeout:", err);
+        if (err.message === "EXECUTION_TIMEOUT" && !isRetry) {
+          retryRows.push(row);
+        }
       } finally {
         setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
       }
+    };
+
+    // First Pass
+    for (const row of directionsData.rows) {
+      await executeRow(row, false);
     }
+
+    // Second Pass (Retry skipped/timed out rows)
+    if (retryRows.length > 0) {
+      await new Promise(r => setTimeout(r, 500)); // Wait half second before retry phase
+      for (const row of retryRows) {
+        await executeRow(row, true);
+      }
+    }
+
     setIsExecutingAll(false);
   };
 
