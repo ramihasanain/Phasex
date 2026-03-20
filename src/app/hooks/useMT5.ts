@@ -191,7 +191,13 @@ export function useMT5(): UseMT5Result {
         if (!ct.includes('application/json')) {
             const text = await res.text();
             console.error(`[MT5] Server returned non-JSON (${res.status}):`, text.slice(0, 200));
-            throw new Error(`Server error (${res.status}). The backend may be down or the endpoint is missing.`);
+            if (res.status === 504) {
+                throw new Error('TIMEOUT_504');
+            }
+            if (res.status === 502 || res.status === 503) {
+                throw new Error(`السيرفر غير متاح حالياً (${res.status}). حاول مرة أخرى بعد قليل.`);
+            }
+            throw new Error(`خطأ من السيرفر (${res.status}). تأكد أن الباك اند شغال.`);
         }
         return res.json();
     }, []);
@@ -428,13 +434,40 @@ export function useMT5(): UseMT5Result {
                 throw new Error(errMsg);
             }
         } catch (e: any) {
+            // Handle 504 Gateway Timeout — trade might have gone through
+            if (e?.message === 'TIMEOUT_504') {
+                console.warn('[MT5] 504 timeout on trade — checking if trade went through...');
+                setError('⏳ السيرفر أخذ وقت طويل. جاري التحقق من الصفقة...');
+                // Wait a moment then check positions
+                await new Promise(r => setTimeout(r, 3000));
+                try {
+                    const posRes = await fetch(`${MT5_API_BASE}/positions/?account_id=${aid}`, {
+                        headers: getHeaders(),
+                    });
+                    const posData = await safeJson(posRes);
+                    if (posData.positions) {
+                        setPositions(posData.positions);
+                        // Check if a new position appeared for this symbol
+                        const hasNewPos = posData.positions.some(
+                            (p: any) => p.symbol.toUpperCase().includes(symbol.toUpperCase().replace(/[.\-_]/g, ''))
+                        );
+                        if (hasNewPos) {
+                            setError(null);
+                            refreshAccount();
+                            return null; // Trade likely succeeded
+                        }
+                    }
+                } catch { /* ignore check failure */ }
+                setError('⚠️ انتهت مهلة السيرفر (504). تحقق من الصفقات يدوياً في MT5.');
+                return null;
+            }
             if (e?.message && e.message !== 'Failed to fetch') {
                 throw e;
             }
             setError('Failed to reach MT5 backend for trade execution');
             throw new Error('Failed to reach MT5 backend for trade execution');
         }
-    }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired]);
+    }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired, safeJson]);
 
     // ─── Close Position (with account_id + session token) ───
     const closePosition = useCallback(async (ticket: number): Promise<boolean> => {
