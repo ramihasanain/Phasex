@@ -306,6 +306,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [showDirections, setShowDirections] = useState(false);
   const [dirLotSizes, setDirLotSizes] = useState<Record<number, number>>({});
   const [dirExecuting, setDirExecuting] = useState<Set<number>>(new Set());
+  const [isExecutingAll, setIsExecutingAll] = useState(false);
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -662,6 +663,30 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
     return { rows, maxProfitWindow, minProfitWindow };
   }, [effectiveData, currency?.price, showDirections]);
+
+  const handleExecuteAll = async () => {
+    if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
+    if (!executeTradeFromChart || !currency) return;
+    
+    setIsExecutingAll(true);
+    for (const row of directionsData.rows) {
+      if (dirExecuting.has(row.windowSize)) continue;
+      
+      const lot = dirLotSizes[row.windowSize] ?? 0.1;
+      setDirExecuting(prev => new Set(prev).add(row.windowSize));
+      
+      try {
+        const chartComment = `PX-Chart ${currency.symbol} ${timeframe} W${row.windowSize} ${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+        await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
+        await new Promise(r => setTimeout(r, 150));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+      }
+    }
+    setIsExecutingAll(false);
+  };
 
   /* ────── EMPTY STATE ────── */
   if (!currency || !indicator) {
@@ -1095,10 +1120,20 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                     </span>
                   </div>
-                  <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
-                    <BarChart3 className="w-3.5 h-3.5" />
-                    {isRTL ? "العودة للشارت" : "Back to Chart"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
+                      {isExecutingAll ? (
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full" />
+                      ) : (
+                        <Activity className="w-3.5 h-3.5" />
+                      )}
+                      {isRTL ? "تنفيذ الكل" : "Execute All"}
+                    </button>
+                    <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
+                      <BarChart3 className="w-3.5 h-3.5" />
+                      {isRTL ? "العودة للشارت" : "Back to Chart"}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Table Data */}
@@ -1510,10 +1545,20 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                             Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                           </span>
                         </div>
-                        <button onClick={() => setShowDirections(false)} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors" style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: `1px solid ${tk.border}` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}>
-                          <BarChart3 className="w-4 h-4" />
-                          {isRTL ? "العودة للشارت" : "Back to Chart"}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: `1px solid rgba(16,185,129,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#6ee7b7"; e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#34d399"; e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}>
+                            {isExecutingAll ? (
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full" />
+                            ) : (
+                              <Activity className="w-4 h-4" />
+                            )}
+                            {isRTL ? "تنفيذ الكل" : "Execute All"}
+                          </button>
+                          <button onClick={() => setShowDirections(false)} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors" style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: `1px solid ${tk.border}` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}>
+                            <BarChart3 className="w-4 h-4" />
+                            {isRTL ? "العودة للشارت" : "Back to Chart"}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex-1 overflow-auto p-2">
