@@ -350,7 +350,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
         };
 
         try {
-            const tradeComment = `PX-SD ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
+            const tradeComment = `PX-Dash ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
             const result = await executeTrade(
                 asset, entry.net_signal.toUpperCase(), lot,
                 entry.stop_loss || undefined, entry.take_profit || undefined,

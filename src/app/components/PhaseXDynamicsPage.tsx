@@ -2797,7 +2797,7 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                             setTradeError(null);
                                             setIsExecuting(true);
                                             try {
-                                                const aiComment = `PX-AI ${symbolToSend} ${action}`.slice(0, 31);
+                                                const aiComment = `PX-SD ${symbolToSend} ${action}`.slice(0, 31);
                                                 const res = await executeTrade(
                                                     symbolToSend, 
                                                     action, 
