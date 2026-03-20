@@ -295,16 +295,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   executeTrade: executeTradeFromChart,
   mt5Positions = [],
 }: IndicatorChartProps) {
-  // Build a set of symbols that have open positions for quick lookup
-  const openPositionSymbols = useMemo(() => {
-    const syms = new Set<string>();
-    mt5Positions.forEach(p => {
-      syms.add(p.symbol.toUpperCase());
-      // Also add without common suffixes for matching
-      const base = p.symbol.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
-      syms.add(base.toUpperCase());
+  // Check if a position exists for a specific window + symbol combination
+  const hasPositionForWindow = useCallback((windowSize: number, sym: string) => {
+    const symUp = sym.toUpperCase();
+    const symBase = symUp.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+    return mt5Positions.some(p => {
+      const pSym = p.symbol.toUpperCase();
+      const pBase = pSym.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+      const symbolMatch = pSym === symUp || pBase === symBase;
+      if (!symbolMatch) return false;
+      // Check if position comment contains W:{windowSize}
+      const comment = (p.comment || '').toUpperCase();
+      return comment.includes(`W:${windowSize}`);
     });
-    return syms;
   }, [mt5Positions]);
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -1197,13 +1200,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                               </td>
                               <td className="p-2 text-center">
                                 {(() => {
-                                  const sym = currency?.symbol?.toUpperCase() || '';
-                                  const hasPosition = openPositionSymbols.has(sym) || openPositionSymbols.has(sym.replace(/\.(raw|p|sd|lv)|micro|m$/i, ''));
+                                  const sym = currency?.symbol || '';
+                                  const hasPosition = currency ? hasPositionForWindow(row.windowSize, sym) : false;
                                   const isDisabled = dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency || hasPosition;
                                   return (
                                     <button
                                       disabled={isDisabled}
-                                      title={hasPosition ? '✅ تم تنفيذ صفقة على هذا الزوج - انتظر إغلاقها' : undefined}
+                                      title={hasPosition ? (language === 'ar' ? '✅ تم تنفيذ صفقة على هذه الشمعة - انتظر إغلاقها' : '✅ Trade already executed on this candle - wait for it to close') : undefined}
                                       onClick={async (e) => {
                                         e.stopPropagation();
                                         if (!executeTradeFromChart || !currency || hasPosition) return;
@@ -1222,7 +1225,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         border: `1px solid ${hasPosition ? 'rgba(100,116,139,0.2)' : dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                                       }}
                                     >
-                                      {hasPosition ? '✅ مُنفّذة' : dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                      {hasPosition ? (language === 'ar' ? '✅ مُنفّذة' : '✅ Executed') : dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                     </button>
                                   );
                                 })()}
@@ -1609,13 +1612,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         </td>
                                         <td className="p-3 text-center">
                                           {(() => {
-                                            const sym = currency?.symbol?.toUpperCase() || '';
-                                            const hasPosition = openPositionSymbols.has(sym) || openPositionSymbols.has(sym.replace(/\.(raw|p|sd|lv)|micro|m$/i, ''));
+                                            const sym = currency?.symbol || '';
+                                            const hasPosition = currency ? hasPositionForWindow(row.windowSize, sym) : false;
                                             const isDisabled = dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency || hasPosition;
                                             return (
                                               <button
                                                 disabled={isDisabled}
-                                                title={hasPosition ? '✅ تم تنفيذ صفقة على هذا الزوج - انتظر إغلاقها' : undefined}
+                                                title={hasPosition ? (language === 'ar' ? '✅ تم تنفيذ صفقة على هذه الشمعة - انتظر إغلاقها' : '✅ Trade already executed on this candle - wait for it to close') : undefined}
                                                 onClick={async (e) => {
                                                   e.stopPropagation();
                                                   if (!executeTradeFromChart || !currency || hasPosition) return;
@@ -1634,7 +1637,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                                   border: `1px solid ${hasPosition ? 'rgba(100,116,139,0.2)' : dirExecuting.has(row.windowSize) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                                                 }}
                                               >
-                                                {hasPosition ? '✅ مُنفّذة' : dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                                {hasPosition ? (language === 'ar' ? '✅ مُنفّذة' : '✅ Executed') : dirExecuting.has(row.windowSize) ? '...' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                               </button>
                                             );
                                           })()}

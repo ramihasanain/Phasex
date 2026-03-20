@@ -1698,17 +1698,26 @@ export function TradingDashboard({
                   selectedAsset
                     ? () => {
                         const sym = selectedAsset.symbol.toUpperCase();
+                        const symBase = sym.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
                         const hasPos = mt5Positions.some(p => {
                           const ps = p.symbol.toUpperCase();
-                          return ps === sym || ps.replace(/\.(raw|p|sd|lv)|micro|m$/i, '') === sym.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                          const psBase = ps.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                          const symbolMatch = ps === sym || psBase === symBase;
+                          if (!symbolMatch) return false;
+                          // Check if position comment contains matching TF
+                          const comment = (p.comment || '').toUpperCase();
+                          return comment.includes(`TF:${timeframe}`);
                         });
+                        const tooltipText = hasPos
+                          ? (language === 'ar' ? '\u2705 \u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0635\u0641\u0642\u0629 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u062a\u0627\u064a\u0645 \u0641\u0631\u064a\u0645 - \u0627\u0646\u062a\u0638\u0631 \u0625\u063a\u0644\u0627\u0642\u0647\u0627' : '\u2705 Trade already executed on this timeframe - wait for it to close')
+                          : undefined;
                         return (
                         <div className="flex items-center gap-1.5 ml-2">
                           <motion.button
                             whileHover={hasPos ? {} : { scale: 1.06 }}
                             whileTap={hasPos ? {} : { scale: 0.94 }}
                             disabled={hasPos}
-                            title={hasPos ? '\u2705 \u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0635\u0641\u0642\u0629 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0632\u0648\u062c - \u0627\u0646\u062a\u0638\u0631 \u0625\u063a\u0644\u0627\u0642\u0647\u0627' : undefined}
+                            title={tooltipText}
                             onClick={() => {
                               if (hasPos) return;
                               setQuickTradeModal({
@@ -1733,7 +1742,7 @@ export function TradingDashboard({
                             whileHover={hasPos ? {} : { scale: 1.06 }}
                             whileTap={hasPos ? {} : { scale: 0.94 }}
                             disabled={hasPos}
-                            title={hasPos ? '\u2705 \u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0635\u0641\u0642\u0629 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0632\u0648\u062c - \u0627\u0646\u062a\u0638\u0631 \u0625\u063a\u0644\u0627\u0642\u0647\u0627' : undefined}
+                            title={tooltipText}
                             onClick={() => {
                               if (hasPos) return;
                               setQuickTradeModal({
@@ -1752,7 +1761,7 @@ export function TradingDashboard({
                               border: hasPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(239,68,68,0.3)",
                             }}
                           >
-                            {hasPos ? '\u0645\u064f\u0646\u0641\u0651\u0630\u0629' : 'SELL'}
+                            {hasPos ? (language === 'ar' ? '\u0645\u064f\u0646\u0641\u0651\u0630\u0629' : 'Executed') : 'SELL'}
                           </motion.button>
                         </div>
                       );
@@ -1929,7 +1938,7 @@ export function TradingDashboard({
                         : "SELL";
                       const slVal = qtSL ? parseFloat(qtSL) : undefined;
                       const tpVal = qtTP ? parseFloat(qtTP) : undefined;
-                      const dashComment = `PhaseX|Dashboard|${qtSymbol}|${actionType}|SL:${slVal || 0}|TP:${tpVal || 0}`;
+                      const dashComment = `PhaseX|Dashboard|${qtSymbol}|${actionType}|TF:${timeframe}|SL:${slVal || 0}|TP:${tpVal || 0}`;
                       await executeTrade(
                         qtSymbol,
                         actionType,
