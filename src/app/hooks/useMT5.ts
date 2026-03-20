@@ -185,6 +185,17 @@ export function useMT5(): UseMT5Result {
         return false;
     }, []);
 
+    // ─── Helper: safely parse JSON response (handles HTML error pages) ───
+    const safeJson = useCallback(async (res: Response): Promise<any> => {
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+            const text = await res.text();
+            console.error(`[MT5] Server returned non-JSON (${res.status}):`, text.slice(0, 200));
+            throw new Error(`Server error (${res.status}). The backend may be down or the endpoint is missing.`);
+        }
+        return res.json();
+    }, []);
+
     // ─── Connect to MT5 via MetaAPI provisioning ───
     const connectMT5 = useCallback(async (credentials: MT5Credentials) => {
         setConnecting(true);
@@ -221,7 +232,7 @@ export function useMT5(): UseMT5Result {
             });
             clearTimeout(timeoutId);
             clearInterval(statusTimer);
-            const data = await res.json();
+            const data = await safeJson(res);
             if (!mountedRef.current) return;
 
             if (data.connected && data.account_id) {
@@ -280,7 +291,7 @@ export function useMT5(): UseMT5Result {
                     const res = await fetch(`${MT5_API_BASE}/account/?account_id=${accountId}`, {
                         headers,
                     });
-                    const data = await res.json();
+                    const data = await safeJson(res);
                     if (handleSessionExpired(data, res)) return;
                     if (mountedRef.current && data.account) {
                         setConnected(true);
@@ -300,7 +311,7 @@ export function useMT5(): UseMT5Result {
             const res = await fetch(`${MT5_API_BASE}/account/?account_id=${aid}`, {
                 headers: getHeaders(),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return;
             if (mountedRef.current && data.account) {
                 setAccount(data.account);
@@ -318,7 +329,7 @@ export function useMT5(): UseMT5Result {
             const res = await fetch(`${MT5_API_BASE}/positions/?account_id=${aid}`, {
                 headers: getHeaders(),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return;
             if (mountedRef.current && data.positions) {
                 setPositions(data.positions);
@@ -336,7 +347,7 @@ export function useMT5(): UseMT5Result {
             const res = await fetch(`${MT5_API_BASE}/history/?account_id=${aid}&days=${days}`, {
                 headers: getHeaders(),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return;
             if (mountedRef.current && data.deals) {
                 setHistory(data.deals);
@@ -404,7 +415,7 @@ export function useMT5(): UseMT5Result {
                     comment: comment || 'PhaseX',
                 }),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return null;
             if (data.success && data.order) {
                 refreshPositions();
@@ -438,7 +449,7 @@ export function useMT5(): UseMT5Result {
                 headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ account_id: aid, ticket }),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return false;
             if (data.success) {
                 refreshPositions();
@@ -467,7 +478,7 @@ export function useMT5(): UseMT5Result {
                 headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ account_id: aid }),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return false;
             if (data.success) {
                 refreshPositions();
@@ -487,7 +498,7 @@ export function useMT5(): UseMT5Result {
     const fetchOverrides = useCallback(async () => {
         try {
             const res = await fetch(`${MT5_API_BASE}/symbol-overrides/`);
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.overrides) setSymbolOverrides(data.overrides);
         } catch { /* ignore */ }
     }, []);
@@ -499,7 +510,7 @@ export function useMT5(): UseMT5Result {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ dashboard_name: dashboardName, broker_name: brokerName }),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success && data.overrides) {
                 setSymbolOverrides(data.overrides);
                 return true;
@@ -515,7 +526,7 @@ export function useMT5(): UseMT5Result {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ dashboard_name: dashboardName, delete: true }),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success) {
                 setSymbolOverrides(prev => { const n = { ...prev }; delete n[dashboardName.toUpperCase()]; return n; });
                 return true;
@@ -536,7 +547,7 @@ export function useMT5(): UseMT5Result {
     const fetchAutoTrades = useCallback(async () => {
         try {
             const res = await fetch(`${MT5_API_BASE}/auto-trades/`);
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success) setServerAutoTrades(data.auto_trades || {});
         } catch { /* ignore */ }
     }, []);
@@ -556,7 +567,7 @@ export function useMT5(): UseMT5Result {
                     account_id: aid,
                 }),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success) {
                 setServerAutoTrades(data.auto_trades || {});
                 return true;
@@ -572,7 +583,7 @@ export function useMT5(): UseMT5Result {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key }),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success) {
                 setServerAutoTrades(data.auto_trades || {});
                 return true;
@@ -584,7 +595,7 @@ export function useMT5(): UseMT5Result {
     const fetchTradeHistory = useCallback(async () => {
         try {
             const res = await fetch(`${MT5_API_BASE}/trade-history/`);
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success) setServerTradeHistory(data.history || []);
         } catch { /* ignore */ }
     }, []);
@@ -596,7 +607,7 @@ export function useMT5(): UseMT5Result {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(entry),
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success) {
                 fetchTradeHistory();
                 return true;
@@ -611,7 +622,7 @@ export function useMT5(): UseMT5Result {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             });
-            const data = await res.json();
+            const data = await safeJson(res);
             if (data.success) {
                 setServerTradeHistory([]);
                 return true;
