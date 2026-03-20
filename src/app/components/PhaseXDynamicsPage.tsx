@@ -1113,8 +1113,8 @@ function TradingDecisionEngineTable({
                                             step="0.01"
                                             min="0.01"
                                             max="100"
-                                            value={lotSizes[r.sym] ?? 0.1}
-                                            onChange={(e) => setLotSizes(prev => ({ ...prev, [r.sym]: Math.max(0.01, parseFloat(e.target.value) || 0.1) }))}
+                                            value={lotSizes[r.sym] ?? 0.01}
+                                            onChange={(e) => setLotSizes(prev => ({ ...prev, [r.sym]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                             onClick={(e) => e.stopPropagation()}
                                             className="w-16 px-2 py-1 rounded-lg text-[11px] font-black text-center outline-none"
                                             style={{
@@ -1139,7 +1139,7 @@ function TradingDecisionEngineTable({
                                                 e.preventDefault();
                                                 e.stopPropagation();
                                                 if (!hasPos && r.decision !== "NO TRADE" && onExecuteAction) {
-                                                    onExecuteAction(r.sym, r.decision, lotSizes[r.sym] ?? 0.1);
+                                                    onExecuteAction(r.sym, r.decision, lotSizes[r.sym] ?? 0.01);
                                                 }
                                             }}
                                             className="execute-btn px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 mx-auto disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-500/20"
