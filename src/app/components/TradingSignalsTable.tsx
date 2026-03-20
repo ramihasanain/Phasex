@@ -873,7 +873,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                 <table className="w-full" style={{ borderCollapse: 'collapse' }}>
                                     <thead className="sticky top-0" style={{ background: tk.isDark ? '#080c15' : tk.surface }}>
                                         <tr style={{ borderBottom: '1px solid rgba(168,85,247,0.06)' }}>
-                                            {['Key', 'Symbol', 'TF', 'Type', 'Target Entry', 'Vol', 'Status', 'Ticket', 'Stop Auto'].map(h => (
+                                            {['Key', 'Symbol', 'TF', 'Current', 'Waiting For', 'Signal Price', 'Vol', 'Status', 'Ticket', 'Stop Auto'].map(h => (
                                                 <th key={h} className="px-2.5 py-1.5 text-[9px] font-bold tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
                                             ))}
                                         </tr>
@@ -893,6 +893,13 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                             color: isBuy ? '#10b981' : '#ef4444',
                                                             background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                                                         }}>{autoTrade.direction?.toUpperCase() || 'UNKNOWN'}</span>
+                                                    </td>
+                                                    <td className="px-2.5 py-1.5">
+                                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded opacity-70" style={{
+                                                            color: !isBuy ? '#10b981' : '#ef4444',
+                                                            background: !isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                            border: `1px dashed ${!isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`
+                                                        }}>⏳ {(!isBuy ? 'BUY' : 'SELL')}</span>
                                                     </td>
                                                     <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signal_price ? fmt(autoTrade.signal_price) : '—'}</td>
                                                     <td className="px-2.5 py-1.5 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{autoTrade.lot || 0.01}</td>
@@ -935,9 +942,13 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
 
                 {/* ═══ AUTO-TRADING HISTORY INLINE PANEL ═══ */}
                 {mt5Connected && showAutoTrades && tradeHistory && tradeHistory.some(th => th.autoExecuted) && (
-                    <div style={{ borderBottom: '1px solid rgba(168,85,247,0.08)', background: tk.isDark ? 'rgba(16,185,129,0.02)' : 'rgba(16,185,129,0.02)' }}>
+                    <div className="mt-2" style={{ borderBottom: '1px solid rgba(168,85,247,0.08)', background: tk.isDark ? 'rgba(16,185,129,0.02)' : 'rgba(16,185,129,0.02)' }}>
                         <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
                             <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: tk.textDim }}>Auto Trading Trace History</span>
+                            <motion.button whileTap={{ scale: 0.95 }} onClick={() => clearServerHistory?.()}
+                                className="text-[9px] font-bold px-3 py-1 rounded cursor-pointer flex items-center gap-1"
+                                style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}
+                            ><X className="w-3 h-3" /> Clear History</motion.button>
                         </div>
                         <div className="overflow-auto" style={{ maxHeight: 240 }}>
                             <table className="w-full" style={{ borderCollapse: 'collapse' }}>
@@ -961,8 +972,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                         background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                                                     }}>{th.action?.toUpperCase()}</span>
                                                 </td>
-                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{th.entryPrice ? fmt(th.entryPrice) : '—'}</td>
-                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{th.closePrice ? fmt(th.closePrice) : '—'}</td>
+                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{th.entryPrice != null && th.entryPrice !== 0 ? fmt(th.entryPrice) : th.signalPrice ? `~${fmt(th.signalPrice)}` : '—'}</td>
+                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{th.closePrice != null && th.closePrice !== 0 ? fmt(th.closePrice) : '—'}</td>
                                                 <td className="px-2.5 py-1.5">
                                                     {th.profit != null ? (
                                                         <span className="text-[10px] font-black font-mono" style={{ color: th.profit >= 0 ? '#10b981' : '#ef4444' }}>
