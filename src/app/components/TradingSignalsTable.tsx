@@ -350,7 +350,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
         };
 
         try {
-            const tradeComment = `PhaseX|SD|${asset}|${tf}|${entry.net_signal}|SL:${entry.stop_loss || 0}|TP:${entry.take_profit || 0}|P:${entry.close}${isAuto ? '|AUTO' : ''}`;
+            const tradeComment = `PX-SD ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
             const result = await executeTrade(
                 asset, entry.net_signal.toUpperCase(), lot,
                 entry.stop_loss || undefined, entry.take_profit || undefined,

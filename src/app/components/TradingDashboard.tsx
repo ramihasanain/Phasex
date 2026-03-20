@@ -1693,14 +1693,24 @@ export function TradingDashboard({
                 accessToken={accessToken}
                 mt5Connected={mt5Connected}
                 executeTrade={executeTrade}
+                mt5Positions={mt5Positions}
                 renderTradeButtons={
                   selectedAsset
-                    ? () => (
+                    ? () => {
+                        const sym = selectedAsset.symbol.toUpperCase();
+                        const hasPos = mt5Positions.some(p => {
+                          const ps = p.symbol.toUpperCase();
+                          return ps === sym || ps.replace(/\.(raw|p|sd|lv)|micro|m$/i, '') === sym.replace(/\.(raw|p|sd|lv)|micro|m$/i, '');
+                        });
+                        return (
                         <div className="flex items-center gap-1.5 ml-2">
                           <motion.button
-                            whileHover={{ scale: 1.06 }}
-                            whileTap={{ scale: 0.94 }}
+                            whileHover={hasPos ? {} : { scale: 1.06 }}
+                            whileTap={hasPos ? {} : { scale: 0.94 }}
+                            disabled={hasPos}
+                            title={hasPos ? '\u2705 \u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0635\u0641\u0642\u0629 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0632\u0648\u062c - \u0627\u0646\u062a\u0638\u0631 \u0625\u063a\u0644\u0627\u0642\u0647\u0627' : undefined}
                             onClick={() => {
+                              if (hasPos) return;
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "BUY",
@@ -1710,19 +1720,22 @@ export function TradingDashboard({
                               setQtSymbol(selectedAsset.symbol);
                               setQtError(null);
                             }}
-                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer"
+                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
-                              background: "rgba(16,185,129,0.15)",
-                              color: "#34d399",
-                              border: "1px solid rgba(16,185,129,0.3)",
+                              background: hasPos ? "rgba(100,116,139,0.08)" : "rgba(16,185,129,0.15)",
+                              color: hasPos ? "#64748b" : "#34d399",
+                              border: hasPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(16,185,129,0.3)",
                             }}
                           >
-                            BUY
+                            {hasPos ? '\u2705' : 'BUY'}
                           </motion.button>
                           <motion.button
-                            whileHover={{ scale: 1.06 }}
-                            whileTap={{ scale: 0.94 }}
+                            whileHover={hasPos ? {} : { scale: 1.06 }}
+                            whileTap={hasPos ? {} : { scale: 0.94 }}
+                            disabled={hasPos}
+                            title={hasPos ? '\u2705 \u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0635\u0641\u0642\u0629 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0632\u0648\u062c - \u0627\u0646\u062a\u0638\u0631 \u0625\u063a\u0644\u0627\u0642\u0647\u0627' : undefined}
                             onClick={() => {
+                              if (hasPos) return;
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "SELL",
@@ -1732,17 +1745,18 @@ export function TradingDashboard({
                               setQtSymbol(selectedAsset.symbol);
                               setQtError(null);
                             }}
-                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer"
+                            className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                             style={{
-                              background: "rgba(239,68,68,0.15)",
-                              color: "#f87171",
-                              border: "1px solid rgba(239,68,68,0.3)",
+                              background: hasPos ? "rgba(100,116,139,0.08)" : "rgba(239,68,68,0.15)",
+                              color: hasPos ? "#64748b" : "#f87171",
+                              border: hasPos ? "1px solid rgba(100,116,139,0.2)" : "1px solid rgba(239,68,68,0.3)",
                             }}
                           >
-                            SELL
+                            {hasPos ? '\u0645\u064f\u0646\u0641\u0651\u0630\u0629' : 'SELL'}
                           </motion.button>
                         </div>
-                      )
+                      );
+                      }
                     : undefined
                 }
               />
