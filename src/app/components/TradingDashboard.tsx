@@ -442,6 +442,7 @@ export function TradingDashboard({
   const [quickTradeModal, setQuickTradeModal] = useState<{
     symbol: string;
     action: string;
+    source?: "Chart" | "AI";
   } | null>(null);
   const [qtSL, setQtSL] = useState("");
   const [qtTP, setQtTP] = useState("");
@@ -1724,6 +1725,7 @@ export function TradingDashboard({
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "BUY",
+                                source: "Chart",
                               });
                               setQtSL("");
                               setQtTP("");
@@ -1749,6 +1751,7 @@ export function TradingDashboard({
                               setQuickTradeModal({
                                 symbol: selectedAsset.symbol,
                                 action: "SELL",
+                                source: "Chart",
                               });
                               setQtSL("");
                               setQtTP("");
@@ -1939,7 +1942,9 @@ export function TradingDashboard({
                         : "SELL";
                       const slVal = qtSL ? parseFloat(qtSL) : undefined;
                       const tpVal = qtTP ? parseFloat(qtTP) : undefined;
-                      const dashComment = `PX-AI ${qtSymbol} ${timeframe} ${actionType}`.slice(0, 31);
+                      const dashComment = quickTradeModal.source === "Chart" 
+                        ? `PX-Chart ${qtSymbol} ${timeframe} ${actionType}`.slice(0, 31)
+                        : `PX-AI ${qtSymbol} ${timeframe} ${actionType}`.slice(0, 31);
                       await executeTrade(
                         qtSymbol,
                         actionType,
