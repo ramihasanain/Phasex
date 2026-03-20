@@ -5,9 +5,7 @@
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { playTradeExecuted, playTradeFailed, playPositionClosed, playConnected } from "../utils/tradeSounds";
-
-const MT5_API_BASE = "https://seashell-app-cq4ql.ondigitalocean.app/api/mt5";
-
+const MT5_API_BASE = "http://localhost:8000/api/mt5";
 /* ─── Types ─── */
 export interface MT5Credentials {
     login: string;
