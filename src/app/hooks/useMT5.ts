@@ -112,6 +112,7 @@ export interface UseMT5Result {
     addAutoTrade: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
     removeAutoTrade: (key: string) => Promise<boolean>;
     fetchAutoTrades: () => Promise<void>;
+    checkAutoTrades: () => Promise<boolean>;
     // Server-side Trade History
     serverTradeHistory: any[];
     fetchTradeHistory: () => Promise<void>;
@@ -598,6 +599,7 @@ export function useMT5(): UseMT5Result {
         } catch { /* ignore */ }
     }, [connected, getHeaders, safeJson]);
 
+
     const addAutoTrade = useCallback(async (
         key: string, symbol: string, tf: string, lot: number,
         direction: string, signalPrice: number, sl?: number | null, tp?: number | null,
@@ -654,6 +656,26 @@ export function useMT5(): UseMT5Result {
             if (data.success) setServerTradeHistory(data.history || []);
         } catch { /* ignore */ }
     }, [getHeaders, safeJson]);
+
+    const checkAutoTrades = useCallback(async (): Promise<boolean> => {
+        const aid = accountIdRef.current;
+        if (!aid) return false;
+        try {
+            const res = await fetch(`${MT5_API_BASE}/auto-trades/check/`, {
+                method: 'POST',
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ account_id: aid })
+            });
+            const data = await safeJson(res);
+            if (data.success) {
+                // Instantly re-fetch to show new state!
+                fetchAutoTrades();
+                fetchTradeHistory();
+                return true;
+            }
+            return false;
+        } catch { return false; }
+    }, [fetchAutoTrades, fetchTradeHistory, getHeaders, safeJson]);
 
     const addTradeToHistory = useCallback(async (entry: any): Promise<boolean> => {
         const aid = accountIdRef.current;
@@ -731,6 +753,7 @@ export function useMT5(): UseMT5Result {
         addAutoTrade,
         removeAutoTrade,
         fetchAutoTrades,
+        checkAutoTrades,
         // Server-side trade history
         serverTradeHistory,
         fetchTradeHistory,

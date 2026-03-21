@@ -863,6 +863,24 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                     <div style={{ borderBottom: '1px solid rgba(168,85,247,0.08)', background: tk.isDark ? 'rgba(168,85,247,0.02)' : 'rgba(168,85,247,0.02)' }}>
                         <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid rgba(168,85,247,0.06)' }}>
                             <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: tk.textDim }}>Active Background Auto-Trades</span>
+                            <motion.button 
+                                whileTap={{ scale: 0.95 }} 
+                                onClick={async () => {
+                                    if (checkAutoTrades) {
+                                        const btn = document.getElementById('mt5-check-btn') as HTMLButtonElement;
+                                        if (btn) btn.innerHTML = 'Checking...';
+                                        await checkAutoTrades();
+                                        setTimeout(() => { if (btn) btn.innerHTML = 'Check Now'; }, 1000);
+                                    }
+                                }}
+                                id="mt5-check-btn"
+                                className="text-[9px] font-black px-3 py-1 rounded cursor-pointer"
+                                style={{
+                                    color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)'
+                                }}
+                            >
+                                Check Now
+                            </motion.button>
                         </div>
                         <div className="overflow-auto" style={{ maxHeight: 240 }}>
                             {Object.keys(serverAutoTrades).length === 0 ? (
