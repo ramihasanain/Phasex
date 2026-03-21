@@ -501,6 +501,7 @@ export function TradingDashboard({
     closeAllPositions,
     symbolOverrides,
     setSymbolOverride,
+    checkAutoTrades,
     // Server-side auto-trade
     serverAutoTrades,
     addAutoTrade,
@@ -1791,6 +1792,7 @@ export function TradingDashboard({
                 symbolOverrides={symbolOverrides}
                 setSymbolOverride={setSymbolOverride}
                 mt5Account={mt5Account}
+                checkAutoTrades={checkAutoTrades}
                 serverAutoTrades={serverAutoTrades}
                 addAutoTrade={addAutoTrade}
                 removeAutoTrade={removeAutoTrade}

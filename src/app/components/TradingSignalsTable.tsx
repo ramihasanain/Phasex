@@ -154,6 +154,7 @@ interface TradingSignalsTableProps {
     symbolOverrides?: Record<string, string>;
     setSymbolOverride?: (dashboardName: string, brokerName: string) => Promise<boolean>;
     mt5Account?: MT5Account | null;
+    checkAutoTrades?: () => Promise<boolean>;
     // Server-side auto-trade
     serverAutoTrades?: Record<string, any>;
     addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
@@ -166,7 +167,7 @@ interface TradingSignalsTableProps {
 }
 
 /* ═══════════ Component ═══════════ */
-export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, serverAutoTrades = {}, addAutoTrade, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory }: TradingSignalsTableProps) {
+export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, checkAutoTrades, serverAutoTrades = {}, addAutoTrade, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory }: TradingSignalsTableProps) {
     const { language, t } = useLanguage();
     const isRTL = language === "ar";
     const tk = useThemeTokens();
