@@ -699,7 +699,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
-        const executePromise = executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+        const executePromise = executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("EXECUTION_TIMEOUT")), 2000));
         
         await Promise.race([executePromise, timeoutPromise]);
@@ -728,6 +728,39 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     }
 
     setIsExecutingAll(false);
+  };
+
+  const [isAutoingAll, setIsAutoingAll] = useState(false);
+  const handleAutoAll = async () => {
+    if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
+    if (!addAutoTrade || !currency) return;
+    
+    setIsAutoingAll(true);
+    for (const row of directionsData.rows) {
+        if (autoExecuting.has(row.windowSize)) continue;
+        
+        const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}_${currency.symbol}`;
+        const lot = dirLotSizes[row.windowSize] ?? 0.01;
+        
+        setAutoExecuting(prev => new Set(prev).add(row.windowSize));
+        try {
+            await addAutoTrade(
+                autoTradeKey,
+                currency.symbol,
+                autoTradeKey,
+                lot,
+                row.directionStr, // Backend will fetch latest anyway
+                row.entry,
+                undefined, undefined, undefined
+            );
+            await new Promise(r => setTimeout(r, 150)); // Small delay to prevent rate limits
+        } catch (err) {
+            console.error("Auto trade setup error:", err);
+        } finally {
+            setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+        }
+    }
+    setIsAutoingAll(false);
   };
 
   /* ────── EMPTY STATE ────── */
@@ -1177,6 +1210,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       )}
                       {isRTL ? "تنفيذ الكل" : "Execute All"}
                     </button>
+                    <button onClick={handleAutoAll} disabled={isAutoingAll || !addAutoTrade || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(168,85,247,0.15)" : "rgba(168,85,247,0.1)", color: tk.isDark ? "#c084fc" : "#9333ea", border: `1px solid ${tk.isDark ? "rgba(168,85,247,0.3)" : "rgba(168,85,247,0.3)"}` }}>
+                      {isAutoingAll ? (
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full" />
+                      ) : (
+                        <Zap className="w-3.5 h-3.5" />
+                      )}
+                      {isRTL ? "أوتو للكل" : "Auto All"}
+                    </button>
                     <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
                       <BarChart3 className="w-3.5 h-3.5" />
                       {isRTL ? "العودة للشارت" : "Back to Chart"}
@@ -1287,7 +1328,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                           const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                           setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                           try {
-                                            await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                            await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                           } catch (err) { console.error(err); }
                                           setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                         }}
@@ -1737,6 +1778,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                             value={dirLotSizes[row.windowSize] ?? 0.01}
                                             onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                             onClick={(e) => e.stopPropagation()}
+                                            className="w-16 text-center text-[12px] font-black font-mono py-1.5 px-1 rounded-lg outline-none mx-auto block"
+                                            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
+                                          />
                                         </td>
                                         <td className="p-3 text-center">
                                           {(() => {
@@ -1759,7 +1803,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                                     const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                                     setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                                     try {
-                                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                                     } catch (err) { console.error(err); }
                                                     setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                                   }}
