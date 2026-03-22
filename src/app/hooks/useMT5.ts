@@ -672,18 +672,17 @@ export function useMT5(): UseMT5Result {
         } catch { /* ignore */ }
     }, [getHeaders, safeJson]);
 
-    const checkAutoTrades = useCallback(async (): Promise<boolean> => {
+    const stopAllAutoTrades = useCallback(async (): Promise<boolean> => {
         const aid = accountIdRef.current;
         if (!aid) return false;
         try {
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/check/`, {
+            const res = await fetch(`${MT5_API_BASE}/auto-trades/stop-all/`, {
                 method: 'POST',
                 headers: getHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ account_id: aid })
             });
             const data = await safeJson(res);
             if (data.success) {
-                // Instantly re-fetch to show new state!
                 fetchAutoTrades();
                 fetchTradeHistory();
                 return true;
