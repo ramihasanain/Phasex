@@ -1737,6 +1737,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                             value={dirLotSizes[row.windowSize] ?? 0.01}
                                             onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                             onClick={(e) => e.stopPropagation()}
+                                            className="w-16 text-center text-[12px] font-black font-mono py-1.5 px-1 rounded-lg outline-none mx-auto block"
+                                            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
+                                          />
                                         </td>
                                         <td className="p-3 text-center">
                                           {(() => {
