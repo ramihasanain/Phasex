@@ -1643,7 +1643,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${tk.border}` }}>
-                            <span className="text-[12px] font-bold text-slate-400 whitespace-nowrap">{isRTL ? "لوت للكل:" : "All Lots:"}</span>
+                            <span className="text-[12px] font-bold text-slate-400 whitespace-nowrap">{isRTL ? "تعيين لوت لجميع الشموع:" : "Set Lots for All:"}</span>
                             <button onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">-</button>
                             <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-14 text-center text-sm font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
                             <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
@@ -1655,29 +1655,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                               <Activity className="w-4 h-4" />
                             )}
                             {isRTL ? "تنفيذ الكل" : "Execute All"}
-                          </button>
-                          <button onClick={async () => {
-                            if (!currency || !directionsData || !addAutoTrade || !serverAutoTrades) return;
-                            for (const row of directionsData.rows) {
-                              const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
-                              if (!serverAutoTrades[autoTradeKey]) {
-                                const lotToUse = dirLotSizes[row.windowSize] ?? 0.01;
-                                try {
-                                  await addAutoTrade(
-                                    autoTradeKey,
-                                    currency.symbol,
-                                    autoTradeKey,
-                                    lotToUse,
-                                    row.directionStr,
-                                    row.entry,
-                                    undefined, undefined, undefined
-                                  );
-                                } catch (err) { console.error("Auto All Error:", err); }
-                              }
-                            }
-                          }} disabled={!currency || !directionsData} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50" style={{ background: "rgba(168,85,247,0.15)", color: "#c084fc", border: `1px solid rgba(168,85,247,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#d8b4fe"; e.currentTarget.style.background = "rgba(168,85,247,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#c084fc"; e.currentTarget.style.background = "rgba(168,85,247,0.15)"; }}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
-                            {isRTL ? "اوتو للكل" : "Auto All"}
                           </button>
                           <button onClick={() => setShowDirections(false)} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors" style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: `1px solid ${tk.border}` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}>
                             <BarChart3 className="w-4 h-4" />
