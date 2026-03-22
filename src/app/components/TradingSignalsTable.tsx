@@ -337,7 +337,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     const handleExecuteTrade = useCallback(async (asset: string, tf: string, entry: SignalEntry, isAuto = false) => {
         if (!executeTrade || !mt5Connected) return;
 
-        const tradeComment = `PX-Dash ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
+        const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
         const hasPos = mt5Positions?.some(p => p.comment === tradeComment) || false;
         if (hasPos) return;
 
@@ -422,7 +422,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             let ticket = '';
             try {
                 if (executeTrade) {
-                    const tradeComment = `SD ${tf} ${entry.candles_showed || '31'}`;
+                    const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
                     const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment);
                     if (res && res.ticket) {
                         ticket = String(res.ticket);
