@@ -317,6 +317,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [dirExecuting, setDirExecuting] = useState<Set<number>>(new Set());
   const [autoExecuting, setAutoExecuting] = useState<Set<number>>(new Set());
   const [isExecutingAll, setIsExecutingAll] = useState(false);
+  const [isAutoingAll, setIsAutoingAll] = useState(false);
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -730,6 +731,98 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     }
 
     setIsExecutingAll(false);
+  };
+
+  const handleAutoAll = async () => {
+    if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
+    if (!addAutoTrade || !currency) return;
+    
+    setIsAutoingAll(true);
+    const retryRows: typeof directionsData.rows = [];
+
+    const autoRow = async (row: any, isRetry: boolean = false) => {
+      if (!isRetry && autoExecuting.has(row.windowSize)) return;
+      
+      const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
+      const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
+      if (isActiveAuto) return; // Skip if already active
+      
+      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+      const lot = dirLotSizes[row.windowSize] ?? 0.01;
+      
+      setAutoExecuting(prev => new Set(prev).add(row.windowSize));
+      
+      try {
+        const executePromise = (async () => {
+           let ticketToAdopt = undefined;
+           const existingManualPos = mt5Positions?.find((p: any) => p.comment === chartComment);
+           
+           if (existingManualPos) {
+               ticketToAdopt = String(existingManualPos.ticket);
+           } else if (executeTradeFromChart) {
+               const res = await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+               if (res && res.ticket) {
+                   ticketToAdopt = String(res.ticket);
+                   if (addTradeToHistory) {
+                     addTradeToHistory({
+                         id: `auto-${Date.now()}-${autoTradeKey}`,
+                         symbol: currency.symbol,
+                         tf: autoTradeKey,
+                         action: row.directionStr,
+                         volume: lot,
+                         entryPrice: Number(res.price || res.openPrice || 0),
+                         sl: null,
+                         tp: null,
+                         ticket: Number(res.ticket),
+                         status: 'filled',
+                         executedAt: new Date().toISOString(),
+                         signalPrice: row.entry,
+                         autoExecuted: true,
+                     });
+                   }
+               }
+           }
+
+           await addAutoTrade(
+             autoTradeKey,
+             currency.symbol,
+             autoTradeKey,
+             lot,
+             row.directionStr,
+             row.entry,
+             undefined, undefined,
+             ticketToAdopt
+           );
+        })();
+
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("EXECUTION_TIMEOUT")), 3000));
+        
+        await Promise.race([executePromise, timeoutPromise]);
+        await new Promise(r => setTimeout(r, 100)); // Small delay
+      } catch (err: any) {
+        console.error("Auto configuration error or timeout:", err);
+        if (err.message === "EXECUTION_TIMEOUT" && !isRetry) {
+          retryRows.push(row);
+        }
+      } finally {
+        setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+      }
+    };
+
+    // First Pass
+    for (const row of directionsData.rows) {
+      await autoRow(row, false);
+    }
+
+    // Second Pass (Retry skipped/timed out rows)
+    if (retryRows.length > 0) {
+      await new Promise(r => setTimeout(r, 500)); // Wait half second before retry phase
+      for (const row of retryRows) {
+        await autoRow(row, true);
+      }
+    }
+
+    setIsAutoingAll(false);
   };
 
   /* ────── EMPTY STATE ────── */
@@ -1650,6 +1743,14 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                             <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-14 text-center text-sm font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
                             <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
                           </div>
+                          <button onClick={handleAutoAll} disabled={isAutoingAll || !addAutoTrade || !currency} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50" style={{ background: "rgba(139,92,246,0.15)", color: "#c4b5fd", border: `1px solid rgba(139,92,246,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#ddd6fe"; e.currentTarget.style.background = "rgba(139,92,246,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#c4b5fd"; e.currentTarget.style.background = "rgba(139,92,246,0.15)"; }}>
+                            {isAutoingAll ? (
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full" />
+                            ) : (
+                              <Zap className="w-4 h-4" />
+                            )}
+                            {isRTL ? "أوتو الكل" : "Auto All"}
+                          </button>
                           <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: `1px solid rgba(16,185,129,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#6ee7b7"; e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#34d399"; e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}>
                             {isExecutingAll ? (
                               <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full" />
