@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
-import { Upload, CheckCircle, FileJson, ChevronDown, ChevronUp, Rocket, Search, X, Maximize2, Minimize2, Zap, Play, ToggleLeft, ToggleRight, Clock, History, Download, Info, Edit2, Check } from "lucide-react";
+import { Upload, CheckCircle, FileJson, ChevronDown, ChevronUp, Rocket, Search, X, Maximize2, Minimize2, Zap, Play, ToggleLeft, ToggleRight, Clock, History, Download, Info, Edit2, Check, Trash2, TrendingUp, TrendingDown, Target, Hash, AlertTriangle } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 import { useLivePrices } from "../hooks/useLivePrices";
@@ -940,19 +940,71 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                     <div key={log.id} className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <span className={`text-[10px] font-black px-2 py-1 rounded bg-blue-500/20`} style={{
-                                                    color: log.event_type === 'START' ? '#34d399' : log.event_type === 'FLIP' ? '#fbbf24' : log.event_type === 'EXECUTE' ? '#a78bfa' : log.event_type === 'ERROR' ? '#f87171' : '#60a5fa'
+                                                <span className={`text-[10px] font-black px-2 py-1 rounded shadow-sm`} style={{
+                                                    color: log.event_type === 'START' ? '#34d399' : 
+                                                           log.event_type === 'FLIP' ? '#fbbf24' : 
+                                                           log.event_type === 'EXECUTE' ? '#a78bfa' : 
+                                                           log.event_type === 'ERROR' ? '#f87171' : 
+                                                           log.event_type === 'MANUAL_ON' ? '#38bdf8' :
+                                                           log.event_type === 'MANUAL_OFF' ? '#f472b6' :
+                                                           log.event_type === 'STOP_ALL' ? '#f43f5e' :
+                                                           log.event_type === 'CLOSED' ? '#94a3b8' :
+                                                           '#60a5fa',
+                                                    background: log.event_type === 'START' ? 'rgba(52,211,153,0.1)' : 
+                                                                log.event_type === 'FLIP' ? 'rgba(251,191,36,0.1)' : 
+                                                                log.event_type === 'EXECUTE' ? 'rgba(167,139,250,0.1)' : 
+                                                                log.event_type === 'ERROR' ? 'rgba(248,113,113,0.1)' : 
+                                                                log.event_type === 'MANUAL_ON' ? 'rgba(56,189,248,0.1)' :
+                                                                log.event_type === 'MANUAL_OFF' ? 'rgba(244,114,182,0.1)' :
+                                                                log.event_type === 'STOP_ALL' ? 'rgba(244,63,94,0.1)' :
+                                                                log.event_type === 'CLOSED' ? 'rgba(148,163,184,0.1)' :
+                                                                'rgba(96,165,250,0.1)',
+                                                    border: `1px solid ${
+                                                        log.event_type === 'START' ? 'rgba(52,211,153,0.2)' : 
+                                                        log.event_type === 'FLIP' ? 'rgba(251,191,36,0.2)' : 
+                                                        log.event_type === 'EXECUTE' ? 'rgba(167,139,250,0.2)' : 
+                                                        log.event_type === 'ERROR' ? 'rgba(248,113,113,0.2)' : 
+                                                        log.event_type === 'MANUAL_ON' ? 'rgba(56,189,248,0.2)' :
+                                                        log.event_type === 'MANUAL_OFF' ? 'rgba(244,114,182,0.2)' :
+                                                        log.event_type === 'STOP_ALL' ? 'rgba(244,63,94,0.2)' :
+                                                        log.event_type === 'CLOSED' ? 'rgba(148,163,184,0.2)' :
+                                                        'rgba(96,165,250,0.2)'
+                                                    }`
                                                 }}>{log.event_type}</span>
-                                                <span className="font-bold text-sm text-gray-200">{log.symbol}</span>
-                                                <span className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString()}</span>
+                                                <span className="font-black text-sm text-gray-200 drop-shadow-sm">{log.symbol === 'ALL' ? <span className="text-pink-400">ALL</span> : log.symbol}</span>
+                                                <span className="text-[11px] font-mono text-gray-500">{new Date(log.created_at).toLocaleString()}</span>
                                             </div>
-                                            <span className="text-[10px] text-gray-500 font-mono">{log.trade_key}</span>
+                                            <span className="text-[9px] font-black text-gray-600 font-mono tracking-widest">{log.trade_key || 'SYSTEM'}</span>
                                         </div>
                                         <div className="text-sm text-gray-300 ml-1">{log.message}</div>
                                         {log.details && Object.keys(log.details).length > 0 && (
-                                            <pre className="text-[10px] p-2 mt-2 rounded-lg bg-black/40 text-gray-400 overflow-x-auto">
-                                                {JSON.stringify(log.details, null, 2)}
-                                            </pre>
+                                            <div className="flex flex-wrap items-center gap-2 mt-2 ml-1">
+                                                {Object.entries(log.details).map(([k, v]) => {
+                                                    if (k === 'deleted_count') {
+                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)' }}><Trash2 className="w-3 h-3" /> {String(v)} Removed</span>;
+                                                    }
+                                                    if (k === 'direction') {
+                                                        const isBuy = String(v).toLowerCase() === 'buy';
+                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wide shadow-sm" style={{ background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: isBuy ? '#34d399' : '#f87171', border: isBuy ? '1px solid rgba(16,185,129,0.15)' : '1px solid rgba(239,68,68,0.15)' }}>{isBuy ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {String(v)}</span>;
+                                                    }
+                                                    if (k === 'signal' || k === 'signal_price') {
+                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold shadow-sm" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.15)' }}><Target className="w-3 h-3" /> {fmt(Number(v))}</span>;
+                                                    }
+                                                    if (k === 'profit') {
+                                                        const p = Number(v);
+                                                        const isWin = p >= 0;
+                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-black shadow-sm" style={{ background: isWin ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: isWin ? '#34d399' : '#f87171', border: isWin ? '1px solid rgba(16,185,129,0.15)' : '1px solid rgba(239,68,68,0.15)' }}>💰 {isWin ? '+' : ''}{p.toFixed(2)}$</span>;
+                                                    }
+                                                    if (k === 'ticket') {
+                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold shadow-sm" style={{ background: 'rgba(168,85,247,0.1)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.15)' }}><Hash className="w-3 h-3" /> {String(v)}</span>;
+                                                    }
+                                                    if (k === 'reason' || k === 'error') {
+                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm" style={{ background: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.15)' }}><AlertTriangle className="w-3 h-3" /> {String(v)}</span>;
+                                                    }
+                                                    // Default fallback pill
+                                                    return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono shadow-sm" style={{ background: 'rgba(255,255,255,0.03)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.08)' }}><strong>{k}:</strong> {String(v)}</span>;
+                                                })}
+                                            </div>
                                         )}
                                     </div>
                                 ))}
