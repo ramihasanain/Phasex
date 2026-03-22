@@ -164,10 +164,13 @@ interface TradingSignalsTableProps {
     addTradeToHistory?: (entry: any) => Promise<boolean>;
     clearServerHistory?: () => Promise<boolean>;
     fetchTradeHistory?: () => Promise<void>;
+    // Server-side Logs
+    serverAutoLogs?: any[];
+    fetchAutoLogs?: () => Promise<void>;
 }
 
 /* ═══════════ Component ═══════════ */
-export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, stopAllAutoTrades, serverAutoTrades = {}, addAutoTrade, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory }: TradingSignalsTableProps) {
+export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, stopAllAutoTrades, serverAutoTrades = {}, addAutoTrade, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory, serverAutoLogs = [], fetchAutoLogs }: TradingSignalsTableProps) {
     const { language, t } = useLanguage();
     const isRTL = language === "ar";
     const tk = useThemeTokens();
@@ -196,6 +199,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     const [showHistory, setShowHistory] = useState(false);
     const [showPositions, setShowPositions] = useState(true);
     const [showAutoTrades, setShowAutoTrades] = useState(false);
+    const [showAutoLogs, setShowAutoLogs] = useState(false);
     const [closingTickets, setClosingTickets] = useState<Set<number>>(new Set());
     const [expandedHistoryRows, setExpandedHistoryRows] = useState<Set<string>>(new Set());
     const [editingSymbol, setEditingSymbol] = useState<string | null>(null);
@@ -663,6 +667,23 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                         </div>
                                         <span>History</span>
                                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(168,85,247,0.2)', color: '#c084fc' }}>{tradeHistory.length}</span>
+                                    </motion.button>
+                                    {/* Auto Logs Button */}
+                                    <motion.button onClick={() => setShowAutoLogs(true)}
+                                        whileHover={{ scale: 1.03 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black cursor-pointer"
+                                        style={{
+                                            color: '#93c5fd',
+                                            background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.08) 100%)',
+                                            border: '1px solid rgba(59,130,246,0.25)',
+                                            boxShadow: '0 2px 12px rgba(59,130,246,0.12), inset 0 1px 0 rgba(255,255,255,0.05)',
+                                        }}>
+                                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.2)' }}>
+                                            <Clock className="w-3 h-3" style={{ color: '#60a5fa' }} />
+                                        </div>
+                                        <span>Auto Log</span>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa' }}>{serverAutoLogs.length}</span>
                                     </motion.button>
                                     {/* Live Positions Button */}
                                     <motion.button onClick={() => setShowPositions(!showPositions)}
@@ -1611,6 +1632,45 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
         </div>
 
         {/* ═══ TRADE HISTORY MODAL ═══ */}
+        {showAutoLogs && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ background: 'rgba(6,10,16,0.85)', backdropFilter: 'blur(12px)' }} onClick={() => setShowAutoLogs(false)}>
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-4xl max-h-[85vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl" style={{ background: tk.surface, border: `1px solid ${tk.border}` }}>
+                    {/* Header */}
+                    <div className="flex-shrink-0 px-6 py-4 flex items-center justify-between" style={{ background: 'rgba(59,130,246,0.05)', borderBottom: `1px solid ${tk.border}` }}>
+                        <div className="flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-blue-400" />
+                            <span className="text-sm font-black tracking-wide text-blue-400">Auto Trade Event Logs</span>
+                        </div>
+                        <button onClick={() => setShowAutoLogs(false)} className="p-2 rounded-xl transition-colors hover:bg-white/10"><X className="w-5 h-5 text-gray-400" /></button>
+                    </div>
+                    {/* Body */}
+                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-4">
+                        {serverAutoLogs.length === 0 && <div className="text-center py-10 text-gray-400 font-bold">No logs recorded yet.</div>}
+                        {serverAutoLogs.map(log => (
+                            <div key={log.id} className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <span className={`text-[10px] font-black px-2 py-1 rounded bg-blue-500/20`} style={{
+                                            color: log.event_type === 'START' ? '#34d399' : log.event_type === 'FLIP' ? '#fbbf24' : log.event_type === 'EXECUTE' ? '#a78bfa' : log.event_type === 'ERROR' ? '#f87171' : '#60a5fa'
+                                        }}>{log.event_type}</span>
+                                        <span className="font-bold text-sm text-gray-200">{log.symbol}</span>
+                                        <span className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString()}</span>
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 font-mono">{log.trade_key}</span>
+                                </div>
+                                <div className="text-sm text-gray-300 ml-1">{log.message}</div>
+                                {log.details && Object.keys(log.details).length > 0 && (
+                                    <pre className="text-[10px] p-2 mt-2 rounded-lg bg-black/40 text-gray-400 overflow-x-auto">
+                                        {JSON.stringify(log.details, null, 2)}
+                                    </pre>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            </div>
+        )}
+
         {showHistory && (
             <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
                 onClick={() => setShowHistory(false)}>

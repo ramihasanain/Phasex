@@ -494,6 +494,8 @@ export function TradingDashboard({
     positions: mt5Positions,
     positionsLoading: mt5PositionsLoading,
     error: mt5Error,
+    history,
+    refreshHistory,
     refreshAccount: refreshMT5Account,
     refreshPositions: refreshMT5Positions,
     executeTrade,
@@ -506,6 +508,9 @@ export function TradingDashboard({
     serverAutoTrades,
     addAutoTrade,
     removeAutoTrade,
+    // Server-side logs
+    serverAutoLogs,
+    fetchAutoLogs,
     // Server-side trade history
     serverTradeHistory,
     fetchTradeHistory,
@@ -1796,10 +1801,12 @@ export function TradingDashboard({
                 serverAutoTrades={serverAutoTrades}
                 addAutoTrade={addAutoTrade}
                 removeAutoTrade={removeAutoTrade}
-                serverTradeHistory={serverTradeHistory}
+                serverTradeHistory={history}
                 addTradeToHistory={addTradeToHistory}
                 clearServerHistory={clearServerHistory}
-                fetchTradeHistory={fetchTradeHistory}
+                fetchTradeHistory={refreshHistory}
+                serverAutoLogs={serverAutoLogs}
+                fetchAutoLogs={fetchAutoLogs}
               />
             </div>
           </div>

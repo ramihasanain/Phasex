@@ -113,6 +113,9 @@ export interface UseMT5Result {
     removeAutoTrade: (key: string) => Promise<boolean>;
     fetchAutoTrades: () => Promise<void>;
     stopAllAutoTrades: () => Promise<boolean>;
+    // Server-side Logs
+    serverAutoLogs: any[];
+    fetchAutoLogs: () => Promise<void>;
     // Server-side Trade History
     serverTradeHistory: any[];
     fetchTradeHistory: () => Promise<void>;
@@ -601,6 +604,7 @@ export function useMT5(): UseMT5Result {
     // ─── Auto-Trade API (server-side, with account_id) ───
     const [serverAutoTrades, setServerAutoTrades] = useState<Record<string, any>>({});
     const [serverTradeHistory, setServerTradeHistory] = useState<any[]>([]);
+    const [serverAutoLogs, setServerAutoLogs] = useState<any[]>([]);
 
     const fetchAutoTrades = useCallback(async () => {
         const aid = accountIdRef.current;
@@ -672,6 +676,18 @@ export function useMT5(): UseMT5Result {
         } catch { /* ignore */ }
     }, [getHeaders, safeJson]);
 
+    const fetchAutoLogs = useCallback(async () => {
+        const aid = accountIdRef.current;
+        if (!aid) return;
+        try {
+            const res = await fetch(`${MT5_API_BASE}/auto-trades/logs/?account_id=${aid}`, {
+                headers: getHeaders()
+            });
+            const data = await safeJson(res);
+            if (data.success) setServerAutoLogs(data.logs || []);
+        } catch { /* ignore */ }
+    }, [getHeaders, safeJson]);
+
     const stopAllAutoTrades = useCallback(async (): Promise<boolean> => {
         const aid = accountIdRef.current;
         if (!aid) return false;
@@ -738,6 +754,8 @@ export function useMT5(): UseMT5Result {
             await fetchAutoTrades();
             if (!isActive) return;
             await fetchTradeHistory();
+            if (!isActive) return;
+            await fetchAutoLogs();
             
             if (isActive) {
                 timer = setTimeout(poll, 10000);
@@ -750,7 +768,7 @@ export function useMT5(): UseMT5Result {
             isActive = false;
             if (timer) clearTimeout(timer);
         };
-    }, [connected, fetchAutoTrades, fetchTradeHistory]);
+    }, [connected, fetchAutoTrades, fetchTradeHistory, fetchAutoLogs]);
 
     return {
         connected,
@@ -781,6 +799,9 @@ export function useMT5(): UseMT5Result {
         removeAutoTrade,
         fetchAutoTrades,
         stopAllAutoTrades,
+        // Server-side logs
+        serverAutoLogs,
+        fetchAutoLogs,
         // Server-side trade history
         serverTradeHistory,
         fetchTradeHistory,
