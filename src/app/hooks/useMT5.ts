@@ -112,7 +112,7 @@ export interface UseMT5Result {
     addAutoTrade: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
     removeAutoTrade: (key: string) => Promise<boolean>;
     fetchAutoTrades: () => Promise<void>;
-    checkAutoTrades: () => Promise<boolean>;
+    stopAllAutoTrades: () => Promise<boolean>;
     // Server-side Trade History
     serverTradeHistory: any[];
     fetchTradeHistory: () => Promise<void>;
@@ -781,7 +781,7 @@ export function useMT5(): UseMT5Result {
         addAutoTrade,
         removeAutoTrade,
         fetchAutoTrades,
-        checkAutoTrades,
+        stopAllAutoTrades,
         // Server-side trade history
         serverTradeHistory,
         fetchTradeHistory,

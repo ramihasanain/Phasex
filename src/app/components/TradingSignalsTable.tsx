@@ -154,7 +154,7 @@ interface TradingSignalsTableProps {
     symbolOverrides?: Record<string, string>;
     setSymbolOverride?: (dashboardName: string, brokerName: string) => Promise<boolean>;
     mt5Account?: MT5Account | null;
-    checkAutoTrades?: () => Promise<boolean>;
+    stopAllAutoTrades?: () => Promise<boolean>;
     // Server-side auto-trade
     serverAutoTrades?: Record<string, any>;
     addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
@@ -167,7 +167,7 @@ interface TradingSignalsTableProps {
 }
 
 /* ═══════════ Component ═══════════ */
-export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, checkAutoTrades, serverAutoTrades = {}, addAutoTrade, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory }: TradingSignalsTableProps) {
+export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, stopAllAutoTrades, serverAutoTrades = {}, addAutoTrade, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory }: TradingSignalsTableProps) {
     const { language, t } = useLanguage();
     const isRTL = language === "ar";
     const tk = useThemeTokens();
@@ -874,20 +874,20 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                             <motion.button
                                 whileTap={{ scale: 0.95 }}
                                 onClick={async () => {
-                                    if (checkAutoTrades) {
-                                        const btn = document.getElementById('mt5-check-btn') as HTMLButtonElement;
-                                        if (btn) btn.innerHTML = 'Checking...';
-                                        await checkAutoTrades();
-                                        setTimeout(() => { if (btn) btn.innerHTML = 'Check Now'; }, 1000);
+                                    if (stopAllAutoTrades) {
+                                        const btn = document.getElementById('mt5-stop-btn') as HTMLButtonElement;
+                                        if (btn) btn.innerHTML = 'Stopping...';
+                                        await stopAllAutoTrades();
+                                        setTimeout(() => { if (btn) btn.innerHTML = 'Stop All'; }, 1000);
                                     }
                                 }}
-                                id="mt5-check-btn"
-                                className="text-[9px] font-black px-3 py-1 rounded cursor-pointer"
+                                id="mt5-stop-btn"
+                                className="text-[9px] font-black px-3 py-1 rounded cursor-pointer transition-colors"
                                 style={{
-                                    color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)'
+                                    color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)'
                                 }}
                             >
-                                Check Now
+                                Stop All
                             </motion.button>
                         </div>
                         <div className="overflow-auto" style={{ maxHeight: 240 }}>
