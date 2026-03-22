@@ -420,26 +420,33 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             // Immediately execute trade!
             setExecutingTrades(prev => new Set(prev).add(key));
             let ticket = '';
-            try {
-                if (executeTrade) {
-                    const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
-                    const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment);
-                    if (res && res.ticket) {
-                        ticket = String(res.ticket);
-                        addTradeToHistory?.({
-                            id: `auto-${Date.now()}-${key}`,
-                            symbol: asset, tf, action: direction,
-                            volume: lot, entryPrice: Number(res.price || 0),
-                            sl: entry.stop_loss || null, tp: entry.take_profit || null,
-                            ticket: Number(res.ticket), status: 'filled',
-                            executedAt: new Date().toISOString(),
-                            signalPrice: entry.close,
-                            autoExecuted: true,
-                        });
+            const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
+            const existingManualPos = mt5Positions?.find(p => p.comment === tradeComment);
+
+            if (existingManualPos) {
+                // Adopt existing position into Auto mode!
+                ticket = String(existingManualPos.ticket);
+            } else {
+                try {
+                    if (executeTrade) {
+                        const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment);
+                        if (res && res.ticket) {
+                            ticket = String(res.ticket);
+                            addTradeToHistory?.({
+                                id: `auto-${Date.now()}-${key}`,
+                                symbol: asset, tf, action: direction,
+                                volume: lot, entryPrice: Number(res.price || 0),
+                                sl: entry.stop_loss || null, tp: entry.take_profit || null,
+                                ticket: Number(res.ticket), status: 'filled',
+                                executedAt: new Date().toISOString(),
+                                signalPrice: entry.close,
+                                autoExecuted: true,
+                            });
+                        }
                     }
+                } catch (err: any) {
+                    console.error("Failed initial auto execute", err);
                 }
-            } catch (err: any) {
-                console.error("Failed initial auto execute", err);
             }
             setExecutingTrades(prev => { const n = new Set(prev); n.delete(key); return n; });
 
@@ -1498,44 +1505,57 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
 
                                                                                             setExecutingTrades(prev => new Set(prev).add(rowKey));
                                                                                             let ticket = '';
-                                                                                            if (executeTrade) {
-                                                                                                const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
-                                                                                                executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment).then(res => {
-                                                                                                    if (res && res.ticket) {
-                                                                                                        ticket = String(res.ticket);
-                                                                                                        addTradeToHistory?.({
-                                                                                                            id: `auto-${Date.now()}-${rowKey}`,
-                                                                                                            symbol: asset, tf, action: direction,
-                                                                                                            volume: lot, entryPrice: Number(res.price || 0),
-                                                                                                            sl: entry.stop_loss || null, tp: entry.take_profit || null,
-                                                                                                            ticket: Number(res.ticket), status: 'filled',
-                                                                                                            executedAt: new Date().toISOString(),
-                                                                                                            signalPrice: entry.close,
-                                                                                                            autoExecuted: true,
-                                                                                                        });
-                                                                                                    }
+                                                                                            const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
+                                                                                            const existingManualPos = mt5Positions?.find(p => p.comment === tradeComment);
 
-                                                                                                    addAutoTrade?.(
-                                                                                                        rowKey, effectiveSymbol, tf, lot, direction,
-                                                                                                        entry.close, entry.stop_loss || null, entry.take_profit || null,
-                                                                                                        ticket
-                                                                                                    );
-                                                                                                    setExecutingTrades(prev => { const n = new Set(prev); n.delete(rowKey); return n; });
-                                                                                                }).catch(err => {
-                                                                                                    console.error("Failed initial auto execute", err);
+                                                                                            if (existingManualPos) {
+                                                                                                ticket = String(existingManualPos.ticket);
+                                                                                                addAutoTrade?.(
+                                                                                                    rowKey, effectiveSymbol, tf, lot, direction,
+                                                                                                    entry.close, entry.stop_loss || null, entry.take_profit || null,
+                                                                                                    ticket
+                                                                                                );
+                                                                                                setExecutingTrades(prev => { const n = new Set(prev); n.delete(rowKey); return n; });
+                                                                                            } else {
+                                                                                                if (executeTrade) {
+                                                                                                    executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment).then(res => {
+                                                                                                        if (res && res.ticket) {
+                                                                                                            ticket = String(res.ticket);
+                                                                                                            addTradeToHistory?.({
+                                                                                                                id: `auto-${Date.now()}-${rowKey}`,
+                                                                                                                symbol: asset, tf, action: direction,
+                                                                                                                volume: lot, entryPrice: Number(res.price || 0),
+                                                                                                                sl: entry.stop_loss || null, tp: entry.take_profit || null,
+                                                                                                                ticket: Number(res.ticket), status: 'filled',
+                                                                                                                executedAt: new Date().toISOString(),
+                                                                                                                signalPrice: entry.close,
+                                                                                                                autoExecuted: true,
+                                                                                                            });
+                                                                                                        }
+
+                                                                                                        addAutoTrade?.(
+                                                                                                            rowKey, effectiveSymbol, tf, lot, direction,
+                                                                                                            entry.close, entry.stop_loss || null, entry.take_profit || null,
+                                                                                                            ticket
+                                                                                                        );
+                                                                                                        setExecutingTrades(prev => { const n = new Set(prev); n.delete(rowKey); return n; });
+                                                                                                    }).catch(err => {
+                                                                                                        console.error("Failed initial auto execute", err);
+                                                                                                        addAutoTrade?.(
+                                                                                                            rowKey, effectiveSymbol, tf, lot, direction,
+                                                                                                            entry.close, entry.stop_loss || null, entry.take_profit || null,
+                                                                                                            ""
+                                                                                                        );
+                                                                                                        setExecutingTrades(prev => { const n = new Set(prev); n.delete(rowKey); return n; });
+                                                                                                    });
+                                                                                                } else {
                                                                                                     addAutoTrade?.(
                                                                                                         rowKey, effectiveSymbol, tf, lot, direction,
                                                                                                         entry.close, entry.stop_loss || null, entry.take_profit || null,
                                                                                                         ""
                                                                                                     );
                                                                                                     setExecutingTrades(prev => { const n = new Set(prev); n.delete(rowKey); return n; });
-                                                                                                });
-                                                                                            } else {
-                                                                                                addAutoTrade?.(
-                                                                                                    rowKey, effectiveSymbol, tf, lot, direction,
-                                                                                                    entry.close, entry.stop_loss || null, entry.take_profit || null,
-                                                                                                    Object.keys(autoTrades).length.toString()
-                                                                                                );
+                                                                                                }
                                                                                             }
                                                                                         }
                                                                                     }}
