@@ -937,7 +937,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                             <div className="overflow-auto custom-scrollbar p-6 space-y-4" style={{ maxHeight: 300, background: tk.surface }}>
                                 {serverAutoLogs.length === 0 && <div className="text-center py-6 text-gray-400 font-bold">No logs recorded yet.</div>}
                                 {serverAutoLogs.map(log => (
-                                    <div key={log.id} className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div key={log.id} className="p-4 rounded-2xl flex flex-col gap-2 transition-colors hover:bg-white/[0.03]" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <span className={`text-[10px] font-black px-2 py-1 rounded shadow-sm`} style={{
@@ -971,12 +971,14 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                         'rgba(96,165,250,0.2)'
                                                     }`
                                                 }}>{log.event_type}</span>
-                                                <span className="font-black text-sm text-gray-200 drop-shadow-sm">{log.symbol === 'ALL' ? <span className="text-pink-400">ALL</span> : log.symbol}</span>
-                                                <span className="text-[11px] font-mono text-gray-500">{new Date(log.created_at).toLocaleString()}</span>
+                                                <span className="font-black text-[13px] text-gray-200 drop-shadow-sm tracking-wide">{log.symbol === 'ALL' ? <span className="text-pink-400">ALL</span> : log.symbol}</span>
+                                                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold font-mono shadow-sm" style={{ background: 'rgba(255,255,255,0.03)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                                    <Clock className="w-2.5 h-2.5 opacity-70" /> {new Date(log.created_at).toLocaleTimeString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                                </span>
                                             </div>
-                                            <span className="text-[9px] font-black text-gray-600 font-mono tracking-widest">{log.trade_key || 'SYSTEM'}</span>
+                                            <span className="text-[9px] font-black uppercase text-gray-600 font-mono tracking-widest">{log.trade_key || 'SYSTEM'}</span>
                                         </div>
-                                        <div className="text-sm text-gray-300 ml-1">{log.message}</div>
+                                        <div className="text-[13px] font-medium leading-relaxed mt-1" style={{ color: '#cbd5e1' }}>{log.message}</div>
                                         {log.details && Object.keys(log.details).length > 0 && (
                                             <div className="flex flex-wrap items-center gap-2 mt-2 ml-1">
                                                 {Object.entries(log.details).map(([k, v]) => {
