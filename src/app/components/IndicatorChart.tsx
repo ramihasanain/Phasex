@@ -1643,7 +1643,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${tk.border}` }}>
-                            <span className="text-[12px] font-bold text-slate-400 whitespace-nowrap">{isRTL ? "تعيين لوت لجميع الشموع:" : "Set Lots for All:"}</span>
+                            <span className="text-[12px] font-bold text-slate-400 whitespace-nowrap">{isRTL ? "لوت للكل:" : "All Lots:"}</span>
                             <button onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">-</button>
                             <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-14 text-center text-sm font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
                             <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
