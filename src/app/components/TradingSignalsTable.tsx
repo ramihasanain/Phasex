@@ -651,135 +651,33 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                             {mt5Connected && (
                                 <>
                                     <div className="w-px h-6 mx-1" style={{ background: "rgba(99,102,241,0.1)" }} />
-                                    {/* Trade History Button */}
-                                    <motion.button onClick={() => setShowHistory(true)}
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black cursor-pointer"
-                                        style={{
-                                            color: '#e9d5ff',
-                                            background: 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(139,92,246,0.08) 100%)',
-                                            border: '1px solid rgba(168,85,247,0.25)',
-                                            boxShadow: '0 2px 12px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.05)',
-                                        }}>
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(168,85,247,0.2)' }}>
-                                            <History className="w-3 h-3" style={{ color: '#c084fc' }} />
-                                        </div>
-                                        <span>History</span>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(168,85,247,0.2)', color: '#c084fc' }}>{tradeHistory.length}</span>
-                                    </motion.button>
-                                    {/* Auto Logs Button */}
-                                    <motion.button onClick={() => setShowAutoLogs(true)}
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black cursor-pointer"
-                                        style={{
-                                            color: '#93c5fd',
-                                            background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.08) 100%)',
-                                            border: '1px solid rgba(59,130,246,0.25)',
-                                            boxShadow: '0 2px 12px rgba(59,130,246,0.12), inset 0 1px 0 rgba(255,255,255,0.05)',
-                                        }}>
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.2)' }}>
-                                            <Clock className="w-3 h-3" style={{ color: '#60a5fa' }} />
-                                        </div>
-                                        <span>Auto Log</span>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa' }}>{serverAutoLogs.length}</span>
-                                    </motion.button>
-                                    {/* Live Positions Button */}
-                                    <motion.button onClick={() => setShowPositions(!showPositions)}
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black cursor-pointer"
-                                        style={{
-                                            color: showPositions ? '#fff' : '#a7f3d0',
-                                            background: showPositions
-                                                ? 'linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(5,150,105,0.2) 100%)'
-                                                : 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.06) 100%)',
-                                            border: `1px solid ${showPositions ? 'rgba(16,185,129,0.45)' : 'rgba(16,185,129,0.2)'}`,
-                                            boxShadow: showPositions
-                                                ? '0 2px 12px rgba(16,185,129,0.2), inset 0 1px 0 rgba(255,255,255,0.08)'
-                                                : '0 2px 12px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
-                                        }}>
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{
-                                            background: showPositions ? 'rgba(16,185,129,0.25)' : 'rgba(16,185,129,0.15)',
-                                        }}>
-                                            <Zap className="w-3 h-3" style={{ color: showPositions ? '#fff' : '#34d399' }} />
-                                        </div>
-                                        <span>Live</span>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{
-                                            background: showPositions ? 'rgba(255,255,255,0.15)' : 'rgba(16,185,129,0.2)',
-                                            color: showPositions ? '#fff' : '#34d399',
-                                        }}>{mt5Positions.length}</span>
-                                        {showPositions
-                                            ? <ChevronUp className="w-3 h-3 ml-0.5" />
-                                            : <ChevronDown className="w-3 h-3 ml-0.5" />
-                                        }
-                                    </motion.button>
-                                    {/* Auto-Trades Button */}
-                                    <motion.button onClick={() => setShowAutoTrades(!showAutoTrades)}
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black cursor-pointer"
-                                        style={{
-                                            color: showAutoTrades ? '#fff' : '#c4b5fd',
-                                            background: showAutoTrades
-                                                ? 'linear-gradient(135deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.2) 100%)'
-                                                : 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(139,92,246,0.06) 100%)',
-                                            border: `1px solid ${showAutoTrades ? 'rgba(168,85,247,0.45)' : 'rgba(168,85,247,0.2)'}`,
-                                            boxShadow: showAutoTrades
-                                                ? '0 2px 12px rgba(168,85,247,0.2), inset 0 1px 0 rgba(255,255,255,0.08)'
-                                                : '0 2px 12px rgba(168,85,247,0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
-                                        }}>
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{
-                                            background: showAutoTrades ? 'rgba(168,85,247,0.25)' : 'rgba(168,85,247,0.15)',
-                                        }}>
-                                            <Zap className="w-3 h-3" style={{ color: showAutoTrades ? '#fff' : '#a855f7' }} />
-                                        </div>
-                                        <span>Auto</span>
-                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{
-                                            background: showAutoTrades ? 'rgba(255,255,255,0.15)' : 'rgba(168,85,247,0.2)',
-                                            color: showAutoTrades ? '#fff' : '#a855f7',
-                                        }}>{autoTrades.size}</span>
-                                        {showAutoTrades
-                                            ? <ChevronUp className="w-3 h-3 ml-0.5" />
-                                            : <ChevronDown className="w-3 h-3 ml-0.5" />
-                                        }
-                                    </motion.button>
+                                    {/* Buttons moved individually to Accordion Headers */}
                                 </>
                             )}
                         </div>
                     </div>
                 </div>
 
-                {/* ═══ LIVE POSITIONS INLINE PANEL ═══ */}
-                {mt5Connected && showPositions && (
-                    <div style={{ borderBottom: '1px solid rgba(16,185,129,0.08)', background: tk.isDark ? 'rgba(16,185,129,0.02)' : 'rgba(16,185,129,0.02)' }}>
-                        {/* Account Stats Grid */}
-                        {mt5Account && (
-                            <div className="grid grid-cols-3 md:grid-cols-6 gap-2 px-4 pt-3 pb-2">
-                                {[
-                                    { label: 'Balance', value: `$${(mt5Account.balance || 0).toLocaleString()}`, color: '#10b981' },
-                                    { label: 'Equity', value: `$${(mt5Account.equity || 0).toLocaleString()}`, color: '#6366f1' },
-                                    { label: 'Profit', value: `$${(mt5Account.profit || 0) >= 0 ? '+' : ''}${(mt5Account.profit || 0).toLocaleString()}`, color: (mt5Account.profit || 0) >= 0 ? '#10b981' : '#ef4444' },
-                                    { label: 'Free Margin', value: `$${(mt5Account.free_margin || 0).toLocaleString()}`, color: '#a855f7' },
-                                    { label: 'Margin', value: `$${(mt5Account.margin || 0).toLocaleString()}`, color: '#f59e0b' },
-                                    { label: 'Leverage', value: `1:${mt5Account.leverage || 0}`, color: '#3b82f6' },
-                                ].map((stat) => (
-                                    <div key={stat.label} className="rounded-lg px-2.5 py-1.5" style={{ background: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
-                                        <div className="text-[8px] font-bold tracking-widest uppercase" style={{ color: tk.textDim }}>{stat.label}</div>
-                                        <div className="text-[13px] font-black" style={{ color: stat.color }}>{stat.value}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                {/* ═══ LIVE POSITIONS INLINE PANEL (Accordion) ═══ */}
+                {mt5Connected && (
+                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(16,185,129,0.15)', background: tk.isDark ? 'rgba(16,185,129,0.02)' : 'rgba(16,185,129,0.02)' }}>
                         {/* Live Positions Header Actions */}
-                        <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
-                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: tk.textDim }}>Active Tickets</span>
-                            {mt5Positions.length > 0 && closeAllPositions && (
+                        <div 
+                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-emerald-500/10" 
+                            style={{ borderBottom: showPositions ? '1px solid rgba(16,185,129,0.06)' : 'none', background: 'rgba(16,185,129,0.05)' }}
+                            onClick={() => setShowPositions(!showPositions)}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Zap className="w-5 h-5 text-emerald-400" />
+                                <span className="text-[12px] font-black uppercase tracking-wider text-emerald-400">Active Tickets</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400">{mt5Positions.length}</span>
+                                {showPositions ? <ChevronUp className="w-4 h-4 text-emerald-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-emerald-400 opacity-50 ml-2" />}
+                            </div>
+                            {showPositions && mt5Positions.length > 0 && closeAllPositions && (
                                 <motion.button
                                     whileTap={{ scale: 0.95 }}
                                     disabled={closingAllPositions}
-                                    onClick={handleCloseAllPositions}
+                                    onClick={(e) => { e.stopPropagation(); handleCloseAllPositions(); }}
                                     className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black cursor-pointer"
                                     style={{
                                         color: closingAllPositions ? tk.textDim : '#ef4444',
@@ -792,262 +690,429 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                 </motion.button>
                             )}
                         </div>
-                        <div className="overflow-auto" style={{ maxHeight: 240 }}>
-                            {mt5Positions.length === 0 ? (
-                                <div className="px-5 py-4 text-center">
-                                    <span className="text-[11px] font-bold" style={{ color: tk.textDim }}>No open positions</span>
-                                </div>
-                            ) : (
-                                <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-                                    <thead className="sticky top-0" style={{ background: tk.isDark ? '#080c15' : tk.surface }}>
-                                        <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
-                                            {['Symbol', 'Type', 'Vol', 'Open', 'Current', 'SL', 'TP', 'Profit', 'Swap', ''].map(h => (
-                                                <th key={h} className="px-2.5 py-1.5 text-[9px] font-bold tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {mt5Positions.map((pos) => {
-                                            const isProfit = pos.profit >= 0;
-                                            const isClosing = closingTickets.has(pos.ticket);
-                                            return (
-                                                <tr key={pos.ticket} style={{
-                                                    borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'}`,
-                                                    background: isProfit ? 'rgba(16,185,129,0.02)' : 'rgba(239,68,68,0.02)',
-                                                }}>
-                                                    <td className="px-2.5 py-1.5 text-[11px] font-bold" style={{ color: tk.textPrimary }}>{pos.symbol}</td>
-                                                    <td className="px-2.5 py-1.5">
-                                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
-                                                            color: pos.type === 'BUY' ? '#10b981' : '#ef4444',
-                                                            background: pos.type === 'BUY' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                        }}>{pos.type}</span>
-                                                    </td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{pos.volume}</td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{fmt(pos.open_price)}</td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono font-bold" style={{ color: tk.textPrimary }}>{fmt(pos.current_price)}</td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: pos.sl ? '#ef4444' : tk.textDim }}>{pos.sl ? fmt(pos.sl) : '—'}</td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: pos.tp ? '#10b981' : tk.textDim }}>{pos.tp ? fmt(pos.tp) : '—'}</td>
-                                                    <td className="px-2.5 py-1.5">
-                                                        <span className="text-[10px] font-black font-mono" style={{ color: isProfit ? '#10b981' : '#ef4444' }}>
-                                                            {isProfit ? '+' : ''}{pos.profit.toFixed(2)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-2.5 py-1.5 text-[9px] font-mono" style={{ color: tk.textDim }}>{pos.swap.toFixed(2)}</td>
-                                                    <td className="px-2.5 py-1.5">
-                                                        <motion.button
-                                                            whileTap={{ scale: 0.95 }}
-                                                            disabled={isClosing || !closePosition}
-                                                            onClick={async () => {
-                                                                if (!closePosition) return;
-                                                                setClosingTickets(prev => new Set(prev).add(pos.ticket));
-                                                                const success = await closePosition(pos.ticket);
-                                                                if (success) {
-                                                                    // Record close in trade history with profit
-                                                                    const closeEntry: TradeHistoryEntry = {
-                                                                        id: `close-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                                                                        symbol: pos.symbol,
-                                                                        tf: '-',
-                                                                        action: pos.type === 'BUY' ? 'Buy' : 'Sell',
-                                                                        volume: pos.volume,
-                                                                        entryPrice: pos.open_price,
-                                                                        sl: pos.sl || null,
-                                                                        tp: pos.tp || null,
-                                                                        ticket: pos.ticket,
-                                                                        status: 'closed',
-                                                                        executedAt: pos.time_open || new Date().toISOString(),
-                                                                        signalPrice: pos.open_price,
-                                                                        profit: pos.profit,
-                                                                        closePrice: pos.current_price,
-                                                                        closedAt: new Date().toISOString(),
-                                                                    };
-                                                                    // Also update any existing open entry for this ticket (backend handles close detection)
-                                                                    // Add close entry to backend history
-                                                                    addTradeToHistory?.(closeEntry);
-                                                                }
-                                                                setClosingTickets(prev => { const n = new Set(prev); n.delete(pos.ticket); return n; });
-                                                            }}
-                                                            className="flex items-center gap-0.5 px-2 py-0.5 rounded text-[9px] font-black cursor-pointer"
-                                                            style={{
-                                                                color: isClosing ? tk.textDim : '#ef4444',
-                                                                background: isClosing ? tk.surfaceHover : 'rgba(239,68,68,0.08)',
-                                                                border: `1px solid ${isClosing ? tk.border : 'rgba(239,68,68,0.15)'}`,
-                                                                opacity: isClosing ? 0.5 : 1,
-                                                            }}>
-                                                            {isClosing ? '⏳' : <X className="w-2.5 h-2.5" />}
-                                                            {isClosing ? '...' : 'Close'}
-                                                        </motion.button>
-                                                    </td>
+                        
+                        {showPositions && (
+                            <div>
+                                {/* Account Stats Grid */}
+                                {mt5Account && (
+                                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 px-4 pt-3 pb-2 border-b border-emerald-500/10">
+                                        {[
+                                            { label: 'Balance', value: `$${(mt5Account.balance || 0).toLocaleString()}`, color: '#10b981' },
+                                            { label: 'Equity', value: `$${(mt5Account.equity || 0).toLocaleString()}`, color: '#6366f1' },
+                                            { label: 'Profit', value: `$${(mt5Account.profit || 0) >= 0 ? '+' : ''}${(mt5Account.profit || 0).toLocaleString()}`, color: (mt5Account.profit || 0) >= 0 ? '#10b981' : '#ef4444' },
+                                            { label: 'Free Margin', value: `$${(mt5Account.free_margin || 0).toLocaleString()}`, color: '#a855f7' },
+                                            { label: 'Margin', value: `$${(mt5Account.margin || 0).toLocaleString()}`, color: '#f59e0b' },
+                                            { label: 'Leverage', value: `1:${mt5Account.leverage || 0}`, color: '#3b82f6' },
+                                        ].map((stat) => (
+                                            <div key={stat.label} className="rounded-lg px-2.5 py-1.5" style={{ background: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                <div className="text-[8px] font-bold tracking-widest uppercase" style={{ color: tk.textDim }}>{stat.label}</div>
+                                                <div className="text-[13px] font-black" style={{ color: stat.color }}>{stat.value}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 240 }}>
+                                    {mt5Positions.length === 0 ? (
+                                        <div className="px-5 py-8 text-center" style={{ background: 'rgba(16,185,129,0.02)' }}>
+                                            <span className="text-[12px] font-black uppercase tracking-widest drop-shadow-sm" style={{ color: 'rgba(16,185,129,0.4)' }}>No active live positions</span>
+                                        </div>
+                                    ) : (
+                                        <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                                            <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
+                                                <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
+                                                    {['Symbol', 'Type', 'Vol', 'Open', 'Current', 'SL', 'TP', 'Profit', 'Swap', ''].map(h => (
+                                                        <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
+                                                    ))}
                                                 </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
+                                            </thead>
+                                            <tbody>
+                                                {mt5Positions.map((pos) => {
+                                                    const isProfit = pos.profit >= 0;
+                                                    const isClosing = closingTickets.has(pos.ticket);
+                                                    return (
+                                                        <tr key={pos.ticket} className="hover:bg-emerald-500/5 transition-colors group" style={{
+                                                            borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'}`,
+                                                            background: isProfit ? 'rgba(16,185,129,0.03)' : 'rgba(239,68,68,0.03)',
+                                                        }}>
+                                                            <td className="px-3 py-2 text-[11px] font-black" style={{ color: tk.textPrimary }}>{pos.symbol}</td>
+                                                            <td className="px-3 py-2">
+                                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
+                                                                    color: pos.type === 'BUY' ? '#10b981' : '#ef4444',
+                                                                    background: pos.type === 'BUY' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                }}>{pos.type}</span>
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[10px] font-bold font-mono drop-shadow-sm" style={{ color: '#f59e0b' }}>{pos.volume}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{fmt(pos.open_price)}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono font-bold" style={{ color: tk.textPrimary }}>{fmt(pos.current_price)}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono" style={{ color: pos.sl ? '#ef4444' : tk.textDim }}>{pos.sl ? fmt(pos.sl) : '—'}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono" style={{ color: pos.tp ? '#10b981' : tk.textDim }}>{pos.tp ? fmt(pos.tp) : '—'}</td>
+                                                            <td className="px-3 py-2">
+                                                                <span className="text-[11px] font-black font-mono drop-shadow-sm" style={{ color: isProfit ? '#10b981' : '#ef4444' }}>
+                                                                    {isProfit ? '+' : ''}{pos.profit.toFixed(2)}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[9px] font-mono" style={{ color: tk.textDim }}>{pos.swap.toFixed(2)}</td>
+                                                            <td className="px-3 py-2 text-right">
+                                                                <motion.button
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    disabled={isClosing || !closePosition}
+                                                                    onClick={async () => {
+                                                                        if (!closePosition) return;
+                                                                        setClosingTickets(prev => new Set(prev).add(pos.ticket));
+                                                                        const success = await closePosition(pos.ticket);
+                                                                        if (success) {
+                                                                            const closeEntry: TradeHistoryEntry = {
+                                                                                id: `close-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                                                                                symbol: pos.symbol,
+                                                                                tf: '-',
+                                                                                action: pos.type === 'BUY' ? 'Buy' : 'Sell',
+                                                                                volume: pos.volume,
+                                                                                entryPrice: pos.open_price,
+                                                                                sl: pos.sl || null,
+                                                                                tp: pos.tp || null,
+                                                                                ticket: pos.ticket,
+                                                                                status: 'closed',
+                                                                                executedAt: pos.time_open || new Date().toISOString(),
+                                                                                signalPrice: pos.open_price,
+                                                                                profit: pos.profit,
+                                                                                closePrice: pos.current_price,
+                                                                                closedAt: new Date().toISOString(),
+                                                                            };
+                                                                            addTradeToHistory?.(closeEntry);
+                                                                        }
+                                                                        setClosingTickets(prev => { const n = new Set(prev); n.delete(pos.ticket); return n; });
+                                                                    }}
+                                                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-black cursor-pointer transition-colors opacity-80 group-hover:opacity-100"
+                                                                    style={{
+                                                                        color: isClosing ? tk.textDim : '#ef4444',
+                                                                        background: isClosing ? tk.surfaceHover : 'rgba(239,68,68,0.08)',
+                                                                        border: `1px solid ${isClosing ? tk.border : 'rgba(239,68,68,0.15)'}`,
+                                                                    }}>
+                                                                    {isClosing ? '⏳' : <X className="w-3 h-3" />}
+                                                                    {isClosing ? '...' : 'Close'}
+                                                                </motion.button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {/* ═══ ACTIVE AUTO-TRADES INLINE PANEL ═══ */}
-                {mt5Connected && showAutoTrades && (
-                    <div style={{ borderBottom: '1px solid rgba(168,85,247,0.08)', background: tk.isDark ? 'rgba(168,85,247,0.02)' : 'rgba(168,85,247,0.02)' }}>
-                        <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid rgba(168,85,247,0.06)' }}>
-                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: tk.textDim }}>Active Background Auto-Trades</span>
-                            <motion.button
-                                whileTap={{ scale: 0.95 }}
-                                onClick={async () => {
-                                    if (stopAllAutoTrades) {
+                {/* ═══ ACTIVE AUTO-TRADES INLINE PANEL (Accordion) ═══ */}
+                {mt5Connected && (
+                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(168,85,247,0.15)', background: tk.isDark ? 'rgba(168,85,247,0.02)' : 'rgba(168,85,247,0.02)' }}>
+                        <div 
+                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-purple-500/10" 
+                            style={{ borderBottom: showAutoTrades ? '1px solid rgba(168,85,247,0.06)' : 'none', background: 'rgba(168,85,247,0.05)' }}
+                            onClick={() => setShowAutoTrades(!showAutoTrades)}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Zap className="w-5 h-5 text-purple-400" />
+                                <span className="text-[12px] font-black uppercase tracking-wider text-purple-400">Background Auto Trades</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-400">{Object.keys(serverAutoTrades).length}</span>
+                                {showAutoTrades ? <ChevronUp className="w-4 h-4 text-purple-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-purple-400 opacity-50 ml-2" />}
+                            </div>
+                            {showAutoTrades && Object.keys(serverAutoTrades).length > 0 && stopAllAutoTrades && (
+                                <motion.button
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
                                         const btn = document.getElementById('mt5-stop-btn') as HTMLButtonElement;
                                         if (btn) btn.innerHTML = 'Stopping...';
                                         await stopAllAutoTrades();
                                         setTimeout(() => { if (btn) btn.innerHTML = 'Stop All'; }, 1000);
-                                    }
-                                }}
-                                id="mt5-stop-btn"
-                                className="text-[9px] font-black px-3 py-1 rounded cursor-pointer transition-colors"
-                                style={{
-                                    color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)'
-                                }}
-                            >
-                                Stop All
-                            </motion.button>
-                        </div>
-                        <div className="overflow-auto" style={{ maxHeight: 240 }}>
-                            {Object.keys(serverAutoTrades).length === 0 ? (
-                                <div className="px-5 py-4 text-center">
-                                    <span className="text-[11px] font-bold" style={{ color: tk.textDim }}>No active background trades</span>
-                                </div>
-                            ) : (
-                                <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-                                    <thead className="sticky top-0" style={{ background: tk.isDark ? '#080c15' : tk.surface }}>
-                                        <tr style={{ borderBottom: '1px solid rgba(168,85,247,0.06)' }}>
-                                            {['Key', 'Symbol', 'TF', 'Current', 'Waiting For', 'Signal Price', 'Vol', 'Status', 'Ticket', 'Stop Auto'].map(h => (
-                                                <th key={h} className="px-2.5 py-1.5 text-[9px] font-bold tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {Object.entries(serverAutoTrades).map(([key, autoTrade]) => {
-                                            const isBuy = autoTrade.direction?.toLowerCase() === 'buy';
-                                            return (
-                                                <tr key={key} style={{
-                                                    borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'}`,
-                                                }}>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono font-bold" style={{ color: tk.textSecondary }}>{key}</td>
-                                                    <td className="px-2.5 py-1.5 text-[11px] font-bold" style={{ color: tk.textPrimary }}>{autoTrade.symbol}</td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-bold" style={{ color: tk.textSecondary }}>{autoTrade.tf}</td>
-                                                    <td className="px-2.5 py-1.5">
-                                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
-                                                            color: isBuy ? '#10b981' : '#ef4444',
-                                                            background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                        }}>{autoTrade.direction?.toUpperCase() || 'UNKNOWN'}</span>
-                                                    </td>
-                                                    <td className="px-2.5 py-1.5">
-                                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded opacity-70" style={{
-                                                            color: !isBuy ? '#10b981' : '#ef4444',
-                                                            background: !isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                            border: `1px dashed ${!isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`
-                                                        }}>⏳ {(!isBuy ? 'BUY' : 'SELL')}</span>
-                                                    </td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signal_price ? fmt(autoTrade.signal_price) : '—'}</td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{autoTrade.lot || 0.01}</td>
-                                                    <td className="px-2.5 py-1.5">
-                                                        <span
-                                                            className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-help"
-                                                            title={autoTrade.last_error || 'No recent errors'}
-                                                            style={{
-                                                                color: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? '#10b981' : autoTrade.status?.startsWith('failed') ? '#ef4444' : '#a855f7',
-                                                                background: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? 'rgba(16,185,129,0.1)' : autoTrade.status?.startsWith('failed') ? 'rgba(239,68,68,0.1)' : 'rgba(168,85,247,0.1)',
-                                                            }}
-                                                        >
-                                                            {autoTrade.status || 'watching'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{autoTrade.active_ticket || autoTrade.ticket || '—'}</td>
-                                                    <td className="px-2.5 py-1.5">
-                                                        <motion.button
-                                                            whileTap={{ scale: 0.95 }}
-                                                            disabled={!removeAutoTrade}
-                                                            onClick={async () => {
-                                                                if (removeAutoTrade) await removeAutoTrade(key);
-                                                            }}
-                                                            className="flex items-center gap-0.5 px-2 py-0.5 rounded text-[9px] font-black cursor-pointer"
-                                                            style={{
-                                                                color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)'
-                                                            }}>
-                                                            <X className="w-2.5 h-2.5" /> Stop
-                                                        </motion.button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                    }}
+                                    id="mt5-stop-btn"
+                                    className="text-[9px] font-black px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                                    style={{
+                                        color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)'
+                                    }}
+                                >
+                                    Stop All
+                                </motion.button>
                             )}
                         </div>
+                        
+                        {showAutoTrades && (
+                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 240 }}>
+                                {Object.keys(serverAutoTrades).length === 0 ? (
+                                    <div className="px-5 py-8 text-center" style={{ background: 'rgba(168,85,247,0.02)' }}>
+                                        <span className="text-[12px] font-black uppercase tracking-widest drop-shadow-sm" style={{ color: 'rgba(168,85,247,0.4)' }}>No active background trades</span>
+                                    </div>
+                                ) : (
+                                    <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                                        <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
+                                            <tr style={{ borderBottom: '1px solid rgba(168,85,247,0.1)' }}>
+                                                {['Key', 'Symbol', 'TF', 'Current', 'Waiting For', 'Signal Price', 'Vol', 'Status', 'Ticket', 'Stop Auto'].map(h => (
+                                                    <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(serverAutoTrades).map(([key, autoTrade]) => {
+                                                const isBuy = autoTrade.direction?.toLowerCase() === 'buy';
+                                                return (
+                                                    <tr key={key} className="hover:bg-purple-500/5 transition-colors group" style={{
+                                                        borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'}`,
+                                                    }}>
+                                                        <td className="px-3 py-2 text-[10px] font-mono font-bold" style={{ color: tk.textSecondary }}>{key}</td>
+                                                        <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{autoTrade.symbol}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: tk.textSecondary }}>{autoTrade.tf}</td>
+                                                        <td className="px-3 py-2">
+                                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
+                                                                color: isBuy ? '#10b981' : '#ef4444',
+                                                                background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                            }}>{autoTrade.direction?.toUpperCase() || 'UNKNOWN'}</span>
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded opacity-70" style={{
+                                                                color: !isBuy ? '#10b981' : '#ef4444',
+                                                                background: !isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                border: `1px dashed ${!isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`
+                                                            }}>⏳ {(!isBuy ? 'BUY' : 'SELL')}</span>
+                                                        </td>
+                                                        <td className="px-3 py-2 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signal_price ? fmt(autoTrade.signal_price) : '—'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{autoTrade.lot || 0.01}</td>
+                                                        <td className="px-3 py-2">
+                                                            <span
+                                                                className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-help shadow-sm"
+                                                                title={autoTrade.last_error || 'No recent errors'}
+                                                                style={{
+                                                                    color: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? '#10b981' : autoTrade.status?.startsWith('failed') ? '#ef4444' : '#a855f7',
+                                                                    background: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? 'rgba(16,185,129,0.1)' : autoTrade.status?.startsWith('failed') ? 'rgba(239,68,68,0.1)' : 'rgba(168,85,247,0.1)',
+                                                                }}
+                                                            >
+                                                                {autoTrade.status || 'watching'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-3 py-2 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{autoTrade.active_ticket || autoTrade.ticket || '—'}</td>
+                                                        <td className="px-3 py-2">
+                                                            <motion.button
+                                                                whileTap={{ scale: 0.95 }}
+                                                                disabled={!removeAutoTrade}
+                                                                onClick={async () => {
+                                                                    if (removeAutoTrade) await removeAutoTrade(key);
+                                                                }}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-black cursor-pointer transition-colors opacity-80 group-hover:opacity-100"
+                                                                style={{
+                                                                    color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)'
+                                                                }}>
+                                                                <X className="w-3 h-3" /> Stop
+                                                            </motion.button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {/* ═══ AUTO-TRADING HISTORY INLINE PANEL ═══ */}
-                {mt5Connected && showAutoTrades && tradeHistory && tradeHistory.some(th => th.autoExecuted) && (
-                    <div className="mt-2" style={{ borderBottom: '1px solid rgba(168,85,247,0.08)', background: tk.isDark ? 'rgba(16,185,129,0.02)' : 'rgba(16,185,129,0.02)' }}>
-                        <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
-                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: tk.textDim }}>Auto Trading Trace History</span>
-                            <motion.button whileTap={{ scale: 0.95 }} onClick={() => clearServerHistory?.()}
-                                className="text-[9px] font-bold px-3 py-1 rounded cursor-pointer flex items-center gap-1"
-                                style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}
-                            ><X className="w-3 h-3" /> Clear History</motion.button>
+                {/* ═══ AUTO-TRADING LOGS INLINE PANEL (Accordion) ═══ */}
+                {mt5Connected && (
+                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(59,130,246,0.15)', background: tk.isDark ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.02)' }}>
+                        <div 
+                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-blue-500/10" 
+                            style={{ borderBottom: showAutoLogs ? '1px solid rgba(59,130,246,0.06)' : 'none', background: 'rgba(59,130,246,0.05)' }}
+                            onClick={() => setShowAutoLogs(!showAutoLogs)}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Clock className="w-5 h-5 text-blue-400" />
+                                <span className="text-[12px] font-black uppercase tracking-wider text-blue-400">Auto Trade Event Logs</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-400">{serverAutoLogs.length}</span>
+                                {showAutoLogs ? <ChevronUp className="w-4 h-4 text-blue-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-blue-400 opacity-50 ml-2" />}
+                            </div>
                         </div>
-                        <div className="overflow-auto" style={{ maxHeight: 240 }}>
-                            <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-                                <thead className="sticky top-0" style={{ background: tk.isDark ? '#080c15' : tk.surface }}>
-                                    <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
-                                        {['Symbol', 'TF', 'Action', 'Entry', 'Close', 'Profit', 'Ticket', 'Status', 'Time'].map(h => (
-                                            <th key={h} className="px-2.5 py-1.5 text-[9px] font-bold tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tradeHistory.filter(th => th.autoExecuted).slice(0, 30).map((th) => {
-                                        const isBuy = th.action === 'Buy';
-                                        return (
-                                            <tr key={th.id} style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'}` }}>
-                                                <td className="px-2.5 py-1.5 text-[11px] font-bold" style={{ color: tk.textPrimary }}>{th.symbol}</td>
-                                                <td className="px-2.5 py-1.5 text-[10px] font-bold" style={{ color: tk.textSecondary }}>{th.tf}</td>
-                                                <td className="px-2.5 py-1.5">
-                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
-                                                        color: isBuy ? '#10b981' : '#ef4444',
-                                                        background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                    }}>{th.action?.toUpperCase()}</span>
-                                                </td>
-                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{th.entryPrice != null && th.entryPrice !== 0 ? fmt(th.entryPrice) : th.signalPrice ? `~${fmt(th.signalPrice)}` : '—'}</td>
-                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{th.closePrice != null && th.closePrice !== 0 ? fmt(th.closePrice) : '—'}</td>
-                                                <td className="px-2.5 py-1.5">
-                                                    {th.profit != null ? (
-                                                        <span className="text-[10px] font-black font-mono" style={{ color: th.profit >= 0 ? '#10b981' : '#ef4444' }}>
-                                                            {th.profit >= 0 ? '+' : ''}{th.profit.toFixed(2)}$
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[10px] font-mono" style={{ color: tk.textDim }}>—</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: '#6366f1' }}>{th.ticket || '—'}</td>
-                                                <td className="px-2.5 py-1.5">
-                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{
-                                                        color: th.status === 'filled' ? '#10b981' : th.status === 'closed' ? '#6366f1' : th.status === 'pending' ? '#f59e0b' : '#ef4444',
-                                                        background: th.status === 'filled' ? 'rgba(16,185,129,0.1)' : th.status === 'closed' ? 'rgba(99,102,241,0.1)' : th.status === 'pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
-                                                    }}>
-                                                        {th.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-2.5 py-1.5 text-[9px] font-mono" style={{ color: tk.textSecondary }}>
-                                                    {new Date(th.executedAt).toLocaleTimeString()}
-                                                </td>
+                        
+                        {showAutoLogs && (
+                            <div className="overflow-auto custom-scrollbar p-6 space-y-4" style={{ maxHeight: 300, background: tk.surface }}>
+                                {serverAutoLogs.length === 0 && <div className="text-center py-6 text-gray-400 font-bold">No logs recorded yet.</div>}
+                                {serverAutoLogs.map(log => (
+                                    <div key={log.id} className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <span className={`text-[10px] font-black px-2 py-1 rounded bg-blue-500/20`} style={{
+                                                    color: log.event_type === 'START' ? '#34d399' : log.event_type === 'FLIP' ? '#fbbf24' : log.event_type === 'EXECUTE' ? '#a78bfa' : log.event_type === 'ERROR' ? '#f87171' : '#60a5fa'
+                                                }}>{log.event_type}</span>
+                                                <span className="font-bold text-sm text-gray-200">{log.symbol}</span>
+                                                <span className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString()}</span>
+                                            </div>
+                                            <span className="text-[10px] text-gray-500 font-mono">{log.trade_key}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-300 ml-1">{log.message}</div>
+                                        {log.details && Object.keys(log.details).length > 0 && (
+                                            <pre className="text-[10px] p-2 mt-2 rounded-lg bg-black/40 text-gray-400 overflow-x-auto">
+                                                {JSON.stringify(log.details, null, 2)}
+                                            </pre>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ═══ TRADE HISTORY INLINE PANEL (Accordion) ═══ */}
+                {mt5Connected && (
+                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(168,85,247,0.15)', background: tk.isDark ? 'rgba(168,85,247,0.02)' : 'rgba(168,85,247,0.02)' }}>
+                        <div 
+                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-indigo-500/10" 
+                            style={{ borderBottom: showHistory ? '1px solid rgba(168,85,247,0.06)' : 'none', background: 'rgba(99,102,241,0.05)' }}
+                            onClick={() => setShowHistory(!showHistory)}
+                        >
+                            <div className="flex items-center gap-3">
+                                <History className="w-5 h-5 text-indigo-400" />
+                                <span className="text-[12px] font-black uppercase tracking-wider text-indigo-400">Trade History</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400">{tradeHistory.length}</span>
+                                {showHistory ? <ChevronUp className="w-4 h-4 text-indigo-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-indigo-400 opacity-50 ml-2" />}
+                            </div>
+                            {showHistory && tradeHistory.length > 0 && (
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                    <motion.button whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                            const headers = ['Symbol', 'TF', 'Action', 'Lot', 'Signal Price', 'Entry Price', 'Close Price', 'SL', 'TP', 'Profit', 'Ticket', 'Status', 'Executed At', 'Closed At'];
+                                            const rows = tradeHistory.map(t => [
+                                                t.symbol, t.tf, t.action, t.volume,
+                                                t.signalPrice || '', t.entryPrice || '', t.closePrice || '',
+                                                t.sl || '', t.tp || '', t.profit ?? '',
+                                                t.ticket || '', t.status, t.executedAt, t.closedAt || ''
+                                            ].map(v => `"${v}"`).join(','));
+                                            const csv = [headers.join(','), ...rows].join('\n');
+                                            const blob = new Blob([csv], { type: 'text/csv' });
+                                            const url = URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `phasex_trade_history_${new Date().toISOString().slice(0, 10)}.csv`;
+                                            a.click();
+                                            URL.revokeObjectURL(url);
+                                        }}
+                                        className="flex items-center gap-1 text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                                        style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}
+                                    ><Download className="w-3 h-3" /> CSV</motion.button>
+                                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => clearServerHistory?.()}
+                                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                                        style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}
+                                    >Clear All</motion.button>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {showHistory && (
+                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 300 }}>
+                                {tradeHistory.length === 0 ? (
+                                    <div className="py-10 text-center" style={{ background: tk.surface }}>
+                                        <History className="w-10 h-10 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.4 }} />
+                                        <span className="text-sm font-bold" style={{ color: tk.textDim }}>No trades executed yet</span>
+                                    </div>
+                                ) : (
+                                    <table className="w-full" style={{ borderCollapse: 'collapse', background: tk.surface }}>
+                                        <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
+                                            <tr style={{ borderBottom: '1px solid rgba(99,102,241,0.06)' }}>
+                                                {['', 'Symbol', 'TF', 'Action', 'Lot', 'Entry', 'Close', 'Profit', 'Ticket', 'Time', 'Status'].map(h => (
+                                                    <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
+                                                ))}
                                             </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                                        </thead>
+                                        <tbody>
+                                            {tradeHistory.map((th) => {
+                                                const isExpanded = expandedHistoryRows.has(th.id);
+                                                return (
+                                                    <React.Fragment key={th.id}>
+                                                        <tr className="hover:bg-indigo-500/5 transition-colors group" style={{ borderBottom: isExpanded ? 'none' : `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                            <td className="px-3 py-2">
+                                                                <motion.button whileTap={{ scale: 0.9 }}
+                                                                    onClick={() => setExpandedHistoryRows(prev => {
+                                                                        const n = new Set(prev);
+                                                                        n.has(th.id) ? n.delete(th.id) : n.add(th.id);
+                                                                        return n;
+                                                                    })}
+                                                                    className="w-5 h-5 flex items-center justify-center rounded cursor-pointer"
+                                                                    style={{ color: '#818cf8', background: 'rgba(99,102,241,0.08)' }}>
+                                                                    <Info className="w-3 h-3" />
+                                                                </motion.button>
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{th.symbol}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono font-bold" style={{ color: '#a5b4fc' }}>{th.tf}</td>
+                                                            <td className="px-3 py-2">
+                                                                <span className="text-[9px] font-black px-2 py-0.5 rounded" style={{
+                                                                    color: th.action === 'Buy' ? '#10b981' : '#ef4444',
+                                                                    background: th.action === 'Buy' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                }}>{th.action}</span>
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[11px] font-bold font-mono" style={{ color: '#f59e0b' }}>{th.volume}</td>
+                                                            <td className="px-3 py-2 text-[11px] font-mono font-bold" style={{ color: tk.textPrimary }}>{th.entryPrice ? fmt(th.entryPrice) : '—'}</td>
+                                                            <td className="px-3 py-2 text-[11px] font-mono" style={{ color: tk.textSecondary }}>{th.closePrice ? fmt(th.closePrice) : '—'}</td>
+                                                            <td className="px-3 py-2">
+                                                                {th.profit != null ? (
+                                                                    <span className="text-[11px] font-black font-mono px-2 py-0.5 rounded shadow-sm" style={{
+                                                                        color: th.profit >= 0 ? '#10b981' : '#ef4444',
+                                                                        background: th.profit >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                    }}>
+                                                                        {th.profit >= 0 ? '+' : ''}{th.profit.toFixed(2)}$
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-[10px] font-mono" style={{ color: tk.textDim }}>—</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[11px] font-mono" style={{ color: '#6366f1' }}>{th.ticket || '—'}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono" style={{ color: tk.textSecondary }}>
+                                                                {new Date(th.executedAt).toLocaleString()}
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <div className="flex flex-wrap items-center gap-1">
+                                                                    <span className="text-[9px] font-black px-2 py-0.5 rounded drop-shadow-sm" style={{
+                                                                        color: th.status === 'filled' ? '#10b981' : th.status === 'closed' ? '#6366f1' : th.status === 'pending' ? '#f59e0b' : '#ef4444',
+                                                                        background: th.status === 'filled' ? 'rgba(16,185,129,0.1)' : th.status === 'closed' ? 'rgba(99,102,241,0.1)' : th.status === 'pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                    }}>
+                                                                        {th.status === 'filled' ? '✓ OPEN' : th.status === 'closed' ? '✔ CLOSED' : th.status === 'pending' ? '⏳ PENDING' : `✗ ${th.error?.slice(0, 30) || 'FAILED'}`}
+                                                                    </span>
+                                                                    {th.autoExecuted && (
+                                                                        <span className="text-[8px] font-black px-1.5 py-0.5 rounded" style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                                                                            ⚡ AUTO
+                                                                        </span>
+                                                                    )}
+                                                                    {th.signalFulfilled != null && th.status === 'closed' && (
+                                                                        <span className="text-[8px] font-black px-1.5 py-0.5 rounded" style={{
+                                                                            color: th.signalFulfilled ? '#10b981' : '#ef4444',
+                                                                            background: th.signalFulfilled ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                            border: `1px solid ${th.signalFulfilled ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}`,
+                                                                        }}>
+                                                                            {th.signalFulfilled ? '✓ TP HIT' : '✗ SL HIT'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {isExpanded && (
+                                                            <tr style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                                <td colSpan={11} className="px-6 py-2" style={{ background: tk.isDark ? 'rgba(99,102,241,0.03)' : 'rgba(99,102,241,0.02)' }}>
+                                                                    <div className="flex items-center gap-6 text-[10px] font-mono">
+                                                                        <span style={{ color: tk.textDim }}>📡 Signal Details:</span>
+                                                                        <span style={{ color: tk.textSecondary }}>Signal Price: <b style={{ color: tk.textPrimary }}>{fmt(th.signalPrice)}</b></span>
+                                                                        <span style={{ color: '#ef4444' }}>SL: <b>{th.sl ? fmt(th.sl) : '—'}</b></span>
+                                                                        <span style={{ color: '#10b981' }}>TP: <b>{th.tp ? fmt(th.tp) : '—'}</b></span>
+                                                                        {th.closedAt && <span style={{ color: tk.textDim }}>Closed: <b>{new Date(th.closedAt).toLocaleString()}</b></span>}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -1631,206 +1696,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             </div>
         </div>
 
-        {/* ═══ TRADE HISTORY MODAL ═══ */}
-        {showAutoLogs && (
-            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ background: 'rgba(6,10,16,0.85)', backdropFilter: 'blur(12px)' }} onClick={() => setShowAutoLogs(false)}>
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-4xl max-h-[85vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl" style={{ background: tk.surface, border: `1px solid ${tk.border}` }}>
-                    {/* Header */}
-                    <div className="flex-shrink-0 px-6 py-4 flex items-center justify-between" style={{ background: 'rgba(59,130,246,0.05)', borderBottom: `1px solid ${tk.border}` }}>
-                        <div className="flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-blue-400" />
-                            <span className="text-sm font-black tracking-wide text-blue-400">Auto Trade Event Logs</span>
-                        </div>
-                        <button onClick={() => setShowAutoLogs(false)} className="p-2 rounded-xl transition-colors hover:bg-white/10"><X className="w-5 h-5 text-gray-400" /></button>
-                    </div>
-                    {/* Body */}
-                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-4">
-                        {serverAutoLogs.length === 0 && <div className="text-center py-10 text-gray-400 font-bold">No logs recorded yet.</div>}
-                        {serverAutoLogs.map(log => (
-                            <div key={log.id} className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <span className={`text-[10px] font-black px-2 py-1 rounded bg-blue-500/20`} style={{
-                                            color: log.event_type === 'START' ? '#34d399' : log.event_type === 'FLIP' ? '#fbbf24' : log.event_type === 'EXECUTE' ? '#a78bfa' : log.event_type === 'ERROR' ? '#f87171' : '#60a5fa'
-                                        }}>{log.event_type}</span>
-                                        <span className="font-bold text-sm text-gray-200">{log.symbol}</span>
-                                        <span className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString()}</span>
-                                    </div>
-                                    <span className="text-[10px] text-gray-500 font-mono">{log.trade_key}</span>
-                                </div>
-                                <div className="text-sm text-gray-300 ml-1">{log.message}</div>
-                                {log.details && Object.keys(log.details).length > 0 && (
-                                    <pre className="text-[10px] p-2 mt-2 rounded-lg bg-black/40 text-gray-400 overflow-x-auto">
-                                        {JSON.stringify(log.details, null, 2)}
-                                    </pre>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </motion.div>
-            </div>
-        )}
 
-        {showHistory && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-                onClick={() => setShowHistory(false)}>
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                    className="relative w-[90vw] max-w-[900px] max-h-[75vh] rounded-2xl overflow-hidden"
-                    style={{ background: tk.isDark ? '#0a0e1a' : '#fff', border: '1px solid rgba(168,85,247,0.15)', boxShadow: '0 25px 50px rgba(0,0,0,0.4)' }}
-                    onClick={(e) => e.stopPropagation()}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(168,85,247,0.1)', background: 'rgba(168,85,247,0.03)' }}>
-                        <div className="flex items-center gap-2">
-                            <History className="w-5 h-5" style={{ color: '#a855f7' }} />
-                            <span className="text-sm font-black tracking-wide" style={{ color: '#a855f7' }}>Trade History ({tradeHistory.length})</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {tradeHistory.length > 0 && (
-                                <>
-                                    <motion.button whileTap={{ scale: 0.95 }}
-                                        onClick={() => {
-                                            const headers = ['Symbol', 'TF', 'Action', 'Lot', 'Signal Price', 'Entry Price', 'Close Price', 'SL', 'TP', 'Profit', 'Ticket', 'Status', 'Executed At', 'Closed At'];
-                                            const rows = tradeHistory.map(t => [
-                                                t.symbol, t.tf, t.action, t.volume,
-                                                t.signalPrice || '', t.entryPrice || '', t.closePrice || '',
-                                                t.sl || '', t.tp || '', t.profit ?? '',
-                                                t.ticket || '', t.status, t.executedAt, t.closedAt || ''
-                                            ].map(v => `"${v}"`).join(','));
-                                            const csv = [headers.join(','), ...rows].join('\n');
-                                            const blob = new Blob([csv], { type: 'text/csv' });
-                                            const url = URL.createObjectURL(blob);
-                                            const a = document.createElement('a');
-                                            a.href = url;
-                                            a.download = `phasex_trade_history_${new Date().toISOString().slice(0, 10)}.csv`;
-                                            a.click();
-                                            URL.revokeObjectURL(url);
-                                        }}
-                                        className="flex items-center gap-1 text-[10px] font-bold px-3 py-1 rounded-lg cursor-pointer"
-                                        style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}
-                                    ><Download className="w-3 h-3" /> CSV</motion.button>
-                                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => clearServerHistory?.()}
-                                        className="text-[10px] font-bold px-3 py-1 rounded-lg cursor-pointer"
-                                        style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}
-                                    >Clear All</motion.button>
-                                </>
-                            )}
-                            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowHistory(false)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer"
-                                style={{ color: tk.textDim, background: tk.surfaceHover }}>
-                                <X className="w-4 h-4" />
-                            </motion.button>
-                        </div>
-                    </div>
-                    {/* Body */}
-                    <div className="overflow-auto" style={{ maxHeight: 'calc(75vh - 60px)' }}>
-                        {tradeHistory.length === 0 ? (
-                            <div className="py-16 text-center">
-                                <History className="w-10 h-10 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.4 }} />
-                                <span className="text-sm font-bold" style={{ color: tk.textDim }}>No trades executed yet</span>
-                            </div>
-                        ) : (
-                            <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-                                <thead className="sticky top-0" style={{ background: tk.isDark ? '#0a0e1a' : '#fff' }}>
-                                    <tr style={{ borderBottom: '1px solid rgba(99,102,241,0.06)' }}>
-                                        {['', 'Symbol', 'TF', 'Action', 'Lot', 'Entry', 'Close', 'Profit', 'Ticket', 'Time', 'Status'].map(h => (
-                                            <th key={h} className="px-3 py-2.5 text-[10px] font-bold tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tradeHistory.map((th) => {
-                                        const isExpanded = expandedHistoryRows.has(th.id);
-                                        return (
-                                            <React.Fragment key={th.id}>
-                                                <tr style={{ borderBottom: isExpanded ? 'none' : `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
-                                                    <td className="px-2 py-2.5">
-                                                        <motion.button whileTap={{ scale: 0.9 }}
-                                                            onClick={() => setExpandedHistoryRows(prev => {
-                                                                const n = new Set(prev);
-                                                                n.has(th.id) ? n.delete(th.id) : n.add(th.id);
-                                                                return n;
-                                                            })}
-                                                            className="w-5 h-5 flex items-center justify-center rounded cursor-pointer"
-                                                            style={{ color: '#818cf8', background: 'rgba(99,102,241,0.08)' }}>
-                                                            <Info className="w-3 h-3" />
-                                                        </motion.button>
-                                                    </td>
-                                                    <td className="px-3 py-2.5 text-[11px] font-bold" style={{ color: tk.textPrimary }}>{th.symbol}</td>
-                                                    <td className="px-3 py-2.5 text-[10px] font-mono font-bold" style={{ color: '#a5b4fc' }}>{th.tf}</td>
-                                                    <td className="px-3 py-2.5">
-                                                        <span className="text-[9px] font-black px-2 py-0.5 rounded" style={{
-                                                            color: th.action === 'Buy' ? '#10b981' : '#ef4444',
-                                                            background: th.action === 'Buy' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                        }}>{th.action}</span>
-                                                    </td>
-                                                    <td className="px-3 py-2.5 text-[11px] font-bold font-mono" style={{ color: '#f59e0b' }}>{th.volume}</td>
-                                                    <td className="px-3 py-2.5 text-[11px] font-mono font-bold" style={{ color: tk.textPrimary }}>{th.entryPrice ? fmt(th.entryPrice) : '—'}</td>
-                                                    <td className="px-3 py-2.5 text-[11px] font-mono" style={{ color: tk.textSecondary }}>{th.closePrice ? fmt(th.closePrice) : '—'}</td>
-                                                    <td className="px-3 py-2.5">
-                                                        {th.profit != null ? (
-                                                            <span className="text-[11px] font-black font-mono px-2 py-0.5 rounded" style={{
-                                                                color: th.profit >= 0 ? '#10b981' : '#ef4444',
-                                                                background: th.profit >= 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                            }}>
-                                                                {th.profit >= 0 ? '+' : ''}{th.profit.toFixed(2)}$
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-[10px] font-mono" style={{ color: tk.textDim }}>—</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-3 py-2.5 text-[11px] font-mono" style={{ color: '#6366f1' }}>{th.ticket || '—'}</td>
-                                                    <td className="px-3 py-2.5 text-[10px] font-mono" style={{ color: tk.textSecondary }}>
-                                                        {new Date(th.executedAt).toLocaleString()}
-                                                    </td>
-                                                    <td className="px-3 py-2.5">
-                                                        <div className="flex flex-wrap items-center gap-1">
-                                                            <span className="text-[9px] font-black px-2 py-0.5 rounded" style={{
-                                                                color: th.status === 'filled' ? '#10b981' : th.status === 'closed' ? '#6366f1' : th.status === 'pending' ? '#f59e0b' : '#ef4444',
-                                                                background: th.status === 'filled' ? 'rgba(16,185,129,0.1)' : th.status === 'closed' ? 'rgba(99,102,241,0.1)' : th.status === 'pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
-                                                            }}>
-                                                                {th.status === 'filled' ? '✓ OPEN' : th.status === 'closed' ? '✔ CLOSED' : th.status === 'pending' ? '⏳ PENDING' : `✗ ${th.error?.slice(0, 30) || 'FAILED'}`}
-                                                            </span>
-                                                            {th.autoExecuted && (
-                                                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded" style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
-                                                                    ⚡ AUTO
-                                                                </span>
-                                                            )}
-                                                            {th.signalFulfilled != null && th.status === 'closed' && (
-                                                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded" style={{
-                                                                    color: th.signalFulfilled ? '#10b981' : '#ef4444',
-                                                                    background: th.signalFulfilled ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                                    border: `1px solid ${th.signalFulfilled ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}`,
-                                                                }}>
-                                                                    {th.signalFulfilled ? '✓ TP HIT' : '✗ SL HIT'}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                {/* Signal Details Row */}
-                                                {isExpanded && (
-                                                    <tr style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
-                                                        <td colSpan={11} className="px-6 py-2" style={{ background: tk.isDark ? 'rgba(99,102,241,0.03)' : 'rgba(99,102,241,0.02)' }}>
-                                                            <div className="flex items-center gap-6 text-[10px] font-mono">
-                                                                <span style={{ color: tk.textDim }}>📡 Signal Details:</span>
-                                                                <span style={{ color: tk.textSecondary }}>Signal Price: <b style={{ color: tk.textPrimary }}>{fmt(th.signalPrice)}</b></span>
-                                                                <span style={{ color: '#ef4444' }}>SL: <b>{th.sl ? fmt(th.sl) : '—'}</b></span>
-                                                                <span style={{ color: '#10b981' }}>TP: <b>{th.tp ? fmt(th.tp) : '—'}</b></span>
-                                                                {th.closedAt && <span style={{ color: tk.textDim }}>Closed: <b>{new Date(th.closedAt).toLocaleString()}</b></span>}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                </motion.div>
-            </div>
-        )}
 
 
     </>);
