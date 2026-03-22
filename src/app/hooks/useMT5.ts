@@ -48,20 +48,19 @@ export interface MT5Position {
 }
 
 export interface MT5Deal {
-    ticket: number;
-    order: number;
+    ticket: string;
+    order: string;
+    position: string;
     symbol: string;
     type: string;
+    entry: string;
     volume: number;
     price: number;
     profit: number;
     swap: number;
     commission: number;
-    fee: number;
     comment: string;
-    magic: number;
     time: string;
-    entry: number;
 }
 
 export interface MT5TradeResult {
