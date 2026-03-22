@@ -706,7 +706,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("EXECUTION_TIMEOUT")), 2000));
         
         await Promise.race([executePromise, timeoutPromise]);
-        await new Promise(r => setTimeout(r, 150)); // Small delay between executions
       } catch (err: any) {
         console.error("Trade execution error or timeout:", err);
         if (err.message === "EXECUTION_TIMEOUT" && !isRetry) {
@@ -717,16 +716,18 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       }
     };
 
-    // First Pass
-    for (const row of directionsData.rows) {
-      await executeRow(row, false);
+    // First Pass - Batch Execution (10 at a time) for massive speedup
+    const batchSize = 10;
+    for (let i = 0; i < directionsData.rows.length; i += batchSize) {
+      const batch = directionsData.rows.slice(i, i + batchSize);
+      await Promise.allSettled(batch.map(row => executeRow(row, false)));
     }
 
     // Second Pass (Retry skipped/timed out rows)
     if (retryRows.length > 0) {
-      await new Promise(r => setTimeout(r, 500)); // Wait half second before retry phase
-      for (const row of retryRows) {
-        await executeRow(row, true);
+      for (let i = 0; i < retryRows.length; i += batchSize) {
+        const batch = retryRows.slice(i, i + batchSize);
+        await Promise.allSettled(batch.map(row => executeRow(row, true)));
       }
     }
 
@@ -798,7 +799,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("EXECUTION_TIMEOUT")), 3000));
         
         await Promise.race([executePromise, timeoutPromise]);
-        await new Promise(r => setTimeout(r, 100)); // Small delay
       } catch (err: any) {
         console.error("Auto configuration error or timeout:", err);
         if (err.message === "EXECUTION_TIMEOUT" && !isRetry) {
@@ -809,16 +809,18 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       }
     };
 
-    // First Pass
-    for (const row of directionsData.rows) {
-      await autoRow(row, false);
+    // First Pass - Batch Execution (10 at a time) for massive speedup
+    const batchSize = 10;
+    for (let i = 0; i < directionsData.rows.length; i += batchSize) {
+      const batch = directionsData.rows.slice(i, i + batchSize);
+      await Promise.allSettled(batch.map(row => autoRow(row, false)));
     }
 
     // Second Pass (Retry skipped/timed out rows)
     if (retryRows.length > 0) {
-      await new Promise(r => setTimeout(r, 500)); // Wait half second before retry phase
-      for (const row of retryRows) {
-        await autoRow(row, true);
+      for (let i = 0; i < retryRows.length; i += batchSize) {
+        const batch = retryRows.slice(i, i + batchSize);
+        await Promise.allSettled(batch.map(row => autoRow(row, true)));
       }
     }
 
