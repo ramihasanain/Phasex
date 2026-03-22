@@ -689,10 +689,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     if (!executeTradeFromChart || !currency) return;
     
     setIsExecutingAll(true);
-    const retryRows: typeof directionsData.rows = [];
-
-    const executeRow = async (row: any, isRetry: boolean = false) => {
-      if (!isRetry && dirExecuting.has(row.windowSize)) return;
+    const executeRow = async (row: any) => {
+      if (dirExecuting.has(row.windowSize)) return;
       
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
@@ -702,33 +700,19 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
-        const executePromise = executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("EXECUTION_TIMEOUT")), 2000));
-        
-        await Promise.race([executePromise, timeoutPromise]);
+        await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
       } catch (err: any) {
-        console.error("Trade execution error or timeout:", err);
-        if (err.message === "EXECUTION_TIMEOUT" && !isRetry) {
-          retryRows.push(row);
-        }
+        console.error("Trade execution error:", err);
       } finally {
         setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
       }
     };
 
-    // First Pass - Batch Execution (10 at a time) for massive speedup
+    // Process in batches of 10 to protect backend limits
     const batchSize = 10;
     for (let i = 0; i < directionsData.rows.length; i += batchSize) {
       const batch = directionsData.rows.slice(i, i + batchSize);
-      await Promise.allSettled(batch.map(row => executeRow(row, false)));
-    }
-
-    // Second Pass (Retry skipped/timed out rows)
-    if (retryRows.length > 0) {
-      for (let i = 0; i < retryRows.length; i += batchSize) {
-        const batch = retryRows.slice(i, i + batchSize);
-        await Promise.allSettled(batch.map(row => executeRow(row, true)));
-      }
+      await Promise.allSettled(batch.map(row => executeRow(row)));
     }
 
     setIsExecutingAll(false);
@@ -739,10 +723,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     if (!addAutoTrade || !currency) return;
     
     setIsAutoingAll(true);
-    const retryRows: typeof directionsData.rows = [];
-
-    const autoRow = async (row: any, isRetry: boolean = false) => {
-      if (!isRetry && autoExecuting.has(row.windowSize)) return;
+    const autoRow = async (row: any) => {
+      if (autoExecuting.has(row.windowSize)) return;
       
       const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
       const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
@@ -754,74 +736,57 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
       setAutoExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
-        const executePromise = (async () => {
-           let ticketToAdopt = undefined;
-           const existingManualPos = mt5Positions?.find((p: any) => p.comment === chartComment);
-           
-           if (existingManualPos) {
-               ticketToAdopt = String(existingManualPos.ticket);
-           } else if (executeTradeFromChart) {
-               const res = await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-               if (res && res.ticket) {
-                   ticketToAdopt = String(res.ticket);
-                   if (addTradeToHistory) {
-                     addTradeToHistory({
-                         id: `auto-${Date.now()}-${autoTradeKey}`,
-                         symbol: currency.symbol,
-                         tf: autoTradeKey,
-                         action: row.directionStr,
-                         volume: lot,
-                         entryPrice: Number(res.price || res.openPrice || 0),
-                         sl: null,
-                         tp: null,
-                         ticket: Number(res.ticket),
-                         status: 'filled',
-                         executedAt: new Date().toISOString(),
-                         signalPrice: row.entry,
-                         autoExecuted: true,
-                     });
-                   }
-               }
-           }
+         let ticketToAdopt = undefined;
+         const existingManualPos = mt5Positions?.find((p: any) => p.comment === chartComment);
+         
+         if (existingManualPos) {
+             ticketToAdopt = String(existingManualPos.ticket);
+         } else if (executeTradeFromChart) {
+             const res = await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+             if (res && res.ticket) {
+                 ticketToAdopt = String(res.ticket);
+                 if (addTradeToHistory) {
+                   addTradeToHistory({
+                       id: `auto-${Date.now()}-${autoTradeKey}`,
+                       symbol: currency.symbol,
+                       tf: autoTradeKey,
+                       action: row.directionStr,
+                       volume: lot,
+                       entryPrice: Number(res.price || res.openPrice || 0),
+                       sl: null,
+                       tp: null,
+                       ticket: Number(res.ticket),
+                       status: 'filled',
+                       executedAt: new Date().toISOString(),
+                       signalPrice: row.entry,
+                       autoExecuted: true,
+                   });
+                 }
+             }
+         }
 
-           await addAutoTrade(
-             autoTradeKey,
-             currency.symbol,
-             autoTradeKey,
-             lot,
-             row.directionStr,
-             row.entry,
-             undefined, undefined,
-             ticketToAdopt
-           );
-        })();
-
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("EXECUTION_TIMEOUT")), 3000));
-        
-        await Promise.race([executePromise, timeoutPromise]);
+         await addAutoTrade(
+           autoTradeKey,
+           currency.symbol,
+           autoTradeKey,
+           lot,
+           row.directionStr,
+           row.entry,
+           undefined, undefined,
+           ticketToAdopt
+         );
       } catch (err: any) {
-        console.error("Auto configuration error or timeout:", err);
-        if (err.message === "EXECUTION_TIMEOUT" && !isRetry) {
-          retryRows.push(row);
-        }
+        console.error("Auto configuration error:", err);
       } finally {
         setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
       }
     };
 
-    // First Pass - Batch Execution (10 at a time) for massive speedup
+    // Process in batches of 10 to protect backend limits
     const batchSize = 10;
     for (let i = 0; i < directionsData.rows.length; i += batchSize) {
       const batch = directionsData.rows.slice(i, i + batchSize);
-      await Promise.allSettled(batch.map(row => autoRow(row, false)));
-    }
-
-    // Second Pass (Retry skipped/timed out rows)
-    if (retryRows.length > 0) {
-      for (let i = 0; i < retryRows.length; i += batchSize) {
-        const batch = retryRows.slice(i, i + batchSize);
-        await Promise.allSettled(batch.map(row => autoRow(row, true)));
-      }
+      await Promise.allSettled(batch.map(row => autoRow(row)));
     }
 
     setIsAutoingAll(false);
