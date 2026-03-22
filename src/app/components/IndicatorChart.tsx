@@ -2,7 +2,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import { Asset } from "./MarketList";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, TrendingDown, Activity, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, ChevronDown, Check, Table, BarChart3, Maximize2, Minimize2, ListOrdered, Edit3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, X, Clock, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, ChevronDown, Check, Table, BarChart3, Maximize2, Minimize2, ListOrdered, Edit3, Zap } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { usePhaseStateAPI } from "../hooks/usePhaseStateAPI";
 import { useDirectionStateAPI } from "../hooks/useDirectionStateAPI";
@@ -48,6 +48,9 @@ interface IndicatorChartProps {
   mt5Connected?: boolean;
   executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<any>;
   mt5Positions?: any[];
+  serverAutoTrades?: Record<string, any>;
+  addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number, tp?: number, ticket?: string) => Promise<boolean>;
+  removeAutoTrade?: (key: string) => Promise<boolean>;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -293,6 +296,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   mt5Connected,
   executeTrade: executeTradeFromChart,
   mt5Positions,
+  serverAutoTrades,
+  addAutoTrade,
+  removeAutoTrade,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -307,6 +313,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [dirLotSizes, setDirLotSizes] = useState<Record<number, number>>({});
   const [globalDirLot, setGlobalDirLot] = useState<number>(0.01);
   const [dirExecuting, setDirExecuting] = useState<Set<number>>(new Set());
+  const [autoExecuting, setAutoExecuting] = useState<Set<number>>(new Set());
   const [isExecutingAll, setIsExecutingAll] = useState(false);
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
@@ -1263,29 +1270,78 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                 {(() => {
                                   const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+                                  
+                                  const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
+                                  const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
+                                  const isProcessingAuto = autoExecuting.has(row.windowSize);
+
                                   return (
-                                    <button
-                                      disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
-                                      title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
-                                      onClick={async (e) => {
-                                        e.stopPropagation();
-                                        if (hasPos || !executeTradeFromChart || !currency) return;
-                                        const lot = dirLotSizes[row.windowSize] ?? 0.01;
-                                        setDirExecuting(prev => new Set(prev).add(row.windowSize));
-                                        try {
-                                          await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-                                        } catch (err) { console.error(err); }
-                                        setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
-                                      }}
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                      style={{
-                                        color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                        background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                        border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                                      }}
-                                    >
-                                      {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
-                                    </button>
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      {/* AUTO Toggle Button */}
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          if (!addAutoTrade || !removeAutoTrade || !currency) return;
+                                          const lot = dirLotSizes[row.windowSize] ?? 0.01;
+                                          setAutoExecuting(prev => new Set(prev).add(row.windowSize));
+                                          try {
+                                            if (isActiveAuto) {
+                                              await removeAutoTrade(autoTradeKey);
+                                            } else {
+                                              await addAutoTrade(
+                                                autoTradeKey,
+                                                currency.symbol,
+                                                autoTradeKey,
+                                                lot,
+                                                row.directionStr, // Will be overridden dynamically by backend calculation anyway
+                                                row.entry,
+                                                undefined, undefined, undefined
+                                              );
+                                            }
+                                          } catch (err) { console.error(err); }
+                                          setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                        }}
+                                        disabled={isProcessingAuto}
+                                        title="التداول الآلي (Auto Trading)"
+                                        className="relative flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase overflow-hidden cursor-pointer shadow-sm transition-all"
+                                        style={{
+                                          background: isActiveAuto ? "linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.05))" : "rgba(255,255,255,0.03)",
+                                          border: `1px solid ${isActiveAuto ? "rgba(234, 179, 8, 0.4)" : "rgba(255,255,255,0.1)"}`,
+                                          color: isActiveAuto ? "#facc15" : "#94a3b8",
+                                          pointerEvents: isProcessingAuto ? 'none' : 'auto',
+                                          opacity: isProcessingAuto ? 0.7 : 1,
+                                        }}
+                                      >
+                                        <div className="relative z-10 flex items-center gap-1">
+                                          <Zap className={`w-3.5 h-3.5 ${isActiveAuto ? "fill-yellow-500/30 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" : "text-slate-400"}`} />
+                                          <span className="drop-shadow-md">AUTO</span>
+                                        </div>
+                                      </button>
+                                      
+                                      {/* Execute Button */}
+                                      <button
+                                        disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                        title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          if (hasPos || !executeTradeFromChart || !currency) return;
+                                          const lot = dirLotSizes[row.windowSize] ?? 0.01;
+                                          setDirExecuting(prev => new Set(prev).add(row.windowSize));
+                                          try {
+                                            await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                          } catch (err) { console.error(err); }
+                                          setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                        }}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                        style={{
+                                          color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                          background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                          border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                        }}
+                                      >
+                                        {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                      </button>
+                                    </div>
                                   );
                                 })()}
                               </td>
@@ -1689,29 +1745,78 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                           {(() => {
                                             const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                             const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+                                            
+                                            const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
+                                            const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
+                                            const isProcessingAuto = autoExecuting.has(row.windowSize);
+
                                             return (
-                                          <button
-                                            disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
-                                            title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
-                                            onClick={async (e) => {
-                                              e.stopPropagation();
-                                              if (hasPos || !executeTradeFromChart || !currency) return;
-                                              const lot = dirLotSizes[row.windowSize] ?? 0.01;
-                                              setDirExecuting(prev => new Set(prev).add(row.windowSize));
-                                              try {
-                                                await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-                                              } catch (err) { console.error(err); }
-                                              setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
-                                            }}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                            style={{
-                                              color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                              background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                              border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                                            }}
-                                          >
-                                            {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
-                                          </button>
+                                              <div className="flex items-center justify-center gap-1.5">
+                                                {/* AUTO Toggle Button */}
+                                                <button
+                                                  onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (!addAutoTrade || !removeAutoTrade || !currency) return;
+                                                    const lot = dirLotSizes[row.windowSize] ?? 0.01;
+                                                    setAutoExecuting(prev => new Set(prev).add(row.windowSize));
+                                                    try {
+                                                      if (isActiveAuto) {
+                                                        await removeAutoTrade(autoTradeKey);
+                                                      } else {
+                                                        await addAutoTrade(
+                                                          autoTradeKey,
+                                                          currency.symbol,
+                                                          autoTradeKey,
+                                                          lot,
+                                                          row.directionStr, // Backend will fetch latest anyway
+                                                          row.entry,
+                                                          undefined, undefined, undefined
+                                                        );
+                                                      }
+                                                    } catch (err) { console.error(err); }
+                                                    setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                                  }}
+                                                  disabled={isProcessingAuto}
+                                                  title="التداول الآلي (Auto Trading)"
+                                                  className="relative flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-widest uppercase overflow-hidden cursor-pointer shadow-sm transition-all"
+                                                  style={{
+                                                    background: isActiveAuto ? "linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.05))" : "rgba(255,255,255,0.03)",
+                                                    border: `1px solid ${isActiveAuto ? "rgba(234, 179, 8, 0.4)" : "rgba(255,255,255,0.1)"}`,
+                                                    color: isActiveAuto ? "#facc15" : "#94a3b8",
+                                                    pointerEvents: isProcessingAuto ? 'none' : 'auto',
+                                                    opacity: isProcessingAuto ? 0.7 : 1,
+                                                  }}
+                                                >
+                                                  <div className="relative z-10 flex items-center gap-1.5">
+                                                    <Zap className={`w-3.5 h-3.5 ${isActiveAuto ? "fill-yellow-500/30 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" : "text-slate-400"}`} />
+                                                    <span className="drop-shadow-md">AUTO</span>
+                                                  </div>
+                                                </button>
+                                                
+                                                {/* Execute Button */}
+                                                <button
+                                                  disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                                  title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
+                                                  onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (hasPos || !executeTradeFromChart || !currency) return;
+                                                    const lot = dirLotSizes[row.windowSize] ?? 0.01;
+                                                    setDirExecuting(prev => new Set(prev).add(row.windowSize));
+                                                    try {
+                                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                                    } catch (err) { console.error(err); }
+                                                    setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                                  }}
+                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                                  style={{
+                                                    color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                                    background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                                    border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                                  }}
+                                                >
+                                                  {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                                </button>
+                                              </div>
                                             );
                                           })()}
                                         </td>

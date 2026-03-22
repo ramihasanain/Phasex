@@ -1714,6 +1714,9 @@ export function TradingDashboard({
                 mt5Connected={mt5Connected}
                 executeTrade={executeTrade}
                 mt5Positions={mt5Positions}
+                serverAutoTrades={serverAutoTrades}
+                addAutoTrade={addAutoTrade}
+                removeAutoTrade={removeAutoTrade}
                 renderTradeButtons={
                   selectedAsset
                     ? () => {
