@@ -408,7 +408,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             const entry = tfs[tf];
             if (!entry.net_signal) continue;
             const key = `${asset}-${tf}`;
-            
+
             // PREVENT DUPLICATE TICKETS: Skip if already executing or if already in Auto Mode!
             if (executingTrades.has(key)) continue;
             if (serverAutoTrades[key]) continue;
@@ -431,7 +431,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                             symbol: asset, tf, action: direction,
                             volume: lot, entryPrice: Number(res.price || 0),
                             sl: entry.stop_loss || null, tp: entry.take_profit || null,
-                            ticket: Number(res.ticket), status: 'filled', 
+                            ticket: Number(res.ticket), status: 'filled',
                             executedAt: new Date().toISOString(),
                             signalPrice: entry.close,
                             autoExecuted: true,
@@ -444,8 +444,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             setExecutingTrades(prev => { const n = new Set(prev); n.delete(key); return n; });
 
             await addAutoTrade(
-                key, effectiveSymbol, tf, lot, direction, 
-                entry.close, entry.stop_loss || null, entry.take_profit || null, 
+                key, effectiveSymbol, tf, lot, direction,
+                entry.close, entry.stop_loss || null, entry.take_profit || null,
                 ticket
             );
         }
@@ -864,8 +864,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                     <div style={{ borderBottom: '1px solid rgba(168,85,247,0.08)', background: tk.isDark ? 'rgba(168,85,247,0.02)' : 'rgba(168,85,247,0.02)' }}>
                         <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid rgba(168,85,247,0.06)' }}>
                             <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: tk.textDim }}>Active Background Auto-Trades</span>
-                            <motion.button 
-                                whileTap={{ scale: 0.95 }} 
+                            <motion.button
+                                whileTap={{ scale: 0.95 }}
                                 onClick={async () => {
                                     if (checkAutoTrades) {
                                         const btn = document.getElementById('mt5-check-btn') as HTMLButtonElement;
@@ -923,8 +923,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                     <td className="px-2.5 py-1.5 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signal_price ? fmt(autoTrade.signal_price) : '—'}</td>
                                                     <td className="px-2.5 py-1.5 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{autoTrade.lot || 0.01}</td>
                                                     <td className="px-2.5 py-1.5">
-                                                        <span 
-                                                            className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-help" 
+                                                        <span
+                                                            className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-help"
                                                             title={autoTrade.last_error || 'No recent errors'}
                                                             style={{
                                                                 color: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? '#10b981' : autoTrade.status?.startsWith('failed') ? '#ef4444' : '#a855f7',
@@ -1484,16 +1484,16 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                         e.stopPropagation();
                                                                                         if (!mt5Connected) return;
                                                                                         const rowKey = `${asset}-${tf}`;
-                                                                                        
+
                                                                                         if (isAuto) {
                                                                                             removeAutoTrade?.(rowKey);
                                                                                         } else {
                                                                                             // PREVENT DUPLICATE EXECUTION: Skip if currently dispatching or already auto-trading from server!
                                                                                             if (executingTrades.has(rowKey) || serverAutoTrades[rowKey]) return;
-                                                                                            
+
                                                                                             const lot = lotSizes[rowKey] || 0.01;
                                                                                             const direction = entry.net_signal || '';
-                                                                                            
+
                                                                                             setExecutingTrades(prev => new Set(prev).add(rowKey));
                                                                                             let ticket = '';
                                                                                             if (executeTrade) {
@@ -1506,32 +1506,32 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                                             symbol: asset, tf, action: direction,
                                                                                                             volume: lot, entryPrice: Number(res.price || 0),
                                                                                                             sl: entry.stop_loss || null, tp: entry.take_profit || null,
-                                                                                                            ticket: Number(res.ticket), status: 'filled', 
+                                                                                                            ticket: Number(res.ticket), status: 'filled',
                                                                                                             executedAt: new Date().toISOString(),
                                                                                                             signalPrice: entry.close,
                                                                                                             autoExecuted: true,
                                                                                                         });
                                                                                                     }
-                                                                                                    
+
                                                                                                     addAutoTrade?.(
-                                                                                                        rowKey, effectiveSymbol, tf, lot, direction, 
-                                                                                                        entry.close, entry.stop_loss || null, entry.take_profit || null, 
+                                                                                                        rowKey, effectiveSymbol, tf, lot, direction,
+                                                                                                        entry.close, entry.stop_loss || null, entry.take_profit || null,
                                                                                                         ticket
                                                                                                     );
                                                                                                     setExecutingTrades(prev => { const n = new Set(prev); n.delete(rowKey); return n; });
                                                                                                 }).catch(err => {
                                                                                                     console.error("Failed initial auto execute", err);
                                                                                                     addAutoTrade?.(
-                                                                                                        rowKey, effectiveSymbol, tf, lot, direction, 
-                                                                                                        entry.close, entry.stop_loss || null, entry.take_profit || null, 
+                                                                                                        rowKey, effectiveSymbol, tf, lot, direction,
+                                                                                                        entry.close, entry.stop_loss || null, entry.take_profit || null,
                                                                                                         ""
                                                                                                     );
                                                                                                     setExecutingTrades(prev => { const n = new Set(prev); n.delete(rowKey); return n; });
                                                                                                 });
                                                                                             } else {
                                                                                                 addAutoTrade?.(
-                                                                                                    rowKey, effectiveSymbol, tf, lot, direction, 
-                                                                                                    entry.close, entry.stop_loss || null, entry.take_profit || null, 
+                                                                                                    rowKey, effectiveSymbol, tf, lot, direction,
+                                                                                                    entry.close, entry.stop_loss || null, entry.take_profit || null,
                                                                                                     Object.keys(autoTrades).length.toString()
                                                                                                 );
                                                                                             }

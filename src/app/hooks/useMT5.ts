@@ -141,7 +141,7 @@ export function useMT5(): UseMT5Result {
     const [symbolOverrides, setSymbolOverrides] = useState<Record<string, string>>({});
 
     const mountedRef = useRef(true);
-    const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const accountIdRef = useRef(accountId);
     accountIdRef.current = accountId;
     const sessionTokenRef = useRef(sessionToken);
@@ -365,28 +365,43 @@ export function useMT5(): UseMT5Result {
 
     // ─── Auto-poll when connected (every 5s) ───
     useEffect(() => {
+        let isActive = true;
         if (!connected) {
             if (pollTimerRef.current) {
-                clearInterval(pollTimerRef.current);
+                clearTimeout(pollTimerRef.current);
                 pollTimerRef.current = null;
             }
             return;
         }
 
-        // Initial fetch
-        refreshAccount();
-        refreshPositions();
-        refreshHistory();
+        const runPoll = async () => {
+            if (!isActive) return;
+            // Initial fetch sequentially and safely to prevent starvation
+            await refreshAccount();
+            if (!isActive) return;
+            await refreshPositions();
+            if (!isActive) return;
+            await refreshHistory();
 
-        // Poll
-        pollTimerRef.current = setInterval(() => {
-            refreshAccount();
-            refreshPositions();
-        }, 5000);
+            const pollLoop = async () => {
+                if (!isActive) return;
+                pollTimerRef.current = setTimeout(async () => {
+                    if (!isActive) return;
+                    await refreshAccount();
+                    if (!isActive) return;
+                    await refreshPositions();
+                    pollLoop();
+                }, 5000);
+            };
+            pollLoop();
+        };
+
+        runPoll();
 
         return () => {
+            isActive = false;
             if (pollTimerRef.current) {
-                clearInterval(pollTimerRef.current);
+                clearTimeout(pollTimerRef.current);
                 pollTimerRef.current = null;
             }
         };
@@ -716,13 +731,26 @@ export function useMT5(): UseMT5Result {
     // Poll auto-trades & history when connected
     useEffect(() => {
         if (!connected) return;
-        fetchAutoTrades();
-        fetchTradeHistory();
-        const interval = setInterval(() => {
-            fetchAutoTrades();
-            fetchTradeHistory();
-        }, 10000);
-        return () => clearInterval(interval);
+        let isActive = true;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        
+        const poll = async () => {
+            if (!isActive) return;
+            await fetchAutoTrades();
+            if (!isActive) return;
+            await fetchTradeHistory();
+            
+            if (isActive) {
+                timer = setTimeout(poll, 10000);
+            }
+        };
+        
+        poll();
+        
+        return () => {
+            isActive = false;
+            if (timer) clearTimeout(timer);
+        };
     }, [connected, fetchAutoTrades, fetchTradeHistory]);
 
     return {
