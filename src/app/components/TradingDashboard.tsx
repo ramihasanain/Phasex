@@ -1717,6 +1717,7 @@ export function TradingDashboard({
                 serverAutoTrades={serverAutoTrades}
                 addAutoTrade={addAutoTrade}
                 removeAutoTrade={removeAutoTrade}
+                addTradeToHistory={addTradeToHistory}
                 renderTradeButtons={
                   selectedAsset
                     ? () => {

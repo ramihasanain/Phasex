@@ -51,6 +51,7 @@ interface IndicatorChartProps {
   serverAutoTrades?: Record<string, any>;
   addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number, tp?: number, ticket?: string) => Promise<boolean>;
   removeAutoTrade?: (key: string) => Promise<boolean>;
+  addTradeToHistory?: (entry: any) => void;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -299,6 +300,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   serverAutoTrades,
   addAutoTrade,
   removeAutoTrade,
+  addTradeToHistory,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -1763,6 +1765,36 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                                       if (isActiveAuto) {
                                                         await removeAutoTrade(autoTradeKey);
                                                       } else {
+                                                        let ticketToAdopt = undefined;
+                                                        const existingManualPos = mt5Positions?.find((p: any) => p.comment === chartComment);
+                                                        
+                                                        if (existingManualPos) {
+                                                            ticketToAdopt = String(existingManualPos.ticket);
+                                                        } else if (executeTradeFromChart) {
+                                                            // Match the bottom table's feature: execute INSTANTLY on frontend before setting Auto
+                                                            const res = await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                                            if (res && res.ticket) {
+                                                                ticketToAdopt = String(res.ticket);
+                                                                if (addTradeToHistory) {
+                                                                  addTradeToHistory({
+                                                                      id: `auto-${Date.now()}-${autoTradeKey}`,
+                                                                      symbol: currency.symbol,
+                                                                      tf: autoTradeKey,
+                                                                      action: row.directionStr,
+                                                                      volume: lot,
+                                                                      entryPrice: Number(res.price || res.openPrice || 0),
+                                                                      sl: null,
+                                                                      tp: null,
+                                                                      ticket: Number(res.ticket),
+                                                                      status: 'filled',
+                                                                      executedAt: new Date().toISOString(),
+                                                                      signalPrice: row.entry,
+                                                                      autoExecuted: true,
+                                                                  });
+                                                                }
+                                                            }
+                                                        }
+
                                                         await addAutoTrade(
                                                           autoTradeKey,
                                                           currency.symbol,
@@ -1770,7 +1802,8 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                                           lot,
                                                           row.directionStr, // Backend will fetch latest anyway
                                                           row.entry,
-                                                          undefined, undefined, undefined
+                                                          undefined, undefined,
+                                                          ticketToAdopt
                                                         );
                                                       }
                                                     } catch (err) { console.error(err); }
