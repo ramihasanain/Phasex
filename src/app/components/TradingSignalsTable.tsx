@@ -1411,9 +1411,9 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                         const isExecuting = executingTrades.has(rowKey);
                                                         const isAuto = autoTrades.has(rowKey);
                                                         const lotVal = lotSizes[rowKey] ?? 0.01;
-                                                        const tradeComment = `PX-Dash ${asset} ${tf} ${entry.net_signal}`.slice(0, 31);
+                                                        const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
                                                         const hasPos = mt5Positions?.some(p => p.comment === tradeComment) || false;
-                                                        const disableExec = isExecuting || hasPos;
+                                                        const disableExec = isExecuting || hasPos || isAuto;
                                                         return (
                                                             <>
                                                                 {/* Lot */}
@@ -1452,10 +1452,12 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                             </motion.div>
                                                                         ) : hasPos ? (
                                                                             <CheckCircle className="w-3 h-3" />
+                                                                        ) : isAuto ? (
+                                                                            <Zap className="w-3 h-3" />
                                                                         ) : (
                                                                             <Play className="w-3 h-3" />
                                                                         )}
-                                                                        {isExecuting ? '...' : hasPos ? 'DONE' : isBuy ? 'BUY' : 'SELL'}
+                                                                        {isExecuting ? '...' : hasPos ? 'DONE' : isAuto ? 'AUTO' : isBuy ? 'BUY' : 'SELL'}
                                                                     </motion.button>
                                                                 </td>
                                                                 {/* Auto */}
@@ -1497,7 +1499,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                             setExecutingTrades(prev => new Set(prev).add(rowKey));
                                                                                             let ticket = '';
                                                                                             if (executeTrade) {
-                                                                                                const tradeComment = `SD ${tf} ${entry.candles_showed || '31'}`;
+                                                                                                const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
                                                                                                 executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment).then(res => {
                                                                                                     if (res && res.ticket) {
                                                                                                         ticket = String(res.ticket);
