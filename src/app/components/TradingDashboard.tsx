@@ -1719,6 +1719,7 @@ export function TradingDashboard({
                 addAutoTrade={addAutoTrade}
                 addAutoTradesBulk={addAutoTradesBulk}
                 removeAutoTrade={removeAutoTrade}
+                stopAllAutoTrades={stopAllAutoTrades}
                 addTradeToHistory={addTradeToHistory}
                 renderTradeButtons={
                   selectedAsset

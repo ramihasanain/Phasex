@@ -52,6 +52,7 @@ interface IndicatorChartProps {
   addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number, tp?: number, ticket?: string) => Promise<boolean>;
   addAutoTradesBulk?: (trades: any[]) => Promise<boolean>;
   removeAutoTrade?: (key: string) => Promise<boolean>;
+  stopAllAutoTrades?: () => Promise<boolean>;
   addTradeToHistory?: (entry: any) => void;
 }
 
@@ -294,7 +295,7 @@ export function IndicatorChart({
   onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange,
   phaseStateData, generateCandlesFromReal, onLiveChartData, renderTradeButtons,
   accessToken, mt5Connected, executeTrade: executeTradeFromChart, mt5Positions, serverAutoTrades,
-  addAutoTrade, addAutoTradesBulk, removeAutoTrade, addTradeToHistory,
+  addAutoTrade, addAutoTradesBulk, removeAutoTrade, stopAllAutoTrades, addTradeToHistory,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -1235,13 +1236,28 @@ export function IndicatorChart({
                       <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-10 md:w-12 text-center text-[10px] md:text-[11px] font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
                       <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
                     </div>
-                    <button onClick={handleAutoAll} disabled={isAutoingAll || !addAutoTrade || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#c4b5fd" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.3)"}` }} onMouseEnter={(e) => { e.currentTarget.style.color = tk.isDark ? "#ddd6fe" : "#7c3aed"; e.currentTarget.style.background = tk.isDark ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.15)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = tk.isDark ? "#c4b5fd" : "#8b5cf6"; e.currentTarget.style.background = tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)"; }}>
+                    <button onClick={async () => {
+                      if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
+                      const anyAutoActive = directionsData.rows.some((row: any) => serverAutoTrades?.[`PX_${currency?.symbol}_${mainTF}_${subTF}_W${row.windowSize}`]);
+                      if (anyAutoActive) {
+                        setIsAutoingAll(true);
+                        if (stopAllAutoTrades) await stopAllAutoTrades();
+                        setIsAutoingAll(false);
+                      } else {
+                        handleAutoAll();
+                      }
+                    }} disabled={isAutoingAll || !addAutoTrade || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#c4b5fd" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.3)"}` }}>
                       {isAutoingAll ? (
                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full" />
-                      ) : (
-                        <Zap className="w-3.5 h-3.5" />
-                      )}
-                      {isRTL ? "أوتو الكل" : "Auto All"}
+                      ) : (() => {
+                        const anyAutoActive = directionsData?.rows.some((row: any) => serverAutoTrades?.[`PX_${currency?.symbol}_${mainTF}_${subTF}_W${row.windowSize}`]);
+                        return anyAutoActive ? <X className="w-3.5 h-3.5 text-red-400" /> : <Zap className="w-3.5 h-3.5" />;
+                      })()}
+                      {(() => {
+                         const anyAutoActive = directionsData?.rows.some((row: any) => serverAutoTrades?.[`PX_${currency?.symbol}_${mainTF}_${subTF}_W${row.windowSize}`]);
+                         if (anyAutoActive) return isRTL ? "إغلاق أوتو الكل" : "Close All Auto";
+                         return isRTL ? "أوتو الكل" : "Auto All";
+                      })()}
                     </button>
                     <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
                       {isExecutingAll ? (
@@ -1353,11 +1369,11 @@ export function IndicatorChart({
                                     <div className="flex items-center justify-center gap-1.5">
                                       {/* Execute Button */}
                                       <button
-                                        disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
-                                        title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
+                                        disabled={isActiveAuto || hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                        title={isActiveAuto ? 'التداول الآلي مفعل' : hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
                                         onClick={async (e) => {
                                           e.stopPropagation();
-                                          if (hasPos || !executeTradeFromChart || !currency) return;
+                                          if (isActiveAuto || hasPos || !executeTradeFromChart || !currency) return;
                                           const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                           setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                           try {
@@ -1367,12 +1383,12 @@ export function IndicatorChart({
                                         }}
                                         className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                         style={{
-                                          color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                          background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                          border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                          color: (isActiveAuto || hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                          background: (isActiveAuto || hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                          border: `1px solid ${(isActiveAuto || hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                                         }}
                                       >
-                                        {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                        {dirExecuting.has(row.windowSize) ? '...' : (isActiveAuto || hasPos) ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                       </button>
                                       
                                       {/* AUTO Toggle Button */}
