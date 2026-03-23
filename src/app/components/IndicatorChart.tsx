@@ -1807,9 +1807,11 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         <td className="p-3 text-center whitespace-nowrap">
                                           {(() => {
                                             const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
-                                            const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+                                            const autoTradeKey = `PX_${currency.symbol}_${mainTF}_${subTF}_W${row.windowSize}`;
+                                            const autoComment = autoTradeKey.slice(0, 31);
                                             
-                                            const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
+                                            const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment || p.comment === autoComment) || false;
+                                            
                                             const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
                                             const isProcessingAuto = autoExecuting.has(row.windowSize);
 
