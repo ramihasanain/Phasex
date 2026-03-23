@@ -726,7 +726,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
     const autoRow = async (row: any) => {
       if (autoExecuting.has(row.windowSize)) return;
       
-      const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
+      const autoTradeKey = `PX_${currency?.symbol}_${mainTF}_${subTF}_W${row.windowSize}`;
       const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
       if (isActiveAuto) return; // Skip if already active
       
@@ -1341,7 +1341,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                   const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                   
-                                  const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
+                                  const autoTradeKey = `PX_${currency?.symbol}_${mainTF}_${subTF}_W${row.windowSize}`;
                                   const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
                                   const isProcessingAuto = autoExecuting.has(row.windowSize);
 
