@@ -50,7 +50,6 @@ interface IndicatorChartProps {
   mt5Positions?: any[];
   serverAutoTrades?: Record<string, any>;
   addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number, tp?: number, ticket?: string) => Promise<boolean>;
-  addAutoTradesBulk?: (trades: any[]) => Promise<boolean>;
   removeAutoTrade?: (key: string) => Promise<boolean>;
   addTradeToHistory?: (entry: any) => void;
 }
@@ -300,7 +299,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   mt5Positions,
   serverAutoTrades,
   addAutoTrade,
-  addAutoTradesBulk,
   removeAutoTrade,
   addTradeToHistory,
 }: IndicatorChartProps) {
@@ -320,7 +318,6 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   const [autoExecuting, setAutoExecuting] = useState<Set<number>>(new Set());
   const [isExecutingAll, setIsExecutingAll] = useState(false);
   const [isAutoingAll, setIsAutoingAll] = useState(false);
-  const [autoAllCooldown, setAutoAllCooldown] = useState(false);
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -722,63 +719,74 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
   };
 
   const handleAutoAll = async () => {
-    if (autoAllCooldown) return;
     if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
-    if (!addAutoTradesBulk || !currency) return;
+    if (!addAutoTrade || !currency) return;
     
     setIsAutoingAll(true);
-    setAutoAllCooldown(true);
-    
-    setTimeout(() => {
-        setAutoAllCooldown(false);
-    }, 30000);
-    
-    const bulkTrades: any[] = [];
-    const executionSet = new Set<number>();
-    
-    for (const row of directionsData.rows) {
-      if (autoExecuting.has(row.windowSize)) continue;
+    const autoRow = async (row: any) => {
+      if (autoExecuting.has(row.windowSize)) return;
       
       const autoTradeKey = `PX_${currency?.symbol}_${mainTF}_${subTF}_W${row.windowSize}`;
       const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
-      if (isActiveAuto) continue; // Skip if already active
+      if (isActiveAuto) return; // Skip if already active
       
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const lot = dirLotSizes[row.windowSize] ?? 0.01;
       
-      let ticketToAdopt = undefined;
-      const existingManualPos = mt5Positions?.find((p: any) => p.comment === chartComment);
-      if (existingManualPos) {
-          ticketToAdopt = String(existingManualPos.ticket);
-      }
+      setAutoExecuting(prev => new Set(prev).add(row.windowSize));
       
-      executionSet.add(row.windowSize);
-      bulkTrades.push({
-          key: autoTradeKey,
-          symbol: currency.symbol,
-          tf: autoTradeKey,
-          lot: lot,
-          direction: row.directionStr,
-          signal_price: row.entry,
-          sl: row.entry,
-          tp: undefined,
-          ticket: ticketToAdopt
-      });
-    }
+      try {
+         let ticketToAdopt = undefined;
+         const existingManualPos = mt5Positions?.find((p: any) => p.comment === chartComment);
+         
+         if (existingManualPos) {
+             ticketToAdopt = String(existingManualPos.ticket);
+         } else if (executeTradeFromChart) {
+             const res = await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+             if (res && res.ticket) {
+                 ticketToAdopt = String(res.ticket);
+                 if (addTradeToHistory) {
+                   addTradeToHistory({
+                       id: `auto-${Date.now()}-${autoTradeKey}`,
+                       symbol: currency.symbol,
+                       tf: autoTradeKey,
+                       action: row.directionStr,
+                       volume: lot,
+                       entryPrice: Number(res.price || res.openPrice || 0),
+                       sl: null,
+                       tp: null,
+                       ticket: Number(res.ticket),
+                       status: 'filled',
+                       executedAt: new Date().toISOString(),
+                       signalPrice: row.entry,
+                       autoExecuted: true,
+                   });
+                 }
+             }
+         }
 
-    if (bulkTrades.length > 0) {
-        setAutoExecuting(prev => new Set([...prev, ...executionSet]));
-        try {
-            await addAutoTradesBulk(bulkTrades);
-        } catch (err) {
-            console.error("Bulk Auto configuration error:", err);
-        } finally {
-            setAutoExecuting(prev => { 
-                const n = new Set(prev); 
-                executionSet.forEach(ws => n.delete(ws)); 
-                return n; 
-            });
-        }
+         await addAutoTrade(
+           autoTradeKey,
+           currency.symbol,
+           autoTradeKey,
+           lot,
+           row.directionStr,
+           row.entry,
+           undefined, undefined,
+           ticketToAdopt
+         );
+      } catch (err: any) {
+        console.error("Auto configuration error:", err);
+      } finally {
+        setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+      }
+    };
+
+    // Process in batches of 10 to protect backend limits
+    const batchSize = 10;
+    for (let i = 0; i < directionsData.rows.length; i += batchSize) {
+      const batch = directionsData.rows.slice(i, i + batchSize);
+      await Promise.allSettled(batch.map(row => autoRow(row)));
     }
 
     setIsAutoingAll(false);
@@ -1223,15 +1231,13 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                       <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-10 md:w-12 text-center text-[10px] md:text-[11px] font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
                       <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
                     </div>
-                    <button onClick={handleAutoAll} disabled={isAutoingAll || autoAllCooldown || !addAutoTradesBulk || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#c4b5fd" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.3)"}` }} onMouseEnter={(e) => { e.currentTarget.style.color = tk.isDark ? "#ddd6fe" : "#7c3aed"; e.currentTarget.style.background = tk.isDark ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.15)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = tk.isDark ? "#c4b5fd" : "#8b5cf6"; e.currentTarget.style.background = tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)"; }}>
+                    <button onClick={handleAutoAll} disabled={isAutoingAll || !addAutoTrade || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#c4b5fd" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.3)"}` }} onMouseEnter={(e) => { e.currentTarget.style.color = tk.isDark ? "#ddd6fe" : "#7c3aed"; e.currentTarget.style.background = tk.isDark ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.15)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = tk.isDark ? "#c4b5fd" : "#8b5cf6"; e.currentTarget.style.background = tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)"; }}>
                       {isAutoingAll ? (
                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full" />
-                      ) : autoAllCooldown ? (
-                        <Clock className="w-3.5 h-3.5" />
                       ) : (
                         <Zap className="w-3.5 h-3.5" />
                       )}
-                      {autoAllCooldown ? (isRTL ? "قيد التهدئة" : "Cooldown") : (isRTL ? "أوتو الكل" : "Auto All")}
+                      {isRTL ? "أوتو الكل" : "Auto All"}
                     </button>
                     <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
                       {isExecutingAll ? (
@@ -1383,9 +1389,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                                 lot,
                                                 row.directionStr, // Will be overridden dynamically by backend calculation anyway
                                                 row.entry,
-                                                row.entry, // SL
-                                                undefined,
-                                                undefined
+                                                undefined, undefined, undefined
                                               );
                                             }
                                           } catch (err) { console.error(err); }
@@ -1818,11 +1822,9 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                         <td className="p-3 text-center whitespace-nowrap">
                                           {(() => {
                                             const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
-                                            const autoTradeKey = `PX_${currency.symbol}_${mainTF}_${subTF}_W${row.windowSize}`;
-                                            const autoComment = autoTradeKey.slice(0, 31);
+                                            const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                             
-                                            const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment || p.comment === autoComment) || false;
-                                            
+                                            const autoTradeKey = `PX_${mainTF}_${subTF}_W${row.windowSize}`;
                                             const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
                                             const isProcessingAuto = autoExecuting.has(row.windowSize);
 
@@ -1876,8 +1878,7 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
                                                           lot,
                                                           row.directionStr, // Backend will fetch latest anyway
                                                           row.entry,
-                                                          row.entry, // sl = entry
-                                                          undefined, // tp
+                                                          undefined, undefined,
                                                           ticketToAdopt
                                                         );
                                                       }
