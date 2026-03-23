@@ -194,6 +194,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     // Trade Execution State
     const [lotSizes, setLotSizes] = useState<Record<string, number>>({});  // key: "ASSET-TF"
     const [executingTrades, setExecutingTrades] = useState<Set<string>>(new Set());
+    const [executingAssetBulk, setExecutingAssetBulk] = useState<string | null>(null);
     // Use server trade history (read from props, backed by backend)
     const tradeHistory = serverTradeHistory || [];
     const [showHistory, setShowHistory] = useState(false);
@@ -387,79 +388,90 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
 
     // ─── Bulk Execution Handlers ───
     const handleExecuteAsset = async (asset: string) => {
-        if (!executeTrade || !mt5Connected) return;
-        const tfs = signalData[asset];
-        if (!tfs) return;
-        let tfKeys = Object.keys(tfs).sort(sortTF);
-        if (actionFilter !== "ALL") tfKeys = tfKeys.filter(tf => tfs[tf].net_signal === actionFilter);
-        if (tfFilter !== "ALL") tfKeys = tfKeys.filter(tf => tf === tfFilter);
+        if (!executeTrade || !mt5Connected || executingAssetBulk) return;
+        setExecutingAssetBulk(asset);
+        try {
+            const tfs = signalData[asset];
+            if (!tfs) return;
+            let tfKeys = Object.keys(tfs).sort(sortTF);
+            if (actionFilter !== "ALL") tfKeys = tfKeys.filter(tf => tfs[tf].net_signal === actionFilter);
+            if (tfFilter !== "ALL") tfKeys = tfKeys.filter(tf => tf === tfFilter);
 
-        for (const tf of tfKeys) {
-            const entry = tfs[tf];
-            if (!entry.net_signal) continue;
-            await handleExecuteTrade(asset, tf, entry, false);
+            for (const tf of tfKeys) {
+                const entry = tfs[tf];
+                if (!entry.net_signal) continue;
+                await handleExecuteTrade(asset, tf, entry, false);
+            }
+        } finally {
+            setExecutingAssetBulk(null);
         }
     };
 
     const handleAutoAsset = async (asset: string) => {
-        if (!addAutoTrade || !mt5Connected) return;
-        const tfs = signalData[asset];
-        if (!tfs) return;
-        let tfKeys = Object.keys(tfs).sort(sortTF);
-        if (actionFilter !== "ALL") tfKeys = tfKeys.filter(tf => tfs[tf].net_signal === actionFilter);
-        if (tfFilter !== "ALL") tfKeys = tfKeys.filter(tf => tf === tfFilter);
+        if (!addAutoTrade || !mt5Connected || executingAssetBulk) return;
+        setExecutingAssetBulk(asset);
+        try {
+            const tfs = signalData[asset];
+            if (!tfs) return;
+            let tfKeys = Object.keys(tfs).sort(sortTF);
+            if (actionFilter !== "ALL") tfKeys = tfKeys.filter(tf => tfs[tf].net_signal === actionFilter);
+            if (tfFilter !== "ALL") tfKeys = tfKeys.filter(tf => tf === tfFilter);
 
-        for (const tf of tfKeys) {
-            const entry = tfs[tf];
-            if (!entry.net_signal) continue;
-            const key = `${asset}-${tf}`;
+            for (const tf of tfKeys) {
+                const entry = tfs[tf];
+                if (!entry.net_signal) continue;
+                const key = `${asset}-${tf}`;
 
-            // PREVENT DUPLICATE TICKETS: Skip if already executing or if already in Auto Mode!
-            if (executingTrades.has(key)) continue;
-            if (serverAutoTrades[key]) continue;
+                // PREVENT DUPLICATE TICKETS: Skip if already executing or if already in Auto Mode!
+                if (executingTrades.has(key)) continue;
+                if (serverAutoTrades[key]) continue;
 
-            const lot = lotSizes[key] || 0.01;
-            const effectiveSymbol = symbolOverrides[asset] || asset;
-            const direction = entry.net_signal;
+                const lot = lotSizes[key] || 0.01;
+                const effectiveSymbol = symbolOverrides[asset] || asset;
+                const direction = entry.net_signal;
 
-            // Immediately execute trade!
-            setExecutingTrades(prev => new Set(prev).add(key));
-            let ticket = '';
-            const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
-            const existingManualPos = mt5Positions?.find(p => p.comment === tradeComment);
+                // Immediately execute trade!
+                setExecutingTrades(prev => new Set(prev).add(key));
+                let ticket = '';
+                const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
+                const existingManualPos = mt5Positions?.find(p => p.comment === tradeComment);
 
-            if (existingManualPos) {
-                // Adopt existing position into Auto mode!
-                ticket = String(existingManualPos.ticket);
-            } else {
-                try {
-                    if (executeTrade) {
-                        const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment);
-                        if (res && res.ticket) {
-                            ticket = String(res.ticket);
-                            addTradeToHistory?.({
-                                id: `auto-${Date.now()}-${key}`,
-                                symbol: asset, tf, action: direction,
-                                volume: lot, entryPrice: Number(res.price || 0),
-                                sl: entry.stop_loss || null, tp: entry.take_profit || null,
-                                ticket: Number(res.ticket), status: 'filled',
-                                executedAt: new Date().toISOString(),
-                                signalPrice: entry.close,
-                                autoExecuted: true,
-                            });
+                if (existingManualPos) {
+                    // Adopt existing position into Auto mode!
+                    ticket = String(existingManualPos.ticket);
+                } else {
+                    try {
+                        if (executeTrade) {
+                            const res = await executeTrade(effectiveSymbol, direction, lot, entry.stop_loss || undefined, entry.take_profit || undefined, tradeComment);
+                            if (res && res.ticket) {
+                                ticket = String(res.ticket);
+                                addTradeToHistory?.({
+                                    id: `auto-${Date.now()}-${key}`,
+                                    symbol: asset, tf, action: direction,
+                                    volume: lot, entryPrice: Number(res.price || 0),
+                                    sl: entry.stop_loss || null, tp: entry.take_profit || null,
+                                    ticket: Number(res.ticket), status: 'filled',
+                                    executedAt: new Date().toISOString(),
+                                    signalPrice: entry.close,
+                                    autoExecuted: true,
+                                });
+                            }
                         }
+                    } catch (err: any) {
+                        console.error("Failed initial auto execute", err);
                     }
-                } catch (err: any) {
-                    console.error("Failed initial auto execute", err);
                 }
-            }
-            setExecutingTrades(prev => { const n = new Set(prev); n.delete(key); return n; });
 
-            await addAutoTrade(
-                key, effectiveSymbol, tf, lot, direction,
-                entry.close, entry.stop_loss || null, entry.take_profit || null,
-                ticket
-            );
+                await addAutoTrade(
+                    key, effectiveSymbol, tf, lot, direction,
+                    entry.close, entry.stop_loss || null, entry.take_profit || null,
+                    ticket
+                );
+                
+                setExecutingTrades(prev => { const n = new Set(prev); n.delete(key); return n; });
+            }
+        } finally {
+            setExecutingAssetBulk(null);
         }
     };
 
@@ -1401,20 +1413,34 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                         {mt5Connected && (
                                                             <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                                                 <motion.button onClick={() => handleExecuteAsset(asset)}
-                                                                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black cursor-pointer"
-                                                                    style={{ color: "#10b981", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
-                                                                    title="Execute all signals for this asset"
+                                                                    disabled={executingAssetBulk !== null}
+                                                                    whileHover={executingAssetBulk === null ? { scale: 1.05 } : {}} whileTap={executingAssetBulk === null ? { scale: 0.95 } : {}}
+                                                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black cursor-pointer transition-colors"
+                                                                    style={{ 
+                                                                        color: executingAssetBulk === asset ? "#fff" : executingAssetBulk ? "#475569" : "#10b981", 
+                                                                        background: executingAssetBulk === asset ? "#10b981" : executingAssetBulk ? "rgba(255,255,255,0.05)" : "rgba(16,185,129,0.1)", 
+                                                                        border: executingAssetBulk ? "1px solid transparent" : "1px solid rgba(16,185,129,0.2)",
+                                                                        opacity: executingAssetBulk && executingAssetBulk !== asset ? 0.5 : 1
+                                                                    }}
+                                                                    title={executingAssetBulk === asset ? "Executing..." : executingAssetBulk ? "Wait for current batch to finish" : "Execute all signals for this asset"}
                                                                 >
-                                                                    <Play className="w-2.5 h-2.5" /> Execute {asset}
+                                                                    {executingAssetBulk === asset ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}><Play className="w-2.5 h-2.5" /></motion.div> : <Play className="w-2.5 h-2.5" />} 
+                                                                    {executingAssetBulk === asset ? "EXEC..." : `Execute ${asset}`}
                                                                 </motion.button>
                                                                 <motion.button onClick={() => handleAutoAsset(asset)}
-                                                                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black cursor-pointer"
-                                                                    style={{ color: "#a855f7", background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)" }}
-                                                                    title="Auto-trade all signals for this asset"
+                                                                    disabled={executingAssetBulk !== null}
+                                                                    whileHover={executingAssetBulk === null ? { scale: 1.05 } : {}} whileTap={executingAssetBulk === null ? { scale: 0.95 } : {}}
+                                                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black cursor-pointer transition-colors"
+                                                                    style={{ 
+                                                                        color: executingAssetBulk === asset ? "#fff" : executingAssetBulk ? "#475569" : "#a855f7", 
+                                                                        background: executingAssetBulk === asset ? "#a855f7" : executingAssetBulk ? "rgba(255,255,255,0.05)" : "rgba(168,85,247,0.1)", 
+                                                                        border: executingAssetBulk ? "1px solid transparent" : "1px solid rgba(168,85,247,0.2)",
+                                                                        opacity: executingAssetBulk && executingAssetBulk !== asset ? 0.5 : 1
+                                                                    }}
+                                                                    title={executingAssetBulk === asset ? "Applying Auto..." : executingAssetBulk ? "Wait for current batch to finish" : "Auto-trade all signals for this asset"}
                                                                 >
-                                                                    <Zap className="w-2.5 h-2.5" /> Auto {asset}
+                                                                    {executingAssetBulk === asset ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}><Zap className="w-2.5 h-2.5" /></motion.div> : <Zap className="w-2.5 h-2.5" />} 
+                                                                    {executingAssetBulk === asset ? "AUTO..." : `Auto ${asset}`}
                                                                 </motion.button>
                                                             </div>
                                                         )}
