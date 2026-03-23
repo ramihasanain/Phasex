@@ -660,7 +660,7 @@ export function useMT5(): UseMT5Result {
             const res = await fetch(`${MT5_API_BASE}/auto-trades/`, {
                 method: 'POST',
                 headers: getHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ trades: bodyTrades }),
+                body: JSON.stringify({ account_id: aid, trades: bodyTrades }),
             });
             const data = await safeJson(res);
             if (data.success) {
