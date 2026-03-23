@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, Fragment } from "react";
 
 import { motion, AnimatePresence } from "motion/react";
 
-import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, TrendingDown, Activity, Zap, Upload, RotateCcw, Target, Cpu, Shield, Flame, Layers, Bot, X, RadioTower, User, LogOut, Wifi, WifiOff, Server, CreditCard } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Settings, RefreshCw, TrendingUp, TrendingDown, Activity, Zap, Upload, RotateCcw, Target, Cpu, Shield, Flame, Layers, Bot, X, RadioTower, User, LogOut, Wifi, WifiOff, Server, CreditCard, PowerOff } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useMT5 } from "../hooks/useMT5";
@@ -1176,7 +1176,7 @@ function TradingDecisionEngineTable({
 export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
     const { user, logout, hasMT5Access } = useAuth();
     const isLoggedIn = !!user;
-    const { connected: mt5Connected, connectMT5, disconnectMT5, connecting: mt5Connecting, connectStatus: mt5ConnectStatus, executeTrade, positions: mt5Positions } = useMT5();
+    const { connected: mt5Connected, connectMT5, disconnectMT5, connecting: mt5Connecting, connectStatus: mt5ConnectStatus, executeTrade, positions: mt5Positions, stopAllAutoTrades } = useMT5();
     
     // UI state for logged-in specific modals
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -1674,6 +1674,25 @@ radial-gradient(ellipse 30% 50% at 20% 80%, ${accentG}0.03) 0%, transparent 60%)
                                 )}
                             </motion.button>
                             
+                            {/* FORCE KILL ALL AUTO Button */}
+                            <motion.button
+                                onClick={async () => {
+                                    if (!isLoggedIn) { setIsLoginPromptOpen(true); return; }
+                                    if (!confirm(isRTL ? "تحذير: هل أنت متأكد من إيقاف ومسح جميع صفقات الأوتو في الخلفية لهذا الحساب؟" : "WARNING: Are you sure you want to FORCE STOP and clear all background Auto Trades for this account?")) return;
+                                    await stopAllAutoTrades();
+                                }}
+                                whileHover={{ scale: 1.04, boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)' }}
+                                whileTap={{ scale: 0.96 }}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer relative overflow-hidden"
+                                style={{
+                                    color: '#ef4444',
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                }}>
+                                <PowerOff className="w-3 h-3 animate-pulse" />
+                                <span>{isRTL ? "إغلاق كل الأوتو" : "Kill All Auto"}</span>
+                            </motion.button>
+
                             <motion.button onClick={() => { if (!isLoggedIn) { setIsLoginPromptOpen(true); return; } setIsSubscriptionOpen(true); }} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer"
                                 style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
