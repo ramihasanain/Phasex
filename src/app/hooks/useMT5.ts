@@ -639,12 +639,13 @@ export function useMT5(): UseMT5Result {
             });
             const data = await safeJson(res);
             if (data.success) {
-                setServerAutoTrades(data.auto_trades || {});
+                fetchAutoTrades();
+                if (data.auto_trades) setServerAutoTrades(data.auto_trades);
                 return true;
             }
             return false;
         } catch { return false; }
-    }, [getHeaders, safeJson]);
+    }, [fetchAutoTrades, getHeaders, safeJson]);
 
     const addAutoTradesBulk = useCallback(async (
         trades: { key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string }[]
@@ -664,12 +665,13 @@ export function useMT5(): UseMT5Result {
             });
             const data = await safeJson(res);
             if (data.success) {
-                setServerAutoTrades(data.auto_trades || {});
+                fetchAutoTrades();
+                if (data.auto_trades) setServerAutoTrades(data.auto_trades);
                 return true;
             }
             return false;
         } catch { return false; }
-    }, [getHeaders, safeJson]);
+    }, [fetchAutoTrades, getHeaders, safeJson]);
 
     const removeAutoTrade = useCallback(async (key: string): Promise<boolean> => {
         const aid = accountIdRef.current;
@@ -682,12 +684,13 @@ export function useMT5(): UseMT5Result {
             });
             const data = await safeJson(res);
             if (data.success) {
-                setServerAutoTrades(data.auto_trades || {});
+                fetchAutoTrades();
+                if (data.auto_trades) setServerAutoTrades(data.auto_trades);
                 return true;
             }
             return false;
         } catch { return false; }
-    }, [getHeaders, safeJson]);
+    }, [fetchAutoTrades, getHeaders, safeJson]);
 
     const fetchTradeHistory = useCallback(async () => {
         const aid = accountIdRef.current;
