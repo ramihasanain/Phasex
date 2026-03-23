@@ -50,6 +50,7 @@ interface IndicatorChartProps {
   mt5Positions?: any[];
   serverAutoTrades?: Record<string, any>;
   addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number, tp?: number, ticket?: string) => Promise<boolean>;
+  addAutoTradesBulk?: (trades: any[]) => Promise<boolean>;
   removeAutoTrade?: (key: string) => Promise<boolean>;
   addTradeToHistory?: (entry: any) => void;
 }
@@ -287,20 +288,13 @@ function CandleLimitSelector({ value, onChange, isRTL, tk, color, compact = fals
   );
 }
 
-export function IndicatorChart({ currency, indicator, data, timeframe, onTimeframeChange, mtfEnabled, mtfSmallTimeframe, mtfLargeTimeframe, onMtfEnabledChange, onMtfSmallTimeframeChange,
-  onMtfLargeTimeframeChange,
-  phaseStateData,
-  generateCandlesFromReal,
-  onLiveChartData,
-  renderTradeButtons,
-  accessToken,
-  mt5Connected,
-  executeTrade: executeTradeFromChart,
-  mt5Positions,
-  serverAutoTrades,
-  addAutoTrade,
-  removeAutoTrade,
-  addTradeToHistory,
+export function IndicatorChart({
+  currency, indicator, data, timeframe, onTimeframeChange,
+  mtfEnabled = false, mtfSmallTimeframe = 5, mtfLargeTimeframe = 60,
+  onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange,
+  phaseStateData, generateCandlesFromReal, onLiveChartData, renderTradeButtons,
+  accessToken, mt5Connected, executeTrade: executeTradeFromChart, mt5Positions, serverAutoTrades,
+  addAutoTrade, addAutoTradesBulk, removeAutoTrade, addTradeToHistory,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -720,22 +714,26 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
 
   const handleAutoAll = async () => {
     if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
-    if (!addAutoTrade || !currency) return;
+    if (!addAutoTradesBulk || !addAutoTrade || !currency) return;
     
     setIsAutoingAll(true);
-    const autoRow = async (row: any) => {
-      if (autoExecuting.has(row.windowSize)) return;
+    const bulkTrades: any[] = [];
+    const executionPromises = [];
+
+    // First, process all the executions concurrently
+    for (const row of directionsData.rows) {
+      if (autoExecuting.has(row.windowSize)) continue;
       
       const autoTradeKey = `PX_${currency?.symbol}_${mainTF}_${subTF}_W${row.windowSize}`;
       const isActiveAuto = !!serverAutoTrades?.[autoTradeKey];
-      if (isActiveAuto) return; // Skip if already active
+      if (isActiveAuto) continue; // Skip if already active
       
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const lot = dirLotSizes[row.windowSize] ?? 0.01;
       
       setAutoExecuting(prev => new Set(prev).add(row.windowSize));
       
-      try {
+      const execPromise = (async () => {
          let ticketToAdopt = undefined;
          const existingManualPos = mt5Positions?.find((p: any) => p.comment === chartComment);
          
@@ -765,28 +763,34 @@ export function IndicatorChart({ currency, indicator, data, timeframe, onTimefra
              }
          }
 
-         await addAutoTrade(
-           autoTradeKey,
-           currency.symbol,
-           autoTradeKey,
-           lot,
-           row.directionStr,
-           row.entry,
-           undefined, undefined,
-           ticketToAdopt
-         );
+         bulkTrades.push({
+             key: autoTradeKey,
+             symbol: currency.symbol,
+             tf: autoTradeKey,
+             lot,
+             direction: row.directionStr,
+             signalPrice: row.entry,
+             sl: null,
+             tp: null,
+             ticket: ticketToAdopt
+         });
+
+         setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+      })();
+
+      executionPromises.push(execPromise);
+    }
+
+    // Wait for all execution promises to finish
+    await Promise.allSettled(executionPromises);
+
+    // Now send the massive ROCKET bulk request!
+    if (bulkTrades.length > 0) {
+      try {
+        await addAutoTradesBulk(bulkTrades);
       } catch (err: any) {
         console.error("Auto configuration error:", err);
-      } finally {
-        setAutoExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
       }
-    };
-
-    // Process in batches of 10 to protect backend limits
-    const batchSize = 10;
-    for (let i = 0; i < directionsData.rows.length; i += batchSize) {
-      const batch = directionsData.rows.slice(i, i + batchSize);
-      await Promise.allSettled(batch.map(row => autoRow(row)));
     }
 
     setIsAutoingAll(false);
