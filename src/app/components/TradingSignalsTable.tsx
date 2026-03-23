@@ -158,6 +158,7 @@ interface TradingSignalsTableProps {
     // Server-side auto-trade
     serverAutoTrades?: Record<string, any>;
     addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
+    addAutoTradesBulk?: (trades: any[]) => Promise<boolean>;
     removeAutoTrade?: (key: string) => Promise<boolean>;
     // Server-side trade history
     serverTradeHistory?: any[];
@@ -170,7 +171,7 @@ interface TradingSignalsTableProps {
 }
 
 /* ═══════════ Component ═══════════ */
-export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, stopAllAutoTrades, serverAutoTrades = {}, addAutoTrade, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory, serverAutoLogs = [], fetchAutoLogs }: TradingSignalsTableProps) {
+export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, stopAllAutoTrades, serverAutoTrades = {}, addAutoTrade, addAutoTradesBulk, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory, serverAutoLogs = [], fetchAutoLogs }: TradingSignalsTableProps) {
     const { language, t } = useLanguage();
     const isRTL = language === "ar";
     const tk = useThemeTokens();
@@ -417,6 +418,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             if (actionFilter !== "ALL") tfKeys = tfKeys.filter(tf => tfs[tf].net_signal === actionFilter);
             if (tfFilter !== "ALL") tfKeys = tfKeys.filter(tf => tf === tfFilter);
 
+            const bulkTrades = [];
+
             for (const tf of tfKeys) {
                 const entry = tfs[tf];
                 if (!entry.net_signal) continue;
@@ -430,28 +433,34 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                 const effectiveSymbol = symbolOverrides[asset] || asset;
                 const direction = entry.net_signal;
 
-                // Immediately delegate execution to the Server!
-                // NO MORE FRONTEND EXECUTION.
                 setExecutingTrades(prev => new Set(prev).add(key));
                 let ticket = '';
                 const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
                 const existingManualPos = mt5Positions?.find(p => p.comment === tradeComment);
 
                 if (existingManualPos) {
-                    // Adopt existing position into Auto mode!
                     ticket = String(existingManualPos.ticket);
                 }
 
-                await addAutoTrade(
-                    key, effectiveSymbol, tf, lot, direction,
-                    entry.close, entry.stop_loss || null, entry.take_profit || null,
-                    ticket
-                );
-                
-                setExecutingTrades(prev => { const n = new Set(prev); n.delete(key); return n; });
+                bulkTrades.push({
+                    key, symbol: effectiveSymbol, tf, lot, direction,
+                    signalPrice: entry.close, sl: entry.stop_loss || null, tp: entry.take_profit || null, ticket
+                });
             }
+
+            if (bulkTrades.length > 0) {
+                if (addAutoTradesBulk) {
+                    await addAutoTradesBulk(bulkTrades);
+                } else {
+                    for (const t of bulkTrades) {
+                        await addAutoTrade(t.key, t.symbol, t.tf, t.lot, t.direction, t.signalPrice, t.sl, t.tp, t.ticket);
+                    }
+                }
+            }
+
         } finally {
             setExecutingAssetBulk(null);
+            setExecutingTrades(prev => new Set([...prev].filter(k => !k.startsWith(`${asset}-`))));
         }
     };
 

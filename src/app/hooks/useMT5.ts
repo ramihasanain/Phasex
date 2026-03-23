@@ -109,6 +109,7 @@ export interface UseMT5Result {
     // Server-side Auto-Trade
     serverAutoTrades: Record<string, any>;
     addAutoTrade: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
+    addAutoTradesBulk: (trades: { key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string }[]) => Promise<boolean>;
     removeAutoTrade: (key: string) => Promise<boolean>;
     fetchAutoTrades: () => Promise<void>;
     stopAllAutoTrades: () => Promise<boolean>;
@@ -645,6 +646,31 @@ export function useMT5(): UseMT5Result {
         } catch { return false; }
     }, [getHeaders, safeJson]);
 
+    const addAutoTradesBulk = useCallback(async (
+        trades: { key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string }[]
+    ): Promise<boolean> => {
+        const aid = accountIdRef.current;
+        if (!aid || !trades.length) return false;
+        try {
+            const bodyTrades = trades.map(t => ({
+                key: t.key, symbol: t.symbol, tf: t.tf, lot: t.lot, direction: t.direction,
+                signal_price: t.signalPrice, sl: t.sl, tp: t.tp, ticket: t.ticket,
+                account_id: aid
+            }));
+            const res = await fetch(`${MT5_API_BASE}/auto-trades/`, {
+                method: 'POST',
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ trades: bodyTrades }),
+            });
+            const data = await safeJson(res);
+            if (data.success) {
+                setServerAutoTrades(data.auto_trades || {});
+                return true;
+            }
+            return false;
+        } catch { return false; }
+    }, [getHeaders, safeJson]);
+
     const removeAutoTrade = useCallback(async (key: string): Promise<boolean> => {
         const aid = accountIdRef.current;
         if (!aid) return false;
@@ -795,6 +821,7 @@ export function useMT5(): UseMT5Result {
         // Server-side auto-trade
         serverAutoTrades,
         addAutoTrade,
+        addAutoTradesBulk,
         removeAutoTrade,
         fetchAutoTrades,
         stopAllAutoTrades,
