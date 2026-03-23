@@ -507,6 +507,7 @@ export function TradingDashboard({
     // Server-side auto-trade
     serverAutoTrades,
     addAutoTrade,
+    addAutoTradesBulk,
     removeAutoTrade,
     // Server-side logs
     serverAutoLogs,
@@ -1716,6 +1717,7 @@ export function TradingDashboard({
                 mt5Positions={mt5Positions}
                 serverAutoTrades={serverAutoTrades}
                 addAutoTrade={addAutoTrade}
+                addAutoTradesBulk={addAutoTradesBulk}
                 removeAutoTrade={removeAutoTrade}
                 addTradeToHistory={addTradeToHistory}
                 renderTradeButtons={
