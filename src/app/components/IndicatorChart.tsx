@@ -676,7 +676,9 @@ export function IndicatorChart({
     if (!executeTradeFromChart || !currency) return;
     
     setIsExecutingAll(true);
-    const executeRow = async (row: any) => {
+    
+    // 🚀 ROCKET MODE: Fire ALL trades simultaneously — bypass per-trade refresh!
+    const promises = directionsData.rows.map(async (row: any) => {
       if (dirExecuting.has(row.windowSize)) return;
       
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
@@ -687,21 +689,16 @@ export function IndicatorChart({
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
       
       try {
+        // Direct fire — no refreshPositions/refreshAccount per trade!
         await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
       } catch (err: any) {
         console.error("Trade execution error:", err);
       } finally {
         setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
       }
-    };
+    });
 
-    // Process in batches of 10 to protect backend limits
-    const batchSize = 10;
-    for (let i = 0; i < directionsData.rows.length; i += batchSize) {
-      const batch = directionsData.rows.slice(i, i + batchSize);
-      await Promise.allSettled(batch.map(row => executeRow(row)));
-    }
-
+    await Promise.allSettled(promises);
     setIsExecutingAll(false);
   };
 
