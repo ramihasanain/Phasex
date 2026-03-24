@@ -303,7 +303,7 @@ export function useMT5(): UseMT5Result {
         }
     }, []); // Only on mount
 
-    // ─── Refresh Account Info ───
+    // ─── Refresh Account Info (with 1 retry) ───
     const refreshAccount = useCallback(async () => {
         const aid = accountIdRef.current;
         if (!connected || !aid) return;
@@ -317,11 +317,19 @@ export function useMT5(): UseMT5Result {
             if (mountedRef.current && data.account) {
                 setAccount(data.account);
             }
-        } catch { /* ignore */ }
+        } catch {
+            // Retry once after 2s — backend may be auto-reconnecting
+            try {
+                await new Promise(r => setTimeout(r, 2000));
+                const res = await fetch(`${MT5_API_BASE}/account/?account_id=${aid}`, { headers: getHeaders() });
+                const data = await safeJson(res);
+                if (mountedRef.current && data.account) setAccount(data.account);
+            } catch { /* ignore retry failure */ }
+        }
         finally { if (mountedRef.current) setAccountLoading(false); }
     }, [connected, getHeaders, handleSessionExpired]);
 
-    // ─── Refresh Positions ───
+    // ─── Refresh Positions (with 1 retry) ───
     const refreshPositions = useCallback(async () => {
         const aid = accountIdRef.current;
         if (!connected || !aid) return;
@@ -335,7 +343,15 @@ export function useMT5(): UseMT5Result {
             if (mountedRef.current && data.positions) {
                 setPositions(data.positions);
             }
-        } catch { /* ignore */ }
+        } catch {
+            // Retry once after 2s — backend may be auto-reconnecting
+            try {
+                await new Promise(r => setTimeout(r, 2000));
+                const res = await fetch(`${MT5_API_BASE}/positions/?account_id=${aid}`, { headers: getHeaders() });
+                const data = await safeJson(res);
+                if (mountedRef.current && data.positions) setPositions(data.positions);
+            } catch { /* ignore retry failure */ }
+        }
         finally { if (mountedRef.current) setPositionsLoading(false); }
     }, [connected, getHeaders, handleSessionExpired]);
 
