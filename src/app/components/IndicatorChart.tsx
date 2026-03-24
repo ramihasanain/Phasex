@@ -1224,10 +1224,26 @@ export function IndicatorChart({
                 style={{ background: tk.isDark ? 'rgba(15,23,42,0.95)' : tk.surface, backdropFilter: 'blur(12px)', border: `1px solid ${tk.border}` }}>
                 {/* Custom Header for Directions Table */}
                 <div className="px-4 py-3 flex items-center justify-between" style={{ background: tk.isDark ? 'rgba(15,23,42,0.6)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-4">
                     <span className="text-lg font-bold tracking-widest" style={{ color: tk.textPrimary }}>
                       Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                     </span>
+                    {directionsData && directionsData.rows && directionsData.rows.length > 0 && (
+                      <div className={(isRTL ? "mr-2 pr-2 border-r" : "ml-2 pl-2 border-l") + " flex items-center gap-3"} style={{ borderColor: tk.border }}>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ background: 'rgba(16,185,129,0.1)' }}>
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[11px] font-black text-emerald-500 uppercase tracking-wider">
+                            BUY: {directionsData.rows.filter((r: any) => r.isBuy).length}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                          <span className="text-[11px] font-black text-red-500 uppercase tracking-wider">
+                            SELL: {directionsData.rows.filter((r: any) => !r.isBuy).length}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 md:gap-1.5 px-1.5 py-1 rounded-lg" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)', border: `1px solid ${tk.border}` }}>
