@@ -613,6 +613,24 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                 <span className="text-[10px]" style={{ color: '#f87171' }}>▼</span>
                                 <span className="text-[11px] font-black" style={{ color: "#f87171" }}>{totalSell}</span>
                             </div>
+                            {mt5Connected && mt5Positions.length > 0 && (() => {
+                                const totalProfit = mt5Positions.reduce((sum, p) => sum + (p.profit || 0), 0);
+                                const isPositive = totalProfit >= 0;
+                                return (
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{
+                                        background: isPositive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+                                        border: `1px solid ${isPositive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}`,
+                                    }}>
+                                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: isPositive ? '#10b981' : '#ef4444' }}>P&L</span>
+                                        <span className="text-[12px] font-black font-mono" style={{
+                                            color: isPositive ? '#10b981' : '#ef4444',
+                                            textShadow: isPositive ? '0 0 10px rgba(16,185,129,0.3)' : '0 0 10px rgba(239,68,68,0.3)',
+                                        }}>
+                                            {isPositive ? '+' : ''}{totalProfit.toFixed(2)}
+                                        </span>
+                                    </div>
+                                );
+                            })()}
                             <div className="w-px h-5 mx-1" style={{ background: "rgba(99,102,241,0.08)" }} />
                             {/* Live Sync */}
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
