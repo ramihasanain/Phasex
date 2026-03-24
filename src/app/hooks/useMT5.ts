@@ -291,44 +291,26 @@ export function useMT5(): UseMT5Result {
 
     // ─── Auto-reconnect if accountId exists ───
     useEffect(() => {
-        let isActive = true;
-        let retryTimer: any;
-
-        const attemptReconnect = async () => {
-            if (!accountId || connected || connecting || !isActive) return;
-            
-            try {
-                const headers: Record<string, string> = {};
-                if (sessionToken) headers['X-Session-Token'] = sessionToken;
-                const res = await fetch(`${MT5_API_BASE}/account/?account_id=${accountId}`, { headers });
-                const data = await safeJson(res);
-                
-                if (!isActive) return;
-                if (handleSessionExpired(data, res)) return;
-                
-                if (mountedRef.current && data.account) {
-                    setConnected(true);
-                    setAccount(data.account);
-                } else {
-                    // Broker might be slow/restarting. Do NOT give up. Schedule a retry.
-                    console.warn("[MT5] Reconnect ping returned no account data. Retrying in 5s...");
-                    retryTimer = setTimeout(attemptReconnect, 5000);
-                }
-            } catch (err) {
-                if (!isActive) return;
-                // Transient network error or 502/504 gateway timeout from backend. Retry indefinitely!
-                console.warn("[MT5] Reconnect ping encountered transient error (50x/Timeout). Retrying in 5s...", err);
-                retryTimer = setTimeout(attemptReconnect, 5000);
-            }
-        };
-
-        attemptReconnect();
-
-        return () => {
-            isActive = false;
-            if (retryTimer) clearTimeout(retryTimer);
-        };
-    }, [accountId, connected, connecting, sessionToken, handleSessionExpired, safeJson]);
+        if (accountId && !connected && !connecting) {
+            // Verify the account is still valid by fetching account info
+            // Server allows through if no session exists (e.g. server restarted)
+            (async () => {
+                try {
+                    const headers: Record<string, string> = {};
+                    if (sessionToken) headers['X-Session-Token'] = sessionToken;
+                    const res = await fetch(`${MT5_API_BASE}/account/?account_id=${accountId}`, {
+                        headers,
+                    });
+                    const data = await safeJson(res);
+                    if (handleSessionExpired(data, res)) return;
+                    if (mountedRef.current && data.account) {
+                        setConnected(true);
+                        setAccount(data.account);
+                    }
+                } catch { /* ignore — user will need to reconnect */ }
+            })();
+        }
+    }, []); // Only on mount
 
     // ─── Refresh Account Info ───
     const refreshAccount = useCallback(async () => {
