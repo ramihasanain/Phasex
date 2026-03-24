@@ -106,16 +106,6 @@ export interface UseMT5Result {
     symbolOverrides: Record<string, string>;
     setSymbolOverride: (dashboardName: string, brokerName: string) => Promise<boolean>;
     deleteSymbolOverride: (dashboardName: string) => Promise<boolean>;
-    // Server-side Auto-Trade
-    serverAutoTrades: Record<string, any>;
-    addAutoTrade: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
-    addAutoTradesBulk: (trades: { key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string }[]) => Promise<boolean>;
-    removeAutoTrade: (key: string) => Promise<boolean>;
-    fetchAutoTrades: () => Promise<void>;
-    stopAllAutoTrades: () => Promise<boolean>;
-    // Server-side Logs
-    serverAutoLogs: any[];
-    fetchAutoLogs: () => Promise<void>;
     // Server-side Trade History
     serverTradeHistory: any[];
     fetchTradeHistory: () => Promise<void>;
@@ -601,96 +591,11 @@ export function useMT5(): UseMT5Result {
         if (connected) fetchOverrides();
     }, [connected, fetchOverrides]);
 
-    // ─── Auto-Trade API (server-side, with account_id) ───
-    const [serverAutoTrades, setServerAutoTrades] = useState<Record<string, any>>({});
+    // ─── Trade History API (server-side, with account_id) ───
     const [serverTradeHistory, setServerTradeHistory] = useState<any[]>([]);
-    const [serverAutoLogs, setServerAutoLogs] = useState<any[]>([]);
-
-    const fetchAutoTrades = useCallback(async () => {
-        const aid = accountIdRef.current;
-        if (!connected || !aid) return;
-        try {
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/?account_id=${aid}`, {
-                headers: getHeaders()
-            });
-            const data = await safeJson(res);
-            if (data.success) setServerAutoTrades(data.auto_trades || {});
-        } catch { /* ignore */ }
-    }, [connected, getHeaders, safeJson]);
 
 
-    const addAutoTrade = useCallback(async (
-        key: string, symbol: string, tf: string, lot: number,
-        direction: string, signalPrice: number, sl?: number | null, tp?: number | null,
-        ticket?: string
-    ): Promise<boolean> => {
-        const aid = accountIdRef.current;
-        if (!aid) return false;
-        try {
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/`, {
-                method: 'POST',
-                headers: getHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({
-                    key, symbol, tf, lot, direction,
-                    signal_price: signalPrice, sl, tp,
-                    account_id: aid,
-                    ticket: ticket,
-                }),
-            });
-            const data = await safeJson(res);
-            if (data.success) {
-                fetchAutoTrades();
-                if (data.auto_trades) setServerAutoTrades(data.auto_trades);
-                return true;
-            }
-            return false;
-        } catch { return false; }
-    }, [fetchAutoTrades, getHeaders, safeJson]);
 
-    const addAutoTradesBulk = useCallback(async (
-        trades: { key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string }[]
-    ): Promise<boolean> => {
-        const aid = accountIdRef.current;
-        if (!aid || !trades.length) return false;
-        try {
-            const bodyTrades = trades.map(t => ({
-                key: t.key, symbol: t.symbol, tf: t.tf, lot: t.lot, direction: t.direction,
-                signal_price: t.signalPrice, sl: t.sl, tp: t.tp, ticket: t.ticket,
-                account_id: aid
-            }));
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/`, {
-                method: 'POST',
-                headers: getHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ account_id: aid, trades: bodyTrades }),
-            });
-            const data = await safeJson(res);
-            if (data.success) {
-                fetchAutoTrades();
-                if (data.auto_trades) setServerAutoTrades(data.auto_trades);
-                return true;
-            }
-            return false;
-        } catch { return false; }
-    }, [fetchAutoTrades, getHeaders, safeJson]);
-
-    const removeAutoTrade = useCallback(async (key: string): Promise<boolean> => {
-        const aid = accountIdRef.current;
-        if (!aid) return false;
-        try {
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/`, {
-                method: 'DELETE',
-                headers: getHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ key, account_id: aid }),
-            });
-            const data = await safeJson(res);
-            if (data.success) {
-                fetchAutoTrades();
-                if (data.auto_trades) setServerAutoTrades(data.auto_trades);
-                return true;
-            }
-            return false;
-        } catch { return false; }
-    }, [fetchAutoTrades, getHeaders, safeJson]);
 
     const fetchTradeHistory = useCallback(async () => {
         const aid = accountIdRef.current;
@@ -704,36 +609,7 @@ export function useMT5(): UseMT5Result {
         } catch { /* ignore */ }
     }, [getHeaders, safeJson]);
 
-    const fetchAutoLogs = useCallback(async () => {
-        const aid = accountIdRef.current;
-        if (!aid) return;
-        try {
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/logs/?account_id=${aid}`, {
-                headers: getHeaders()
-            });
-            const data = await safeJson(res);
-            if (data.success) setServerAutoLogs(data.logs || []);
-        } catch { /* ignore */ }
-    }, [getHeaders, safeJson]);
 
-    const stopAllAutoTrades = useCallback(async (): Promise<boolean> => {
-        const aid = accountIdRef.current;
-        if (!aid) return false;
-        try {
-            const res = await fetch(`${MT5_API_BASE}/auto-trades/stop-all/`, {
-                method: 'POST',
-                headers: getHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ account_id: aid })
-            });
-            const data = await safeJson(res);
-            if (data.success) {
-                fetchAutoTrades();
-                fetchTradeHistory();
-                return true;
-            }
-            return false;
-        } catch { return false; }
-    }, [fetchAutoTrades, fetchTradeHistory, getHeaders, safeJson]);
 
     const addTradeToHistory = useCallback(async (entry: any): Promise<boolean> => {
         const aid = accountIdRef.current;
@@ -771,7 +647,7 @@ export function useMT5(): UseMT5Result {
         } catch { return false; }
     }, [getHeaders, safeJson]);
 
-    // Poll auto-trades & history when connected
+    // Poll trade history when connected
     useEffect(() => {
         if (!connected) return;
         let isActive = true;
@@ -779,11 +655,7 @@ export function useMT5(): UseMT5Result {
         
         const poll = async () => {
             if (!isActive) return;
-            await fetchAutoTrades();
-            if (!isActive) return;
             await fetchTradeHistory();
-            if (!isActive) return;
-            await fetchAutoLogs();
             
             if (isActive) {
                 timer = setTimeout(poll, 10000);
@@ -796,7 +668,7 @@ export function useMT5(): UseMT5Result {
             isActive = false;
             if (timer) clearTimeout(timer);
         };
-    }, [connected, fetchAutoTrades, fetchTradeHistory, fetchAutoLogs]);
+    }, [connected, fetchTradeHistory]);
 
     return {
         connected,
@@ -821,16 +693,6 @@ export function useMT5(): UseMT5Result {
         symbolOverrides,
         setSymbolOverride,
         deleteSymbolOverride,
-        // Server-side auto-trade
-        serverAutoTrades,
-        addAutoTrade,
-        addAutoTradesBulk,
-        removeAutoTrade,
-        fetchAutoTrades,
-        stopAllAutoTrades,
-        // Server-side logs
-        serverAutoLogs,
-        fetchAutoLogs,
         // Server-side trade history
         serverTradeHistory,
         fetchTradeHistory,
