@@ -682,37 +682,8 @@ export function IndicatorChart({
     return { rows, maxProfitWindow, minProfitWindow };
   }, [effectiveData, currency?.price, showDirections]);
 
-  // When live positions close → remove from executedComments so signals become active again
-  // GUARD: Only run when mt5Positions has actual data (not empty/unsynced)
-  const hadPositionsRef = useRef(false);
-  useEffect(() => {
-    if (!mt5Positions || !currency || !directionsData?.rows) return;
-    // Don't clear anything if positions array is empty — might not be synced yet
-    if (mt5Positions.length === 0) return;
-    // Mark that we've seen real positions
-    hadPositionsRef.current = true;
-  }, [mt5Positions]);
-
-  useEffect(() => {
-    if (!mt5Positions || !currency || !directionsData?.rows) return;
-    // Only clean up if we've previously seen positions AND we still have some loaded
-    if (!hadPositionsRef.current || mt5Positions.length === 0) return;
-    
-    const liveComments = new Set(
-      mt5Positions.filter((p: any) => p.comment?.startsWith('PX-Chart-')).map((p: any) => p.comment)
-    );
-    setExecutedComments(prev => {
-      const next = new Set<string>();
-      prev.forEach(c => {
-        // Keep if it's for a different symbol/chart OR still has a live position
-        if (!c.startsWith(`PX-Chart-${currency.symbol}-`) || liveComments.has(c)) {
-          next.add(c);
-        }
-      });
-      if (next.size !== prev.size) return next;
-      return prev;
-    });
-  }, [mt5Positions, currency?.symbol, directionsData]);
+  // Smart blocking: use live positions when available, executedComments as fallback
+  const positionsLoaded = (mt5Positions && mt5Positions.length > 0);
 
   // Check if all trades are already executed or have positions
   const allTradesExecuted = useMemo(() => {
@@ -720,9 +691,11 @@ export function IndicatorChart({
     return directionsData.rows.every((row: any) => {
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
-      return hasPos || executedComments.has(chartComment);
+      const alreadyExecuted = executedComments.has(chartComment);
+      // If positions loaded: only live position blocks. If not loaded: use executedComments as safety
+      return hasPos || (!positionsLoaded && alreadyExecuted);
     });
-  }, [directionsData, currency, mainTF, subTF, mt5Positions, executedComments]);
+  }, [directionsData, currency, mainTF, subTF, mt5Positions, executedComments, positionsLoaded]);
 
   const applyGlobalDirLot = (val: number) => {
     if (!directionsData?.rows) return;
@@ -748,7 +721,8 @@ export function IndicatorChart({
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
       const alreadyExecuted = executedComments.has(chartComment);
-      if (hasPos || alreadyExecuted) continue;
+      // If positions loaded: only live positions block. If not: executedComments is safety fallback
+      if (hasPos || (!positionsLoaded && alreadyExecuted)) continue;
       
       trades.push({
         symbol: currency.symbol,
@@ -1373,7 +1347,8 @@ export function IndicatorChart({
                                   const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                   const alreadyExecuted = executedComments.has(chartComment);
-                                  const isBlocked = hasPos || alreadyExecuted;
+                                  // If positions loaded: only live positions block. If not: executedComments is safety fallback
+                                  const isBlocked = hasPos || (!positionsLoaded && alreadyExecuted);
 
                                   return (
                                     <div className="flex items-center justify-center gap-1.5">
