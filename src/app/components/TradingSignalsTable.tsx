@@ -613,19 +613,6 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                 <span className="text-[10px]" style={{ color: '#f87171' }}>▼</span>
                                 <span className="text-[11px] font-black" style={{ color: "#f87171" }}>{totalSell}</span>
                             </div>
-                            {mt5Connected && mt5Account && (
-                                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg" style={{
-                                    background: (mt5Account.profit ?? 0) >= 0 ? 'rgba(74,222,128,0.06)' : 'rgba(248,113,113,0.06)',
-                                    border: (mt5Account.profit ?? 0) >= 0 ? '1px solid rgba(74,222,128,0.1)' : '1px solid rgba(248,113,113,0.1)',
-                                }}>
-                                    <span className="text-[10px]" style={{ color: tk.textDim }}>P/L</span>
-                                    <span className="text-[11px] font-black" style={{
-                                        color: (mt5Account.profit ?? 0) >= 0 ? '#4ade80' : '#f87171',
-                                    }}>
-                                        {(mt5Account.profit ?? 0) >= 0 ? '+' : ''}{(mt5Account.profit ?? 0).toFixed(2)}$
-                                    </span>
-                                </div>
-                            )}
                             <div className="w-px h-5 mx-1" style={{ background: "rgba(99,102,241,0.08)" }} />
                             {/* Live Sync */}
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
