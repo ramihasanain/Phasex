@@ -350,6 +350,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
 
         const key = `${asset}-${tf}`;
         const lot = lotSizes[key] || 0.01;
+        // SL = entry price (breakeven) if no explicit stop_loss from signal
+        const effectiveSL = entry.stop_loss || entry.close;
 
         setExecutingTrades(prev => new Set(prev).add(key));
 
@@ -357,7 +359,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
             symbol: asset, tf, action: entry.net_signal,
             volume: lot, entryPrice: 0,
-            sl: entry.stop_loss || null, tp: entry.take_profit || null,
+            sl: effectiveSL, tp: entry.take_profit || null,
             ticket: null, status: 'pending', executedAt: new Date().toISOString(),
             signalPrice: entry.close,
             autoExecuted: isAuto,
@@ -366,7 +368,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
         try {
             const result = await executeTrade(
                 asset, entry.net_signal.toUpperCase(), lot,
-                entry.stop_loss || undefined, entry.take_profit || undefined,
+                effectiveSL, entry.take_profit || undefined,
                 tradeComment
             );
 
