@@ -441,8 +441,8 @@ export function useMT5(): UseMT5Result {
             if (handleSessionExpired(data, res)) return null;
             if (data.success && data.order) {
                 playTradeExecuted();
-                refreshPositions();
-                refreshAccount();
+                // Delay refresh to let MetaAPI sync new positions
+                setTimeout(() => { refreshPositions(); refreshAccount(); }, 1500);
                 return data.order as MT5TradeResult;
             } else {
                 const errMsg = data.error || 'Trade execution failed';
@@ -521,8 +521,8 @@ export function useMT5(): UseMT5Result {
             // Direct execution (Redis fallback) — results already here
             if (!data.queued) {
                 if (data.orders?.length > 0) playTradeExecuted();
-                refreshPositions();
-                refreshAccount();
+                // Delay refresh to let MetaAPI sync new positions
+                setTimeout(() => { refreshPositions(); refreshAccount(); }, 1500);
                 return { orders: data.orders || [], errors: data.errors || [] };
             }
 
@@ -538,8 +538,7 @@ export function useMT5(): UseMT5Result {
                     if (!pollData.pending) {
                         console.log(`[MT5] ✅ Job ${jobId}: ${pollData.executed || 0} executed`);
                         if (pollData.orders?.length > 0) playTradeExecuted();
-                        refreshPositions();
-                        refreshAccount();
+                        setTimeout(() => { refreshPositions(); refreshAccount(); }, 1500);
                         return { orders: pollData.orders || [], errors: pollData.errors || [] };
                     }
                 } catch { /* retry */ }
