@@ -487,7 +487,7 @@ export function useMT5(): UseMT5Result {
         }
     }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired, safeJson]);
 
-    // ─── Bulk Execute Trades (Rocket Mode — ONE request for ALL trades) ───
+    // ─── Bulk Execute Trades (Socket-Like: fire → poll for results) ───
     const bulkExecuteTrades = useCallback(async (
         trades: Array<{symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string}>
     ): Promise<{orders: any[], errors: any[]}> => {
@@ -502,7 +502,9 @@ export function useMT5(): UseMT5Result {
                 volume: Math.max(0.01, Math.min(10, Number(t.volume) || 0.01)),
                 comment: t.comment || 'PhaseX',
             }));
-            console.log(`[MT5] 🚀 BULK Execute: ${safeTrades.length} trades in ONE request`);
+            console.log(`[MT5] 🚀 FIRE: ${safeTrades.length} trades`);
+
+            // 1. FIRE — instant return (~20ms)
             const res = await fetch(`${MT5_API_BASE}/trade-bulk/`, {
                 method: 'POST',
                 headers: getHeaders({ 'Content-Type': 'application/json' }),
@@ -510,16 +512,40 @@ export function useMT5(): UseMT5Result {
             });
             const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return { orders: [], errors: [{error: 'Session expired'}] };
-            if (data.success) {
-                if (data.orders?.length > 0) playTradeExecuted();
-                // Single refresh after all trades complete
-                refreshPositions();
-                refreshAccount();
-                return { orders: data.orders || [], errors: data.errors || [] };
-            } else {
+
+            if (!data.success) {
                 setError(data.error || 'Bulk execution failed');
                 return { orders: [], errors: [{error: data.error}] };
             }
+
+            // Direct execution (Redis fallback) — results already here
+            if (!data.queued) {
+                if (data.orders?.length > 0) playTradeExecuted();
+                refreshPositions();
+                refreshAccount();
+                return { orders: data.orders || [], errors: data.errors || [] };
+            }
+
+            // 2. POLL — check for results (Redis queue mode)
+            const jobId = data.job_id;
+            console.log(`[MT5] ⏳ Job ${jobId} queued, polling...`);
+            const pollStart = Date.now();
+            while (Date.now() - pollStart < 25000) {
+                await new Promise(r => setTimeout(r, 200));
+                try {
+                    const pollRes = await fetch(`${MT5_API_BASE}/trade-result/${jobId}/`, { headers: getHeaders() });
+                    const pollData = await safeJson(pollRes);
+                    if (!pollData.pending) {
+                        console.log(`[MT5] ✅ Job ${jobId}: ${pollData.executed || 0} executed`);
+                        if (pollData.orders?.length > 0) playTradeExecuted();
+                        refreshPositions();
+                        refreshAccount();
+                        return { orders: pollData.orders || [], errors: pollData.errors || [] };
+                    }
+                } catch { /* retry */ }
+            }
+            refreshPositions();
+            return { orders: [], errors: [{error: 'Execution in progress, check positions'}] };
         } catch (e: any) {
             console.error('[MT5] Bulk execution error:', e);
             setError('Bulk execution failed');
