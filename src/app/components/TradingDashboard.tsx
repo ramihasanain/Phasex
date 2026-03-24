@@ -504,15 +504,6 @@ export function TradingDashboard({
     closeAllPositions,
     symbolOverrides,
     setSymbolOverride,
-    stopAllAutoTrades,
-    // Server-side auto-trade
-    serverAutoTrades,
-    addAutoTrade,
-    addAutoTradesBulk,
-    removeAutoTrade,
-    // Server-side logs
-    serverAutoLogs,
-    fetchAutoLogs,
     // Server-side trade history
     serverTradeHistory,
     fetchTradeHistory,
@@ -985,29 +976,6 @@ export function TradingDashboard({
                   transition={{ duration: 1.5, repeat: Infinity }}
                 />
               )}
-            </motion.button>
-
-            {/* FORCE KILL ALL AUTO Button */}
-            <motion.button
-              onClick={async () => {
-                if (!confirm(isRTL ? "تحذير: هل أنت متأكد من إيقاف ومسح جميع صفقات الأوتو في الخلفية لهذا الحساب؟" : "WARNING: Are you sure you want to FORCE STOP and clear all background Auto Trades for this account?")) return;
-                await stopAllAutoTrades();
-              }}
-              whileHover={{
-                scale: 1.04,
-                boxShadow: tk.isDark ? "0 4px 15px rgba(239, 68, 68, 0.4)" : "0 4px 15px rgba(220, 38, 38, 0.3)",
-              }}
-              whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer relative overflow-hidden"
-              style={{
-                color: "#ef4444",
-                background: "rgba(239, 68, 68, 0.1)",
-                border: `1px solid rgba(239, 68, 68, 0.3)`,
-                backdropFilter: tk.isDark ? "blur(8px)" : undefined,
-              }}
-            >
-              <PowerOff className="w-3.5 h-3.5 animate-pulse" />
-              <span>{isRTL ? "إغلاق كل الأوتو" : "Kill All Auto"}</span>
             </motion.button>
 
             <motion.button
@@ -1739,12 +1707,8 @@ export function TradingDashboard({
                 mt5Connected={mt5Connected}
                 executeTrade={executeTrade}
                 mt5Positions={mt5Positions}
-                serverAutoTrades={serverAutoTrades}
-                addAutoTrade={addAutoTrade}
-                addAutoTradesBulk={addAutoTradesBulk}
-                removeAutoTrade={removeAutoTrade}
-                stopAllAutoTrades={stopAllAutoTrades}
                 addTradeToHistory={addTradeToHistory}
+                serverTradeHistory={history}
                 renderTradeButtons={
                   selectedAsset
                     ? () => {
@@ -1828,17 +1792,7 @@ export function TradingDashboard({
                 symbolOverrides={symbolOverrides}
                 setSymbolOverride={setSymbolOverride}
                 mt5Account={mt5Account}
-                stopAllAutoTrades={stopAllAutoTrades}
-                serverAutoTrades={serverAutoTrades}
-                addAutoTrade={addAutoTrade}
-                addAutoTradesBulk={addAutoTradesBulk}
-                removeAutoTrade={removeAutoTrade}
                 serverTradeHistory={history}
-                addTradeToHistory={addTradeToHistory}
-                clearServerHistory={clearServerHistory}
-                fetchTradeHistory={refreshHistory}
-                serverAutoLogs={serverAutoLogs}
-                fetchAutoLogs={fetchAutoLogs}
               />
             </div>
           </div>

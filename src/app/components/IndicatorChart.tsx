@@ -49,6 +49,7 @@ interface IndicatorChartProps {
   executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<any>;
   mt5Positions?: any[];
   addTradeToHistory?: (entry: any) => void;
+  serverTradeHistory?: any[];
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -289,7 +290,7 @@ export function IndicatorChart({
   mtfEnabled = false, mtfSmallTimeframe = 5, mtfLargeTimeframe = 60,
   onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange,
   phaseStateData, generateCandlesFromReal, onLiveChartData, renderTradeButtons,
-  accessToken, mt5Connected, executeTrade: executeTradeFromChart, mt5Positions, addTradeToHistory,
+  accessToken, mt5Connected, executeTrade: executeTradeFromChart, mt5Positions, addTradeToHistory, serverTradeHistory,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -305,6 +306,24 @@ export function IndicatorChart({
   const [globalDirLot, setGlobalDirLot] = useState<number>(0.01);
   const [dirExecuting, setDirExecuting] = useState<Set<number>>(new Set());
   const [isExecutingAll, setIsExecutingAll] = useState(false);
+  // Track executed trade comments to prevent duplicates (persists via serverTradeHistory)
+  const [executedComments, setExecutedComments] = useState<Set<string>>(new Set());
+  
+  // Initialize executedComments from server trade history on mount/update
+  useEffect(() => {
+    if (serverTradeHistory && serverTradeHistory.length > 0) {
+      const comments = new Set<string>();
+      for (const entry of serverTradeHistory) {
+        if (entry.tf && typeof entry.tf === 'string') comments.add(entry.tf);
+        if (entry.comment && typeof entry.comment === 'string') comments.add(entry.comment);
+      }
+      setExecutedComments(prev => {
+        const merged = new Set(prev);
+        comments.forEach(c => merged.add(c));
+        return merged;
+      });
+    }
+  }, [serverTradeHistory]);
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -683,7 +702,8 @@ export function IndicatorChart({
       
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
-      if (hasPos) return;
+      const alreadyExecuted = executedComments.has(chartComment);
+      if (hasPos || alreadyExecuted) return;
       
       const lot = dirLotSizes[row.windowSize] ?? 0.01;
       setDirExecuting(prev => new Set(prev).add(row.windowSize));
@@ -691,6 +711,8 @@ export function IndicatorChart({
       try {
         // Direct fire — no refreshPositions/refreshAccount per trade!
         await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+        // Mark as executed permanently
+        setExecutedComments(prev => new Set(prev).add(chartComment));
       } catch (err: any) {
         console.error("Trade execution error:", err);
       } finally {
@@ -1261,31 +1283,34 @@ export function IndicatorChart({
                                 {(() => {
                                   const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+                                  const alreadyExecuted = executedComments.has(chartComment);
+                                  const isBlocked = hasPos || alreadyExecuted;
 
                                   return (
                                     <div className="flex items-center justify-center gap-1.5">
                                       {/* Execute Button */}
                                       <button
-                                        disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
-                                        title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
+                                        disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                        title={isBlocked ? '✅ صفقة منفذة بالفعل' : undefined}
                                         onClick={async (e) => {
                                           e.stopPropagation();
-                                          if (hasPos || !executeTradeFromChart || !currency) return;
+                                          if (isBlocked || !executeTradeFromChart || !currency) return;
                                           const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                           setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                           try {
                                             await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                            setExecutedComments(prev => new Set(prev).add(chartComment));
                                           } catch (err) { console.error(err); }
                                           setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                         }}
                                         className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                         style={{
-                                          color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                          background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                          border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                          color: (isBlocked || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                          background: (isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                          border: `1px solid ${(isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                                         }}
                                       >
-                                        {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                        {dirExecuting.has(row.windowSize) ? '...' : isBlocked ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                       </button>
                                     </div>
                                   );
@@ -1692,31 +1717,34 @@ export function IndicatorChart({
                                           {(() => {
                                             const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                             const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+                                            const alreadyExecuted = executedComments.has(chartComment);
+                                            const isBlocked = hasPos || alreadyExecuted;
 
                                             return (
                                               <div className="flex items-center justify-center gap-2 whitespace-nowrap min-w-fit">
                                                 {/* Execute Button */}
                                                 <button
-                                                  disabled={hasPos || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
-                                                  title={hasPos ? '✅ صفقة منفذة بالفعل' : undefined}
+                                                  disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                                  title={isBlocked ? '✅ صفقة منفذة بالفعل' : undefined}
                                                   onClick={async (e) => {
                                                     e.stopPropagation();
-                                                    if (hasPos || !executeTradeFromChart || !currency) return;
+                                                    if (isBlocked || !executeTradeFromChart || !currency) return;
                                                     const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                                     setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                                     try {
                                                       await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                                      setExecutedComments(prev => new Set(prev).add(chartComment));
                                                     } catch (err) { console.error(err); }
                                                     setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                                   }}
                                                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                                   style={{
-                                                    color: (hasPos || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                                    background: (hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                                    border: `1px solid ${(hasPos || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                                    color: (isBlocked || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                                    background: (isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                                    border: `1px solid ${(isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                                                   }}
                                                 >
-                                                  {dirExecuting.has(row.windowSize) ? '...' : hasPos ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                                  {dirExecuting.has(row.windowSize) ? '...' : isBlocked ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                                 </button>
                                               </div>
                                             );
