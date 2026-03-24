@@ -47,6 +47,7 @@ interface IndicatorChartProps {
   accessToken?: string | null;
   mt5Connected?: boolean;
   executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<any>;
+  bulkExecuteTrades?: (trades: Array<{symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string}>) => Promise<{orders: any[], errors: any[]}>;
   mt5Positions?: any[];
   addTradeToHistory?: (entry: any) => void;
   serverTradeHistory?: any[];
@@ -290,7 +291,7 @@ export function IndicatorChart({
   mtfEnabled = false, mtfSmallTimeframe = 5, mtfLargeTimeframe = 60,
   onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange,
   phaseStateData, generateCandlesFromReal, onLiveChartData, renderTradeButtons,
-  accessToken, mt5Connected, executeTrade: executeTradeFromChart, mt5Positions, addTradeToHistory, serverTradeHistory,
+  accessToken, mt5Connected, executeTrade: executeTradeFromChart, bulkExecuteTrades, mt5Positions, addTradeToHistory, serverTradeHistory,
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -692,35 +693,72 @@ export function IndicatorChart({
 
   const handleExecuteAll = async () => {
     if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
-    if (!executeTradeFromChart || !currency) return;
+    if (!currency) return;
     
     setIsExecutingAll(true);
     
-    // 🚀 ROCKET MODE: Fire ALL trades simultaneously — bypass per-trade refresh!
-    const promises = directionsData.rows.map(async (row: any) => {
-      if (dirExecuting.has(row.windowSize)) return;
-      
+    // Build trades array — skip already executed or live positions
+    const trades: Array<{symbol: string, action: string, volume: number, comment: string}> = [];
+    const tradeWindowSizes: number[] = [];
+    
+    for (const row of directionsData.rows) {
+      if (dirExecuting.has(row.windowSize)) continue;
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
       const alreadyExecuted = executedComments.has(chartComment);
-      if (hasPos || alreadyExecuted) return;
+      if (hasPos || alreadyExecuted) continue;
       
-      const lot = dirLotSizes[row.windowSize] ?? 0.01;
-      setDirExecuting(prev => new Set(prev).add(row.windowSize));
-      
-      try {
-        // Direct fire — no refreshPositions/refreshAccount per trade!
-        await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-        // Mark as executed permanently
-        setExecutedComments(prev => new Set(prev).add(chartComment));
-      } catch (err: any) {
-        console.error("Trade execution error:", err);
-      } finally {
-        setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
-      }
+      trades.push({
+        symbol: currency.symbol,
+        action: row.isBuy ? 'BUY' : 'SELL',
+        volume: dirLotSizes[row.windowSize] ?? 0.01,
+        comment: chartComment,
+      });
+      tradeWindowSizes.push(row.windowSize);
+    }
+
+    if (trades.length === 0) {
+      setIsExecutingAll(false);
+      return;
+    }
+
+    // Mark all as executing
+    setDirExecuting(prev => {
+      const next = new Set(prev);
+      tradeWindowSizes.forEach(ws => next.add(ws));
+      return next;
     });
 
-    await Promise.allSettled(promises);
+    try {
+      if (bulkExecuteTrades) {
+        // 🚀 ROCKET MODE: ONE request, ALL trades fire in parallel on the server!
+        const { orders } = await bulkExecuteTrades(trades);
+        // Mark successfully executed comments
+        const executedSet = new Set(orders.map((o: any) => o.comment).filter(Boolean));
+        setExecutedComments(prev => {
+          const next = new Set(prev);
+          executedSet.forEach(c => next.add(c));
+          return next;
+        });
+      } else if (executeTradeFromChart) {
+        // Fallback: parallel individual calls
+        await Promise.allSettled(trades.map(async (t) => {
+          try {
+            await executeTradeFromChart(t.symbol, t.action, t.volume, undefined, undefined, t.comment);
+            setExecutedComments(prev => new Set(prev).add(t.comment));
+          } catch (err) { console.error(err); }
+        }));
+      }
+    } catch (err) {
+      console.error('Bulk execution error:', err);
+    }
+
+    // Clear executing state
+    setDirExecuting(prev => {
+      const next = new Set(prev);
+      tradeWindowSizes.forEach(ws => next.delete(ws));
+      return next;
+    });
     setIsExecutingAll(false);
   };
 

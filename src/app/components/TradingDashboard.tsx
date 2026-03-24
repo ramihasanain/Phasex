@@ -500,6 +500,7 @@ export function TradingDashboard({
     refreshAccount: refreshMT5Account,
     refreshPositions: refreshMT5Positions,
     executeTrade,
+    bulkExecuteTrades,
     closePosition,
     closeAllPositions,
     symbolOverrides,
@@ -1706,6 +1707,7 @@ export function TradingDashboard({
                 accessToken={accessToken}
                 mt5Connected={mt5Connected}
                 executeTrade={executeTrade}
+                bulkExecuteTrades={bulkExecuteTrades}
                 mt5Positions={mt5Positions}
                 addTradeToHistory={addTradeToHistory}
                 serverTradeHistory={history}

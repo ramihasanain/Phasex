@@ -100,6 +100,7 @@ export interface UseMT5Result {
     refreshHistory: (days?: number) => Promise<void>;
     // Trade Execution
     executeTrade: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<MT5TradeResult | null>;
+    bulkExecuteTrades: (trades: Array<{symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string}>) => Promise<{orders: any[], errors: any[]}>;
     closePosition: (ticket: number) => Promise<boolean>;
     closeAllPositions: () => Promise<boolean>;
     // Symbol Overrides
@@ -486,6 +487,46 @@ export function useMT5(): UseMT5Result {
         }
     }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired, safeJson]);
 
+    // ─── Bulk Execute Trades (Rocket Mode — ONE request for ALL trades) ───
+    const bulkExecuteTrades = useCallback(async (
+        trades: Array<{symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string}>
+    ): Promise<{orders: any[], errors: any[]}> => {
+        const aid = accountIdRef.current;
+        if (!connected || !aid) {
+            setError('Not connected to MT5');
+            return { orders: [], errors: [{error: 'Not connected'}] };
+        }
+        try {
+            const safeTrades = trades.map(t => ({
+                ...t,
+                volume: Math.max(0.01, Math.min(10, Number(t.volume) || 0.01)),
+                comment: t.comment || 'PhaseX',
+            }));
+            console.log(`[MT5] 🚀 BULK Execute: ${safeTrades.length} trades in ONE request`);
+            const res = await fetch(`${MT5_API_BASE}/trade-bulk/`, {
+                method: 'POST',
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ account_id: aid, trades: safeTrades }),
+            });
+            const data = await safeJson(res);
+            if (handleSessionExpired(data, res)) return { orders: [], errors: [{error: 'Session expired'}] };
+            if (data.success) {
+                if (data.orders?.length > 0) playTradeExecuted();
+                // Single refresh after all trades complete
+                refreshPositions();
+                refreshAccount();
+                return { orders: data.orders || [], errors: data.errors || [] };
+            } else {
+                setError(data.error || 'Bulk execution failed');
+                return { orders: [], errors: [{error: data.error}] };
+            }
+        } catch (e: any) {
+            console.error('[MT5] Bulk execution error:', e);
+            setError('Bulk execution failed');
+            return { orders: [], errors: [{error: e?.message || 'Unknown'}] };
+        }
+    }, [connected, refreshPositions, refreshAccount, getHeaders, handleSessionExpired, safeJson]);
+
     // ─── Close Position (with account_id + session token) ───
     const closePosition = useCallback(async (ticket: number): Promise<boolean> => {
         const aid = accountIdRef.current;
@@ -688,6 +729,7 @@ export function useMT5(): UseMT5Result {
         refreshPositions,
         refreshHistory,
         executeTrade,
+        bulkExecuteTrades,
         closePosition,
         closeAllPositions,
         symbolOverrides,
