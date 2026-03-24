@@ -585,10 +585,8 @@ export function useMT5(): UseMT5Result {
             if (handleSessionExpired(data, res)) return false;
             if (data.success) {
                 playPositionClosed();
-                // Optimistic removal: instantly remove from local state
-                setPositions(prev => prev.filter(p => p.ticket !== ticket));
-                // Delayed re-sync with server (terminal_state needs ~2s to update)
-                setTimeout(() => { refreshPositions(); refreshAccount(); }, 2000);
+                refreshPositions();
+                refreshAccount();
                 return true;
             } else {
                 setError(data.error || 'Failed to close position');
@@ -616,10 +614,8 @@ export function useMT5(): UseMT5Result {
             const data = await safeJson(res);
             if (handleSessionExpired(data, res)) return false;
             if (data.success) {
-                // Optimistic removal: instantly clear all positions locally
-                setPositions([]);
-                // Delayed re-sync with server
-                setTimeout(() => { refreshPositions(); refreshAccount(); }, 2000);
+                refreshPositions();
+                refreshAccount();
                 return true;
             } else {
                 setError(data.error || 'Failed to close all positions');
