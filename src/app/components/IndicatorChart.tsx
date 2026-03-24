@@ -683,8 +683,21 @@ export function IndicatorChart({
   }, [effectiveData, currency?.price, showDirections]);
 
   // When live positions close → remove from executedComments so signals become active again
+  // GUARD: Only run when mt5Positions has actual data (not empty/unsynced)
+  const hadPositionsRef = useRef(false);
   useEffect(() => {
     if (!mt5Positions || !currency || !directionsData?.rows) return;
+    // Don't clear anything if positions array is empty — might not be synced yet
+    if (mt5Positions.length === 0) return;
+    // Mark that we've seen real positions
+    hadPositionsRef.current = true;
+  }, [mt5Positions]);
+
+  useEffect(() => {
+    if (!mt5Positions || !currency || !directionsData?.rows) return;
+    // Only clean up if we've previously seen positions AND we still have some loaded
+    if (!hadPositionsRef.current || mt5Positions.length === 0) return;
+    
     const liveComments = new Set(
       mt5Positions.filter((p: any) => p.comment?.startsWith('PX-Chart-')).map((p: any) => p.comment)
     );
@@ -696,7 +709,6 @@ export function IndicatorChart({
           next.add(c);
         }
       });
-      // Only update if something changed
       if (next.size !== prev.size) return next;
       return prev;
     });
