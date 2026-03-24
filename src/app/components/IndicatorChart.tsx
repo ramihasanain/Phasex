@@ -1195,7 +1195,10 @@ export function IndicatorChart({
                     <span className="text-lg font-bold tracking-widest" style={{ color: tk.textPrimary }}>
                       Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                     </span>
-                    {directionsData && directionsData.rows && directionsData.rows.length > 0 && (
+                    {directionsData && directionsData.rows && directionsData.rows.length > 0 && (() => {
+                      const totalProfit = directionsData.rows.reduce((sum: number, r: any) => sum + (r.profit || 0), 0);
+                      const isTotalPositive = totalProfit >= 0;
+                      return (
                       <div className={(isRTL ? "mr-2 pr-2 border-r" : "ml-2 pl-2 border-l") + " flex items-center gap-3"} style={{ borderColor: tk.border }}>
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ background: 'rgba(16,185,129,0.1)' }}>
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -1209,8 +1212,14 @@ export function IndicatorChart({
                             SELL: {directionsData.rows.filter((r: any) => !r.isBuy).length}
                           </span>
                         </div>
+                        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md" style={{ background: isTotalPositive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${isTotalPositive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
+                          <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: isTotalPositive ? '#10b981' : '#ef4444' }}>
+                            {isRTL ? 'الربح:' : 'Profit:'} {isTotalPositive ? '+' : ''}{totalProfit.toFixed(decimals)}
+                          </span>
+                        </div>
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 md:gap-1.5 px-1.5 py-1 rounded-lg" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)', border: `1px solid ${tk.border}` }}>
@@ -1645,10 +1654,35 @@ export function IndicatorChart({
                       className="absolute inset-0 z-40 overflow-hidden flex flex-col bg-slate-900/95 backdrop-blur-md rounded-lg"
                       style={{ border: `1px solid ${tk.border}` }}>
                       <div className="px-6 py-4 flex flex-wrap items-center justify-between gap-4" style={{ background: "rgba(15, 23, 42, 0.6)", borderBottom: `1px solid ${tk.border}` }}>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           <span className="text-xl font-bold text-white tracking-widest">
                             Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                           </span>
+                          {directionsData && directionsData.rows && directionsData.rows.length > 0 && (() => {
+                            const totalProfit = directionsData.rows.reduce((sum: number, r: any) => sum + (r.profit || 0), 0);
+                            const isTotalPositive = totalProfit >= 0;
+                            return (
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md" style={{ background: 'rgba(16,185,129,0.1)' }}>
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                  <span className="text-[12px] font-black text-emerald-500 uppercase tracking-wider">
+                                    BUY: {directionsData.rows.filter((r: any) => r.isBuy).length}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                  <span className="text-[12px] font-black text-red-500 uppercase tracking-wider">
+                                    SELL: {directionsData.rows.filter((r: any) => !r.isBuy).length}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md" style={{ background: isTotalPositive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)', border: `1px solid ${isTotalPositive ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}` }}>
+                                  <span className="text-[13px] font-black uppercase tracking-wider font-mono" style={{ color: isTotalPositive ? '#10b981' : '#ef4444' }}>
+                                    {isRTL ? 'الربح:' : 'Profit:'} {isTotalPositive ? '+' : ''}{totalProfit.toFixed(decimals)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                         <div className="flex flex-wrap items-center gap-3">
                           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${tk.border}` }}>
