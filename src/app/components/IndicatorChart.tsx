@@ -682,21 +682,6 @@ export function IndicatorChart({
     return { rows, maxProfitWindow, minProfitWindow };
   }, [effectiveData, currency?.price, showDirections]);
 
-  // Smart blocking: use live positions when available, executedComments as fallback
-  const positionsLoaded = (mt5Positions && mt5Positions.length > 0);
-
-  // Check if all trades are already executed or have positions
-  const allTradesExecuted = useMemo(() => {
-    if (!directionsData?.rows || directionsData.rows.length === 0 || !currency) return true;
-    return directionsData.rows.every((row: any) => {
-      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
-      const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
-      const alreadyExecuted = executedComments.has(chartComment);
-      // If positions loaded: only live position blocks. If not loaded: use executedComments as safety
-      return hasPos || (!positionsLoaded && alreadyExecuted);
-    });
-  }, [directionsData, currency, mainTF, subTF, mt5Positions, executedComments, positionsLoaded]);
-
   const applyGlobalDirLot = (val: number) => {
     if (!directionsData?.rows) return;
     setDirLotSizes(prev => {
@@ -721,8 +706,7 @@ export function IndicatorChart({
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
       const alreadyExecuted = executedComments.has(chartComment);
-      // If positions loaded: only live positions block. If not: executedComments is safety fallback
-      if (hasPos || (!positionsLoaded && alreadyExecuted)) continue;
+      if (hasPos || alreadyExecuted) continue;
       
       trades.push({
         symbol: currency.symbol,
@@ -1245,7 +1229,7 @@ export function IndicatorChart({
                       <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
                     </div>
 
-                    <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency || !mt5Connected || allTradesExecuted} title={!mt5Connected ? (isRTL ? 'MT5 غير متصل' : 'MT5 not connected') : allTradesExecuted ? (isRTL ? 'جميع الصفقات منفذة' : 'All trades executed') : undefined} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
+                    <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
                       {isExecutingAll ? (
                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full" />
                       ) : (
@@ -1347,8 +1331,7 @@ export function IndicatorChart({
                                   const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                   const alreadyExecuted = executedComments.has(chartComment);
-                                  // If positions loaded: only live positions block. If not: executedComments is safety fallback
-                                  const isBlocked = hasPos || (!positionsLoaded && alreadyExecuted);
+                                  const isBlocked = hasPos || alreadyExecuted;
 
                                   return (
                                     <div className="flex items-center justify-center gap-1.5">
