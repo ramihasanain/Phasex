@@ -1,42 +1,7 @@
-const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/accounts";
+import { APICountry, APIError, APIUser, AuthResponse, RegisterPayload } from "./types";
 
-/* ─── Country Type ─── */
-export interface APICountry {
-  id: number;
-  name_en: string;
-  name_ar: string;
-}
+const API_BASE = import.meta.env.API_URL;
 
-/* ─── Types ─── */
-export interface RegisterPayload {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password: string;
-  country_id: number;
-}
-
-export interface APIUser {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  country_id: number;
-  email_verified: boolean;
-  email_verified_at: string | null;
-  referral_code: string;
-}
-
-export interface AuthResponse {
-  user: APIUser;
-  refresh: string;
-  access: string;
-}
-
-export interface APIError {
-  error: string;
-  message: string;
-}
 
 /* ─── Helper ─── */
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -58,11 +23,7 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
   return handleResponse<AuthResponse>(res);
 }
 
-/* ─── Verify Email ─── */
-export async function verifyEmail(uid: string, token: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/verify-email/?uid=${uid}&token=${token}`);
-  return handleResponse<any>(res);
-}
+
 
 /* ─── Resend Verification ─── */
 export async function resendVerification(email: string): Promise<any> {

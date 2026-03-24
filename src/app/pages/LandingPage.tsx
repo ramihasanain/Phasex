@@ -1,9 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Logo } from "./Logo";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  ArrowRight, Activity, TrendingUp, Shield, Zap, Globe, Cpu, ChevronRight, Menu, X, Play, Clock, BarChart2,
-  Lock, RefreshCw, Server, Send, LayoutTemplate, Smartphone, Languages, ChevronDown,
+  ArrowRight, Activity, TrendingUp, Shield, Zap, ChevronRight, Menu, X,
+  ChevronDown,
   Gauge, Move, Target, Navigation, Users, BarChart3, Sparkles, ChevronLeft, Linkedin, Twitter, Mail,
   Briefcase, Brain, Eye, LineChart, Ban, BellOff, HeartOff, Layers
 } from "lucide-react";
@@ -15,16 +14,17 @@ import screenshot4 from "../../assets/screenshot4.png";
 import screenshot5 from "../../assets/screenshot5.png";
 import screenshot6 from "../../assets/screenshot6.png";
 import screenshot7 from "../../assets/screenshot7.png";
-import { TermsModal, TermsButton, CookiePolicyModal, CookieButton, LegalDisclaimerModal, LegalDisclaimerButton, ManifestoModal, ManifestoButton, PrivacyPolicyModal, PrivacyPolicyButton, RiskDisclosureModal, RiskDisclosureButton } from "./TermsAndConditions";
-import { BreakingNews } from "./BreakingNews";
+import { languageOptions } from "../utils/languageOptions";
+import { Logo } from "../components/Logo";
+import { BreakingNews } from "../components/BreakingNews";
+import { CookieButton, CookiePolicyModal, LegalDisclaimerButton, LegalDisclaimerModal, ManifestoButton, ManifestoModal, PrivacyPolicyButton, PrivacyPolicyModal, RiskDisclosureButton, RiskDisclosureModal, TermsButton, TermsModal } from "../components/TermsAndConditions";
 
 interface LandingPageProps {
   onGetStarted: () => void;
-  onRegister: () => void;
   onOpenDynamics: () => void;
 }
 
-export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: LandingPageProps) {
+export function LandingPage({ onGetStarted, onOpenDynamics }: LandingPageProps) {
   const { language, setLanguageKey, t } = useLanguage();
   const isRTL = language === "ar";
   const [currentScreenshot, setCurrentScreenshot] = useState(0);
@@ -51,14 +51,6 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const languageOptions = [
-    { code: "ar", label: "العربية", flagUrl: "sa" },
-    { code: "en", label: "English", flagUrl: "gb" },
-    { code: "ru", label: "Русский", flagUrl: "ru" },
-    { code: "tr", label: "Türkçe", flagUrl: "tr" },
-    { code: "fr", label: "Français", flagUrl: "fr" },
-    { code: "es", label: "Español", flagUrl: "es" }
-  ];
 
   const currentLangObj = languageOptions.find(l => l.code === language) || languageOptions[1];
 
@@ -290,8 +282,8 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                               setLangDropdownOpen(false);
                             }}
                             className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left ${language === lang.code
-                                ? "bg-white/10 text-white font-bold"
-                                : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                              ? "bg-white/10 text-white font-bold"
+                              : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
                               }`}
                           >
                             <img src={`https://flagcdn.com/${lang.flagUrl}.svg`} alt={lang.code} className="w-5 h-auto rounded-sm object-cover" />
@@ -1061,7 +1053,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                 onClick={() => setFlippedBroker(flippedBroker === i ? null : i)}>
                 {/* Card container with 3D flip */}
                 <div className="w-full h-full relative transition-transform duration-500" style={{ transformStyle: "preserve-3d", transform: flippedBroker === i ? "rotateY(180deg)" : "rotateY(0deg)" }}>
-                  
+
                   {/* FRONT FACE */}
                   <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-2 border border-[#1c2230] hover:border-gray-600 transition-colors"
                     style={{ backfaceVisibility: "hidden", background: "#10141d" }}>
@@ -1072,7 +1064,7 @@ export function LandingPage({ onGetStarted, onRegister, onOpenDynamics }: Landin
                     </div>
                     <p className="text-[9px] text-gray-600 font-medium">{t("brokerClickToReveal")}</p>
                   </div>
-                  
+
                   {/* BACK FACE */}
                   <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3 border p-4"
                     style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(135deg, #10141d, #161c2a)", borderColor: `${accent}40` }}>

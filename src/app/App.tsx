@@ -14,7 +14,6 @@ function LandingRoute() {
   return (
     <LandingPage
       onGetStarted={() => navigate("/login")}
-      onRegister={() => navigate("/register")}
       onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "landing" } })}
     />
   );

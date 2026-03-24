@@ -210,7 +210,7 @@ export function SignalCell({ signal, rowIdx, colIdx }: { signal: Signal; rowIdx:
 // ==========================================
 import { NewsTag } from "./types";
 
-export const GLOBAL_NEWS_TAGS: NewsTag[] = [
+const GLOBAL_NEWS_TAGS: NewsTag[] = [
     // Forex Majors & Central Banks
     { symbol: "EURUSD", keywords: ["EUR", "USD", "ECB", "Federal Reserve", "Fed", "Lagarde", "Powell", "Eurozone", "Euro", "Dollar", "NFP", "FOMC", "CPI"] },
     { symbol: "GBPUSD", keywords: ["GBP", "USD", "BoE", "Bank of England", "Bailey", "Pound", "Sterling", "UK", "Britain", "Brexit"] },
@@ -246,7 +246,7 @@ export function extractTagsFromText(text: string | undefined): string[] {
             const isShort = kw.length <= 3;
             const regexStr = isShort ? `\\b${kw.toLowerCase()}\\b` : kw.toLowerCase();
             const regex = new RegExp(regexStr, 'i');
-            
+
             if (regex.test(normalizedText)) {
                 matched.add(tagdef.symbol);
                 break; // One keyword match is enough to assign this symbol tag
