@@ -821,52 +821,94 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                         >
                             <div className="flex items-center gap-3">
                                 <History className="w-5 h-5 text-pink-400" />
-                                <span className="text-[12px] font-black uppercase tracking-wider text-pink-400">Auto Trade Logs</span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400">{serverAutoLogs.length}</span>
+                                <span className="text-[12px] font-black uppercase tracking-wider text-pink-400">Background Auto Trades</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400">{Object.keys(serverAutoTrades).length}</span>
                                 {showAutoLogs ? <ChevronUp className="w-4 h-4 text-pink-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-pink-400 opacity-50 ml-2" />}
                             </div>
-                            {showAutoLogs && (
+                            {showAutoLogs && Object.keys(serverAutoTrades).length > 0 && stopAllAutoTrades && (
                                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => fetchAutoLogs?.()}
-                                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                                    <motion.button whileTap={{ scale: 0.95 }}
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            const btn = document.getElementById('mt5-stop-btn') as HTMLButtonElement;
+                                            if (btn) btn.innerHTML = 'Stopping...';
+                                            await stopAllAutoTrades();
+                                            setTimeout(() => { if (btn) btn.innerHTML = 'Stop All'; }, 1000);
+                                        }}
+                                        id="mt5-stop-btn"
+                                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
                                         style={{ color: '#ec4899', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.15)' }}
-                                    >Refresh Logs</motion.button>
+                                    >Stop All</motion.button>
                                 </div>
                             )}
                         </div>
                         
                         {showAutoLogs && (
-                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 400 }}>
-                                {serverAutoLogs.length === 0 ? (
+                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 240 }}>
+                                {Object.keys(serverAutoTrades).length === 0 ? (
                                     <div className="py-10 text-center" style={{ background: tk.surface }}>
                                         <History className="w-10 h-10 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.4 }} />
-                                        <span className="text-sm font-bold" style={{ color: tk.textDim }}>No auto trade logs yet</span>
+                                        <span className="text-sm font-bold" style={{ color: tk.textDim }}>No active background trades</span>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col">
                                         <table className="w-full text-left" style={{ borderCollapse: 'collapse', background: tk.surface }}>
                                             <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
                                                 <tr style={{ borderBottom: '1px solid rgba(236,72,153,0.06)' }}>
-                                                    {['Time', 'Action', 'Symbol', 'TF', 'Old Dir.', 'New Dir.', 'Lot', 'Ticket', 'Profit', 'Details'].map(h => (
-                                                        <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase" style={{ color: tk.textDim }}>{h}</th>
+                                                    {['Symbol', 'Current Dir.', 'Waiting For', 'Lot', 'Ticket', 'Status', 'Action'].map(h => (
+                                                        <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase text-center" style={{ color: tk.textDim }}>{h}</th>
                                                     ))}
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {serverAutoLogs.map((log: any, i) => (
-                                                    <tr key={`${log.id}-${i}`} className="hover:bg-pink-500/5 transition-colors" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
-                                                        <td className="px-3 py-2 text-[10px] font-mono text-slate-400">{new Date(log.created_at).toLocaleString()}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-black" style={{ color: log.action === 'OPEN' ? '#10b981' : log.action === 'CLOSE' ? '#ef4444' : '#fbbf24' }}>{log.action}</td>
-                                                        <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{log.auto_trade?.symbol || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold text-indigo-400">{log.auto_trade?.main_tf || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.old_direction?.toLowerCase() === 'buy' ? '#10b981' : log.old_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.old_direction || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.new_direction?.toLowerCase() === 'buy' ? '#10b981' : log.new_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.new_direction || '-'}</td>
-                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold text-amber-500">{log.lot_size || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-mono text-purple-400">{log.ticket || '-'}</td>
-                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold" style={{ color: (log.profit || 0) >= 0 ? '#10b981' : '#ef4444' }}>{log.profit !== null && log.profit !== undefined ? log.profit.toFixed(2) : '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] text-slate-400 max-w-[200px] truncate" title={log.details}>{log.details || '-'}</td>
-                                                    </tr>
-                                                ))}
+                                                {Object.entries(serverAutoTrades).map(([key, autoTrade]) => {
+                                                    const isBuy = autoTrade.direction?.toLowerCase() === 'buy';
+                                                    return (
+                                                        <tr key={key} className="hover:bg-pink-500/5 transition-colors group text-center" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                            <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{autoTrade.symbol || '-'}</td>
+                                                            <td className="px-3 py-2">
+                                                                <span className="text-[10px] font-black px-2 py-0.5 rounded shadow-sm" style={{
+                                                                    color: isBuy ? '#10b981' : '#ef4444',
+                                                                    background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                }}>{autoTrade.direction?.toUpperCase() || '-'}</span>
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <span className="text-[10px] font-black px-2 py-0.5 rounded opacity-80 shadow-sm" style={{
+                                                                    color: !isBuy ? '#10b981' : '#ef4444',
+                                                                    background: !isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                                    border: `1px dashed ${!isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`
+                                                                }}>⏳ {!isBuy ? 'BUY' : 'SELL'}</span>
+                                                            </td>
+                                                            <td className="px-3 py-2 text-[11px] font-mono font-bold text-amber-500">{autoTrade.lot || '0.01'}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono text-purple-400">{autoTrade.active_ticket || autoTrade.ticket || '-'}</td>
+                                                            <td className="px-3 py-2">
+                                                                <span
+                                                                    className="text-[10px] font-black px-2 py-1 rounded shadow-sm cursor-help"
+                                                                    title={autoTrade.last_error || 'Active and monitoring'}
+                                                                    style={{
+                                                                        color: autoTrade.status === 'executed' ? '#ef4444' : autoTrade.status === 'watching' ? '#fbbf24' : '#a855f7',
+                                                                        background: autoTrade.status === 'executed' ? 'rgba(239,68,68,0.1)' : autoTrade.status === 'watching' ? 'rgba(245,158,11,0.1)' : 'rgba(168,85,247,0.1)',
+                                                                        border: `1px solid ${autoTrade.status === 'executed' ? 'rgba(239,68,68,0.2)' : autoTrade.status === 'watching' ? 'rgba(245,158,11,0.2)' : 'rgba(168,85,247,0.2)'}`
+                                                                    }}
+                                                                >
+                                                                    {autoTrade.status === 'executed' ? 'EXECUTED' : autoTrade.status === 'watching' ? 'WATCHING' : (autoTrade.status?.toUpperCase() || 'WATCHING')}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <motion.button
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    disabled={!removeAutoTrade}
+                                                                    onClick={async () => {
+                                                                        if (removeAutoTrade) await removeAutoTrade(key);
+                                                                    }}
+                                                                    className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded text-[10px] font-black cursor-pointer transition-colors opacity-80 hover:opacity-100 mx-auto"
+                                                                    style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                                                                    <X className="w-3 h-3" /> Stop
+                                                                </motion.button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
