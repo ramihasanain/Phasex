@@ -223,13 +223,26 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     const [nextCheckStr, setNextCheckStr] = useState<string>('');
 
     useEffect(() => {
-        if (!autoTradeWorker?.next_check) {
-            setNextCheckStr('');
-            return;
-        }
         const interval = setInterval(() => {
-            const now = Date.now() / 1000;
-            const diff = autoTradeWorker.next_check - now;
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            let targetMinute = Math.floor(minutes / 5) * 5;
+            
+            if (minutes % 5 === 0 && seconds >= 35) {
+                targetMinute += 5;
+            } else if (minutes % 5 !== 0) {
+                targetMinute = Math.ceil(minutes / 5) * 5;
+            }
+            
+            const targetDate = new Date(now);
+            targetDate.setMinutes(targetMinute);
+            targetDate.setSeconds(35);
+            targetDate.setMilliseconds(0);
+            
+            const diff = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
+            
             if (diff <= 0) {
                 setNextCheckStr('00:00');
             } else {
@@ -239,7 +252,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             }
         }, 1000);
         return () => clearInterval(interval);
-    }, [autoTradeWorker]);
+    }, []);
 
     // Track previous positions to detect when they close
     const prevPositionsRef = useRef<MT5Position[]>([]);
