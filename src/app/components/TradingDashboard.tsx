@@ -6,6 +6,7 @@ import { Logo } from "./Logo";
 import { SubscriptionPanel } from "./SubscriptionPanel";
 import { AdSpace } from "./AdSpace";
 import { TradingSignalsTable } from "./TradingSignalsTable";
+import { TradeErrorPopup } from "./TradeErrorPopup";
 import {
   LineChart,
   Activity,
@@ -495,6 +496,8 @@ export function TradingDashboard({
     positions: mt5Positions,
     positionsLoading: mt5PositionsLoading,
     error: mt5Error,
+    tradeError,
+    clearTradeError,
     history,
     refreshHistory,
     refreshAccount: refreshMT5Account,
@@ -809,6 +812,8 @@ export function TradingDashboard({
   ]);
 
   return (
+    <>
+    <TradeErrorPopup error={tradeError} onClose={clearTradeError} />
     <div
       className="min-h-screen overflow-x-hidden"
       dir={isRTL ? "rtl" : "ltr"}
@@ -2751,5 +2756,6 @@ export function TradingDashboard({
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }

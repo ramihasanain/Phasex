@@ -4,6 +4,7 @@
  * account_id is obtained during connect (MetaAPI provisioning) and persisted in localStorage.
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import type { TradeErrorInfo } from '../components/TradeErrorPopup';
 import { playTradeExecuted, playTradeFailed, playPositionClosed, playConnected } from "../utils/tradeSounds";
 const MT5_API_BASE = "https://seashell-app-cq4ql.ondigitalocean.app/api/mt5";
 /* ─── Types ─── */
@@ -94,6 +95,8 @@ export interface UseMT5Result {
     historyLoading: boolean;
     // Error
     error: string | null;
+    tradeError: TradeErrorInfo | null;
+    clearTradeError: () => void;
     // Refresh
     refreshAccount: () => Promise<void>;
     refreshPositions: () => Promise<void>;
@@ -131,6 +134,8 @@ export function useMT5(): UseMT5Result {
     const [history, setHistory] = useState<MT5Deal[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [tradeError, setTradeError] = useState<TradeErrorInfo | null>(null);
+    const clearTradeError = useCallback(() => setTradeError(null), []);
     const [connectStatus, setConnectStatus] = useState<string>('');
     const [symbolOverrides, setSymbolOverrides] = useState<Record<string, string>>({});
 
@@ -464,6 +469,7 @@ export function useMT5(): UseMT5Result {
                 const errMsg = data.error || 'Trade execution failed';
                 console.error('[MT5] Trade failed:', errMsg);
                 setError(errMsg);
+                setTradeError({ message: errMsg, symbol, action });
                 playTradeFailed();
                 throw new Error(errMsg);
             }
@@ -530,8 +536,10 @@ export function useMT5(): UseMT5Result {
             if (handleSessionExpired(data, res)) return { orders: [], errors: [{error: 'Session expired'}] };
 
             if (!data.success) {
-                setError(data.error || 'Bulk execution failed');
-                return { orders: [], errors: [{error: data.error}] };
+                const errMsg = data.error || 'Bulk execution failed';
+                setError(errMsg);
+                setTradeError({ message: errMsg, title: 'Bulk Execution Failed' });
+                return { orders: [], errors: [{error: errMsg}] };
             }
 
             // Direct execution (Redis fallback) — results already here
@@ -766,6 +774,8 @@ export function useMT5(): UseMT5Result {
         history,
         historyLoading,
         error,
+        tradeError,
+        clearTradeError,
         refreshAccount,
         refreshPositions,
         refreshHistory,
