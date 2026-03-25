@@ -1813,6 +1813,8 @@ export function TradingDashboard({
                 serverTradeHistory={history}
                 serverAutoLogs={autoTradeHistory}
                 fetchAutoLogs={fetchAutoTradeHistory}
+                serverAutoTrades={autoTrades}
+                removeAutoTrade={autoTradeUnsubscribe}
               />
             </div>
           </div>

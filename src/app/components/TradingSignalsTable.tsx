@@ -156,10 +156,10 @@ interface TradingSignalsTableProps {
     mt5Account?: MT5Account | null;
     stopAllAutoTrades?: () => Promise<boolean>;
     // Server-side auto-trade
-    serverAutoTrades?: Record<string, any>;
+    serverAutoTrades?: any[];
     addAutoTrade?: (key: string, symbol: string, tf: string, lot: number, direction: string, signalPrice: number, sl?: number | null, tp?: number | null, ticket?: string) => Promise<boolean>;
     addAutoTradesBulk?: (trades: any[]) => Promise<boolean>;
-    removeAutoTrade?: (key: string) => Promise<boolean>;
+    removeAutoTrade?: (comments: string[]) => Promise<void>;
     // Server-side trade history
     serverTradeHistory?: any[];
     addTradeToHistory?: (entry: any) => Promise<boolean>;
@@ -171,7 +171,7 @@ interface TradingSignalsTableProps {
 }
 
 /* ═══════════ Component ═══════════ */
-export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, stopAllAutoTrades, serverAutoTrades = {}, addAutoTrade, addAutoTradesBulk, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory, serverAutoLogs = [], fetchAutoLogs }: TradingSignalsTableProps) {
+export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Positions = [], closePosition, closeAllPositions, symbolOverrides = {}, setSymbolOverride, mt5Account, stopAllAutoTrades, serverAutoTrades = [], addAutoTrade, addAutoTradesBulk, removeAutoTrade, serverTradeHistory = [], addTradeToHistory, clearServerHistory, fetchTradeHistory, serverAutoLogs = [], fetchAutoLogs }: TradingSignalsTableProps) {
     const { language, t } = useLanguage();
     const isRTL = language === "ar";
     const tk = useThemeTokens();
@@ -207,8 +207,12 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     const [expandedHistoryRows, setExpandedHistoryRows] = useState<Set<string>>(new Set());
     const [editingSymbol, setEditingSymbol] = useState<string | null>(null);
     const [editingBrokerName, setEditingBrokerName] = useState('');
-    // Derive autoTrades set from server state
-    const autoTrades = useMemo(() => new Set(Object.keys(serverAutoTrades)), [serverAutoTrades]);
+    // Derive autoTrades set from server state array (key: "SYMBOL-SUB_TF")
+    const autoTrades = useMemo(() => {
+        const s = new Set<string>();
+        serverAutoTrades.forEach(at => s.add(`${at.symbol}-${at.sub_tf}`));
+        return s;
+    }, [serverAutoTrades]);
     const autoTradesRef = useRef(autoTrades);
     autoTradesRef.current = autoTrades;
     const lotSizesRef = useRef(lotSizes);
@@ -429,7 +433,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
 
                 // PREVENT DUPLICATE TICKETS: Skip if already executing or if already in Auto Mode!
                 if (executingTrades.has(key)) continue;
-                if (serverAutoTrades[key]) continue;
+                if (autoTrades.has(key)) continue;
 
                 const lot = lotSizes[key] || 0.01;
                 const effectiveSymbol = symbolOverrides[asset] || asset;
@@ -822,10 +826,10 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                             <div className="flex items-center gap-3">
                                 <History className="w-5 h-5 text-pink-400" />
                                 <span className="text-[12px] font-black uppercase tracking-wider text-pink-400">Background Auto Trades</span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400">{Object.keys(serverAutoTrades).length}</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400">{serverAutoTrades.length}</span>
                                 {showAutoLogs ? <ChevronUp className="w-4 h-4 text-pink-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-pink-400 opacity-50 ml-2" />}
                             </div>
-                            {showAutoLogs && Object.keys(serverAutoTrades).length > 0 && stopAllAutoTrades && (
+                            {showAutoLogs && serverAutoTrades.length > 0 && stopAllAutoTrades && (
                                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                     <motion.button whileTap={{ scale: 0.95 }}
                                         onClick={async (e) => {
@@ -845,7 +849,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                         
                         {showAutoLogs && (
                             <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 240 }}>
-                                {Object.keys(serverAutoTrades).length === 0 ? (
+                                {serverAutoTrades.length === 0 ? (
                                     <div className="py-10 text-center" style={{ background: tk.surface }}>
                                         <History className="w-10 h-10 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.4 }} />
                                         <span className="text-sm font-bold" style={{ color: tk.textDim }}>No active background trades</span>
@@ -861,16 +865,16 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {Object.entries(serverAutoTrades).map(([key, autoTrade]) => {
-                                                    const isBuy = autoTrade.direction?.toLowerCase() === 'buy';
+                                                {serverAutoTrades.map((autoTrade, i) => {
+                                                    const isBuy = autoTrade.current_direction?.toLowerCase() === 'buy';
                                                     return (
-                                                        <tr key={key} className="hover:bg-pink-500/5 transition-colors group text-center" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                        <tr key={autoTrade.id || i} className="hover:bg-pink-500/5 transition-colors group text-center" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
                                                             <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{autoTrade.symbol || '-'}</td>
                                                             <td className="px-3 py-2">
                                                                 <span className="text-[10px] font-black px-2 py-0.5 rounded shadow-sm" style={{
                                                                     color: isBuy ? '#10b981' : '#ef4444',
                                                                     background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                                }}>{autoTrade.direction?.toUpperCase() || '-'}</span>
+                                                                }}>{autoTrade.current_direction?.toUpperCase() || '-'}</span>
                                                             </td>
                                                             <td className="px-3 py-2">
                                                                 <span className="text-[10px] font-black px-2 py-0.5 rounded opacity-80 shadow-sm" style={{
@@ -879,19 +883,19 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                     border: `1px dashed ${!isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`
                                                                 }}>⏳ {!isBuy ? 'BUY' : 'SELL'}</span>
                                                             </td>
-                                                            <td className="px-3 py-2 text-[11px] font-mono font-bold text-amber-500">{autoTrade.lot || '0.01'}</td>
-                                                            <td className="px-3 py-2 text-[10px] font-mono text-purple-400">{autoTrade.active_ticket || autoTrade.ticket || '-'}</td>
+                                                            <td className="px-3 py-2 text-[11px] font-mono font-bold text-amber-500">{autoTrade.lot_size || '0.01'}</td>
+                                                            <td className="px-3 py-2 text-[10px] font-mono text-purple-400">{autoTrade.last_ticket || '-'}</td>
                                                             <td className="px-3 py-2">
                                                                 <span
                                                                     className="text-[10px] font-black px-2 py-1 rounded shadow-sm cursor-help"
                                                                     title={autoTrade.last_error || 'Active and monitoring'}
                                                                     style={{
-                                                                        color: autoTrade.status === 'executed' ? '#ef4444' : autoTrade.status === 'watching' ? '#fbbf24' : '#a855f7',
-                                                                        background: autoTrade.status === 'executed' ? 'rgba(239,68,68,0.1)' : autoTrade.status === 'watching' ? 'rgba(245,158,11,0.1)' : 'rgba(168,85,247,0.1)',
-                                                                        border: `1px solid ${autoTrade.status === 'executed' ? 'rgba(239,68,68,0.2)' : autoTrade.status === 'watching' ? 'rgba(245,158,11,0.2)' : 'rgba(168,85,247,0.2)'}`
+                                                                        color: autoTrade.last_ticket ? '#ef4444' : '#fbbf24',
+                                                                        background: autoTrade.last_ticket ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+                                                                        border: `1px solid ${autoTrade.last_ticket ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`
                                                                     }}
                                                                 >
-                                                                    {autoTrade.status === 'executed' ? 'EXECUTED' : autoTrade.status === 'watching' ? 'WATCHING' : (autoTrade.status?.toUpperCase() || 'WATCHING')}
+                                                                    {autoTrade.last_ticket ? 'EXECUTED' : 'WATCHING'}
                                                                 </span>
                                                             </td>
                                                             <td className="px-3 py-2">
@@ -899,7 +903,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                     whileTap={{ scale: 0.95 }}
                                                                     disabled={!removeAutoTrade}
                                                                     onClick={async () => {
-                                                                        if (removeAutoTrade) await removeAutoTrade(key);
+                                                                        if (removeAutoTrade && autoTrade.comment) await removeAutoTrade([autoTrade.comment]);
                                                                     }}
                                                                     className="inline-flex items-center justify-center gap-1 px-3 py-1 rounded text-[10px] font-black cursor-pointer transition-colors opacity-80 hover:opacity-100 mx-auto"
                                                                     style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
@@ -1496,10 +1500,11 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                         const rowKey = `${asset}-${tf}`;
 
                                                                                         if (isAuto) {
-                                                                                            removeAutoTrade?.(rowKey);
+                                                                                            const autoObj = serverAutoTrades.find(at => `${at.symbol}-${at.sub_tf}` === rowKey);
+                                                                                            if (autoObj?.comment) removeAutoTrade?.([autoObj.comment]);
                                                                                         } else {
                                                                                             // PREVENT DUPLICATE EXECUTION: Skip if currently dispatching or already auto-trading from server!
-                                                                                            if (executingTrades.has(rowKey) || serverAutoTrades[rowKey]) return;
+                                                                                            if (executingTrades.has(rowKey) || autoTrades.has(rowKey)) return;
 
                                                                                             const lot = lotSizes[rowKey] || 0.01;
                                                                                             const direction = entry.net_signal || '';
