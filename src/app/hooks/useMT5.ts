@@ -545,6 +545,10 @@ export function useMT5(): UseMT5Result {
             // Direct execution (Redis fallback) — results already here
             if (!data.queued) {
                 if (data.orders?.length > 0) playTradeExecuted();
+                if (data.errors?.length > 0) {
+                    const errMsgs = data.errors.map((e: any) => e.error || e.message || 'Unknown error');
+                    setTradeError({ message: errMsgs.join('\n'), title: 'Trade Execution Errors', details: errMsgs });
+                }
                 // Delay refresh to let MetaAPI sync new positions
                 setTimeout(() => { refreshPositions(); refreshAccount(); }, 1500);
                 return { orders: data.orders || [], errors: data.errors || [] };
@@ -562,6 +566,10 @@ export function useMT5(): UseMT5Result {
                     if (!pollData.pending) {
                         console.log(`[MT5] ✅ Job ${jobId}: ${pollData.executed || 0} executed`);
                         if (pollData.orders?.length > 0) playTradeExecuted();
+                        if (pollData.errors?.length > 0) {
+                            const errMsgs = pollData.errors.map((e: any) => e.error || e.message || 'Unknown error');
+                            setTradeError({ message: errMsgs.join('\n'), title: 'Trade Execution Errors', details: errMsgs });
+                        }
                         setTimeout(() => { refreshPositions(); refreshAccount(); }, 1500);
                         return { orders: pollData.orders || [], errors: pollData.errors || [] };
                     }

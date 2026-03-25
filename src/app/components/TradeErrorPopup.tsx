@@ -36,13 +36,7 @@ export function TradeErrorPopup({ error, onClose }: TradeErrorPopupProps) {
     }, 350);
   };
 
-  // Auto-close after 8 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(handleClose, 8000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
+
 
   if (!error) return null;
 
@@ -235,21 +229,7 @@ export function TradeErrorPopup({ error, onClose }: TradeErrorPopupProps) {
             </div>
           )}
 
-          {/* Auto-close progress bar */}
-          <div style={{
-            marginTop: '20px',
-            height: '2px',
-            borderRadius: '1px',
-            background: 'rgba(255,255,255,0.06)',
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              height: '100%',
-              background: `linear-gradient(90deg, ${errorColor}, ${errorColor}66)`,
-              animation: 'tradeErrorCountdown 8s linear forwards',
-              borderRadius: '1px',
-            }} />
-          </div>
+
         </div>
       </div>
 
@@ -262,10 +242,7 @@ export function TradeErrorPopup({ error, onClose }: TradeErrorPopupProps) {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.05); }
         }
-        @keyframes tradeErrorCountdown {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
+
       `}</style>
     </>
   );
