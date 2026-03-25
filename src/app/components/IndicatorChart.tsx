@@ -311,20 +311,36 @@ export function IndicatorChart({
   const [executedComments, setExecutedComments] = useState<Set<string>>(new Set());
   
   // Initialize executedComments from server trade history on mount/update
+  // BUT only keep comments that have a matching active position
   useEffect(() => {
+    const activeComments = new Set<string>(
+      (mt5Positions || []).map((p: any) => p.comment).filter(Boolean)
+    );
+    
     if (serverTradeHistory && serverTradeHistory.length > 0) {
-      const comments = new Set<string>();
+      const historyComments = new Set<string>();
       for (const entry of serverTradeHistory) {
-        if (entry.tf && typeof entry.tf === 'string') comments.add(entry.tf);
-        if (entry.comment && typeof entry.comment === 'string') comments.add(entry.comment);
+        if (entry.tf && typeof entry.tf === 'string') historyComments.add(entry.tf);
+        if (entry.comment && typeof entry.comment === 'string') historyComments.add(entry.comment);
       }
+      // Only keep comments that are STILL active positions
       setExecutedComments(prev => {
-        const merged = new Set(prev);
-        comments.forEach(c => merged.add(c));
+        const merged = new Set<string>();
+        // Keep existing entries only if they have an active position
+        prev.forEach(c => { if (activeComments.has(c)) merged.add(c); });
+        // Add history entries only if they have an active position
+        historyComments.forEach(c => { if (activeComments.has(c)) merged.add(c); });
         return merged;
       });
+    } else {
+      // No history — just keep what's still active
+      setExecutedComments(prev => {
+        const cleaned = new Set<string>();
+        prev.forEach(c => { if (activeComments.has(c)) cleaned.add(c); });
+        return cleaned;
+      });
     }
-  }, [serverTradeHistory]);
+  }, [serverTradeHistory, mt5Positions]);
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
