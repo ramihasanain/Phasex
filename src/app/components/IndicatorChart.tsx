@@ -309,38 +309,9 @@ export function IndicatorChart({
   const [isExecutingAll, setIsExecutingAll] = useState(false);
   // Track executed trade comments to prevent duplicates (persists via serverTradeHistory)
   const [executedComments, setExecutedComments] = useState<Set<string>>(new Set());
-  
-  // Initialize executedComments from server trade history on mount/update
-  // BUT only keep comments that have a matching active position
-  useEffect(() => {
-    const activeComments = new Set<string>(
-      (mt5Positions || []).map((p: any) => p.comment).filter(Boolean)
-    );
-    
-    if (serverTradeHistory && serverTradeHistory.length > 0) {
-      const historyComments = new Set<string>();
-      for (const entry of serverTradeHistory) {
-        if (entry.tf && typeof entry.tf === 'string') historyComments.add(entry.tf);
-        if (entry.comment && typeof entry.comment === 'string') historyComments.add(entry.comment);
-      }
-      // Only keep comments that are STILL active positions
-      setExecutedComments(prev => {
-        const merged = new Set<string>();
-        // Keep existing entries only if they have an active position
-        prev.forEach(c => { if (activeComments.has(c)) merged.add(c); });
-        // Add history entries only if they have an active position
-        historyComments.forEach(c => { if (activeComments.has(c)) merged.add(c); });
-        return merged;
-      });
-    } else {
-      // No history — just keep what's still active
-      setExecutedComments(prev => {
-        const cleaned = new Set<string>();
-        prev.forEach(c => { if (activeComments.has(c)) cleaned.add(c); });
-        return cleaned;
-      });
-    }
-  }, [serverTradeHistory, mt5Positions]);
+  // executedComments is a temporary optimistic block (3s) to prevent double-clicks
+  // After 3s it auto-clears, and hasPos (from mt5Positions) takes over the blocking
+  // When a position is closed, hasPos becomes false immediately → button re-enables
   const [viewWindow, setViewWindow] = useState(30);
   const [startIndex, setStartIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -778,6 +749,7 @@ export function IndicatorChart({
           try {
             await executeTradeFromChart(t.symbol, t.action, t.volume, undefined, undefined, t.comment);
             setExecutedComments(prev => new Set(prev).add(t.comment));
+            setTimeout(() => setExecutedComments(prev => { const n = new Set(prev); n.delete(t.comment); return n; }), 3000);
           } catch (err) { console.error(err); }
         }));
       }
@@ -1379,6 +1351,7 @@ export function IndicatorChart({
                                           try {
                                             await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
                                             setExecutedComments(prev => new Set(prev).add(chartComment));
+                                            setTimeout(() => setExecutedComments(prev => { const n = new Set(prev); n.delete(chartComment); return n; }), 3000);
                                           } catch (err) { console.error(err); }
                                           setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                         }}
@@ -1838,6 +1811,7 @@ export function IndicatorChart({
                                                     try {
                                                       await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
                                                       setExecutedComments(prev => new Set(prev).add(chartComment));
+                                                      setTimeout(() => setExecutedComments(prev => { const n = new Set(prev); n.delete(chartComment); return n; }), 3000);
                                                     } catch (err) { console.error(err); }
                                                     setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                                   }}
