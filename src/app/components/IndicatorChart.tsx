@@ -1348,11 +1348,6 @@ export function IndicatorChart({
                         )}
                         {isRTL ? "اوتو للكل" : "Auto All"}
                       </button>
-                      {nextCheckStr && (
-                        <span className="text-[9px] font-mono font-bold text-slate-400 animate-pulse">
-                          {isRTL ? "الفحص القادم:" : "Next Check:"} <span className="text-purple-400">{nextCheckStr}</span>
-                        </span>
-                      )}
                     </div>
                     <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 mb-4 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
                       <BarChart3 className="w-3.5 h-3.5" />

@@ -1815,6 +1815,7 @@ export function TradingDashboard({
                 fetchAutoLogs={fetchAutoTradeHistory}
                 serverAutoTrades={autoTrades}
                 removeAutoTrade={autoTradeUnsubscribe}
+                autoTradeWorker={autoTradeWorker}
               />
             </div>
           </div>
