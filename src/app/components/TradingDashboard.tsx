@@ -513,6 +513,11 @@ export function TradingDashboard({
     fetchTradeHistory,
     addTradeToHistory,
     clearServerHistory,
+    // Auto-Trade integration
+    autoTrades,
+    autoTradeWorker,
+    autoTradeSubscribe,
+    autoTradeUnsubscribe,
   } = useMT5();
 
   // Clear recentlyExecuted entries once positions confirm them
@@ -1697,6 +1702,10 @@ export function TradingDashboard({
               <IndicatorChart
                 key={`${selectedAsset?.id}-${selectedIndicator?.id}-${timeframe}`}
                 currency={liveSelectedAsset}
+                autoTrades={autoTrades}
+                autoTradeWorker={autoTradeWorker}
+                autoTradeSubscribe={autoTradeSubscribe}
+                autoTradeUnsubscribe={autoTradeUnsubscribe}
                 indicator={selectedIndicator}
                 data={selectedIndicator?.locked ? [] : chartData}
                 timeframe={timeframe}

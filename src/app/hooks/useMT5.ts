@@ -115,6 +115,14 @@ export interface UseMT5Result {
     fetchTradeHistory: () => Promise<void>;
     addTradeToHistory: (entry: any) => Promise<boolean>;
     clearServerHistory: () => Promise<boolean>;
+    // Auto-Trade
+    autoTrades: any[];
+    autoTradeWorker: any;
+    autoTradeHistory: any[];
+    autoTradeSubscribe: (trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}>) => Promise<{subscribed: any[], errors: any[]}>;
+    autoTradeUnsubscribe: (comments: string[]) => Promise<void>;
+    fetchAutoTradeStatus: () => Promise<void>;
+    fetchAutoTradeHistory: (limit?: number) => Promise<void>;
 }
 
 /* ─── Hook ─── */
@@ -768,6 +776,90 @@ export function useMT5(): UseMT5Result {
         };
     }, [connected, fetchTradeHistory]);
 
+    // ─── Auto-Trade State ───
+    const [autoTrades, setAutoTrades] = useState<any[]>([]);
+    const [autoTradeWorker, setAutoTradeWorker] = useState<any>(null);
+    const [autoTradeHistory, setAutoTradeHistory] = useState<any[]>([]);
+
+    const fetchAutoTradeStatus = useCallback(async () => {
+        const aid = accountIdRef.current;
+        if (!connected || !aid) return;
+        try {
+            const res = await fetch(`${MT5_API_BASE}/auto-trade/status/?account_id=${aid}`, { headers: getHeaders() });
+            const data = await safeJson(res);
+            if (handleSessionExpired(data, res)) return;
+            if (data?.success) {
+                setAutoTrades(data.auto_trades || []);
+                setAutoTradeWorker(data.worker || null);
+            }
+        } catch { /* ignore */ }
+    }, [connected, getHeaders, handleSessionExpired, safeJson]);
+
+    const fetchAutoTradeHistory = useCallback(async (limit = 50) => {
+        const aid = accountIdRef.current;
+        if (!connected || !aid) return;
+        try {
+            const res = await fetch(`${MT5_API_BASE}/auto-trade/history/?account_id=${aid}&limit=${limit}`, { headers: getHeaders() });
+            const data = await safeJson(res);
+            if (handleSessionExpired(data, res)) return;
+            if (data?.success) {
+                setAutoTradeHistory(data.logs || []);
+            }
+        } catch { /* ignore */ }
+    }, [connected, getHeaders, handleSessionExpired, safeJson]);
+
+    const autoTradeSubscribe = useCallback(async (
+        trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}>
+    ) => {
+        const aid = accountIdRef.current;
+        if (!connected || !aid) {
+            setError('Not connected to MT5');
+            return { subscribed: [], errors: [{ error: 'Not connected' }] };
+        }
+        try {
+            const res = await fetch(`${MT5_API_BASE}/auto-trade/subscribe/`, {
+                method: 'POST',
+                headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ account_id: aid, trades }),
+            });
+            const data = await safeJson(res);
+            if (handleSessionExpired(data, res)) return { subscribed: [], errors: [{ error: 'Session expired' }] };
+            if (data?.success) {
+                await fetchAutoTradeStatus();
+                await fetchAutoTradeHistory();
+                await refreshPositions();
+            }
+            return { subscribed: data?.subscribed || [], errors: data?.errors || [] };
+        } catch (e: any) {
+            setError(e.message);
+            return { subscribed: [], errors: [{ error: e.message }] };
+        }
+    }, [connected, getHeaders, handleSessionExpired, safeJson, fetchAutoTradeStatus, fetchAutoTradeHistory, refreshPositions]);
+
+    const autoTradeUnsubscribe = useCallback(async (comments: string[]) => {
+        const aid = accountIdRef.current;
+        if (!connected || !aid) return;
+        try {
+            const res = await fetch(`${MT5_API_BASE}/auto-trade/unsubscribe/`, {
+                method: 'POST',
+                headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ account_id: aid, comments }),
+            });
+            const data = await safeJson(res);
+            if (handleSessionExpired(data, res)) return;
+            await fetchAutoTradeStatus();
+            await fetchAutoTradeHistory();
+        } catch { /* ignore */ }
+    }, [connected, getHeaders, handleSessionExpired, fetchAutoTradeStatus, fetchAutoTradeHistory]);
+
+    // Poll auto-trade status every 30s
+    useEffect(() => {
+        if (!connected) return;
+        fetchAutoTradeStatus();
+        const interval = setInterval(fetchAutoTradeStatus, 30000);
+        return () => clearInterval(interval);
+    }, [connected, fetchAutoTradeStatus]);
+
     return {
         connected,
         connecting,
@@ -799,5 +891,13 @@ export function useMT5(): UseMT5Result {
         fetchTradeHistory,
         addTradeToHistory,
         clearServerHistory,
+        // Auto-Trade
+        autoTrades,
+        autoTradeWorker,
+        autoTradeHistory: autoTradeHistory,
+        autoTradeSubscribe,
+        autoTradeUnsubscribe,
+        fetchAutoTradeStatus,
+        fetchAutoTradeHistory,
     };
 }

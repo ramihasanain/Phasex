@@ -51,6 +51,11 @@ interface IndicatorChartProps {
   mt5Positions?: any[];
   addTradeToHistory?: (entry: any) => void;
   serverTradeHistory?: any[];
+  // Auto-Trade
+  autoTrades?: any[];
+  autoTradeWorker?: any;
+  autoTradeSubscribe?: (trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}>) => Promise<{subscribed: any[], errors: any[]}>;
+  autoTradeUnsubscribe?: (comments: string[]) => Promise<void>;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -292,6 +297,7 @@ export function IndicatorChart({
   onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange,
   phaseStateData, generateCandlesFromReal, onLiveChartData, renderTradeButtons,
   accessToken, mt5Connected, executeTrade: executeTradeFromChart, bulkExecuteTrades, mt5Positions, addTradeToHistory, serverTradeHistory,
+  autoTrades, autoTradeWorker, autoTradeSubscribe, autoTradeUnsubscribe
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -307,6 +313,9 @@ export function IndicatorChart({
   const [globalDirLot, setGlobalDirLot] = useState<number>(0.01);
   const [dirExecuting, setDirExecuting] = useState<Set<number>>(new Set());
   const [isExecutingAll, setIsExecutingAll] = useState(false);
+  const [isAutoExecutingAll, setIsAutoExecutingAll] = useState(false);
+  const [nextCheckStr, setNextCheckStr] = useState<string>('');
+  
   // Track executed trade comments to prevent duplicates (persists via serverTradeHistory)
   const [executedComments, setExecutedComments] = useState<Set<string>>(new Set());
   // executedComments is a temporary optimistic block (3s) to prevent double-clicks
@@ -360,6 +369,32 @@ export function IndicatorChart({
     onMtfLargeTimeframeChange?.(tfStringToNum(mainTF));
     onMtfSmallTimeframeChange?.(tfStringToNum(s));
   };
+
+  // ────── AUTO-TRADE COUNTDOWN TIMER ────── //
+  useEffect(() => {
+    if (!autoTradeWorker?.next_check) {
+      setNextCheckStr('');
+      return;
+    }
+    
+    // Auto trade worker runs on exact 5-minute boundaries + 35 seconds
+    // We already have the UTC timestamp in next_check, just count down to it.
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const next = new Date(autoTradeWorker.next_check).getTime();
+      const diff = next - now;
+      
+      if (diff <= 0) {
+        setNextCheckStr(isRTL ? "الآن..." : "Now...");
+      } else {
+        const m = Math.floor(diff / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        setNextCheckStr(`${m}:${s.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [autoTradeWorker?.next_check, isRTL]);
 
   const isPhaseIndicator = indicator?.id === "phase";
 
@@ -771,6 +806,62 @@ export function IndicatorChart({
       return next;
     });
     setIsExecutingAll(false);
+  };
+
+  const handleAutoAll = async () => {
+    if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
+    if (!currency || !autoTradeSubscribe) return;
+
+    setIsAutoExecutingAll(true);
+
+    const trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}> = [];
+    const tradeWindowSizes: number[] = [];
+
+    for (const row of directionsData.rows) {
+      if (dirExecuting.has(-row.windowSize)) continue;
+      
+      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+      const isAutoActive = autoTrades?.some(at => at.comment === chartComment);
+      const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+      
+      if (isAutoActive) continue;
+      
+      trades.push({
+        symbol: currency.symbol,
+        main_tf: mainTF,
+        sub_tf: subTF,
+        window_size: row.windowSize,
+        direction: row.isBuy ? 'BUY' : 'SELL',
+        lot_size: dirLotSizes[row.windowSize] ?? 0.01,
+        sl: row.entry,
+        comment: chartComment,
+      });
+      tradeWindowSizes.push(-row.windowSize); // negative implies auto loading state
+    }
+
+    if (trades.length === 0) {
+      setIsAutoExecutingAll(false);
+      return;
+    }
+
+    setDirExecuting(prev => {
+      const next = new Set(prev);
+      tradeWindowSizes.forEach(ws => next.add(ws));
+      return next;
+    });
+
+    try {
+      await autoTradeSubscribe(trades);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDirExecuting(prev => {
+        const next = new Set(prev);
+        tradeWindowSizes.forEach(ws => next.delete(ws));
+        return next;
+      });
+      setIsAutoExecutingAll(false);
+    }
   };
 
 
@@ -1248,7 +1339,22 @@ export function IndicatorChart({
                       )}
                       {isRTL ? "تنفيذ الكل" : "Execute All"}
                     </button>
-                    <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
+                    <div className="flex flex-col items-center gap-1">
+                      <button onClick={handleAutoAll} disabled={isAutoExecutingAll || !autoTradeSubscribe || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#a78bfa" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.2)"}` }}>
+                        {isAutoExecutingAll ? (
+                          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full" />
+                        ) : (
+                          <Zap className="w-3.5 h-3.5" />
+                        )}
+                        {isRTL ? "اوتو للكل" : "Auto All"}
+                      </button>
+                      {nextCheckStr && (
+                        <span className="text-[9px] font-mono font-bold text-slate-400 animate-pulse">
+                          {isRTL ? "الفحص القادم:" : "Next Check:"} <span className="text-purple-400">{nextCheckStr}</span>
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 mb-4 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
                       <BarChart3 className="w-3.5 h-3.5" />
                       {isRTL ? "العودة للشارت" : "Back to Chart"}
                     </button>
@@ -1362,7 +1468,7 @@ export function IndicatorChart({
                                           } catch (err) { console.error(err); }
                                           setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
                                         }}
-                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center justify-center min-w-[60px] px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                         style={{
                                           color: (isBlocked || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
                                           background: (isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
@@ -1371,6 +1477,50 @@ export function IndicatorChart({
                                       >
                                         {dirExecuting.has(row.windowSize) ? '...' : isBlocked ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
                                       </button>
+
+                                      {/* Auto Button */}
+                                      {(() => {
+                                        const isAutoActive = autoTrades?.some(at => at.comment === chartComment);
+                                        const isAutoTrading = dirExecuting.has(-row.windowSize); // negative windowSize for auto loading state
+                                        
+                                        return (
+                                          <button
+                                            disabled={isAutoTrading || (!isAutoActive && isBlocked) || !autoTradeSubscribe || !currency}
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              if (!autoTradeSubscribe || !autoTradeUnsubscribe || !currency) return;
+                                              
+                                              setDirExecuting(prev => new Set(prev).add(-row.windowSize));
+                                              
+                                              if (isAutoActive) {
+                                                await autoTradeUnsubscribe([chartComment]);
+                                              } else {
+                                                const lot = dirLotSizes[row.windowSize] ?? 0.01;
+                                                await autoTradeSubscribe([{
+                                                  symbol: currency.symbol,
+                                                  main_tf: mainTF,
+                                                  sub_tf: subTF,
+                                                  window_size: row.windowSize,
+                                                  direction: row.isBuy ? 'BUY' : 'SELL',
+                                                  lot_size: lot,
+                                                  sl: row.entry,
+                                                  comment: chartComment
+                                                }]);
+                                              }
+                                              
+                                              setDirExecuting(prev => { const n = new Set(prev); n.delete(-row.windowSize); return n; });
+                                            }}
+                                            className="inline-flex items-center justify-center min-w-[60px] gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                            style={{
+                                              color: isAutoActive ? '#a78bfa' : '#94a3b8',
+                                              background: isAutoActive ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)',
+                                              border: `1px solid ${isAutoActive ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                                            }}
+                                          >
+                                            {isAutoTrading ? '...' : isAutoActive ? '✅ Auto' : 'Auto'}
+                                          </button>
+                                        );
+                                      })()}
                                     </div>
                                   );
                                 })()}
