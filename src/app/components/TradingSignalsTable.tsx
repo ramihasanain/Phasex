@@ -1115,6 +1115,74 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                         )}
                     </div>
                 )}
+                
+                {/* ═══ AUTO TRADE LOGS INLINE PANEL (Accordion) ═══ */}
+                {mt5Connected && (
+                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(236,72,153,0.15)', background: tk.isDark ? 'rgba(236,72,153,0.02)' : 'rgba(236,72,153,0.02)' }}>
+                        <div 
+                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-pink-500/10" 
+                            style={{ borderBottom: showAutoLogs ? '1px solid rgba(236,72,153,0.06)' : 'none', background: 'rgba(236,72,153,0.05)' }}
+                            onClick={() => {
+                                setShowAutoLogs(!showAutoLogs);
+                                if (!showAutoLogs && fetchAutoLogs) fetchAutoLogs();
+                            }}
+                        >
+                            <div className="flex items-center gap-3">
+                                <History className="w-5 h-5 text-pink-400" />
+                                <span className="text-[12px] font-black uppercase tracking-wider text-pink-400">Auto Trade Logs</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400">{serverAutoLogs.length}</span>
+                                {showAutoLogs ? <ChevronUp className="w-4 h-4 text-pink-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-pink-400 opacity-50 ml-2" />}
+                            </div>
+                            {showAutoLogs && (
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => fetchAutoLogs?.()}
+                                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                                        style={{ color: '#ec4899', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.15)' }}
+                                    >Refresh Logs</motion.button>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {showAutoLogs && (
+                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 400 }}>
+                                {serverAutoLogs.length === 0 ? (
+                                    <div className="py-10 text-center" style={{ background: tk.surface }}>
+                                        <History className="w-10 h-10 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.4 }} />
+                                        <span className="text-sm font-bold" style={{ color: tk.textDim }}>No auto trade logs yet</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col">
+                                        <table className="w-full text-left" style={{ borderCollapse: 'collapse', background: tk.surface }}>
+                                            <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
+                                                <tr style={{ borderBottom: '1px solid rgba(236,72,153,0.06)' }}>
+                                                    {['Time', 'Action', 'Symbol', 'TF', 'Old Dir.', 'New Dir.', 'Lot', 'Ticket', 'Profit', 'Details'].map(h => (
+                                                        <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase" style={{ color: tk.textDim }}>{h}</th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {serverAutoLogs.map((log: any, i) => (
+                                                    <tr key={`${log.id}-${i}`} className="hover:bg-pink-500/5 transition-colors" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                        <td className="px-3 py-2 text-[10px] font-mono text-slate-400">{new Date(log.created_at).toLocaleString()}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-black" style={{ color: log.action === 'OPEN' ? '#10b981' : log.action === 'CLOSE' ? '#ef4444' : '#fbbf24' }}>{log.action}</td>
+                                                        <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{log.auto_trade?.symbol || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold text-indigo-400">{log.auto_trade?.main_tf || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.old_direction?.toLowerCase() === 'buy' ? '#10b981' : log.old_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.old_direction || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.new_direction?.toLowerCase() === 'buy' ? '#10b981' : log.new_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.new_direction || '-'}</td>
+                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold text-amber-500">{log.lot_size || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-mono text-purple-400">{log.ticket || '-'}</td>
+                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold" style={{ color: (log.profit || 0) >= 0 ? '#10b981' : '#ef4444' }}>{log.profit !== null && log.profit !== undefined ? log.profit.toFixed(2) : '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] text-slate-400 max-w-[200px] truncate" title={log.details}>{log.details || '-'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* ═══ FILTERS ═══ */}
                 <div className="px-5 py-4 mt-3 flex flex-wrap items-center gap-2.5 rounded-t-lg mx-0" style={{

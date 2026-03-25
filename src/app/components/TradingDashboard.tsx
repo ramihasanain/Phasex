@@ -516,8 +516,10 @@ export function TradingDashboard({
     // Auto-Trade integration
     autoTrades,
     autoTradeWorker,
+    autoTradeHistory,
     autoTradeSubscribe,
     autoTradeUnsubscribe,
+    fetchAutoTradeHistory,
   } = useMT5();
 
   // Clear recentlyExecuted entries once positions confirm them
@@ -1809,6 +1811,8 @@ export function TradingDashboard({
                 setSymbolOverride={setSymbolOverride}
                 mt5Account={mt5Account}
                 serverTradeHistory={history}
+                serverAutoLogs={autoTradeHistory}
+                fetchAutoLogs={fetchAutoTradeHistory}
               />
             </div>
           </div>
