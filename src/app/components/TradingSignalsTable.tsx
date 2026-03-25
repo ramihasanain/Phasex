@@ -230,7 +230,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             
             let targetMinute = Math.floor(minutes / 5) * 5;
             
-            if (minutes % 5 === 0 && seconds >= 35) {
+            if (minutes % 5 === 0 && seconds >= 42) {
                 targetMinute += 5;
             } else if (minutes % 5 !== 0) {
                 targetMinute = Math.ceil(minutes / 5) * 5;
@@ -238,7 +238,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             
             const targetDate = new Date(now);
             targetDate.setMinutes(targetMinute);
-            targetDate.setSeconds(35);
+            targetDate.setSeconds(42);
             targetDate.setMilliseconds(0);
             
             const diff = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
