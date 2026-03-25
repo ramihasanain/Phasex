@@ -701,7 +701,7 @@ export function IndicatorChart({
     setIsExecutingAll(true);
     
     // Build trades array — skip already executed or live positions
-    const trades: Array<{symbol: string, action: string, volume: number, comment: string}> = [];
+    const trades: Array<{symbol: string, action: string, volume: number, sl?: number, comment: string}> = [];
     const tradeWindowSizes: number[] = [];
     
     for (const row of directionsData.rows) {
@@ -715,6 +715,7 @@ export function IndicatorChart({
         symbol: currency.symbol,
         action: row.isBuy ? 'BUY' : 'SELL',
         volume: dirLotSizes[row.windowSize] ?? 0.01,
+        sl: row.entry,
         comment: chartComment,
       });
       tradeWindowSizes.push(row.windowSize);
@@ -747,7 +748,7 @@ export function IndicatorChart({
         // Fallback: parallel individual calls
         await Promise.allSettled(trades.map(async (t) => {
           try {
-            await executeTradeFromChart(t.symbol, t.action, t.volume, undefined, undefined, t.comment);
+            await executeTradeFromChart(t.symbol, t.action, t.volume, t.sl, undefined, t.comment);
             setExecutedComments(prev => new Set(prev).add(t.comment));
             setTimeout(() => setExecutedComments(prev => { const n = new Set(prev); n.delete(t.comment); return n; }), 3000);
           } catch (err) { console.error(err); }
