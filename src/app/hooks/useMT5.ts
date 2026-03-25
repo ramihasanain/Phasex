@@ -121,6 +121,7 @@ export interface UseMT5Result {
     autoTradeHistory: any[];
     autoTradeSubscribe: (trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}>) => Promise<{subscribed: any[], errors: any[]}>;
     autoTradeUnsubscribe: (comments: string[]) => Promise<void>;
+    stopAllAutoTrades: () => Promise<boolean>;
     fetchAutoTradeStatus: () => Promise<void>;
     fetchAutoTradeHistory: (limit?: number) => Promise<void>;
 }
@@ -852,6 +853,27 @@ export function useMT5(): UseMT5Result {
         } catch { /* ignore */ }
     }, [connected, getHeaders, handleSessionExpired, fetchAutoTradeStatus, fetchAutoTradeHistory]);
 
+    const stopAllAutoTrades = useCallback(async () => {
+        if (!autoTrades || autoTrades.length === 0) return true;
+        const comments = autoTrades.map((at: any) => at.comment).filter(Boolean);
+        if (comments.length === 0) return true;
+        
+        const aid = accountIdRef.current;
+        if (!connected || !aid) return false;
+        try {
+            const res = await fetch(`${MT5_API_BASE}/auto-trade/unsubscribe/`, {
+                method: 'POST',
+                headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ account_id: aid, comments }),
+            });
+            const data = await safeJson(res);
+            if (handleSessionExpired(data, res)) return false;
+            await fetchAutoTradeStatus();
+            await fetchAutoTradeHistory();
+            return data?.success || false;
+        } catch { return false; }
+    }, [connected, autoTrades, getHeaders, handleSessionExpired, fetchAutoTradeStatus, fetchAutoTradeHistory]);
+
     // Poll auto-trade status every 30s
     useEffect(() => {
         if (!connected) return;
@@ -899,5 +921,6 @@ export function useMT5(): UseMT5Result {
         autoTradeUnsubscribe,
         fetchAutoTradeStatus,
         fetchAutoTradeHistory,
+        stopAllAutoTrades,
     };
 }

@@ -519,6 +519,7 @@ export function TradingDashboard({
     autoTradeHistory,
     autoTradeSubscribe,
     autoTradeUnsubscribe,
+    stopAllAutoTrades,
     fetchAutoTradeHistory,
   } = useMT5();
 
@@ -1815,6 +1816,7 @@ export function TradingDashboard({
                 fetchAutoLogs={fetchAutoTradeHistory}
                 serverAutoTrades={autoTrades}
                 removeAutoTrade={autoTradeUnsubscribe}
+                stopAllAutoTrades={stopAllAutoTrades}
                 autoTradeWorker={autoTradeWorker}
               />
             </div>
