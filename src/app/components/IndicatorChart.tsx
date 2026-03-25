@@ -655,12 +655,7 @@ export function IndicatorChart({
 
   // Optimize Directions Table rendering
   const directionsData = useMemo(() => {
-    if (!showDirections || effectiveData.length === 0) return null;
-    
-    // Use the close price of the last closed candle (fixed value, no socket dependency)
-    const lastCandle = effectiveData[effectiveData.length - 1];
-    const closePrice = lastCandle?.close ?? lastCandle?.value ?? 0;
-    if (closePrice === 0) return null;
+    if (!showDirections || effectiveData.length === 0 || !currency?.price) return null;
     
     const rows = Array.from({ length: 50 }, (_, i) => (i + 1) * 10).map((windowSize, idx) => {
       if (windowSize > effectiveData.length) return null;
@@ -671,7 +666,7 @@ export function IndicatorChart({
       const high = Math.max(...dataSlice.map((d: any) => d.high ?? d.value));
       const low = Math.min(...dataSlice.map((d: any) => d.low ?? d.value));
       const entry = (high + low) / 2;
-      const currentPrice = closePrice;
+      const currentPrice = currency.price;
       const isBuy = currentPrice >= entry;
       const directionStr = isBuy ? "Buy" : "Sell";
       const profit = isBuy ? currentPrice - entry : entry - currentPrice;
@@ -685,7 +680,7 @@ export function IndicatorChart({
     const minProfitWindow = [...rows].reduce((min, row) => row.profit < min.profit ? row : min, rows[0]).windowSize;
 
     return { rows, maxProfitWindow, minProfitWindow };
-  }, [effectiveData, showDirections]);
+  }, [effectiveData, currency?.price, showDirections]);
 
   const applyGlobalDirLot = (val: number) => {
     if (!directionsData?.rows) return;
@@ -1254,14 +1249,14 @@ export function IndicatorChart({
                   <table className="w-full text-center border-collapse">
                     <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: tk.isDark ? 'rgba(15,23,42,0.85)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
                       <tr>
-                        {["Close Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", "Lot", "Execute"].map((head, idx) => (
+                        {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", "Lot", "Execute"].map((head, idx) => (
                           <th key={idx} className="p-2 text-[12px] font-bold whitespace-nowrap" style={{
                             color: head === "Lot" ? '#fbbf24' : head === "Execute" ? '#818cf8' : tk.textPrimary,
                             border: `1px solid ${tk.isDark ? 'rgba(100,116,139,0.3)' : tk.border}`,
                             ...(head === "Lot" ? { borderLeft: '2px solid rgba(245,158,11,0.3)' } : {}),
                           }}>
                             {isRTL ? (
-                              head === "Close Price" ? "سعر الإغلاق" :
+                              head === "Current Price" ? "السعر الحالي" :
                                 head === "High Price" ? "أعلى سعر" :
                                   head === "Low Price" ? "أدنى سعر" :
                                     head === "Candles" ? "الشموع" :
@@ -1716,12 +1711,12 @@ export function IndicatorChart({
                         <table className="w-full text-center border-collapse">
                           <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: "rgba(15, 23, 42, 0.85)", borderBottom: `1px solid ${tk.border}` }}>
                             <tr>
-                              {["Close Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", "Lot", "Execute"].map((head, idx) => (
+                              {["Current Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", "Lot", "Execute"].map((head, idx) => (
                                 <th key={idx} className="p-3 text-[14px] font-bold text-white border border-slate-700/50 whitespace-nowrap"
                                   style={head === "Lot" ? { color: '#fbbf24', borderLeft: '2px solid rgba(245,158,11,0.3)' } : head === "Execute" ? { color: '#818cf8' } : {}}
                                 >
                                   {isRTL ? (
-                                    head === "Close Price" ? "سعر الإغلاق" :
+                                    head === "Current Price" ? "السعر الحالي" :
                                       head === "High Price" ? "أعلى سعر" :
                                         head === "Low Price" ? "أدنى سعر" :
                                           head === "Candles" ? "الشموع" :
