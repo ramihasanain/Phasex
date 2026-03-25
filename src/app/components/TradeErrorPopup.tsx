@@ -36,12 +36,17 @@ export function TradeErrorPopup({ error, onClose }: TradeErrorPopupProps) {
     }, 350);
   };
 
+  // Sanitize internal service names from error messages
+  const sanitize = (text: string) =>
+    text.replace(/MetaApi[i]?/gi, 'Broker').replace(/metaapi/gi, 'Broker').replace(/meta-api/gi, 'Broker');
+
   // Deduplicate details — group identical errors with count
   const dedupedDetails = useMemo(() => {
     if (!error?.details || error.details.length === 0) return [];
     const countMap = new Map<string, number>();
     for (const d of error.details) {
-      countMap.set(d, (countMap.get(d) || 0) + 1);
+      const clean = sanitize(d);
+      countMap.set(clean, (countMap.get(clean) || 0) + 1);
     }
     return Array.from(countMap.entries()); // [message, count][]
   }, [error?.details]);
@@ -52,7 +57,7 @@ export function TradeErrorPopup({ error, onClose }: TradeErrorPopupProps) {
     // If message contains newlines (bulk errors joined), show only the first unique
     const lines = error.message.split('\n').filter(Boolean);
     const uniqueLines = [...new Set(lines)];
-    return uniqueLines[0] || error.message;
+    return sanitize(uniqueLines[0] || error.message);
   }, [error]);
 
   const totalErrorCount = error?.details?.length || 0;
