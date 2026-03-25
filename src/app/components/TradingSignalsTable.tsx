@@ -722,8 +722,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                         <div className="flex items-center gap-2 ml-4 px-3 py-1 bg-black/20 rounded-lg border border-emerald-500/10">
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{isRTL ? "مراكز حالية" : "Current"}</span>
-                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-1 rounded shadow-sm drop-shadow">{activeBuyCount} B</span>
-                                                <span className="text-[10px] font-black text-red-400 bg-red-500/10 px-1 rounded shadow-sm drop-shadow">{activeSellCount} S</span>
+                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-1 rounded shadow-sm drop-shadow whitespace-nowrap">{activeBuyCount} B</span>
+                                                <span className="text-[10px] font-black text-red-400 bg-red-500/10 px-1 rounded shadow-sm drop-shadow whitespace-nowrap">{activeSellCount} S</span>
                                             </div>
                                         </div>
                                     );
@@ -884,13 +884,13 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                         <div className="flex items-center gap-2 ml-4 px-3 py-1 bg-black/20 rounded-lg border border-pink-500/10">
                                             <div className="flex items-center gap-1.5 border-r border-pink-500/10 pr-2">
                                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{isRTL ? "مراكز حالية" : "Current"}</span>
-                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-1 rounded shadow-sm drop-shadow">{activeBuyCount} B</span>
-                                                <span className="text-[10px] font-black text-red-400 bg-red-500/10 px-1 rounded shadow-sm drop-shadow">{activeSellCount} S</span>
+                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-1 rounded shadow-sm drop-shadow whitespace-nowrap">{activeBuyCount} B</span>
+                                                <span className="text-[10px] font-black text-red-400 bg-red-500/10 px-1 rounded shadow-sm drop-shadow whitespace-nowrap">{activeSellCount} S</span>
                                             </div>
                                             <div className="flex items-center gap-1.5 pl-1">
                                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{isRTL ? "بانتظار" : "Waiting"}</span>
-                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 px-1 rounded shadow-sm drop-shadow opacity-80">{activeSellCount} B</span>
-                                                <span className="text-[10px] font-black text-red-400 bg-red-500/5 border border-red-500/20 px-1 rounded shadow-sm drop-shadow opacity-80">{activeBuyCount} S</span>
+                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 px-1 rounded shadow-sm drop-shadow opacity-80 whitespace-nowrap">{activeSellCount} B</span>
+                                                <span className="text-[10px] font-black text-red-400 bg-red-500/5 border border-red-500/20 px-1 rounded shadow-sm drop-shadow opacity-80 whitespace-nowrap">{activeBuyCount} S</span>
                                             </div>
                                         </div>
                                     );
