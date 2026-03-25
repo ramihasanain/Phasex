@@ -715,6 +715,19 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                 <Zap className="w-5 h-5 text-emerald-400" />
                                 <span className="text-[12px] font-black uppercase tracking-wider text-emerald-400">Active Tickets</span>
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400">{mt5Positions.length}</span>
+                                {showPositions && mt5Positions.length > 0 && (() => {
+                                    const activeBuyCount = mt5Positions.filter(p => p.type?.toUpperCase() === 'BUY').length;
+                                    const activeSellCount = mt5Positions.filter(p => p.type?.toUpperCase() === 'SELL').length;
+                                    return (
+                                        <div className="flex items-center gap-2 ml-4 px-3 py-1 bg-black/20 rounded-lg border border-emerald-500/10">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{isRTL ? "مراكز حالية" : "Current"}</span>
+                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-1 rounded shadow-sm drop-shadow">{activeBuyCount} B</span>
+                                                <span className="text-[10px] font-black text-red-400 bg-red-500/10 px-1 rounded shadow-sm drop-shadow">{activeSellCount} S</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                                 {showPositions ? <ChevronUp className="w-4 h-4 text-emerald-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-emerald-400 opacity-50 ml-2" />}
                             </div>
                             {showPositions && mt5Positions.length > 0 && closeAllPositions && (
