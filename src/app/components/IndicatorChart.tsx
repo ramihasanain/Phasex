@@ -744,6 +744,12 @@ export function IndicatorChart({
           executedSet.forEach(c => next.add(c));
           return next;
         });
+        // Auto-expire after 3s — hasPos from real positions takes over
+        setTimeout(() => setExecutedComments(prev => {
+          const next = new Set(prev);
+          executedSet.forEach(c => next.delete(c));
+          return next;
+        }), 3000);
       } else if (executeTradeFromChart) {
         // Fallback: parallel individual calls
         await Promise.allSettled(trades.map(async (t) => {
