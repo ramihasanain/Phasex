@@ -188,30 +188,13 @@ export function usePhaseStateAPI(
             const stateKey = `${apiMain}_from_${sub}`;
             const url = `${API_BASE}?symbol=${cleanSym}&state_key=${stateKey}&limit=50000`;
 
-            const h1m5StateKey = "H1_from_M5";
-            const h1m5Url = `${API_BASE}?symbol=${cleanSym}&state_key=${h1m5StateKey}&limit=2`;
-
             const authHeaders: Record<string, string> = {};
             if (accessToken) authHeaders["Authorization"] = `Bearer ${accessToken}`;
 
-            const [res, h1m5Res] = await Promise.all([
-                fetch(url, { signal: controller.signal, headers: authHeaders }),
-                stateKey !== h1m5StateKey ? fetch(h1m5Url, { signal: controller.signal, headers: authHeaders }).catch(() => null) : Promise.resolve(null)
-            ]);
+            const res = await fetch(url, { signal: controller.signal, headers: authHeaders });
 
             if (!res.ok) throw new Error(`API error: ${res.status}`);
             const json = await res.json();
-
-            if (h1m5Res && h1m5Res.ok && stateKey !== h1m5StateKey) {
-                const h1m5Json = await h1m5Res.json();
-                if (json.candles?.length > 0 && h1m5Json.candles?.length > 0) {
-                    // The newest candle is at index 0. Overwrite its mathematical OHLC with the stable H1_from_M5 OHLC.
-                    json.candles[0].open = h1m5Json.candles[0].open;
-                    json.candles[0].high = h1m5Json.candles[0].high;
-                    json.candles[0].low = h1m5Json.candles[0].low;
-                    json.candles[0].close = h1m5Json.candles[0].close;
-                }
-            }
 
             if (!json.candles || !Array.isArray(json.candles) || json.candles.length === 0) {
                 throw new Error("No candle data available");
