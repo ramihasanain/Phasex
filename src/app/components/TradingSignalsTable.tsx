@@ -905,7 +905,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                             }}
                                             id="mt5-stop-btn"
                                             className="text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
-                                            style={{ color: '#ec4899', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.15)' }}
+                                            style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}
                                         >Stop All</motion.button>
                                     )}
                                     <motion.button whileTap={{ scale: 0.95 }}
@@ -914,10 +914,11 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                             if (fetchAutoLogs) fetchAutoLogs();
                                             setShowAutoHistoryModal(true);
                                         }}
-                                        className="flex items-center gap-1 text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                                        className="flex items-center justify-center p-1.5 rounded-lg cursor-pointer transition-colors"
                                         style={{ color: '#ec4899', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.15)' }}
+                                        title="Auto Trade History"
                                     >
-                                        <History className="w-3.5 h-3.5" /> History
+                                        <History className="w-4 h-4" />
                                     </motion.button>
                                 </div>
                             )}
