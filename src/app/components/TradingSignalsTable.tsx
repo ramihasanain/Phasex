@@ -808,212 +808,69 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                     </div>
                 )}
 
-                {/* ═══ ACTIVE AUTO-TRADES INLINE PANEL (Accordion) ═══ */}
+                {/* ═══ AUTO TRADE LOGS INLINE PANEL (Accordion) ═══ */}
                 {mt5Connected && (
-                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(168,85,247,0.15)', background: tk.isDark ? 'rgba(168,85,247,0.02)' : 'rgba(168,85,247,0.02)' }}>
+                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(236,72,153,0.15)', background: tk.isDark ? 'rgba(236,72,153,0.02)' : 'rgba(236,72,153,0.02)' }}>
                         <div 
-                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-purple-500/10" 
-                            style={{ borderBottom: showAutoTrades ? '1px solid rgba(168,85,247,0.06)' : 'none', background: 'rgba(168,85,247,0.05)' }}
-                            onClick={() => setShowAutoTrades(!showAutoTrades)}
+                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-pink-500/10" 
+                            style={{ borderBottom: showAutoLogs ? '1px solid rgba(236,72,153,0.06)' : 'none', background: 'rgba(236,72,153,0.05)' }}
+                            onClick={() => {
+                                setShowAutoLogs(!showAutoLogs);
+                                if (!showAutoLogs && fetchAutoLogs) fetchAutoLogs();
+                            }}
                         >
                             <div className="flex items-center gap-3">
-                                <Zap className="w-5 h-5 text-purple-400" />
-                                <span className="text-[12px] font-black uppercase tracking-wider text-purple-400">Background Auto Trades</span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-400">{Object.keys(serverAutoTrades).length}</span>
-                                {showAutoTrades ? <ChevronUp className="w-4 h-4 text-purple-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-purple-400 opacity-50 ml-2" />}
+                                <History className="w-5 h-5 text-pink-400" />
+                                <span className="text-[12px] font-black uppercase tracking-wider text-pink-400">Auto Trade Logs</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400">{serverAutoLogs.length}</span>
+                                {showAutoLogs ? <ChevronUp className="w-4 h-4 text-pink-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-pink-400 opacity-50 ml-2" />}
                             </div>
-                            {showAutoTrades && Object.keys(serverAutoTrades).length > 0 && stopAllAutoTrades && (
-                                <motion.button
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={async (e) => {
-                                        e.stopPropagation();
-                                        const btn = document.getElementById('mt5-stop-btn') as HTMLButtonElement;
-                                        if (btn) btn.innerHTML = 'Stopping...';
-                                        await stopAllAutoTrades();
-                                        setTimeout(() => { if (btn) btn.innerHTML = 'Stop All'; }, 1000);
-                                    }}
-                                    id="mt5-stop-btn"
-                                    className="text-[9px] font-black px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
-                                    style={{
-                                        color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)'
-                                    }}
-                                >
-                                    Stop All
-                                </motion.button>
+                            {showAutoLogs && (
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => fetchAutoLogs?.()}
+                                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                                        style={{ color: '#ec4899', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.15)' }}
+                                    >Refresh Logs</motion.button>
+                                </div>
                             )}
                         </div>
                         
-                        {showAutoTrades && (
-                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 240 }}>
-                                {Object.keys(serverAutoTrades).length === 0 ? (
-                                    <div className="px-5 py-8 text-center" style={{ background: 'rgba(168,85,247,0.02)' }}>
-                                        <span className="text-[12px] font-black uppercase tracking-widest drop-shadow-sm" style={{ color: 'rgba(168,85,247,0.4)' }}>No active background trades</span>
+                        {showAutoLogs && (
+                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 400 }}>
+                                {serverAutoLogs.length === 0 ? (
+                                    <div className="py-10 text-center" style={{ background: tk.surface }}>
+                                        <History className="w-10 h-10 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.4 }} />
+                                        <span className="text-sm font-bold" style={{ color: tk.textDim }}>No auto trade logs yet</span>
                                     </div>
                                 ) : (
-                                    <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-                                        <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
-                                            <tr style={{ borderBottom: '1px solid rgba(168,85,247,0.1)' }}>
-                                                {['Key', 'Symbol', 'TF', 'Current', 'Waiting For', 'Signal Price', 'Vol', 'Status', 'Ticket', 'Stop Auto'].map(h => (
-                                                    <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {Object.entries(serverAutoTrades).map(([key, autoTrade]) => {
-                                                const isBuy = autoTrade.direction?.toLowerCase() === 'buy';
-                                                return (
-                                                    <tr key={key} className="hover:bg-purple-500/5 transition-colors group" style={{
-                                                        borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'}`,
-                                                    }}>
-                                                        <td className="px-3 py-2 text-[10px] font-mono font-bold" style={{ color: tk.textSecondary }}>{key}</td>
-                                                        <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{autoTrade.symbol}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: tk.textSecondary }}>{autoTrade.tf}</td>
-                                                        <td className="px-3 py-2">
-                                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
-                                                                color: isBuy ? '#10b981' : '#ef4444',
-                                                                background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                            }}>{autoTrade.direction?.toUpperCase() || 'UNKNOWN'}</span>
-                                                        </td>
-                                                        <td className="px-3 py-2">
-                                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded opacity-70" style={{
-                                                                color: !isBuy ? '#10b981' : '#ef4444',
-                                                                background: !isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                                                border: `1px dashed ${!isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`
-                                                            }}>⏳ {(!isBuy ? 'BUY' : 'SELL')}</span>
-                                                        </td>
-                                                        <td className="px-3 py-2 text-[10px] font-mono" style={{ color: tk.textPrimary }}>{autoTrade.signal_price ? fmt(autoTrade.signal_price) : '—'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold font-mono" style={{ color: '#f59e0b' }}>{autoTrade.lot || 0.01}</td>
-                                                        <td className="px-3 py-2">
-                                                            <span
-                                                                className="text-[9px] font-bold px-1.5 py-0.5 rounded cursor-help shadow-sm"
-                                                                title={autoTrade.last_error || 'No recent errors'}
-                                                                style={{
-                                                                    color: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? '#10b981' : autoTrade.status?.startsWith('failed') ? '#ef4444' : '#a855f7',
-                                                                    background: autoTrade.status === 'executed' || autoTrade.status === 'watching' ? 'rgba(16,185,129,0.1)' : autoTrade.status?.startsWith('failed') ? 'rgba(239,68,68,0.1)' : 'rgba(168,85,247,0.1)',
-                                                                }}
-                                                            >
-                                                                {autoTrade.status || 'watching'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-3 py-2 text-[10px] font-mono" style={{ color: tk.textSecondary }}>{autoTrade.active_ticket || autoTrade.ticket || '—'}</td>
-                                                        <td className="px-3 py-2">
-                                                            <motion.button
-                                                                whileTap={{ scale: 0.95 }}
-                                                                disabled={!removeAutoTrade}
-                                                                onClick={async () => {
-                                                                    if (removeAutoTrade) await removeAutoTrade(key);
-                                                                }}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-black cursor-pointer transition-colors opacity-80 group-hover:opacity-100"
-                                                                style={{
-                                                                    color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)'
-                                                                }}>
-                                                                <X className="w-3 h-3" /> Stop
-                                                            </motion.button>
-                                                        </td>
+                                    <div className="flex flex-col">
+                                        <table className="w-full text-left" style={{ borderCollapse: 'collapse', background: tk.surface }}>
+                                            <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
+                                                <tr style={{ borderBottom: '1px solid rgba(236,72,153,0.06)' }}>
+                                                    {['Time', 'Action', 'Symbol', 'TF', 'Old Dir.', 'New Dir.', 'Lot', 'Ticket', 'Profit', 'Details'].map(h => (
+                                                        <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase" style={{ color: tk.textDim }}>{h}</th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {serverAutoLogs.map((log: any, i) => (
+                                                    <tr key={`${log.id}-${i}`} className="hover:bg-pink-500/5 transition-colors" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
+                                                        <td className="px-3 py-2 text-[10px] font-mono text-slate-400">{new Date(log.created_at).toLocaleString()}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-black" style={{ color: log.action === 'OPEN' ? '#10b981' : log.action === 'CLOSE' ? '#ef4444' : '#fbbf24' }}>{log.action}</td>
+                                                        <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{log.auto_trade?.symbol || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold text-indigo-400">{log.auto_trade?.main_tf || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.old_direction?.toLowerCase() === 'buy' ? '#10b981' : log.old_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.old_direction || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.new_direction?.toLowerCase() === 'buy' ? '#10b981' : log.new_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.new_direction || '-'}</td>
+                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold text-amber-500">{log.lot_size || '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] font-mono text-purple-400">{log.ticket || '-'}</td>
+                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold" style={{ color: (log.profit || 0) >= 0 ? '#10b981' : '#ef4444' }}>{log.profit !== null && log.profit !== undefined ? log.profit.toFixed(2) : '-'}</td>
+                                                        <td className="px-3 py-2 text-[10px] text-slate-400 max-w-[200px] truncate" title={log.details}>{log.details || '-'}</td>
                                                     </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* ═══ AUTO-TRADING LOGS INLINE PANEL (Accordion) ═══ */}
-                {mt5Connected && (
-                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(59,130,246,0.15)', background: tk.isDark ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.02)' }}>
-                        <div 
-                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-blue-500/10" 
-                            style={{ borderBottom: showAutoLogs ? '1px solid rgba(59,130,246,0.06)' : 'none', background: 'rgba(59,130,246,0.05)' }}
-                            onClick={() => setShowAutoLogs(!showAutoLogs)}
-                        >
-                            <div className="flex items-center gap-3">
-                                <Clock className="w-5 h-5 text-blue-400" />
-                                <span className="text-[12px] font-black uppercase tracking-wider text-blue-400">Auto Trade Event Logs</span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-400">{serverAutoLogs.length}</span>
-                                {showAutoLogs ? <ChevronUp className="w-4 h-4 text-blue-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-blue-400 opacity-50 ml-2" />}
-                            </div>
-                        </div>
-                        
-                        {showAutoLogs && (
-                            <div className="overflow-auto custom-scrollbar p-6 space-y-4" style={{ maxHeight: 300, background: tk.surface }}>
-                                {serverAutoLogs.length === 0 && <div className="text-center py-6 text-gray-400 font-bold">No logs recorded yet.</div>}
-                                {serverAutoLogs.map(log => (
-                                    <div key={log.id} className="p-4 rounded-2xl flex flex-col gap-2 transition-colors hover:bg-white/[0.03]" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <span className={`text-[10px] font-black px-2 py-1 rounded shadow-sm`} style={{
-                                                    color: log.event_type === 'START' ? '#34d399' : 
-                                                           log.event_type === 'FLIP' ? '#fbbf24' : 
-                                                           log.event_type === 'EXECUTE' ? '#a78bfa' : 
-                                                           log.event_type === 'ERROR' ? '#f87171' : 
-                                                           log.event_type === 'MANUAL_ON' ? '#38bdf8' :
-                                                           log.event_type === 'MANUAL_OFF' ? '#f472b6' :
-                                                           log.event_type === 'STOP_ALL' ? '#f43f5e' :
-                                                           log.event_type === 'CLOSED' ? '#94a3b8' :
-                                                           '#60a5fa',
-                                                    background: log.event_type === 'START' ? 'rgba(52,211,153,0.1)' : 
-                                                                log.event_type === 'FLIP' ? 'rgba(251,191,36,0.1)' : 
-                                                                log.event_type === 'EXECUTE' ? 'rgba(167,139,250,0.1)' : 
-                                                                log.event_type === 'ERROR' ? 'rgba(248,113,113,0.1)' : 
-                                                                log.event_type === 'MANUAL_ON' ? 'rgba(56,189,248,0.1)' :
-                                                                log.event_type === 'MANUAL_OFF' ? 'rgba(244,114,182,0.1)' :
-                                                                log.event_type === 'STOP_ALL' ? 'rgba(244,63,94,0.1)' :
-                                                                log.event_type === 'CLOSED' ? 'rgba(148,163,184,0.1)' :
-                                                                'rgba(96,165,250,0.1)',
-                                                    border: `1px solid ${
-                                                        log.event_type === 'START' ? 'rgba(52,211,153,0.2)' : 
-                                                        log.event_type === 'FLIP' ? 'rgba(251,191,36,0.2)' : 
-                                                        log.event_type === 'EXECUTE' ? 'rgba(167,139,250,0.2)' : 
-                                                        log.event_type === 'ERROR' ? 'rgba(248,113,113,0.2)' : 
-                                                        log.event_type === 'MANUAL_ON' ? 'rgba(56,189,248,0.2)' :
-                                                        log.event_type === 'MANUAL_OFF' ? 'rgba(244,114,182,0.2)' :
-                                                        log.event_type === 'STOP_ALL' ? 'rgba(244,63,94,0.2)' :
-                                                        log.event_type === 'CLOSED' ? 'rgba(148,163,184,0.2)' :
-                                                        'rgba(96,165,250,0.2)'
-                                                    }`
-                                                }}>{log.event_type}</span>
-                                                <span className="font-black text-[13px] text-gray-200 drop-shadow-sm tracking-wide">{log.symbol === 'ALL' ? <span className="text-pink-400">ALL</span> : log.symbol}</span>
-                                                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold font-mono shadow-sm" style={{ background: 'rgba(255,255,255,0.03)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                                    <Clock className="w-2.5 h-2.5 opacity-70" /> {new Date(log.created_at).toLocaleTimeString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                                </span>
-                                            </div>
-                                            <span className="text-[9px] font-black uppercase text-gray-600 font-mono tracking-widest">{log.trade_key || 'SYSTEM'}</span>
-                                        </div>
-                                        <div className="text-[13px] font-medium leading-relaxed mt-1" style={{ color: '#cbd5e1' }}>{log.message}</div>
-                                        {log.details && Object.keys(log.details).length > 0 && (
-                                            <div className="flex flex-wrap items-center gap-2 mt-2 ml-1">
-                                                {Object.entries(log.details).map(([k, v]) => {
-                                                    if (k === 'deleted_count') {
-                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)' }}><Trash2 className="w-3 h-3" /> {String(v)} Removed</span>;
-                                                    }
-                                                    if (k === 'direction') {
-                                                        const isBuy = String(v).toLowerCase() === 'buy';
-                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black uppercase tracking-wide shadow-sm" style={{ background: isBuy ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: isBuy ? '#34d399' : '#f87171', border: isBuy ? '1px solid rgba(16,185,129,0.15)' : '1px solid rgba(239,68,68,0.15)' }}>{isBuy ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {String(v)}</span>;
-                                                    }
-                                                    if (k === 'signal' || k === 'signal_price') {
-                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold shadow-sm" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.15)' }}><Target className="w-3 h-3" /> {fmt(Number(v))}</span>;
-                                                    }
-                                                    if (k === 'profit') {
-                                                        const p = Number(v);
-                                                        const isWin = p >= 0;
-                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-black shadow-sm" style={{ background: isWin ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: isWin ? '#34d399' : '#f87171', border: isWin ? '1px solid rgba(16,185,129,0.15)' : '1px solid rgba(239,68,68,0.15)' }}>💰 {isWin ? '+' : ''}{p.toFixed(2)}$</span>;
-                                                    }
-                                                    if (k === 'ticket') {
-                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold shadow-sm" style={{ background: 'rgba(168,85,247,0.1)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.15)' }}><Hash className="w-3 h-3" /> {String(v)}</span>;
-                                                    }
-                                                    if (k === 'reason' || k === 'error') {
-                                                        return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm" style={{ background: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.15)' }}><AlertTriangle className="w-3 h-3" /> {String(v)}</span>;
-                                                    }
-                                                    // Default fallback pill
-                                                    return <span key={k} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono shadow-sm" style={{ background: 'rgba(255,255,255,0.03)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.08)' }}><strong>{k}:</strong> {String(v)}</span>;
-                                                })}
-                                            </div>
-                                        )}
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
-                                ))}
+                                )}
                             </div>
                         )}
                     </div>
@@ -1116,73 +973,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                     </div>
                 )}
                 
-                {/* ═══ AUTO TRADE LOGS INLINE PANEL (Accordion) ═══ */}
-                {mt5Connected && (
-                    <div className="mx-6 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(236,72,153,0.15)', background: tk.isDark ? 'rgba(236,72,153,0.02)' : 'rgba(236,72,153,0.02)' }}>
-                        <div 
-                            className="flex items-center justify-between px-5 py-3 cursor-pointer select-none transition-colors hover:bg-pink-500/10" 
-                            style={{ borderBottom: showAutoLogs ? '1px solid rgba(236,72,153,0.06)' : 'none', background: 'rgba(236,72,153,0.05)' }}
-                            onClick={() => {
-                                setShowAutoLogs(!showAutoLogs);
-                                if (!showAutoLogs && fetchAutoLogs) fetchAutoLogs();
-                            }}
-                        >
-                            <div className="flex items-center gap-3">
-                                <History className="w-5 h-5 text-pink-400" />
-                                <span className="text-[12px] font-black uppercase tracking-wider text-pink-400">Auto Trade Logs</span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400">{serverAutoLogs.length}</span>
-                                {showAutoLogs ? <ChevronUp className="w-4 h-4 text-pink-400 opacity-50 ml-2" /> : <ChevronDown className="w-4 h-4 text-pink-400 opacity-50 ml-2" />}
-                            </div>
-                            {showAutoLogs && (
-                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => fetchAutoLogs?.()}
-                                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
-                                        style={{ color: '#ec4899', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.15)' }}
-                                    >Refresh Logs</motion.button>
-                                </div>
-                            )}
-                        </div>
-                        
-                        {showAutoLogs && (
-                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 400 }}>
-                                {serverAutoLogs.length === 0 ? (
-                                    <div className="py-10 text-center" style={{ background: tk.surface }}>
-                                        <History className="w-10 h-10 mx-auto mb-3" style={{ color: tk.textDim, opacity: 0.4 }} />
-                                        <span className="text-sm font-bold" style={{ color: tk.textDim }}>No auto trade logs yet</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col">
-                                        <table className="w-full text-left" style={{ borderCollapse: 'collapse', background: tk.surface }}>
-                                            <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
-                                                <tr style={{ borderBottom: '1px solid rgba(236,72,153,0.06)' }}>
-                                                    {['Time', 'Action', 'Symbol', 'TF', 'Old Dir.', 'New Dir.', 'Lot', 'Ticket', 'Profit', 'Details'].map(h => (
-                                                        <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase" style={{ color: tk.textDim }}>{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {serverAutoLogs.map((log: any, i) => (
-                                                    <tr key={`${log.id}-${i}`} className="hover:bg-pink-500/5 transition-colors" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'}` }}>
-                                                        <td className="px-3 py-2 text-[10px] font-mono text-slate-400">{new Date(log.created_at).toLocaleString()}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-black" style={{ color: log.action === 'OPEN' ? '#10b981' : log.action === 'CLOSE' ? '#ef4444' : '#fbbf24' }}>{log.action}</td>
-                                                        <td className="px-3 py-2 text-[11px] font-black drop-shadow-sm" style={{ color: tk.textPrimary }}>{log.auto_trade?.symbol || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold text-indigo-400">{log.auto_trade?.main_tf || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.old_direction?.toLowerCase() === 'buy' ? '#10b981' : log.old_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.old_direction || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-bold" style={{ color: log.new_direction?.toLowerCase() === 'buy' ? '#10b981' : log.new_direction?.toLowerCase() === 'sell' ? '#ef4444' : tk.textDim }}>{log.new_direction || '-'}</td>
-                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold text-amber-500">{log.lot_size || '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] font-mono text-purple-400">{log.ticket || '-'}</td>
-                                                        <td className="px-3 py-2 text-[11px] font-mono font-bold" style={{ color: (log.profit || 0) >= 0 ? '#10b981' : '#ef4444' }}>{log.profit !== null && log.profit !== undefined ? log.profit.toFixed(2) : '-'}</td>
-                                                        <td className="px-3 py-2 text-[10px] text-slate-400 max-w-[200px] truncate" title={log.details}>{log.details || '-'}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
+
 
                 {/* ═══ FILTERS ═══ */}
                 <div className="px-5 py-4 mt-3 flex flex-wrap items-center gap-2.5 rounded-t-lg mx-0" style={{
