@@ -841,7 +841,6 @@ export function IndicatorChart({
         symbol: currency.symbol,
         action: row.isBuy ? 'BUY' : 'SELL',
         volume: dirLotSizes[row.windowSize] ?? 0.01,
-        sl: row.entry,
         comment: chartComment,
       });
       tradeWindowSizes.push(row.windowSize);
@@ -924,7 +923,6 @@ export function IndicatorChart({
         window_size: row.windowSize,
         direction: row.isBuy ? 'BUY' : 'SELL',
         lot_size: dirLotSizes[row.windowSize] ?? 0.01,
-        sl: row.entry,
         comment: chartComment,
       });
       tradeWindowSizes.push(-row.windowSize); // negative implies auto loading state
@@ -1571,7 +1569,7 @@ export function IndicatorChart({
                                           const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                           setDirExecuting(prev => new Set(prev).add(row.windowSize));
                                           try {
-                                            await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                            await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, undefined, undefined, chartComment);
                                             setExecutedComments(prev => new Set(prev).add(chartComment));
                                             setTimeout(() => setExecutedComments(prev => { const n = new Set(prev); n.delete(chartComment); return n; }), 3000);
                                           } catch (err) { console.error(err); }
@@ -1612,7 +1610,6 @@ export function IndicatorChart({
                                                   window_size: row.windowSize,
                                                   direction: row.isBuy ? 'BUY' : 'SELL',
                                                   lot_size: lot,
-                                                  sl: row.entry,
                                                   comment: chartComment
                                                 }]);
                                               }
