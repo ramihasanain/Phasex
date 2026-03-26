@@ -198,6 +198,11 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     const [executingTrades, setExecutingTrades] = useState<Set<string>>(new Set());
     const [executingAssetBulk, setExecutingAssetBulk] = useState<string | null>(null);
     const [globalAutoCooldown, setGlobalAutoCooldown] = useState(false);
+
+    // Optimistic UI Locks
+    const [localAutoActive, setLocalAutoActive] = useState<Set<string>>(new Set());
+    const [localPosActive, setLocalPosActive] = useState<Set<string>>(new Set());
+    
     // Use server trade history (read from props, backed by backend)
     const tradeHistory = serverTradeHistory || [];
     const [showHistory, setShowHistory] = useState(false);
@@ -400,6 +405,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
         const effectiveSL = entry.stop_loss || entry.close;
 
         setExecutingTrades(prev => new Set(prev).add(key));
+        setLocalPosActive(prev => new Set(prev).add(key));
 
         const newEntry: TradeHistoryEntry = {
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -425,10 +431,12 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
             } else {
                 newEntry.status = 'failed';
                 newEntry.error = 'Execution returned null';
+                setLocalPosActive(prev => { const n = new Set(prev); n.delete(key); return n; });
             }
         } catch (err: any) {
             newEntry.status = 'failed';
             newEntry.error = err?.message || 'Unknown error';
+            setLocalPosActive(prev => { const n = new Set(prev); n.delete(key); return n; });
         }
 
         addTradeToHistory?.(newEntry);
@@ -484,6 +492,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                 const direction = entry.net_signal;
 
                 setExecutingTrades(prev => new Set(prev).add(key));
+                setLocalAutoActive(prev => new Set(prev).add(key));
                 let ticket = '';
                 const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
                 const existingManualPos = mt5Positions?.find(p => p.comment === tradeComment);
@@ -1654,10 +1663,10 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                         const rowKey = `${asset}-${tf}`;
                                                         const effectiveSymbol = symbolOverrides[asset] || asset;
                                                         const isExecuting = executingTrades.has(rowKey);
-                                                        const isAuto = autoTrades.has(rowKey);
+                                                        const isAuto = autoTrades.has(rowKey) || localAutoActive.has(rowKey);
                                                         const lotVal = lotSizes[rowKey] ?? 0.01;
                                                         const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
-                                                        const hasPos = mt5Positions?.some(p => p.comment === tradeComment) || false;
+                                                        const hasPos = mt5Positions?.some(p => p.comment === tradeComment) || localPosActive.has(rowKey);
                                                         const disableExec = isExecuting || hasPos || isAuto;
                                                         return (
                                                             <>
@@ -1740,6 +1749,7 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                                                         const direction = entry.net_signal || '';
 
                                                                                         setExecutingTrades(prev => new Set(prev).add(rowKey));
+                                                                                        setLocalAutoActive(prev => new Set(prev).add(rowKey));
                                                                                         let ticket = '';
                                                                                         const tradeComment = `PX-Dash ${asset} ${tf}`.slice(0, 31);
                                                                                         const existingManualPos = mt5Positions?.find(p => p.comment === tradeComment);
