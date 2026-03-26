@@ -1818,6 +1818,21 @@ export function TradingDashboard({
                 removeAutoTrade={autoTradeUnsubscribe}
                 stopAllAutoTrades={stopAllAutoTrades}
                 autoTradeWorker={autoTradeWorker}
+                addTradeToHistory={addTradeToHistory}
+                clearServerHistory={clearServerHistory}
+                fetchTradeHistory={fetchTradeHistory}
+                addAutoTrade={async (key, symbol, tf, lot, direction, signalPrice, sl, tp, ticket) => {
+                  const res = await autoTradeSubscribe([{
+                    symbol, main_tf: mtfEnabled ? formatTfStr(mtfLargeTimeframe) : formatTfStr(timeframe >= 60 ? timeframe : 60), sub_tf: tf, window_size: 10, direction, lot_size: lot, sl: sl || undefined, comment: `PX-Dash ${symbol} ${tf}`.slice(0, 31)
+                  }]);
+                  return res.errors.length === 0;
+                }}
+                addAutoTradesBulk={async (trades) => {
+                  const res = await autoTradeSubscribe(trades.map(t => ({
+                    symbol: t.symbol, main_tf: mtfEnabled ? formatTfStr(mtfLargeTimeframe) : formatTfStr(timeframe >= 60 ? timeframe : 60), sub_tf: t.tf, window_size: 10, direction: t.direction, lot_size: t.lot, sl: t.sl || undefined, comment: `PX-Dash ${t.symbol} ${t.tf}`.slice(0, 31)
+                  })));
+                  return res.errors.length === 0;
+                }}
               />
             </div>
           </div>
@@ -1983,7 +1998,10 @@ export function TradingDashboard({
                       // Force refresh positions immediately
                       refreshMT5Positions();
                     } catch (err: any) {
-                      setQtError(err.message || "Trade failed");
+                      const rawMsg = err.message || "Trade failed";
+                      // Sanitize the internal service name from the inline error just like TradeErrorPopup does
+                      const safeMsg = rawMsg.replace(/MetaApi[i]?/gi, 'Broker').replace(/metaapi/gi, 'Broker').replace(/meta-api/gi, 'Broker');
+                      setQtError(safeMsg);
                     } finally {
                       setQtExecuting(false);
                     }
@@ -2324,7 +2342,7 @@ export function TradingDashboard({
                       className="text-[11px] font-bold"
                       style={{ color: "#ef4444" }}
                     >
-                      {mt5Error}
+                      {mt5Error.replace(/MetaApi[i]?/gi, 'Broker').replace(/metaapi/gi, 'Broker').replace(/meta-api/gi, 'Broker')}
                     </span>
                   </motion.div>
                 )}

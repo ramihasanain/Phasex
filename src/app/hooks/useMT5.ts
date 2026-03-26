@@ -829,10 +829,14 @@ export function useMT5(): UseMT5Result {
                 await fetchAutoTradeStatus();
                 await fetchAutoTradeHistory();
                 await refreshPositions();
+            } else if (data?.errors && data.errors.length > 0) {
+                const errMsgs = data.errors.map((e: any) => e.error || e.message || 'Unknown error');
+                setTradeError({ message: errMsgs.join('\n'), title: 'Auto-Trade Execution Failed', details: errMsgs });
             }
             return { subscribed: data?.subscribed || [], errors: data?.errors || [] };
         } catch (e: any) {
             setError(e.message);
+            setTradeError({ message: e.message, title: 'Auto-Trade Error' });
             return { subscribed: [], errors: [{ error: e.message }] };
         }
     }, [connected, getHeaders, handleSessionExpired, safeJson, fetchAutoTradeStatus, fetchAutoTradeHistory, refreshPositions]);
