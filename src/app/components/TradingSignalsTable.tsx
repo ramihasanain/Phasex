@@ -208,6 +208,8 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
     const [autoFilterSymbol, setAutoFilterSymbol] = useState('ALL');
     const [autoFilterDir, setAutoFilterDir] = useState('ALL');
     const [autoFilterSource, setAutoFilterSource] = useState('ALL');
+    const [posFilterSymbol, setPosFilterSymbol] = useState('ALL');
+    const [posFilterDir, setPosFilterDir] = useState('ALL');
     const [closingTickets, setClosingTickets] = useState<Set<number>>(new Set());
     const [expandedHistoryRows, setExpandedHistoryRows] = useState<Set<string>>(new Set());
     const [editingSymbol, setEditingSymbol] = useState<string | null>(null);
@@ -774,22 +776,79 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                         ))}
                                     </div>
                                 )}
-                                <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 240 }}>
-                                    {mt5Positions.length === 0 ? (
-                                        <div className="px-5 py-8 text-center" style={{ background: 'rgba(16,185,129,0.02)' }}>
-                                            <span className="text-[12px] font-black uppercase tracking-widest drop-shadow-sm" style={{ color: 'rgba(16,185,129,0.4)' }}>No active live positions</span>
-                                        </div>
-                                    ) : (
-                                        <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-                                            <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
-                                                <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
-                                                    {['Symbol', 'Type', 'Vol', 'Open', 'Current', 'SL', 'TP', 'Profit', 'Swap', ''].map(h => (
-                                                        <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {mt5Positions.map((pos) => {
+                                {(() => {
+                                    const uniquePosSymbols = Array.from(new Set(mt5Positions.map(p => p.symbol).filter(Boolean))).sort();
+                                    const filteredPositions = mt5Positions.filter(p => {
+                                        if (posFilterSymbol !== 'ALL' && p.symbol !== posFilterSymbol) return false;
+                                        if (posFilterDir !== 'ALL' && p.type?.toUpperCase() !== posFilterDir) return false;
+                                        return true;
+                                    });
+                                    const hasActivePosFilters = posFilterSymbol !== 'ALL' || posFilterDir !== 'ALL';
+
+                                    return (
+                                        <>
+                                            {mt5Positions.length > 0 && (
+                                                <div className="flex flex-wrap items-center gap-2 px-4 py-2.5" style={{ background: tk.isDark ? 'rgba(16,185,129,0.03)' : 'rgba(16,185,129,0.02)', borderBottom: '1px solid rgba(16,185,129,0.06)' }}>
+                                                    {/* Symbol Filter */}
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 mr-0.5">Symbol</span>
+                                                        <button onClick={() => setPosFilterSymbol('ALL')} className={`px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-all ${posFilterSymbol === 'ALL' ? 'text-emerald-300 bg-emerald-500/20 shadow-sm' : 'text-slate-500 hover:text-slate-300 bg-transparent'}`} style={{ border: posFilterSymbol === 'ALL' ? '1px solid rgba(16,185,129,0.3)' : '1px solid transparent' }}>All</button>
+                                                        {uniquePosSymbols.map(sym => (
+                                                            <button key={sym} onClick={() => setPosFilterSymbol(posFilterSymbol === sym ? 'ALL' : sym)} className={`px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-all ${posFilterSymbol === sym ? 'text-emerald-300 bg-emerald-500/20 shadow-sm' : 'text-slate-500 hover:text-slate-300 bg-transparent'}`} style={{ border: posFilterSymbol === sym ? '1px solid rgba(16,185,129,0.3)' : '1px solid transparent' }}>{sym}</button>
+                                                        ))}
+                                                    </div>
+                                                    <div className="w-px h-4 bg-emerald-500/10" />
+                                                    {/* Direction Filter */}
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 mr-0.5">Dir</span>
+                                                        {['ALL', 'BUY', 'SELL'].map(d => (
+                                                            <button key={d} onClick={() => setPosFilterDir(d)} className={`px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-all ${posFilterDir === d ? (d === 'BUY' ? 'text-emerald-300 bg-emerald-500/20' : d === 'SELL' ? 'text-red-300 bg-red-500/20' : 'text-emerald-300 bg-emerald-500/20') + ' shadow-sm' : 'text-slate-500 hover:text-slate-300 bg-transparent'}`} style={{ border: posFilterDir === d ? `1px solid ${d === 'BUY' ? 'rgba(16,185,129,0.3)' : d === 'SELL' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}` : '1px solid transparent' }}>{d === 'ALL' ? 'All' : d}</button>
+                                                        ))}
+                                                    </div>
+                                                    
+                                                    {/* Close Filtered Button */}
+                                                    {hasActivePosFilters && filteredPositions.length > 0 && closePosition && (
+                                                        <>
+                                                            <div className="w-px h-4 bg-emerald-500/10" />
+                                                            <motion.button whileTap={{ scale: 0.95 }}
+                                                                onClick={async () => {
+                                                                    setClosingAllPositions(true);
+                                                                    for (const p of filteredPositions) {
+                                                                        await closePosition(p.ticket);
+                                                                    }
+                                                                    setClosingAllPositions(false);
+                                                                }}
+                                                                className="px-3 py-1 rounded-lg text-[9px] font-black cursor-pointer transition-all flex items-center gap-1"
+                                                                style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}
+                                                            >
+                                                                <X className="w-2.5 h-2.5" /> Close Filtered ({filteredPositions.length})
+                                                            </motion.button>
+                                                        </>
+                                                    )}
+                                                    {hasActivePosFilters && (
+                                                        <button onClick={() => { setPosFilterSymbol('ALL'); setPosFilterDir('ALL'); }} className="ml-auto text-[9px] font-bold text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1 pr-2">
+                                                            <X className="w-2 h-2" /> Clear Filters
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="overflow-auto custom-scrollbar" style={{ maxHeight: 240 }}>
+                                                {filteredPositions.length === 0 ? (
+                                                    <div className="px-5 py-8 text-center" style={{ background: 'rgba(16,185,129,0.02)' }}>
+                                                        <span className="text-[12px] font-black uppercase tracking-widest drop-shadow-sm" style={{ color: 'rgba(16,185,129,0.4)' }}>No active live positions{hasActivePosFilters ? ' matched' : ''}</span>
+                                                    </div>
+                                                ) : (
+                                                    <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                                                        <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#020617' : tk.surface }}>
+                                                            <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
+                                                                {['Symbol', 'Type', 'Vol', 'Open', 'Current', 'SL', 'TP', 'Profit', 'Swap', ''].map(h => (
+                                                                    <th key={h} className="px-3 py-2 text-[10px] font-black tracking-wider uppercase text-left" style={{ color: tk.textDim }}>{h}</th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {filteredPositions.map((pos) => {
                                                     const isProfit = pos.profit >= 0;
                                                     const isClosing = closingTickets.has(pos.ticket);
                                                     return (
@@ -857,11 +916,14 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                                             </td>
                                                         </tr>
                                                     );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    )}
-                                </div>
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                )}
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
                         )}
                     </div>
