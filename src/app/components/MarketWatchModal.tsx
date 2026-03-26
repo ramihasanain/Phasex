@@ -10,10 +10,11 @@ interface MarketWatchModalProps {
     onClose: () => void;
     mt5Positions: MT5Position[];
     serverAutoTrades: any[];
+    serverTradeHistory?: any[];
     closePosition: (ticket: number) => Promise<boolean>;
 }
 
-export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, closePosition }: MarketWatchModalProps) {
+export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, serverTradeHistory, closePosition }: MarketWatchModalProps) {
     const { language, t } = useLanguage();
     const tk = useThemeTokens();
 
@@ -22,6 +23,20 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
 
     const { summary, aggregated } = useMemo(() => {
         let totalProfit = 0;
+        
+        const flipCounts: Record<string, number> = {};
+        if (serverTradeHistory) {
+            const autoComments = new Set(serverAutoTrades.map(at => at.comment).filter(Boolean));
+            serverTradeHistory.forEach((deal: any) => {
+                if (deal.entry === '0' || deal.entry === 0 || deal.entry === 'IN' || deal.entry === 'DEAL_ENTRY_IN') {
+                    if (deal.comment && autoComments.has(deal.comment)) {
+                        const sym = deal.symbol;
+                        flipCounts[sym] = (flipCounts[sym] || 0) + 1;
+                    }
+                }
+            });
+        }
+
         const symMap: Record<string, {
             symbol: string,
             totalPos: number,
@@ -29,6 +44,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
             sellCount: number,
             autoCount: number,
             manualCount: number,
+            flipCount: number,
             profit: number,
             autoTickets: number[],
             allTickets: number[],
@@ -47,6 +63,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                     sellCount: 0,
                     autoCount: 0,
                     manualCount: 0,
+                    flipCount: flipCounts[sym] || 0,
                     profit: 0,
                     autoTickets: [],
                     allTickets: []
@@ -84,7 +101,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
             },
             aggregated: aggregatedArray
         };
-    }, [mt5Positions, serverAutoTrades]);
+    }, [mt5Positions, serverAutoTrades, serverTradeHistory]);
 
     const handleCloseAuto = async (symbol: string, tickets: number[]) => {
         setClosingAutoSymbols(prev => new Set(prev).add(symbol));
@@ -213,8 +230,8 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                             <table className="w-full text-left border-collapse">
                                 <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#0b0e14' : '#ffffff', borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
                                     <tr>
-                                        {['Symbol', 'Total', 'Buy', 'Sell', 'Auto', 'Manual', 'Net Profit', 'Action', 'Action'].map((h, i) => (
-                                            <th key={i} className={`px-5 py-4 text-[10px] font-black tracking-widest uppercase ${i >= 6 ? 'text-right' : ''}`} style={{ color: tk.textDim }}>
+                                        {['Symbol', 'Total', 'Buy', 'Sell', 'Auto', 'Flips', 'Manual', 'Net Profit', 'Action', 'Action'].map((h, i) => (
+                                            <th key={i} className={`px-5 py-4 text-[10px] font-black tracking-widest uppercase ${i >= 7 ? 'text-right' : ''}`} style={{ color: tk.textDim }}>
                                                 {h}
                                             </th>
                                         ))}
@@ -245,6 +262,11 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                                                 <td className="px-5 py-3.5">
                                                     <span className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-sm drop-shadow" style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
                                                         <Zap className="w-3 h-3" /> {row.autoCount}
+                                                    </span>
+                                                </td>
+                                                <td className="px-5 py-3.5">
+                                                    <span title="Total times Auto Trade reversed direction" className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-sm drop-shadow" style={{ color: '#fb923c', background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.15)' }}>
+                                                        <Activity className="w-3 h-3" /> {row.flipCount}
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-3.5">
