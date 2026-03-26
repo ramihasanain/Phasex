@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/phase-state/read";
 
+// Global cache to deduplicate simultaneous requests
+const pendingRequests = new Map<string, Promise<any>>();
+
 /**
  * Calculate ms until next 5-minute clock mark + 30 seconds.
  * e.g., if now is 12:32:15 → next is 12:35:30 → wait 3m15s = 195000ms
@@ -191,10 +194,23 @@ export function usePhaseStateAPI(
             const authHeaders: Record<string, string> = {};
             if (accessToken) authHeaders["Authorization"] = `Bearer ${accessToken}`;
 
-            const res = await fetch(url, { signal: controller.signal, headers: authHeaders });
+            const cacheKey = url;
+            let reqPromise = pendingRequests.get(cacheKey);
 
-            if (!res.ok) throw new Error(`API error: ${res.status}`);
-            const json = await res.json();
+            if (!reqPromise) {
+                // Remove signal controller so one component unmounting doesn't abort for others
+                reqPromise = fetch(url, { headers: authHeaders }).then(res => {
+                    if (!res.ok) throw new Error(`API error: ${res.status}`);
+                    return res.json();
+                }).finally(() => {
+                    // Clear from cache after a short delay so polling/manual fetch still works, 
+                    // but simultaneous duplicate mount calls are deduped
+                    setTimeout(() => pendingRequests.delete(cacheKey), 1000);
+                });
+                pendingRequests.set(cacheKey, reqPromise);
+            }
+
+            const json = await reqPromise;
 
             if (!json.candles || !Array.isArray(json.candles) || json.candles.length === 0) {
                 throw new Error("No candle data available");

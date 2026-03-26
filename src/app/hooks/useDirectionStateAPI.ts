@@ -1,7 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const API_BASE =
-  "https://phase-x-qc8dy.ondigitalocean.app/api/v1/direction-state/read";
+const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/direction-state/read";
+
+// Global cache to deduplicate simultaneous requests
+const pendingRequests = new Map<string, Promise<any>>();
+
+function fetchDedup(url: string, headers: Record<string, string>): Promise<any> {
+  let req = pendingRequests.get(url);
+  if (!req) {
+    req = fetch(url, { headers }).then(res => {
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    }).finally(() => setTimeout(() => pendingRequests.delete(url), 1000));
+    pendingRequests.set(url, req);
+  }
+  return req;
+}
 
 interface APICandle {
   time: string;
@@ -167,21 +181,12 @@ export function useDirectionStateAPI(
         const authHeaders: Record<string, string> = {};
         if (accessToken) authHeaders["Authorization"] = `Bearer ${accessToken}`;
 
-        const [res, m5Res] = await Promise.all([
-          fetch(url, { signal: controller.signal, headers: authHeaders }),
-          stateKey !== m5StateKey
-            ? fetch(m5Url, {
-                signal: controller.signal,
-                headers: authHeaders,
-              }).catch(() => null)
-            : Promise.resolve(null),
+        const [json, m5Json] = await Promise.all([
+          fetchDedup(url, authHeaders),
+          stateKey !== m5StateKey ? fetchDedup(m5Url, authHeaders).catch(() => null) : Promise.resolve(null),
         ]);
 
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
-        const json = await res.json();
-
-        if (m5Res && m5Res.ok && stateKey !== m5StateKey) {
-          const m5Json = await m5Res.json();
+        if (m5Json && stateKey !== m5StateKey) {
           if (json.candles?.length > 0 && m5Json.candles?.length > 0) {
             json.candles[0].open = m5Json.candles[0].open;
             json.candles[0].high = m5Json.candles[0].high;

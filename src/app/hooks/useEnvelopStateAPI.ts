@@ -2,6 +2,21 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/envelop-state/read";
 
+// Global cache to deduplicate simultaneous requests
+const pendingRequests = new Map<string, Promise<any>>();
+
+function fetchDedup(url: string, headers: Record<string, string>): Promise<any> {
+  let req = pendingRequests.get(url);
+  if (!req) {
+    req = fetch(url, { headers }).then(res => {
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    }).finally(() => setTimeout(() => pendingRequests.delete(url), 1000));
+    pendingRequests.set(url, req);
+  }
+  return req;
+}
+
 interface APICandle {
     time: string;
     open: string;
@@ -149,10 +164,8 @@ export function useEnvelopStateAPI(
 
             const authHeaders: Record<string, string> = {};
             if (accessToken) authHeaders["Authorization"] = `Bearer ${accessToken}`;
-            const res = await fetch(url, { signal: controller.signal, headers: authHeaders });
-
-            if (!res.ok) throw new Error(`API error: ${res.status}`);
-            const json = await res.json();
+            
+            const json = await fetchDedup(url, authHeaders);
 
             if (!json.candles || !Array.isArray(json.candles) || json.candles.length === 0) {
                 throw new Error("No envelop data available");
