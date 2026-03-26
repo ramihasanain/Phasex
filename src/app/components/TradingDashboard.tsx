@@ -953,33 +953,14 @@ export function TradingDashboard({
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
                   />
 
-                  <div className="flex flex-col relative z-10">
-                    <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: tk.textDim }}>Balance</span>
-                    <span className="text-xs font-black tabular-nums tracking-tight" style={{ color: tk.textPrimary }}>
-                      ${mt5Account.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <div className="flex flex-col relative z-10 pr-1 text-right">
+                    <span className="text-[8px] font-black uppercase tracking-widest line-clamp-1 max-w-[120px]" style={{ color: tk.textDim }}>
+                      {mt5Account.server || mt5Account.name || "Broker"}
+                    </span>
+                    <span className="text-[10px] font-black tabular-nums tracking-tight" style={{ color: tk.textPrimary }}>
+                      {mt5Account.login}
                     </span>
                   </div>
-                  
-                  <div className="w-[1px] h-6" style={{ background: tk.isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }} />
-                  
-                  <div className="flex flex-col relative z-10">
-                    <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: tk.textDim }}>Equity</span>
-                    <span className="text-xs font-black tabular-nums tracking-tight" style={{ color: tk.textPrimary }}>
-                      ${mt5Account.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-
-                  {mt5Account.margin_level > 0 && (
-                    <>
-                      <div className="w-[1px] h-6" style={{ background: tk.isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }} />
-                      <div className="flex flex-col relative z-10">
-                        <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: tk.textDim }}>Margin</span>
-                        <span className="text-[11px] font-black tabular-nums tracking-tight" style={{ color: mt5Account.margin_level < 100 ? "#ef4444" : "#10b981" }}>
-                          {mt5Account.margin_level.toFixed(2)}%
-                        </span>
-                      </div>
-                    </>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>
