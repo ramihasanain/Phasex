@@ -1,5 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { LandingPage } from "./components/LandingPage";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
 import { PhaseXDynamicsPage } from "./components/PhaseXDynamicsPage";
@@ -8,13 +14,16 @@ import { SubscriptionOnboarding } from "./components/SubscriptionOnboarding";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { LandingPage } from "./pages/LandingPage";
 
 function LandingRoute() {
   const navigate = useNavigate();
   return (
     <LandingPage
       onGetStarted={() => navigate("/login")}
-      onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "landing" } })}
+      onOpenDynamics={() =>
+        navigate("/phasex-dynamics", { state: { from: "landing" } })
+      }
     />
   );
 }
@@ -37,7 +46,9 @@ function RegisterRoute() {
   if (user) return <Navigate to="/dashboard" replace />;
   return (
     <RegisterPage
-      onRegister={() => navigate("/dashboard", { state: { fromRegister: true } })}
+      onRegister={() =>
+        navigate("/dashboard", { state: { fromRegister: true } })
+      }
       onBackToLogin={() => navigate("/login")}
     />
   );
@@ -65,7 +76,9 @@ function DashboardRoute() {
         logout();
         navigate("/");
       }}
-      onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "dashboard" } })}
+      onOpenDynamics={() =>
+        navigate("/phasex-dynamics", { state: { from: "dashboard" } })
+      }
     />
   );
 }
