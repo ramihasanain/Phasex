@@ -672,54 +672,41 @@ export function TradingDashboard({
     ? formatTfStr(mtfSmallTimeframe)
     : formatTfStr(timeframe);
 
-  // Phase State loads first (default indicator on page load)
   const { candles: phaseCandles } = usePhaseStateAPI(
     selectedAsset?.symbol,
     aiTf1,
     aiTf2,
-    true,
+    selectedIndicator?.id === "phase",
     accessToken,
   );
-
-  // Stagger remaining indicator API calls — each enables 1.5s after the previous
-  // This prevents all 6 APIs from hitting the server simultaneously on login
-  const phaseLoaded = phaseCandles.length > 0;
-  const [staggerIdx, setStaggerIdx] = useState(0);
-  useEffect(() => {
-    if (!phaseLoaded) return;
-    if (staggerIdx >= 5) return;
-    const timer = setTimeout(() => setStaggerIdx(prev => prev + 1), 1500);
-    return () => clearTimeout(timer);
-  }, [phaseLoaded, staggerIdx]);
-
   const { candles: dirCandles } = useDirectionStateAPI(
     selectedAsset?.symbol,
     mtfEnabled ? mtfSmallTimeframe : timeframe,
-    staggerIdx >= 1,
+    selectedIndicator?.id === "direction",
     accessToken,
   );
   const { candles: oscCandles } = useOscillationStateAPI(
     selectedAsset?.symbol,
     mtfEnabled ? mtfSmallTimeframe : timeframe,
-    staggerIdx >= 2,
+    selectedIndicator?.id === "oscillation",
     accessToken,
   );
   const { candles: dispCandles } = useDisplacementStateAPI(
     selectedAsset?.symbol,
     mtfEnabled ? mtfSmallTimeframe : timeframe,
-    staggerIdx >= 3,
+    selectedIndicator?.id === "displacement",
     accessToken,
   );
   const { candles: refCandles } = useReferenceStateAPI(
     selectedAsset?.symbol,
     mtfEnabled ? mtfSmallTimeframe : timeframe,
-    staggerIdx >= 4,
+    selectedIndicator?.id === "reference",
     accessToken,
   );
   const { candles: envCandles } = useEnvelopStateAPI(
     selectedAsset?.symbol,
     mtfEnabled ? mtfSmallTimeframe : timeframe,
-    staggerIdx >= 5,
+    selectedIndicator?.id === "envelop",
     accessToken,
   );
 
