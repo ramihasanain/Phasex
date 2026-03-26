@@ -7,6 +7,7 @@ import { SubscriptionPanel } from "./SubscriptionPanel";
 import { AdSpace } from "./AdSpace";
 import { TradingSignalsTable } from "./TradingSignalsTable";
 import { TradeErrorPopup } from "./TradeErrorPopup";
+import { MarketWatchModal } from "./MarketWatchModal";
 import {
   LineChart,
   Activity,
@@ -449,6 +450,8 @@ export function TradingDashboard({
     action: string;
     source?: "Chart" | "AI";
   } | null>(null);
+
+  const [showMarketWatch, setShowMarketWatch] = useState(false);
   const [qtSL, setQtSL] = useState("");
   const [qtTP, setQtTP] = useState("");
   const [qtSymbol, setQtSymbol] = useState("");
@@ -890,40 +893,28 @@ export function TradingDashboard({
             className="flex items-center gap-3"
           >
             <Logo size="sm" showText={false} animated={false} />
-            <div className="hidden sm:block">
-              <span
-                className="text-[8px] font-bold tracking-[0.25em] uppercase"
-                style={{
-                  color: tk.isDark
-                    ? "rgba(99,102,241,0.4)"
-                    : "rgba(79,70,229,0.35)",
-                }}
-              >
-                STRUCTURAL DYNAMICS
-              </span>
-            </div>
           </motion.div>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Structural Dynamics Link */}
+            {/* Market Watch Link */}
             <motion.button
-              onClick={onOpenDynamics}
+              onClick={() => setShowMarketWatch(true)}
               whileHover={{
                 scale: 1.04,
-                boxShadow: "0 4px 15px rgba(99,102,241,0.15)",
+                boxShadow: "0 4px 15px rgba(168,85,247,0.15)",
               }}
               whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer transition-colors"
               style={{
-                color: tk.info,
-                background: tk.infoBg,
-                border: `1px solid ${tk.isDark ? "rgba(99,102,241,0.12)" : "rgba(79,70,229,0.15)"}`,
+                color: "#c084fc",
+                background: "rgba(168,85,247,0.1)",
+                border: `1px solid ${tk.isDark ? "rgba(168,85,247,0.15)" : "rgba(168,85,247,0.25)"}`,
                 backdropFilter: tk.isDark ? "blur(8px)" : undefined,
               }}
             >
-              <Network className="w-3.5 h-3.5" />
-              <span>{t("structuralDynamics")}</span>
+              <Activity className="w-3.5 h-3.5" />
+              <span>MARKET WATCH</span>
             </motion.button>
 
             {/* MT5 Account Details */}
@@ -2830,6 +2821,15 @@ export function TradingDashboard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MarketWatchModal 
+        isOpen={showMarketWatch} 
+        onClose={() => setShowMarketWatch(false)} 
+        mt5Positions={mt5Positions} 
+        serverAutoTrades={autoTrades} 
+        closePosition={closePosition} 
+      />
+
     </div>
     </>
   );
