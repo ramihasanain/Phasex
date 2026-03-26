@@ -1170,13 +1170,13 @@ export function IndicatorChart({
             </div>
           </div>
           
-          {/* Centered Animated Symbol (Absolute) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none">
+          {/* Centered Animated Symbol + Decision Badge (Absolute) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none" style={{ marginLeft: decisionLabel ? '-10px' : 0 }}>
              <motion.div 
-                className="flex items-center justify-center gap-3 px-6 py-1.5 rounded-full"
+                className="flex items-center justify-center gap-2.5 px-5 py-1.5 rounded-full"
                 initial={{ opacity: 0, scale: 0.8, y: -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                key={currency.symbol}
+                key={currency.symbol + (decisionLabel || '')}
                 style={{ 
                   background: `linear-gradient(180deg, ${tk.surfaceHover} 0%, transparent 100%)`,
                   border: `1px solid ${tk.border}`,
@@ -1190,7 +1190,7 @@ export function IndicatorChart({
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                />
                <motion.h2 
-                  className="text-2xl font-black relative z-10 tracking-[0.15em] uppercase"
+                  className="text-lg font-black relative z-10 tracking-[0.15em] uppercase"
                   style={{ color: tk.textPrimary }}
                   animate={{ 
                      textShadow: [
@@ -1203,31 +1203,25 @@ export function IndicatorChart({
                >
                   {currency.symbol}
                </motion.h2>
-               {/* Decision Engine Badge */}
+               {/* Decision Engine Badge — inline next to symbol */}
                {decisionLabel && (() => {
                  const ds = decisionStyle(decisionLabel);
                  return (
-                   <motion.div
-                     className="relative z-10 mt-1"
-                     initial={{ opacity: 0, y: 5, scale: 0.8 }}
-                     animate={{ opacity: 1, y: 0, scale: 1 }}
+                   <motion.span
+                     className="relative z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap"
+                     initial={{ opacity: 0, x: -8, scale: 0.8 }}
+                     animate={{ opacity: 1, x: 0, scale: 1 }}
                      transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+                     style={{
+                       color: ds.color,
+                       background: ds.bg,
+                       border: `1px solid ${ds.border}`,
+                       boxShadow: ds.glow,
+                     }}
                    >
-                     <motion.span
-                       className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.15em] uppercase"
-                       style={{
-                         color: ds.color,
-                         background: ds.bg,
-                         border: `1px solid ${ds.border}`,
-                         boxShadow: ds.glow,
-                       }}
-                       animate={{ boxShadow: [ds.glow, ds.glow.replace(/[\d.]+\)$/, '0.6)'), ds.glow] }}
-                       transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                     >
-                       <Zap className="w-3 h-3" />
-                       {isRTL ? decisionLabelAr[decisionLabel] || decisionLabel : decisionLabel}
-                     </motion.span>
-                   </motion.div>
+                     <Zap className="w-2.5 h-2.5" />
+                     {isRTL ? decisionLabelAr[decisionLabel] || decisionLabel : decisionLabel}
+                   </motion.span>
                  );
                })()}
                {!decisionLabel && (
