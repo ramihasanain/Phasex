@@ -926,6 +926,64 @@ export function TradingDashboard({
               <span>{t("structuralDynamics")}</span>
             </motion.button>
 
+            {/* MT5 Account Details */}
+            <AnimatePresence>
+              {mt5Connected && mt5Account && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="hidden md:flex items-center gap-4 px-4 py-1.5 rounded-xl relative overflow-hidden"
+                  style={{
+                    background: tk.isDark ? "linear-gradient(90deg, rgba(16,185,129,0.04), rgba(99,102,241,0.04))" : "linear-gradient(90deg, rgba(16,185,129,0.08), rgba(99,102,241,0.08))",
+                    border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.25)"}`,
+                    boxShadow: tk.isDark ? "inset 0 0 20px rgba(16,185,129,0.02)" : "0 2px 10px rgba(0,0,0,0.02)",
+                    backdropFilter: tk.isDark ? "blur(12px)" : undefined,
+                  }}
+                >
+                  {/* Shimmer effect */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)",
+                      width: "50%",
+                    }}
+                    animate={{ x: ["-200%", "400%"] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                  />
+
+                  <div className="flex flex-col relative z-10">
+                    <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: tk.textDim }}>Balance</span>
+                    <span className="text-xs font-black tabular-nums tracking-tight" style={{ color: tk.textPrimary }}>
+                      ${mt5Account.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  
+                  <div className="w-[1px] h-6" style={{ background: tk.isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }} />
+                  
+                  <div className="flex flex-col relative z-10">
+                    <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: tk.textDim }}>Equity</span>
+                    <span className="text-xs font-black tabular-nums tracking-tight" style={{ color: tk.textPrimary }}>
+                      ${mt5Account.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+
+                  {mt5Account.margin_level > 0 && (
+                    <>
+                      <div className="w-[1px] h-6" style={{ background: tk.isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }} />
+                      <div className="flex flex-col relative z-10">
+                        <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: tk.textDim }}>Margin</span>
+                        <span className="text-[11px] font-black tabular-nums tracking-tight" style={{ color: mt5Account.margin_level < 100 ? "#ef4444" : "#10b981" }}>
+                          {mt5Account.margin_level.toFixed(2)}%
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* MT5 Connection Button */}
             <motion.button
               onClick={() => {
