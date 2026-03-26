@@ -902,19 +902,19 @@ export function TradingDashboard({
               onClick={() => setShowMarketWatch(true)}
               whileHover={{
                 scale: 1.04,
-                boxShadow: "0 4px 15px rgba(168,85,247,0.15)",
+                boxShadow: tk.isDark ? "0 4px 15px rgba(251,191,36,0.15)" : "0 4px 15px rgba(245,158,11,0.2)",
               }}
               whileTap={{ scale: 0.96 }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer transition-colors"
               style={{
-                color: "#c084fc",
-                background: "rgba(168,85,247,0.1)",
-                border: `1px solid ${tk.isDark ? "rgba(168,85,247,0.15)" : "rgba(168,85,247,0.25)"}`,
+                color: tk.textPrimary,
+                background: tk.isDark ? "rgba(251,191,36,0.08)" : "rgba(245,158,11,0.1)",
+                border: `1px solid ${tk.isDark ? "rgba(251,191,36,0.2)" : "rgba(245,158,11,0.3)"}`,
                 backdropFilter: tk.isDark ? "blur(8px)" : undefined,
               }}
             >
-              <Activity className="w-3.5 h-3.5" />
-              <span>MARKET WATCH</span>
+              <Activity className="w-3.5 h-3.5 drop-shadow-sm" style={{ color: tk.isDark ? "#fcd34d" : "#d97706" }} />
+              <span className="drop-shadow-sm tracking-wide">MARKET WATCH</span>
             </motion.button>
 
             {/* MT5 Account Details */}

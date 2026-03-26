@@ -254,10 +254,10 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-3.5">
-                                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm drop-shadow" style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>{row.buyCount} B</span>
+                                                    <span className="inline-flex whitespace-nowrap items-center w-max text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm drop-shadow" style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>{row.buyCount} B</span>
                                                 </td>
                                                 <td className="px-5 py-3.5">
-                                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm drop-shadow" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}>{row.sellCount} S</span>
+                                                    <span className="inline-flex whitespace-nowrap items-center w-max text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm drop-shadow" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}>{row.sellCount} S</span>
                                                 </td>
                                                 <td className="px-5 py-3.5">
                                                     <span className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-sm drop-shadow" style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
