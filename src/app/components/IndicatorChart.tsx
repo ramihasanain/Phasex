@@ -40,38 +40,46 @@ function useDecisionEngine(symbol: string | undefined): string | null {
         const json = await res.json();
         const files: any[] = json?.files || [];
 
-        // Build a simplified score per symbol using all available indicator data
+        // Build score per symbol from Buy/Sell signals across all BS windows & timeframes
         const symbolScores: Record<string, number> = {};
         const symbolCounts: Record<string, number> = {};
 
         for (const file of files) {
           if (!file.payload) continue;
           for (const [key, val] of Object.entries(file.payload)) {
-            if (key === 'exported_at') continue;
-            const sym = key.split(' - ')[0]?.trim();
-            if (!sym) continue;
-            const tfData = val as Record<string, any>;
-            for (const entry of Object.values(tfData)) {
-              const e = entry as any;
-              const sig = (e.net_signal || '').toLowerCase().trim();
-              if (sig === 'buy') { symbolScores[sym] = (symbolScores[sym] || 0) + 1; symbolCounts[sym] = (symbolCounts[sym] || 0) + 1; }
-              else if (sig === 'sell') { symbolScores[sym] = (symbolScores[sym] || 0) - 1; symbolCounts[sym] = (symbolCounts[sym] || 0) + 1; }
+            if (key === 'exported_at' || key === 'stage') continue;
+            // Key format: "AUDCAD.sd - FOREX" or "BTCUSD.lv - CRYPTO" or "AIG - OTHER"
+            const rawSym = key.split(' - ')[0]?.trim();
+            if (!rawSym) continue;
+            // Strip suffixes like .sd, .lv to get clean symbol name
+            const sym = rawSym.replace(/\.\w+$/, '');
+
+            const symData = val as any;
+            // Data is nested: { indicators: { BS10: { M5: "Buy", M10: "Sell", ... }, ... } }
+            const indicators = symData?.indicators || symData;
+            for (const [, bsVal] of Object.entries(indicators)) {
+              const tfData = bsVal as Record<string, string>;
+              for (const signal of Object.values(tfData)) {
+                const s = (signal || '').toLowerCase().trim();
+                if (s === 'buy') { symbolScores[sym] = (symbolScores[sym] || 0) + 1; symbolCounts[sym] = (symbolCounts[sym] || 0) + 1; }
+                else if (s === 'sell') { symbolScores[sym] = (symbolScores[sym] || 0) - 1; symbolCounts[sym] = (symbolCounts[sym] || 0) + 1; }
+              }
             }
           }
         }
 
         const result: Record<string, string> = {};
         for (const sym of Object.keys(symbolScores)) {
+          const score = symbolScores[sym]; // net score (buys - sells)
           const count = symbolCounts[sym] || 1;
-          const ratio = symbolScores[sym] / count; // -1 to +1
-          const score = ratio * count; // weighted
+          const pct = score / count; // -1 to +1 ratio
 
-          if (score >= 8) result[sym] = 'STRONG BUY';
-          else if (score >= 4) result[sym] = 'BUY';
-          else if (score > 0) result[sym] = 'WEAK BUY';
-          else if (score === 0) result[sym] = 'NO TRADE';
-          else if (score > -4) result[sym] = 'WEAK SELL';
-          else if (score > -8) result[sym] = 'SELL';
+          if (pct >= 0.6) result[sym] = 'STRONG BUY';
+          else if (pct >= 0.3) result[sym] = 'BUY';
+          else if (pct > 0.05) result[sym] = 'WEAK BUY';
+          else if (pct >= -0.05) result[sym] = 'NEUTRAL';
+          else if (pct > -0.3) result[sym] = 'WEAK SELL';
+          else if (pct > -0.6) result[sym] = 'SELL';
           else result[sym] = 'STRONG SELL';
         }
 
@@ -94,6 +102,7 @@ const decisionStyle = (d: string): { color: string; bg: string; border: string; 
     case 'BUY': return { color: '#a3e635', bg: 'rgba(163,230,53,0.12)', border: 'rgba(163,230,53,0.3)', glow: '0 0 10px rgba(163,230,53,0.25)' };
     case 'WEAK BUY': return { color: '#facc15', bg: 'rgba(250,204,21,0.1)', border: 'rgba(250,204,21,0.25)', glow: '0 0 8px rgba(250,204,21,0.15)' };
     case 'NO TRADE': return { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', glow: 'none' };
+    case 'NEUTRAL': return { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', glow: 'none' };
     case 'WEAK SELL': return { color: '#fb923c', bg: 'rgba(251,146,60,0.1)', border: 'rgba(251,146,60,0.25)', glow: '0 0 8px rgba(251,146,60,0.15)' };
     case 'SELL': return { color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)', glow: '0 0 10px rgba(248,113,113,0.25)' };
     case 'STRONG SELL': return { color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', glow: '0 0 15px rgba(239,68,68,0.4)' };
@@ -103,7 +112,7 @@ const decisionStyle = (d: string): { color: string; bg: string; border: string; 
 
 const decisionLabelAr: Record<string, string> = {
   'STRONG BUY': 'شراء قوي', 'BUY': 'شراء', 'WEAK BUY': 'شراء ضعيف',
-  'NO TRADE': 'لا تداول', 'WEAK SELL': 'بيع ضعيف', 'SELL': 'بيع', 'STRONG SELL': 'بيع قوي'
+  'NO TRADE': 'لا تداول', 'NEUTRAL': 'محايد', 'WEAK SELL': 'بيع ضعيف', 'SELL': 'بيع', 'STRONG SELL': 'بيع قوي'
 };
 
 
