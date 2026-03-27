@@ -901,32 +901,10 @@ export function useMT5(): UseMT5Result {
 
     // Track Auto Trade Flips from live positions
     useEffect(() => {
-        if (!connected) return;
+        if (!connected || positions.length === 0 || autoTrades.length === 0) return;
 
         const activeComments = new Set(autoTrades.map((at: any) => at.comment).filter(Boolean));
-        const activeSymbols = new Set(autoTrades.map((at: any) => at.symbol).filter(Boolean));
-
-        let changed = false;
-        const newFlipCounts = { ...autoFlipCountsRef.current };
-
-        // 1. CLEANUP: If an auto trade was stopped, clear its flip count
-        for (const sym of Object.keys(newFlipCounts)) {
-            if (!activeSymbols.has(sym)) {
-                delete newFlipCounts[sym];
-                changed = true;
-            }
-        }
-        
-        for (const sym of Object.keys(prevAutoPositionsRef.current)) {
-            if (!activeSymbols.has(sym)) {
-                delete prevAutoPositionsRef.current[sym];
-            }
-        }
-
-        if (positions.length === 0 || activeComments.size === 0) {
-            if (changed) setAutoFlipCounts(newFlipCounts);
-            return;
-        }
+        if (activeComments.size === 0) return;
 
         const currentPositionMap: Record<string, { ticket: number, type: string }> = {};
         
@@ -935,6 +913,9 @@ export function useMT5(): UseMT5Result {
                 currentPositionMap[pos.symbol] = { ticket: pos.ticket, type: pos.type };
             }
         });
+
+        let changed = false;
+        const newFlipCounts = { ...autoFlipCountsRef.current };
 
         for (const [sym, curr] of Object.entries(currentPositionMap)) {
             const prev = prevAutoPositionsRef.current[sym];
