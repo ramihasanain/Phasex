@@ -26,10 +26,21 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
         
         const flipCounts: Record<string, number> = {};
         if (serverTradeHistory) {
-            const autoComments = new Set(serverAutoTrades.map(at => at.comment).filter(Boolean));
+            const autoComments = Array.from(new Set(serverAutoTrades.map(at => at.comment).filter(Boolean)));
             serverTradeHistory.forEach((deal: any) => {
-                if (deal.entry === '0' || deal.entry === 0 || deal.entry === 'IN' || deal.entry === 'DEAL_ENTRY_IN') {
-                    if (deal.comment && autoComments.has(deal.comment)) {
+                const entryVal = deal.entryType || deal.entry || deal.entry_type;
+                const eStr = String(entryVal).toUpperCase();
+                const isInDeal = eStr === '0' || eStr === 'IN' || eStr === 'DEAL_ENTRY_IN';
+                
+                if (isInDeal && deal.comment) {
+                    // Match comment robustly
+                    const isAutoMatch = autoComments.some(ac => 
+                        deal.comment === ac || 
+                        deal.comment.includes(ac) || 
+                        ac.includes(deal.comment)
+                    );
+                    
+                    if (isAutoMatch) {
                         const sym = deal.symbol;
                         flipCounts[sym] = (flipCounts[sym] || 0) + 1;
                     }
