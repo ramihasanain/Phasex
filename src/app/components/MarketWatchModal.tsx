@@ -10,11 +10,11 @@ interface MarketWatchModalProps {
     onClose: () => void;
     mt5Positions: MT5Position[];
     serverAutoTrades: any[];
-    serverTradeHistory?: any[];
+    autoFlipCounts: Record<string, number>;
     closePosition: (ticket: number) => Promise<boolean>;
 }
 
-export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, serverTradeHistory, closePosition }: MarketWatchModalProps) {
+export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, autoFlipCounts, closePosition }: MarketWatchModalProps) {
     const { language, t } = useLanguage();
     const tk = useThemeTokens();
 
@@ -23,30 +23,6 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
 
     const { summary, aggregated } = useMemo(() => {
         let totalProfit = 0;
-        
-        const flipCounts: Record<string, number> = {};
-        if (serverTradeHistory) {
-            const autoComments = Array.from(new Set(serverAutoTrades.map(at => at.comment).filter(Boolean)));
-            serverTradeHistory.forEach((deal: any) => {
-                const entryVal = deal.entryType || deal.entry || deal.entry_type;
-                const eStr = String(entryVal).toUpperCase();
-                const isInDeal = eStr === '0' || eStr === 'IN' || eStr === 'DEAL_ENTRY_IN';
-                
-                if (isInDeal && deal.comment) {
-                    // Match comment robustly
-                    const isAutoMatch = autoComments.some(ac => 
-                        deal.comment === ac || 
-                        deal.comment.includes(ac) || 
-                        ac.includes(deal.comment)
-                    );
-                    
-                    if (isAutoMatch) {
-                        const sym = deal.symbol;
-                        flipCounts[sym] = (flipCounts[sym] || 0) + 1;
-                    }
-                }
-            });
-        }
 
         const symMap: Record<string, {
             symbol: string,
@@ -74,7 +50,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                     sellCount: 0,
                     autoCount: 0,
                     manualCount: 0,
-                    flipCount: flipCounts[sym] || 0,
+                    flipCount: autoFlipCounts[sym] || 0,
                     profit: 0,
                     autoTickets: [],
                     allTickets: []
@@ -112,7 +88,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
             },
             aggregated: aggregatedArray
         };
-    }, [mt5Positions, serverAutoTrades, serverTradeHistory]);
+    }, [mt5Positions, serverAutoTrades, autoFlipCounts]);
 
     const handleCloseAuto = async (symbol: string, tickets: number[]) => {
         setClosingAutoSymbols(prev => new Set(prev).add(symbol));

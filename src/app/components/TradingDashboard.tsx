@@ -524,6 +524,7 @@ export function TradingDashboard({
     autoTradeUnsubscribe,
     stopAllAutoTrades,
     fetchAutoTradeHistory,
+    autoFlipCounts,
   } = useMT5();
 
   // Clear recentlyExecuted entries once positions confirm them
@@ -2827,6 +2828,7 @@ export function TradingDashboard({
         onClose={() => setShowMarketWatch(false)} 
         mt5Positions={mt5Positions} 
         serverAutoTrades={autoTrades} 
+        autoFlipCounts={autoFlipCounts}
         closePosition={closePosition} 
       />
 

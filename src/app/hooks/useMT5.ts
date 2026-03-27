@@ -124,6 +124,7 @@ export interface UseMT5Result {
     stopAllAutoTrades: () => Promise<boolean>;
     fetchAutoTradeStatus: () => Promise<void>;
     fetchAutoTradeHistory: (limit?: number) => Promise<void>;
+    autoFlipCounts: Record<string, number>;
 }
 
 /* ─── Hook ─── */
@@ -147,6 +148,18 @@ export function useMT5(): UseMT5Result {
     const clearTradeError = useCallback(() => setTradeError(null), []);
     const [connectStatus, setConnectStatus] = useState<string>('');
     const [symbolOverrides, setSymbolOverrides] = useState<Record<string, string>>({});
+
+    // ─── Auto Flips Tracking ───
+    const [autoFlipCounts, setAutoFlipCountsState] = useState<Record<string, number>>(() => {
+        try { return JSON.parse(localStorage.getItem('phasex_auto_flips') || '{}'); } catch { return {}; }
+    });
+    const autoFlipCountsRef = useRef(autoFlipCounts);
+    const setAutoFlipCounts = useCallback((newCounts: Record<string, number>) => {
+        autoFlipCountsRef.current = newCounts;
+        setAutoFlipCountsState(newCounts);
+        try { localStorage.setItem('phasex_auto_flips', JSON.stringify(newCounts)); } catch {}
+    }, []);
+    const prevAutoPositionsRef = useRef<Record<string, { ticket: number, type: string }>>({});
 
     const mountedRef = useRef(true);
     const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -886,6 +899,39 @@ export function useMT5(): UseMT5Result {
         return () => clearInterval(interval);
     }, [connected, fetchAutoTradeStatus]);
 
+    // Track Auto Trade Flips from live positions
+    useEffect(() => {
+        if (!connected || positions.length === 0 || autoTrades.length === 0) return;
+
+        const activeComments = new Set(autoTrades.map((at: any) => at.comment).filter(Boolean));
+        if (activeComments.size === 0) return;
+
+        const currentPositionMap: Record<string, { ticket: number, type: string }> = {};
+        
+        positions.forEach(pos => {
+            if (pos.comment && activeComments.has(pos.comment)) {
+                currentPositionMap[pos.symbol] = { ticket: pos.ticket, type: pos.type };
+            }
+        });
+
+        let changed = false;
+        const newFlipCounts = { ...autoFlipCountsRef.current };
+
+        for (const [sym, curr] of Object.entries(currentPositionMap)) {
+            const prev = prevAutoPositionsRef.current[sym];
+            if (prev && (prev.ticket !== curr.ticket || prev.type !== curr.type)) {
+                newFlipCounts[sym] = (newFlipCounts[sym] || 0) + 1;
+                changed = true;
+            }
+        }
+
+        prevAutoPositionsRef.current = currentPositionMap;
+
+        if (changed) {
+            setAutoFlipCounts(newFlipCounts);
+        }
+    }, [positions, autoTrades, connected, setAutoFlipCounts]);
+
     return {
         connected,
         connecting,
@@ -926,5 +972,6 @@ export function useMT5(): UseMT5Result {
         fetchAutoTradeStatus,
         fetchAutoTradeHistory,
         stopAllAutoTrades,
+        autoFlipCounts,
     };
 }
