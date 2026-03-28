@@ -1764,6 +1764,7 @@ export function TradingDashboard({
                 data={selectedIndicator?.locked ? [] : chartData}
                 timeframe={timeframe}
                 onTimeframeChange={pickTimeframe}
+                onOpenDynamics={onOpenDynamics}
                 mtfEnabled={mtfEnabled}
                 mtfSmallTimeframe={mtfSmallTimeframe}
                 mtfLargeTimeframe={mtfLargeTimeframe}

@@ -19,6 +19,8 @@ import { getAIMarketInsightText } from "./phase-x/aiMarketInsightLogic";
 
 interface PhaseXDynamicsPageProps {
     onBack: () => void;
+    initialSymbol?: string;
+    initialTab?: string;
 }
 
 import type { MarketCategory, AnalysisTab, Signal, TrendLabel, SymbolData } from "./phase-x/types";
@@ -1173,7 +1175,7 @@ function TradingDecisionEngineTable({
 
 /* ═══════════ MAIN COMPONENT ═══════════ */
 
-export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
+export function PhaseXDynamicsPage({ onBack, initialSymbol, initialTab }: PhaseXDynamicsPageProps) {
     const { user, logout, hasMT5Access } = useAuth();
     const isLoggedIn = !!user;
     const { connected: mt5Connected, connectMT5, disconnectMT5, connecting: mt5Connecting, connectStatus: mt5ConnectStatus, executeTrade, positions: mt5Positions, stopAllAutoTrades } = useMT5();
@@ -1255,13 +1257,21 @@ export function PhaseXDynamicsPage({ onBack }: PhaseXDynamicsPageProps) {
 
     const [selectedCategory, setSelectedCategory] = useState<MarketCategory>("Forex");
 
-    const [selectedSymbol, setSelectedSymbol] = useState("EURUSD");
+    const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol || "EURUSD");
     const [lastSystemUpdate, setLastSystemUpdate] = useState<number | null>(Date.now());
 
-    const [selectedTab, setSelectedTab] = useState<AnalysisTab>("Vector Core");
+    const [selectedTab, setSelectedTab] = useState<AnalysisTab>((initialTab as AnalysisTab) || "Vector Core");
     const [filterOpen, setFilterOpen] = useState(true);
     const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
     const [isNewsOpen, setIsNewsOpen] = useState(false);
+
+    // Set category correctly based on initial symbol
+    useEffect(() => {
+        if (initialSymbol) {
+            const cat = marketCategories.find(c => c.name !== "All" && c.symbols.includes(initialSymbol));
+            if (cat) setSelectedCategory(cat.name as MarketCategory);
+        }
+    }, [initialSymbol]);
 
     const [sources, setSources] = useState<Record<AnalysisTab, any[]>>(defaultAnalysisSources);
     const [uploadStatus, setUploadStatus] = useState<Record<AnalysisTab, boolean[]>>({

@@ -196,16 +196,7 @@ function useDecisionEngine(symbol: string | undefined): string | null {
           const extraSum = sMom + sPhase + sVol + sConf;
           const totalScore = Math.sign(coreSum) * (Math.abs(coreSum) + extraSum);
 
-          let decision = 'NO TRADE';
-          if (totalScore >= 13) decision = 'STRONG BUY';
-          else if (totalScore > 7) decision = 'BUY';
-          else if (totalScore > 0) decision = 'WEAK BUY';
-          else if (totalScore === 0) decision = 'NO TRADE';
-          else if (totalScore > -7) decision = 'WEAK SELL';
-          else if (totalScore > -13) decision = 'SELL';
-          else decision = 'STRONG SELL';
-
-          result[cleanSym] = decision;
+          result[cleanSym] = primaryTrendFull;
         }
 
         _decisionCache.data = result;
@@ -223,21 +214,17 @@ function useDecisionEngine(symbol: string | undefined): string | null {
 
 const decisionStyle = (d: string): { color: string; bg: string; border: string; glow: string } => {
   switch (d) {
-    case 'STRONG BUY': return { color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)', glow: '0 0 15px rgba(16,185,129,0.4)' };
-    case 'BUY': return { color: '#a3e635', bg: 'rgba(163,230,53,0.12)', border: 'rgba(163,230,53,0.3)', glow: '0 0 10px rgba(163,230,53,0.25)' };
-    case 'WEAK BUY': return { color: '#facc15', bg: 'rgba(250,204,21,0.1)', border: 'rgba(250,204,21,0.25)', glow: '0 0 8px rgba(250,204,21,0.15)' };
-    case 'NO TRADE': return { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', glow: 'none' };
-    case 'NEUTRAL': return { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', glow: 'none' };
-    case 'WEAK SELL': return { color: '#fb923c', bg: 'rgba(251,146,60,0.1)', border: 'rgba(251,146,60,0.25)', glow: '0 0 8px rgba(251,146,60,0.15)' };
-    case 'SELL': return { color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)', glow: '0 0 10px rgba(248,113,113,0.25)' };
-    case 'STRONG SELL': return { color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', glow: '0 0 15px rgba(239,68,68,0.4)' };
+    case 'Strong Uptrend': return { color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)', glow: '0 0 15px rgba(16,185,129,0.4)' };
+    case 'Bullish': return { color: '#a3e635', bg: 'rgba(163,230,53,0.12)', border: 'rgba(163,230,53,0.3)', glow: '0 0 10px rgba(163,230,53,0.25)' };
+    case 'Neutral': return { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)', glow: 'none' };
+    case 'Bearish': return { color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)', glow: '0 0 10px rgba(248,113,113,0.25)' };
+    case 'Strong Downtrend': return { color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', glow: '0 0 15px rgba(239,68,68,0.4)' };
     default: return { color: '#94a3b8', bg: 'rgba(148,163,184,0.05)', border: 'rgba(148,163,184,0.1)', glow: 'none' };
   }
 };
 
 const decisionLabelAr: Record<string, string> = {
-  'STRONG BUY': 'شراء قوي', 'BUY': 'شراء', 'WEAK BUY': 'شراء ضعيف',
-  'NO TRADE': 'لا تداول', 'NEUTRAL': 'محايد', 'WEAK SELL': 'بيع ضعيف', 'SELL': 'بيع', 'STRONG SELL': 'بيع قوي'
+  'Strong Uptrend': 'اتجاه صاعد قوي', 'Bullish': 'صاعد', 'Neutral': 'محايد', 'Bearish': 'هابط', 'Strong Downtrend': 'اتجاه هابط قوي'
 };
 
 
@@ -280,6 +267,7 @@ interface IndicatorChartProps {
   autoTradeWorker?: any;
   autoTradeSubscribe?: (trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}>) => Promise<{subscribed: any[], errors: any[]}>;
   autoTradeUnsubscribe?: (comments: string[]) => Promise<void>;
+  onOpenDynamics?: (symbol: string, tab: string) => void;
 }
 
 /* ═══════════ Phase State Hierarchical Timeframes ═══════════ */
@@ -521,7 +509,7 @@ export function IndicatorChart({
   onMtfEnabledChange, onMtfSmallTimeframeChange, onMtfLargeTimeframeChange,
   phaseStateData, generateCandlesFromReal, onLiveChartData, renderTradeButtons,
   accessToken, mt5Connected, executeTrade: executeTradeFromChart, bulkExecuteTrades, mt5Positions, addTradeToHistory, serverTradeHistory,
-  autoTrades, autoTradeWorker, autoTradeSubscribe, autoTradeUnsubscribe
+  autoTrades, autoTradeWorker, autoTradeSubscribe, autoTradeUnsubscribe, onOpenDynamics
 }: IndicatorChartProps) {
   const { language, t } = useLanguage();
   const [showInfoPopup, setShowInfoPopup] = useState(false);
@@ -1303,7 +1291,7 @@ export function IndicatorChart({
           </div>
           
           {/* Centered Animated Symbol + Decision Badge (Absolute) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none" style={{ marginLeft: decisionLabel ? '-10px' : 0 }}>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-auto" style={{ marginLeft: decisionLabel ? '-10px' : 0 }}>
              <motion.div 
                 className="flex items-center justify-center gap-2.5 px-5 py-1.5 rounded-full"
                 initial={{ opacity: 0, scale: 0.8, y: -10 }}
@@ -1321,9 +1309,11 @@ export function IndicatorChart({
                   animate={{ opacity: [0.1, 0.3, 0.1], scale: [0.9, 1.1, 0.9] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                />
-               <motion.h2 
-                  className="text-lg font-black relative z-10 tracking-[0.15em] uppercase"
+               <motion.button 
+                  onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
+                  className="text-lg font-black relative z-10 tracking-[0.15em] uppercase cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ color: tk.textPrimary }}
+                  title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
                   animate={{ 
                      textShadow: [
                        `0 0 10px rgba(255,255,255,0.1)`, 
@@ -1334,13 +1324,14 @@ export function IndicatorChart({
                   transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
                >
                   {currency.symbol}
-               </motion.h2>
+               </motion.button>
                {/* Decision Engine Badge — inline next to symbol */}
                {decisionLabel && (() => {
                  const ds = decisionStyle(decisionLabel);
                  return (
-                   <motion.span
-                     className="relative z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap"
+                   <motion.button
+                     onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
+                     className="relative z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity"
                      initial={{ opacity: 0, x: -8, scale: 0.8 }}
                      animate={{ opacity: 1, x: 0, scale: 1 }}
                      transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
@@ -1350,10 +1341,11 @@ export function IndicatorChart({
                        border: `1px solid ${ds.border}`,
                        boxShadow: ds.glow,
                      }}
+                     title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
                    >
                      <Zap className="w-2.5 h-2.5" />
                      {isRTL ? decisionLabelAr[decisionLabel] || decisionLabel : decisionLabel}
-                   </motion.span>
+                   </motion.button>
                  );
                })()}
                {!decisionLabel && (
