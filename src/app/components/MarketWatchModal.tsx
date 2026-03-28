@@ -162,77 +162,144 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
                     }}
                 >
-                    {/* Header */}
-                    <div className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', background: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
-                                <Activity className="w-5 h-5" />
-                            </div>
+                    {/* Sci-Fi Racing Header */}
+                    <div className="px-6 py-5 flex items-center justify-between relative overflow-hidden" style={{ background: tk.isDark ? '#060a10' : '#f8fafc', borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.15)' : 'rgba(0,0,0,0.1)'}` }}>
+                        {/* Background Grid Pattern */}
+                        {tk.isDark && (
+                            <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'linear-gradient(rgba(99,102,241,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.2) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                        )}
+                        {/* Glowing orb */}
+                        <div className="absolute top-1/2 left-0 w-32 h-32 bg-indigo-500 rounded-full blur-[60px] opacity-20 -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
+                        <div className="flex items-center gap-4 relative z-10">
+                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="w-12 h-12 rounded-xl flex items-center justify-center relative border border-indigo-500/30" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(0,0,0,0))' }}>
+                                <Activity className="w-6 h-6 text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                                <div className="absolute inset-0 border border-indigo-400 rounded-xl" style={{ clipPath: 'polygon(0 0, 30% 0, 0 30%)' }} />
+                                <div className="absolute inset-0 border border-indigo-400 rounded-xl" style={{ clipPath: 'polygon(100% 100%, 70% 100%, 100% 70%)' }} />
+                            </motion.div>
                             <div>
-                                <h2 className="text-sm font-black tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 drop-shadow-sm">
-                                    Market Watch <span className="opacity-50 font-medium">TERMINAL</span>
+                                <h2 className="text-lg font-black tracking-[0.3em] uppercase bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-500 drop-shadow-sm flex items-center gap-2">
+                                    Market Watch <span className="opacity-40 font-mono text-[10px]">v2.0</span>
                                 </h2>
-                                <p className="text-[9px] uppercase font-bold tracking-[0.2em]" style={{ color: tk.textDim }}>
-                                    Live MetaApi Aggregation
-                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                                    <p className="text-[10px] uppercase font-bold tracking-[0.25em]" style={{ color: tk.textDim }}>
+                                        Telemetry Active // MetaApi Link
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded-lg transition-colors hover:bg-white/5 group" style={{ color: tk.textDim }}>
-                            <X className="w-5 h-5 group-hover:text-white transition-colors" />
-                        </button>
+
+                        <div className="relative z-10 flex items-center gap-3">
+                            {/* Scanning line decoration */}
+                            <div className="hidden md:flex flex-col items-end mr-4">
+                                <div className="text-[8px] font-mono tracking-widest text-indigo-400/50 mb-0.5">LATENCY: 12ms</div>
+                                <div className="w-24 h-1 bg-indigo-900/40 rounded-full overflow-hidden relative">
+                                    <motion.div className="w-1/2 h-full bg-indigo-500 rounded-full" animate={{ x: ['-100%', '200%'] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} />
+                                </div>
+                            </div>
+                            <button onClick={onClose} className="p-2.5 rounded-xl transition-all duration-300 hover:scale-105 group border border-transparent hover:border-red-500/30 hover:bg-red-500/10" style={{ color: tk.textDim }}>
+                                <X className="w-5 h-5 group-hover:text-red-400 transition-colors drop-shadow-[0_0_8px_rgba(239,68,68,0)] group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
-                        {/* Total Net Profit */}
-                        <div className="rounded-xl p-5 border relative overflow-hidden" style={{ borderColor: summary.totalProfit >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)', background: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', boxShadow: summary.totalProfit >= 0 ? 'inset 0 0 20px rgba(16,185,129,0.05)' : 'inset 0 0 20px rgba(239,68,68,0.05)' }}>
-                            <div className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none transform translate-x-10 -translate-y-10">
+                    {/* Telemetry Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 p-6 relative" style={{ background: tk.isDark ? '#0b0e14' : '#f1f5f9' }}>
+                        {/* Background glowing sweep */}
+                        <motion.div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ background: 'linear-gradient(90deg, transparent, #6366f1, transparent)' }} animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} />
+
+                        {/* Total Net Profit Card */}
+                        <div className="rounded-2xl p-5 border relative overflow-hidden group transition-all duration-500 hover:scale-[1.02]" style={{ 
+                            background: tk.isDark ? 'linear-gradient(180deg, rgba(16,185,129,0.05), rgba(0,0,0,0))' : 'linear-gradient(180deg, rgba(16,185,129,0.05), #ffffff)', 
+                            border: `1px solid ${summary.totalProfit >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                            boxShadow: `0 8px 30px ${summary.totalProfit >= 0 ? 'rgba(16,185,129,0.05)' : 'rgba(239,68,68,0.05)'}`
+                        }}>
+                            <div className="absolute -right-10 -top-10 w-40 h-40 opacity-10 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none">
                                 {summary.totalProfit >= 0 ? <TrendingUp className="w-full h-full text-emerald-500" /> : <TrendingDown className="w-full h-full text-red-500" />}
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: tk.textDim }}>Total Net Profit</span>
-                            <div className="text-3xl font-black font-mono mt-1 drop-shadow-lg" style={{ color: summary.totalProfit >= 0 ? '#10b981' : '#ef4444', textShadow: `0 0 15px ${summary.totalProfit >= 0 ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}` }}>
-                                {summary.totalProfit >= 0 ? '+' : ''}{summary.totalProfit.toFixed(2)}
+                            {/* Abstract racing stripe */}
+                            <div className="absolute top-0 left-0 w-1.5 h-full" style={{ background: summary.totalProfit >= 0 ? '#10b981' : '#ef4444', boxShadow: `0 0 15px ${summary.totalProfit >= 0 ? '#10b981' : '#ef4444'}` }} />
+                            
+                            <div className="pl-4">
+                                <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: tk.textDim }}>
+                                    <div className="w-1 h-1 rounded-full bg-current opacity-50" />
+                                    Total Net Profit
+                                </span>
+                                <div className="text-4xl font-black font-mono tracking-tight" style={{ 
+                                    color: summary.totalProfit >= 0 ? '#10b981' : '#ef4444', 
+                                    textShadow: `0 0 20px ${summary.totalProfit >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)'}` 
+                                }}>
+                                    {summary.totalProfit >= 0 ? '+' : ''}{summary.totalProfit.toFixed(2)}
+                                </div>
+                                <div className="flex items-center gap-2 mt-3">
+                                    <span className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest text-[#10b981] bg-[#10b981]/10 border border-[#10b981]/20">LIVE</span>
+                                    <span className="text-[10px] uppercase font-bold tracking-[0.1em]" style={{ color: tk.textDim }}>Portfolio Delta</span>
+                                </div>
                             </div>
-                            <div className="text-[9px] font-bold tracking-[0.2em] mt-2 uppercase" style={{ color: tk.textSecondary }}>Live MT5 Portfolio</div>
                         </div>
 
-                        {/* Best Asset */}
-                        <div className="rounded-xl p-5 border relative overflow-hidden" style={{ borderColor: 'rgba(99,102,241,0.2)', background: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-                            <div className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none transform translate-x-10 -translate-y-10">
+                        {/* Best Asset Card */}
+                        <div className="rounded-2xl p-5 border relative overflow-hidden group transition-all duration-500 hover:scale-[1.02]" style={{ 
+                            background: tk.isDark ? 'linear-gradient(180deg, rgba(99,102,241,0.05), rgba(0,0,0,0))' : 'linear-gradient(180deg, rgba(99,102,241,0.05), #ffffff)', 
+                            border: '1px solid rgba(99,102,241,0.3)',
+                            boxShadow: '0 8px 30px rgba(99,102,241,0.05)'
+                        }}>
+                            <div className="absolute -right-8 -bottom-8 w-32 h-32 opacity-[0.08] group-hover:opacity-15 transition-opacity duration-500 pointer-events-none">
                                 <Target className="w-full h-full text-indigo-500" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: tk.textDim }}>Best Performing</span>
+                            <div className="absolute top-0 right-10 w-20 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+                            
+                            <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: tk.textDim }}>
+                                <div className="w-1 h-1 rounded-full bg-current opacity-50" />
+                                Apex Performer
+                            </span>
                             {summary.bestSymbol ? (
                                 <>
-                                    <div className="text-xl font-black mt-2 drop-shadow-lg" style={{ color: tk.textPrimary }}>
+                                    <div className="text-2xl font-black tracking-wider mt-1 drop-shadow-md" style={{ color: tk.textPrimary }}>
                                         {summary.bestSymbol.symbol}
                                     </div>
-                                    <div className="text-sm font-bold font-mono mt-1" style={{ color: '#10b981' }}>
-                                        +{summary.bestSymbol.profit.toFixed(2)}
+                                    <div className="flex items-center gap-3 mt-3">
+                                        <div className="text-lg font-black font-mono drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]" style={{ color: '#10b981' }}>
+                                            +{summary.bestSymbol.profit.toFixed(2)}
+                                        </div>
+                                        <div className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20">MAX THRUST</div>
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-sm font-bold mt-4" style={{ color: tk.textDim }}>No Data</div>
+                                <div className="text-sm font-mono mt-4 opacity-50" style={{ color: tk.textDim }}>// NO DATA</div>
                             )}
                         </div>
 
-                        {/* Worst Asset */}
-                        <div className="rounded-xl p-5 border relative overflow-hidden" style={{ borderColor: 'rgba(245,158,11,0.2)', background: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-                            <div className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none transform translate-x-10 -translate-y-10">
+                        {/* Worst Asset Card */}
+                        <div className="rounded-2xl p-5 border relative overflow-hidden group transition-all duration-500 hover:scale-[1.02]" style={{ 
+                            background: tk.isDark ? 'linear-gradient(180deg, rgba(245,158,11,0.05), rgba(0,0,0,0))' : 'linear-gradient(180deg, rgba(245,158,11,0.05), #ffffff)', 
+                            border: '1px solid rgba(245,158,11,0.3)',
+                            boxShadow: '0 8px 30px rgba(245,158,11,0.05)'
+                        }}>
+                            <div className="absolute -right-8 -bottom-8 w-32 h-32 opacity-[0.08] group-hover:opacity-15 transition-opacity duration-500 pointer-events-none">
                                 <BarChart2 className="w-full h-full text-amber-500" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: tk.textDim }}>Highest Drawdown</span>
+                            <div className="absolute bottom-0 right-10 w-20 h-px bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+                            
+                            <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: tk.textDim }}>
+                                <div className="w-1 h-1 rounded-full bg-current opacity-50" />
+                                High Drag
+                            </span>
                             {summary.worstSymbol ? (
                                 <>
-                                    <div className="text-xl font-black mt-2 drop-shadow-lg" style={{ color: tk.textPrimary }}>
+                                    <div className="text-2xl font-black tracking-wider mt-1 drop-shadow-md" style={{ color: tk.textPrimary }}>
                                         {summary.worstSymbol.symbol}
                                     </div>
-                                    <div className="text-sm font-bold font-mono mt-1" style={{ color: '#ef4444' }}>
-                                        {summary.worstSymbol.profit.toFixed(2)}
+                                    <div className="flex items-center gap-3 mt-3">
+                                        <div className="text-lg font-black font-mono drop-shadow-[0_0_10px_rgba(239,68,68,0.4)]" style={{ color: '#ef4444' }}>
+                                            {summary.worstSymbol.profit.toFixed(2)}
+                                        </div>
+                                        <div className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest text-amber-500 bg-amber-500/10 border border-amber-500/20">CRITICAL</div>
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-sm font-bold mt-4" style={{ color: tk.textDim }}>No Data</div>
+                                <div className="text-sm font-mono mt-4 opacity-50" style={{ color: tk.textDim }}>// NO DATA</div>
                             )}
                         </div>
                     </div>
@@ -282,24 +349,31 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                         </div>
                     )}
 
-                    {/* Table */}
-                    <div className="flex-1 overflow-auto custom-scrollbar">
+                    {/* Telemetry Data Grid */}
+                    <div className="flex-1 overflow-auto custom-scrollbar relative">
+                        {/* Inner shadow for depth */}
+                        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_10px_20px_rgba(0,0,0,0.5)] z-20" />
+                        
                         {aggregated.length === 0 ? (
-                            <div className="p-16 text-center flex flex-col items-center justify-center">
-                                <Activity className="w-16 h-16 mb-4 opacity-10" style={{ color: tk.textDim }} />
-                                <h3 className="text-lg font-black uppercase tracking-[0.2em]" style={{ color: tk.textSecondary }}>No Active Markets</h3>
-                                <p className="text-xs mt-2 uppercase tracking-wide" style={{ color: tk.textDim }}>There are currently no open positions.</p>
+                            <div className="p-20 text-center flex flex-col items-center justify-center relative min-h-[300px]">
+                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} className="absolute w-32 h-32 border border-indigo-500/20 rounded-full border-t-indigo-500/80 border-b-indigo-500/80" />
+                                <motion.div animate={{ rotate: -360 }} transition={{ duration: 12, repeat: Infinity, ease: 'linear' }} className="absolute w-24 h-24 border border-rose-500/20 rounded-full border-l-rose-500/80 border-r-rose-500/80" />
+                                <Activity className="w-8 h-8 opacity-50 relative z-10" style={{ color: tk.textDim }} />
+                                <h3 className="text-xl font-black uppercase tracking-[0.4em] mt-6 relative z-10" style={{ color: tk.textSecondary }}>RADAR EMPTY</h3>
+                                <p className="text-[10px] mt-2 uppercase tracking-[0.2em] font-mono relative z-10" style={{ color: tk.textDim }}>// AWAITING ACTIVE TELEMETRY //</p>
                             </div>
                         ) : (
-                            <table className="w-full text-left border-collapse">
-                                <thead className="sticky top-0 z-10" style={{ background: tk.isDark ? '#0b0e14' : '#ffffff', borderBottom: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
+                            <table className="w-full text-left border-collapse relative z-10">
+                                <thead className="sticky top-0 z-30" style={{ background: tk.isDark ? '#060a10' : '#f8fafc' }}>
                                     <tr>
                                         {['Symbol', 'Total', 'Buy', 'Sell', 'Auto', 'Flips', 'Manual', 'Net Profit', 'Action', 'Action'].map((h, i) => (
-                                            <th key={i} className={`px-5 py-4 text-[10px] font-black tracking-widest uppercase ${i >= 7 ? 'text-right' : ''}`} style={{ color: tk.textDim }}>
+                                            <th key={i} className={`px-5 py-4 text-[9px] font-black tracking-[0.25em] uppercase border-b ${i >= 7 ? 'text-right' : ''}`} style={{ color: tk.textDim, borderColor: tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(0,0,0,0.1)' }}>
                                                 {h}
                                             </th>
                                         ))}
                                     </tr>
+                                    {/* Glowing line under header */}
+                                    <tr className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
                                 </thead>
                                 <tbody>
                                     {aggregated.map((row) => {
@@ -308,73 +382,82 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                                         const isProfit = row.profit >= 0;
 
                                         return (
-                                            <tr key={row.symbol} className="border-b transition-colors hover:bg-white/5" style={{ borderColor: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)' }}>
-                                                <td className="px-5 py-3.5">
-                                                    <div className="text-xs font-black tracking-wider" style={{ color: tk.textPrimary }}>{row.symbol}</div>
+                                            <tr key={row.symbol} className="border-b transition-all duration-300 hover:bg-indigo-500/5 group relative" style={{ borderColor: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)' }}>
+                                                {/* Hover side glow */}
+                                                <td className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                
+                                                <td className="px-5 py-4">
+                                                    <div className="text-[13px] font-black tracking-[0.15em] drop-shadow-sm" style={{ color: tk.textPrimary }}>{row.symbol}</div>
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <span className="px-2.5 py-1 rounded-md text-[11px] font-black font-mono shadow-inner" style={{ background: tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', color: tk.textSecondary }}>
+                                                <td className="px-5 py-4">
+                                                    <span className="px-3 py-1.5 rounded-md text-[11px] font-black font-mono shadow-[inset_0_1px_3px_rgba(0,0,0,0.3)]" style={{ background: tk.isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)', color: tk.textSecondary, border: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.1)'}` }}>
                                                         {row.totalPos}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <span className="inline-flex whitespace-nowrap items-center w-max text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm drop-shadow" style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>{row.buyCount} B</span>
+                                                <td className="px-5 py-4">
+                                                    <span className="inline-flex whitespace-nowrap items-center w-max text-[10px] font-bold px-2.5 py-1 rounded-md shadow-[0_0_10px_rgba(16,185,129,0.15)]" style={{ color: '#10b981', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)' }}>{row.buyCount} B</span>
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <span className="inline-flex whitespace-nowrap items-center w-max text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm drop-shadow" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}>{row.sellCount} S</span>
+                                                <td className="px-5 py-4">
+                                                    <span className="inline-flex whitespace-nowrap items-center w-max text-[10px] font-bold px-2.5 py-1 rounded-md shadow-[0_0_10px_rgba(239,68,68,0.15)]" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>{row.sellCount} S</span>
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <span className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-sm drop-shadow" style={{ color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                                                <td className="px-5 py-4">
+                                                    <span className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-[0_0_10px_rgba(168,85,247,0.15)]" style={{ color: '#c084fc', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)' }}>
                                                         <Zap className="w-3 h-3" /> {row.autoCount}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <span title="Total times Auto Trade reversed direction" className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-sm drop-shadow" style={{ color: '#fb923c', background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.15)' }}>
+                                                <td className="px-5 py-4">
+                                                    <span title="Total times Auto Trade reversed direction" className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-[0_0_10px_rgba(251,146,60,0.15)]" style={{ color: '#fb923c', background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.3)' }}>
                                                         <Activity className="w-3 h-3" /> {row.flipCount}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md w-max shadow-sm drop-shadow" style={{ color: '#3b82f6', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.15)' }}>
+                                                <td className="px-5 py-4">
+                                                    <span className="text-[10px] font-bold px-3 py-1 rounded-md w-max shadow-[0_0_10px_rgba(59,130,246,0.15)]" style={{ color: '#60a5fa', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.3)' }}>
                                                         {row.manualCount}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-3.5 text-right">
-                                                    <span className="text-sm font-black font-mono drop-shadow-md" style={{ color: isProfit ? '#10b981' : '#ef4444' }}>
+                                                <td className="px-5 py-4 text-right">
+                                                    <span className="text-base font-black font-mono tracking-tight" style={{ color: isProfit ? '#10b981' : '#ef4444', textShadow: `0 0 10px ${isProfit ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}` }}>
                                                         {isProfit ? '+' : ''}{row.profit.toFixed(2)}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-3.5 text-right">
+                                                <td className="px-5 py-4 text-right">
                                                     <motion.button 
                                                         whileTap={{ scale: 0.95 }}
                                                         onClick={() => handleCloseAuto(row.symbol)}
                                                         disabled={isClosingAuto || row.autoCount === 0}
-                                                        className="px-3.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap shadow-sm"
+                                                        className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap overflow-hidden relative"
                                                         style={{
-                                                            color: row.autoCount === 0 ? tk.textDim : '#a855f7',
+                                                            color: row.autoCount === 0 ? tk.textDim : '#c084fc',
                                                             background: row.autoCount === 0 ? tk.surfaceHover : 'rgba(168,85,247,0.1)',
-                                                            border: `1px solid ${row.autoCount === 0 ? 'transparent' : 'rgba(168,85,247,0.2)'}`,
-                                                            opacity: (isClosingAuto || row.autoCount === 0) ? 0.5 : 1,
+                                                            border: `1px solid ${row.autoCount === 0 ? 'transparent' : 'rgba(168,85,247,0.4)'}`,
+                                                            opacity: (isClosingAuto || row.autoCount === 0) ? 0.3 : 1,
                                                             cursor: (isClosingAuto || row.autoCount === 0) ? 'not-allowed' : 'pointer'
                                                         }}
                                                     >
+                                                        {(!isClosingAuto && row.autoCount !== 0) && (
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                                                        )}
                                                         {isClosingAuto ? 'STOPPING...' : 'STOP AUTO'}
                                                     </motion.button>
                                                 </td>
-                                                <td className="px-5 py-3.5 text-right w-[160px]">
+                                                <td className="px-5 py-4 text-right w-[180px]">
                                                     <motion.button 
                                                         whileTap={{ scale: 0.95 }}
                                                         onClick={() => handleCloseAll(row.symbol, row.allTickets)}
                                                         disabled={isClosingAll || row.totalPos === 0}
-                                                        className="px-3.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap shadow-sm"
+                                                        className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap overflow-hidden relative"
                                                         style={{
                                                             color: row.totalPos === 0 ? tk.textDim : '#ef4444',
                                                             background: row.totalPos === 0 ? tk.surfaceHover : 'rgba(239,68,68,0.1)',
-                                                            border: `1px solid ${row.totalPos === 0 ? 'transparent' : 'rgba(239,68,68,0.2)'}`,
-                                                            opacity: (isClosingAll || row.totalPos === 0) ? 0.5 : 1,
+                                                            border: `1px solid ${row.totalPos === 0 ? 'transparent' : 'rgba(239,68,68,0.4)'}`,
+                                                            opacity: (isClosingAll || row.totalPos === 0) ? 0.3 : 1,
                                                             cursor: (isClosingAll || row.totalPos === 0) ? 'not-allowed' : 'pointer'
                                                         }}
                                                     >
-                                                        {isClosingAll ? 'CLOSING...' : 'CLOSE ALL POSITIONS'}
+                                                        {(!isClosingAll && row.totalPos !== 0) && (
+                                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                                                        )}
+                                                        {isClosingAll ? 'CLOSING...' : 'CLOSE ALL'}
                                                     </motion.button>
                                                 </td>
                                             </tr>
