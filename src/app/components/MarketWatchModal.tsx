@@ -59,7 +59,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                 };
             }
 
-            const isAuto = autoTicketsSet.has(String(pos.ticket)) || (pos.comment && pos.comment.toLowerCase().includes('auto'));
+            const isAuto = autoTicketsSet.has(String(pos.ticket)) || (pos.comment && (pos.comment.toLowerCase().includes('auto') || pos.comment.startsWith('PX-Chart-')));
             
             symMap[sym].totalPos++;
             symMap[sym].allTickets.push(pos.ticket);
