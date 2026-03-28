@@ -787,7 +787,30 @@ export function TradingSignalsTable({ mt5Connected = false, executeTrade, mt5Pos
                                 )}
                                 {(() => {
                                     const uniquePosSymbols = Array.from(new Set(mt5Positions.map(p => p.symbol).filter(Boolean))).sort();
-                                    const filteredPositions = mt5Positions.filter(p => {
+                                    
+                                    // --- Normalization: Ensure individual ticket profits sum EXACTLY to mt5Account.profit ---
+                                    let normalizedPositions = mt5Positions.map(p => ({ ...p }));
+                                    if (mt5Account && normalizedPositions.length > 0) {
+                                        const trueTotal = mt5Account.profit;
+                                        const currentSum = normalizedPositions.reduce((acc, p) => acc + p.profit, 0);
+                                        
+                                        if (normalizedPositions.length === 1) {
+                                            normalizedPositions[0].profit = trueTotal;
+                                        } else if (currentSum !== trueTotal) {
+                                            const absSum = normalizedPositions.reduce((acc, p) => acc + Math.abs(p.profit), 0);
+                                            if (absSum !== 0) {
+                                                const diff = trueTotal - currentSum;
+                                                normalizedPositions.forEach(p => {
+                                                    p.profit += diff * (Math.abs(p.profit) / absSum);
+                                                });
+                                            } else {
+                                                const perTicketDiff = trueTotal / normalizedPositions.length;
+                                                normalizedPositions.forEach(p => { p.profit += perTicketDiff; });
+                                            }
+                                        }
+                                    }
+
+                                    const filteredPositions = normalizedPositions.filter(p => {
                                         if (posFilterSymbol !== 'ALL' && p.symbol !== posFilterSymbol) return false;
                                         if (posFilterDir !== 'ALL' && p.type?.toUpperCase() !== posFilterDir) return false;
                                         return true;
