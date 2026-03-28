@@ -906,7 +906,7 @@ export function TradingDashboard({
                 boxShadow: tk.isDark ? "0 4px 15px rgba(99,102,241,0.15)" : "0 4px 15px rgba(79,70,229,0.2)",
               }}
               whileTap={{ scale: 0.96 }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer transition-colors"
               style={{
                 color: tk.textPrimary,
                 background: tk.isDark ? "rgba(99,102,241,0.08)" : "rgba(79,70,229,0.1)",
@@ -914,8 +914,8 @@ export function TradingDashboard({
                 backdropFilter: tk.isDark ? "blur(8px)" : undefined,
               }}
             >
-              <Layers className="w-3.5 h-3.5 drop-shadow-sm" style={{ color: tk.isDark ? "#818cf8" : "#4f46e5" }} />
-              <span className="drop-shadow-sm tracking-wide uppercase">{isRTL ? "ستركشر داينمك" : "STRUCTURE DYNAMIC"}</span>
+              <Layers className="w-3.5 h-3.5 flex-shrink-0 drop-shadow-sm" style={{ color: tk.isDark ? "#818cf8" : "#4f46e5" }} />
+              <span className="drop-shadow-sm tracking-wide uppercase whitespace-nowrap">{isRTL ? "S. داينمك" : "S. DYNAMIC"}</span>
             </motion.button>
 
             {/* Market Watch Link */}
