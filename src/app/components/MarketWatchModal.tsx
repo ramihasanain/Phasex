@@ -12,9 +12,10 @@ interface MarketWatchModalProps {
     serverAutoTrades: any[];
     autoFlipCounts: Record<string, number>;
     closePosition: (ticket: number) => Promise<boolean>;
+    autoTradeUnsubscribe?: (comments: string[]) => Promise<void>;
 }
 
-export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, autoFlipCounts, closePosition }: MarketWatchModalProps) {
+export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, autoFlipCounts, closePosition, autoTradeUnsubscribe }: MarketWatchModalProps) {
     const { language, t } = useLanguage();
     const tk = useThemeTokens();
 
@@ -90,10 +91,15 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
         };
     }, [mt5Positions, serverAutoTrades, autoFlipCounts]);
 
-    const handleCloseAuto = async (symbol: string, tickets: number[]) => {
+    const handleCloseAuto = async (symbol: string) => {
         setClosingAutoSymbols(prev => new Set(prev).add(symbol));
-        for (const t of tickets) {
-            await closePosition(t);
+        const commentsToStop = serverAutoTrades
+            .filter(at => at.symbol === symbol && at.is_active)
+            .map(at => at.comment)
+            .filter(Boolean);
+            
+        if (commentsToStop.length > 0 && autoTradeUnsubscribe) {
+            await autoTradeUnsubscribe(commentsToStop);
         }
         setClosingAutoSymbols(prev => { const n = new Set(prev); n.delete(symbol); return n; });
     };
@@ -269,7 +275,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                                                 <td className="px-5 py-3.5 text-right">
                                                     <motion.button 
                                                         whileTap={{ scale: 0.95 }}
-                                                        onClick={() => handleCloseAuto(row.symbol, row.autoTickets)}
+                                                        onClick={() => handleCloseAuto(row.symbol)}
                                                         disabled={isClosingAuto || row.autoCount === 0}
                                                         className="px-3.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap shadow-sm"
                                                         style={{
@@ -280,7 +286,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                                                             cursor: (isClosingAuto || row.autoCount === 0) ? 'not-allowed' : 'pointer'
                                                         }}
                                                     >
-                                                        {isClosingAuto ? 'CLOSING...' : 'CLOSE AUTO'}
+                                                        {isClosingAuto ? 'STOPPING...' : 'STOP AUTO'}
                                                     </motion.button>
                                                 </td>
                                                 <td className="px-5 py-3.5 text-right w-[160px]">

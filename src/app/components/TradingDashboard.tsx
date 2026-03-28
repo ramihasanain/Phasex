@@ -2830,6 +2830,7 @@ export function TradingDashboard({
         serverAutoTrades={autoTrades} 
         autoFlipCounts={autoFlipCounts}
         closePosition={closePosition} 
+        autoTradeUnsubscribe={autoTradeUnsubscribe}
       />
 
     </div>
