@@ -16,7 +16,7 @@ function LandingRoute() {
     <LandingPage
       onGetStarted={() => navigate("/login")}
       onRegister={() => navigate("/register")}
-      onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "landing" } })}
+      onOpenDynamics={(symbol?: string, tab?: string) => navigate("/phasex-dynamics", { state: { from: "landing", symbol, tab } })}
     />
   );
 }
@@ -67,7 +67,7 @@ function DashboardRoute() {
         logout();
         navigate("/");
       }}
-      onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "dashboard" } })}
+      onOpenDynamics={(symbol?: string, tab?: string) => navigate("/phasex-dynamics", { state: { from: "dashboard", symbol, tab } })}
     />
   );
 }
@@ -76,9 +76,11 @@ function PhaseXDynamicsRoute() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state?.from as string) || "landing";
+  const symbol = location.state?.symbol as string | undefined;
+  const tab = location.state?.tab as string | undefined;
   const backPath = from === "dashboard" ? "/dashboard" : "/";
 
-  return <PhaseXDynamicsPage onBack={() => navigate(backPath)} />;
+  return <PhaseXDynamicsPage onBack={() => navigate(backPath)} initialSymbol={symbol} initialTab={tab} />;
 }
 
 function AppContent() {
