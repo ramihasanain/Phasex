@@ -212,6 +212,25 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                         </div>
                     </div>
 
+                    {/* Account Stats */}
+                    {mt5Account && (
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 px-6 pb-6" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
+                            {[
+                                { label: 'Balance', value: `$${(mt5Account.balance || 0).toLocaleString()}`, color: '#10b981' },
+                                { label: 'Equity', value: `$${(mt5Account.equity || 0).toLocaleString()}`, color: '#6366f1' },
+                                { label: 'Free Margin', value: `$${(mt5Account.free_margin || 0).toLocaleString()}`, color: '#a855f7' },
+                                { label: 'Margin', value: `$${(mt5Account.margin || 0).toLocaleString()}`, color: '#f59e0b' },
+                                { label: 'Leverage', value: `1:${mt5Account.leverage || 0}`, color: '#3b82f6' },
+                            ].map((stat) => (
+                                <div key={stat.label} className="rounded-xl px-4 py-3 border relative overflow-hidden group" style={{ background: tk.isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.015)', borderColor: tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300" style={{ background: `linear-gradient(135deg, transparent, ${stat.color})` }} />
+                                    <div className="text-[9px] font-black tracking-[0.2em] uppercase mb-1" style={{ color: tk.textDim }}>{stat.label}</div>
+                                    <div className="text-sm font-black font-mono tracking-wide relative z-10 drop-shadow-sm" style={{ color: stat.color }}>{stat.value}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Table */}
                     <div className="flex-1 overflow-auto custom-scrollbar">
                         {aggregated.length === 0 ? (
