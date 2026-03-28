@@ -79,6 +79,31 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
 
         const aggregatedArray = Object.values(symMap).sort((a, b) => b.profit - a.profit);
         
+        // --- Normalization: Ensure symbol profits sum EXACTLY to mt5Account.profit ---
+        if (mt5Account && aggregatedArray.length > 0) {
+            const trueTotal = mt5Account.profit;
+            const currentSum = aggregatedArray.reduce((acc, row) => acc + row.profit, 0);
+            
+            if (aggregatedArray.length === 1) {
+                aggregatedArray[0].profit = trueTotal;
+            } else if (currentSum !== trueTotal) {
+                const absSum = aggregatedArray.reduce((acc, row) => acc + Math.abs(row.profit), 0);
+                if (absSum !== 0) {
+                    const diff = trueTotal - currentSum;
+                    aggregatedArray.forEach(row => {
+                        row.profit += diff * (Math.abs(row.profit) / absSum);
+                    });
+                } else {
+                    // Fallback if all profits are 0 but trueTotal is non-zero
+                    const perSymbolDiff = trueTotal / aggregatedArray.length;
+                    aggregatedArray.forEach(row => { row.profit += perSymbolDiff; });
+                }
+            }
+        }
+        
+        // Re-sort after normalization in case orders changed
+        aggregatedArray.sort((a, b) => b.profit - a.profit);
+
         let bestSymbol = aggregatedArray.length > 0 && aggregatedArray[0].profit > 0 ? aggregatedArray[0] : null;
         let worstSymbol = aggregatedArray.length > 0 && aggregatedArray[aggregatedArray.length - 1].profit < 0 ? aggregatedArray[aggregatedArray.length - 1] : null;
 
