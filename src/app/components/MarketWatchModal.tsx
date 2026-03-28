@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Activity, TrendingUp, TrendingDown, Target, Zap, BarChart2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useThemeTokens } from '../hooks/useThemeTokens';
-import { MT5Position } from '../hooks/useMT5';
+import { MT5Position, MT5Account } from '../hooks/useMT5';
 
 interface MarketWatchModalProps {
     isOpen: boolean;
@@ -13,9 +13,10 @@ interface MarketWatchModalProps {
     autoFlipCounts: Record<string, number>;
     closePosition: (ticket: number) => Promise<boolean>;
     autoTradeUnsubscribe?: (comments: string[]) => Promise<void>;
+    mt5Account?: MT5Account | null;
 }
 
-export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, autoFlipCounts, closePosition, autoTradeUnsubscribe }: MarketWatchModalProps) {
+export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrades, autoFlipCounts, closePosition, autoTradeUnsubscribe, mt5Account }: MarketWatchModalProps) {
     const { language, t } = useLanguage();
     const tk = useThemeTokens();
 
@@ -83,13 +84,13 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
 
         return {
             summary: {
-                totalProfit,
+                totalProfit: mt5Account ? mt5Account.profit : totalProfit, // Use live account profit if available to avoid freeze
                 bestSymbol,
                 worstSymbol
             },
             aggregated: aggregatedArray
         };
-    }, [mt5Positions, serverAutoTrades, autoFlipCounts]);
+    }, [mt5Positions, serverAutoTrades, autoFlipCounts, mt5Account]);
 
     const handleCloseAuto = async (symbol: string) => {
         setClosingAutoSymbols(prev => new Set(prev).add(symbol));

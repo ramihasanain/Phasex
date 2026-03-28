@@ -2852,6 +2852,7 @@ export function TradingDashboard({
         autoFlipCounts={autoFlipCounts}
         closePosition={closePosition} 
         autoTradeUnsubscribe={autoTradeUnsubscribe}
+        mt5Account={mt5Account}
       />
 
     </div>
