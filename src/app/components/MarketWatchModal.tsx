@@ -155,7 +155,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="relative w-full max-w-5xl overflow-hidden rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+                    className="relative w-full max-w-[1200px] overflow-hidden rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
                     style={{
                         background: tk.isDark ? '#0b0e14' : '#ffffff',
                         border: `1px solid ${tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
@@ -383,10 +383,10 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
 
                                         return (
                                             <tr key={row.symbol} className="border-b transition-all duration-300 hover:bg-indigo-500/5 group relative" style={{ borderColor: tk.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)' }}>
-                                                {/* Hover side glow */}
-                                                <td className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 
-                                                <td className="px-5 py-4">
+                                                <td className="px-5 py-4 relative">
+                                                    {/* Hover side glow */}
+                                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     <div className="text-[13px] font-black tracking-[0.15em] drop-shadow-sm" style={{ color: tk.textPrimary }}>{row.symbol}</div>
                                                 </td>
                                                 <td className="px-5 py-4">
