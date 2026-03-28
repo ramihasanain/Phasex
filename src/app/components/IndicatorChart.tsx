@@ -1568,25 +1568,40 @@ export function IndicatorChart({
                       <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-10 md:w-12 text-center text-[10px] md:text-[11px] font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
                       <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
                     </div>
+                    {(() => {
+                      const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
+                        const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                        return executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
+                      });
+                      
+                      const isAllAutoActive = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
+                        const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                        return autoTrades?.some(at => at.comment === chartComment) || executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
+                      });
 
-                    <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
-                      {isExecutingAll ? (
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full" />
-                      ) : (
-                        <Activity className="w-3.5 h-3.5" />
-                      )}
-                      {isRTL ? "تنفيذ الكل" : "Execute All"}
-                    </button>
-                    <div className="flex flex-col items-center gap-1">
-                      <button onClick={handleAutoAll} disabled={isAutoExecutingAll || !autoTradeSubscribe || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#a78bfa" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.2)"}` }}>
-                        {isAutoExecutingAll ? (
-                          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full" />
-                        ) : (
-                          <Zap className="w-3.5 h-3.5" />
-                        )}
-                        {isRTL ? "اوتو للكل" : "Auto All"}
-                      </button>
-                    </div>
+                      return (
+                        <>
+                          <button onClick={handleExecuteAll} disabled={isExecutingAll || isAllExecuted || !executeTradeFromChart || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
+                            {isExecutingAll ? (
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full" />
+                            ) : (
+                              <Activity className="w-3.5 h-3.5" />
+                            )}
+                            {isRTL ? "تنفيذ الكل" : "Execute All"}
+                          </button>
+                          <div className="flex flex-col items-center gap-1">
+                            <button onClick={handleAutoAll} disabled={isAutoExecutingAll || isAllAutoActive || !autoTradeSubscribe || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#a78bfa" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.2)"}` }}>
+                              {isAutoExecutingAll ? (
+                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full" />
+                              ) : (
+                                <Zap className="w-3.5 h-3.5" />
+                              )}
+                              {isRTL ? "اوتو للكل" : "Auto All"}
+                            </button>
+                          </div>
+                        </>
+                      );
+                    })()}
                     <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 mb-4 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
                       <BarChart3 className="w-3.5 h-3.5" />
                       {isRTL ? "العودة للشارت" : "Back to Chart"}
@@ -1715,38 +1730,35 @@ export function IndicatorChart({
                                       {(() => {
                                         const isAutoActive = autoTrades?.some(at => at.comment === chartComment);
                                         const isAutoTrading = dirExecuting.has(-row.windowSize); // negative windowSize for auto loading state
+                                        const isAutoBlocked = isAutoActive || isBlocked;
                                         
                                         return (
                                           <button
-                                            disabled={isAutoTrading || (!isAutoActive && isBlocked) || !autoTradeSubscribe || !currency}
+                                            disabled={isAutoTrading || isAutoBlocked || !autoTradeSubscribe || !currency}
                                             onClick={async (e) => {
                                               e.stopPropagation();
-                                              if (!autoTradeSubscribe || !autoTradeUnsubscribe || !currency) return;
+                                              if (!autoTradeSubscribe || !currency || isAutoBlocked) return;
                                               
                                               setDirExecuting(prev => new Set(prev).add(-row.windowSize));
                                               
-                                              if (isAutoActive) {
-                                                await autoTradeUnsubscribe([chartComment]);
-                                              } else {
-                                                const lot = dirLotSizes[row.windowSize] ?? 0.01;
-                                                await autoTradeSubscribe([{
-                                                  symbol: currency.symbol,
-                                                  main_tf: mainTF,
-                                                  sub_tf: subTF,
-                                                  window_size: row.windowSize,
-                                                  direction: row.isBuy ? 'BUY' : 'SELL',
-                                                  lot_size: lot,
-                                                  comment: chartComment
-                                                }]);
-                                              }
+                                              const lot = dirLotSizes[row.windowSize] ?? 0.01;
+                                              await autoTradeSubscribe([{
+                                                symbol: currency.symbol,
+                                                main_tf: mainTF,
+                                                sub_tf: subTF,
+                                                window_size: row.windowSize,
+                                                direction: row.isBuy ? 'BUY' : 'SELL',
+                                                lot_size: lot,
+                                                comment: chartComment
+                                              }]);
                                               
                                               setDirExecuting(prev => { const n = new Set(prev); n.delete(-row.windowSize); return n; });
                                             }}
                                             className="inline-flex items-center justify-center min-w-[60px] gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                             style={{
-                                              color: isAutoActive ? '#a78bfa' : '#94a3b8',
-                                              background: isAutoActive ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)',
-                                              border: `1px solid ${isAutoActive ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                                              color: (isAutoBlocked || isAutoTrading) ? '#64748b' : '#a78bfa',
+                                              background: (isAutoBlocked || isAutoTrading) ? 'rgba(255,255,255,0.03)' : 'rgba(139,92,246,0.15)',
+                                              border: `1px solid ${(isAutoBlocked || isAutoTrading) ? 'rgba(255,255,255,0.06)' : 'rgba(139,92,246,0.3)'}`,
                                             }}
                                           >
                                             {isAutoTrading ? '...' : isAutoActive ? '✅ Auto' : 'Auto'}
@@ -2085,15 +2097,23 @@ export function IndicatorChart({
                             <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-14 text-center text-sm font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
                             <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
                           </div>
+                          {(() => {
+                            const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
+                              const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                              return executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
+                            });
 
-                          <button onClick={handleExecuteAll} disabled={isExecutingAll || !executeTradeFromChart || !currency} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: `1px solid rgba(16,185,129,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#6ee7b7"; e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#34d399"; e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}>
-                            {isExecutingAll ? (
-                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full" />
-                            ) : (
-                              <Activity className="w-4 h-4" />
-                            )}
-                            {isRTL ? "تنفيذ الكل" : "Execute All"}
-                          </button>
+                            return (
+                              <button onClick={handleExecuteAll} disabled={isExecutingAll || isAllExecuted || !executeTradeFromChart || !currency} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: `1px solid rgba(16,185,129,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#6ee7b7"; e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#34d399"; e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}>
+                                {isExecutingAll ? (
+                                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full" />
+                                ) : (
+                                  <Activity className="w-4 h-4" />
+                                )}
+                                {isRTL ? "تنفيذ الكل" : "Execute All"}
+                              </button>
+                            );
+                          })()}
                           <button onClick={() => setShowDirections(false)} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors" style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: `1px solid ${tk.border}` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}>
                             <BarChart3 className="w-4 h-4" />
                             {isRTL ? "العودة للشارت" : "Back to Chart"}
