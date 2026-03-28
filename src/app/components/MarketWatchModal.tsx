@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, TrendingUp, TrendingDown, Target, Zap, BarChart2 } from 'lucide-react';
+import { X, Activity, TrendingUp, TrendingDown, Target, Zap, BarChart2, Wallet, CircleDollarSign, Unlock, Lock, Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useThemeTokens } from '../hooks/useThemeTokens';
 import { MT5Position, MT5Account } from '../hooks/useMT5';
@@ -212,22 +212,48 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                         </div>
                     </div>
 
-                    {/* Account Stats */}
+                    {/* Premium Account Stats Panel */}
                     {mt5Account && (
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 px-6 pb-6" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
-                            {[
-                                { label: 'Balance', value: `$${(mt5Account.balance || 0).toLocaleString()}`, color: '#10b981' },
-                                { label: 'Equity', value: `$${(mt5Account.equity || 0).toLocaleString()}`, color: '#6366f1' },
-                                { label: 'Free Margin', value: `$${(mt5Account.free_margin || 0).toLocaleString()}`, color: '#a855f7' },
-                                { label: 'Margin', value: `$${(mt5Account.margin || 0).toLocaleString()}`, color: '#f59e0b' },
-                                { label: 'Leverage', value: `1:${mt5Account.leverage || 0}`, color: '#3b82f6' },
-                            ].map((stat) => (
-                                <div key={stat.label} className="rounded-xl px-4 py-3 border relative overflow-hidden group" style={{ background: tk.isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.015)', borderColor: tk.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300" style={{ background: `linear-gradient(135deg, transparent, ${stat.color})` }} />
-                                    <div className="text-[9px] font-black tracking-[0.2em] uppercase mb-1" style={{ color: tk.textDim }}>{stat.label}</div>
-                                    <div className="text-sm font-black font-mono tracking-wide relative z-10 drop-shadow-sm" style={{ color: stat.color }}>{stat.value}</div>
+                        <div className="px-6 pb-6">
+                            <div className="p-4 rounded-2xl border" style={{ 
+                                background: tk.isDark ? 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)' : 'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.005) 100%)', 
+                                borderColor: tk.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)'
+                            }}>
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                    {[
+                                        { label: 'Balance', icon: Wallet, value: `$${(mt5Account.balance || 0).toLocaleString()}`, color: '#10b981', rgb: '16, 185, 129' },
+                                        { label: 'Equity', icon: CircleDollarSign, value: `$${(mt5Account.equity || 0).toLocaleString()}`, color: '#6366f1', rgb: '99, 102, 241' },
+                                        { label: 'Free Margin', icon: Unlock, value: `$${(mt5Account.free_margin || 0).toLocaleString()}`, color: '#a855f7', rgb: '168, 85, 247' },
+                                        { label: 'Margin', icon: Lock, value: `$${(mt5Account.margin || 0).toLocaleString()}`, color: '#f59e0b', rgb: '245, 158, 11' },
+                                        { label: 'Leverage', icon: Zap, value: `1:${mt5Account.leverage || 0}`, color: '#3b82f6', rgb: '59, 130, 246' },
+                                    ].map((stat, idx) => (
+                                        <div key={stat.label} className="relative group p-3 rounded-xl transition-all duration-300 hover:scale-105 cursor-default" style={{ 
+                                            background: `rgba(${stat.rgb}, 0.05)`, 
+                                            border: `1px solid rgba(${stat.rgb}, 0.15)`,
+                                            boxShadow: `inset 0 0 20px rgba(${stat.rgb}, 0.02)`
+                                        }}>
+                                            <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-xl" style={{ background: `linear-gradient(135deg, transparent, rgba(${stat.rgb}, 1))` }} />
+                                            {/* Glow effect behind icon */}
+                                            <div className="absolute -top-2 -right-2 w-12 h-12 rounded-full opacity-20 blur-xl transition-opacity duration-300 group-hover:opacity-40 pointer-events-none" style={{ background: stat.color }} />
+                                            
+                                            <div className="flex items-center gap-2 mb-2 relative z-10">
+                                                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: `rgba(${stat.rgb}, 0.1)`, border: `1px solid rgba(${stat.rgb}, 0.2)` }}>
+                                                    <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
+                                                </div>
+                                                <div className="text-[9px] xl:text-[10px] font-black tracking-[0.2em] uppercase truncate" style={{ color: tk.textDim }}>{stat.label}</div>
+                                            </div>
+                                            <div className="text-sm xl:text-lg font-black font-mono tracking-wide relative z-10 drop-shadow-md truncate" style={{ color: stat.color, textShadow: tk.isDark ? `0 0 12px rgba(${stat.rgb}, 0.4)` : 'none' }}>
+                                                {stat.value}
+                                            </div>
+                                            {/* Separator line for non-last child on Desktop */}
+                                            {idx < 4 && (
+                                                <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-px h-10" style={{ background: tk.isDark ? 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent)' : 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.1), transparent)' }} />
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
                         </div>
                     )}
 
