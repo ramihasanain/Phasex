@@ -39,7 +39,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
             allTickets: number[],
         }> = {};
 
-        const autoTicketsSet = new Set(serverAutoTrades.map(at => at.last_ticket).filter(Boolean));
+        const autoTicketsSet = new Set(serverAutoTrades.map(at => String(at.last_ticket)).filter(Boolean));
 
         mt5Positions.forEach(pos => {
             totalProfit += pos.profit;
@@ -59,7 +59,7 @@ export function MarketWatchModal({ isOpen, onClose, mt5Positions, serverAutoTrad
                 };
             }
 
-            const isAuto = autoTicketsSet.has(pos.ticket) || (pos.comment && pos.comment.toLowerCase().includes('auto'));
+            const isAuto = autoTicketsSet.has(String(pos.ticket)) || (pos.comment && pos.comment.toLowerCase().includes('auto'));
             
             symMap[sym].totalPos++;
             symMap[sym].allTickets.push(pos.ticket);

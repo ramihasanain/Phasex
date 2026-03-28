@@ -20,9 +20,9 @@ import { useThemeTokens } from "../hooks/useThemeTokens";
 const _decisionCache: { data: Record<string, string>; ts: number } = { data: {}, ts: 0 };
 
 // Timeframe→team mapping (same as PhaseXDynamicsPage getDynamicLayerData)
-const _shortTfs = new Set(['M5','M10','M15','M20','M30']);
-const _mediumTfs = new Set(['H1','H2','H3','H4']);
-const _longTfs = new Set(['H6','H8','D1']);
+const _shortTfs = new Set(['M5', 'M10', 'M15', 'M20', 'M30']);
+const _mediumTfs = new Set(['H1', 'H2', 'H3', 'H4']);
+const _longTfs = new Set(['H6', 'H8', 'D1']);
 
 function _getClassification(dsr: number): string {
   const t = dsr * 100;
@@ -258,14 +258,14 @@ interface IndicatorChartProps {
   accessToken?: string | null;
   mt5Connected?: boolean;
   executeTrade?: (symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string) => Promise<any>;
-  bulkExecuteTrades?: (trades: Array<{symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string}>) => Promise<{orders: any[], errors: any[]}>;
+  bulkExecuteTrades?: (trades: Array<{ symbol: string, action: string, volume: number, sl?: number, tp?: number, comment?: string }>) => Promise<{ orders: any[], errors: any[] }>;
   mt5Positions?: any[];
   addTradeToHistory?: (entry: any) => void;
   serverTradeHistory?: any[];
   // Auto-Trade
   autoTrades?: any[];
   autoTradeWorker?: any;
-  autoTradeSubscribe?: (trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}>) => Promise<{subscribed: any[], errors: any[]}>;
+  autoTradeSubscribe?: (trades: Array<{ symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string }>) => Promise<{ subscribed: any[], errors: any[] }>;
   autoTradeUnsubscribe?: (comments: string[]) => Promise<void>;
   onOpenDynamics?: (symbol: string, tab: string) => void;
 }
@@ -528,7 +528,7 @@ export function IndicatorChart({
   const [isExecutingAll, setIsExecutingAll] = useState(false);
   const [isAutoExecutingAll, setIsAutoExecutingAll] = useState(false);
   const [nextCheckStr, setNextCheckStr] = useState<string>('');
-  
+
   // Track executed trade comments to prevent duplicates (persists via serverTradeHistory)
   const [executedComments, setExecutedComments] = useState<Set<string>>(new Set());
   // executedComments is a temporary optimistic block (3s) to prevent double-clicks
@@ -589,14 +589,14 @@ export function IndicatorChart({
       setNextCheckStr('');
       return;
     }
-    
+
     // Auto trade worker runs on exact 5-minute boundaries + 35 seconds
     // We already have the UTC timestamp in next_check, just count down to it.
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const next = new Date(autoTradeWorker.next_check).getTime();
       const diff = next - now;
-      
+
       if (diff <= 0) {
         setNextCheckStr(isRTL ? "الآن..." : "Now...");
       } else {
@@ -605,7 +605,7 @@ export function IndicatorChart({
         setNextCheckStr(`${m}:${s.toString().padStart(2, '0')}`);
       }
     }, 1000);
-    
+
     return () => clearInterval(interval);
   }, [autoTradeWorker?.next_check, isRTL]);
 
@@ -807,8 +807,8 @@ export function IndicatorChart({
   const dataLenRef = useRef(effectiveData.length);
   useEffect(() => { viewWindowRef.current = viewWindow; }, [viewWindow]);
   useEffect(() => { startIndexRef.current = startIndex; }, [startIndex]);
-  useEffect(() => { 
-    dataLenRef.current = effectiveData.length; 
+  useEffect(() => {
+    dataLenRef.current = effectiveData.length;
     if (onLiveChartData) onLiveChartData(effectiveData);
   }, [effectiveData, onLiveChartData]);
 
@@ -907,7 +907,7 @@ export function IndicatorChart({
   const directionsData = useMemo(() => {
     const closePrice = h1m5ClosePrice;
     if (!showDirections || effectiveData.length === 0 || closePrice === null) return null;
-    
+
     const rows = Array.from({ length: 50 }, (_, i) => (i + 1) * 10).map((windowSize, idx) => {
       if (windowSize > effectiveData.length) return null;
 
@@ -945,20 +945,20 @@ export function IndicatorChart({
   const handleExecuteAll = async () => {
     if (!directionsData || !directionsData.rows || directionsData.rows.length === 0) return;
     if (!currency) return;
-    
+
     setIsExecutingAll(true);
-    
+
     // Build trades array — skip already executed or live positions
-    const trades: Array<{symbol: string, action: string, volume: number, sl?: number, comment: string}> = [];
+    const trades: Array<{ symbol: string, action: string, volume: number, sl?: number, comment: string }> = [];
     const tradeWindowSizes: number[] = [];
-    
+
     for (const row of directionsData.rows) {
       if (dirExecuting.has(row.windowSize)) continue;
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
       const alreadyExecuted = executedComments.has(chartComment);
       if (hasPos || alreadyExecuted) continue;
-      
+
       trades.push({
         symbol: currency.symbol,
         action: row.isBuy ? 'BUY' : 'SELL',
@@ -1026,18 +1026,18 @@ export function IndicatorChart({
 
     setIsAutoExecutingAll(true);
 
-    const trades: Array<{symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string}> = [];
+    const trades: Array<{ symbol: string, main_tf: string, sub_tf: string, window_size: number, direction: string, lot_size: number, sl?: number, comment: string }> = [];
     const tradeWindowSizes: number[] = [];
 
     for (const row of directionsData.rows) {
       if (dirExecuting.has(-row.windowSize)) continue;
-      
+
       const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
       const isAutoActive = autoTrades?.some(at => at.comment === chartComment);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
-      
+
       if (isAutoActive) continue;
-      
+
       trades.push({
         symbol: currency.symbol,
         main_tf: mainTF,
@@ -1150,9 +1150,9 @@ export function IndicatorChart({
                   <p className="text-xs mt-1" style={{ color: tk.negative, opacity: 0.7 }}>{errorMsg}</p>
                 )}
                 <p className="text-[11px] mt-2" style={{ color: tk.textDim }}>
-                  {isPhaseIndicator 
+                  {isPhaseIndicator
                     ? (isRTL ? `${currency?.symbol} - ${mainTF} من ${subTF} ` : `${currency?.symbol} - ${mainTF} from ${subTF} `)
-                    : isDirectionIndicator 
+                    : isDirectionIndicator
                       ? (isRTL ? `${currency?.symbol} - الإتجاه (${timeframe}د)` : `${currency?.symbol} - Direction (M${timeframe})`)
                       : isOscillationIndicator
                         ? (isRTL ? `${currency?.symbol} - التذبذب (${timeframe}د)` : `${currency?.symbol} - Oscillation (M${timeframe})`)
@@ -1289,72 +1289,72 @@ export function IndicatorChart({
               {renderTradeButtons && renderTradeButtons()}
             </div>
           </div>
-          
+
           {/* Centered Animated Symbol + Decision Badge (Absolute) */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-auto" style={{ marginLeft: decisionLabel ? '-10px' : 0 }}>
-             <motion.div 
-                className="flex items-center justify-center gap-2.5 px-5 py-1.5 rounded-full"
-                initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                key={currency.symbol + (decisionLabel || '')}
-                style={{ 
-                  background: `linear-gradient(180deg, ${tk.surfaceHover} 0%, transparent 100%)`,
-                  border: `1px solid ${tk.border}`,
-                  boxShadow: `0 4px 20px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05)`
+            <motion.div
+              className="flex items-center justify-center gap-2.5 px-5 py-1.5 rounded-full"
+              initial={{ opacity: 0, scale: 0.8, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              key={currency.symbol + (decisionLabel || '')}
+              style={{
+                background: `linear-gradient(180deg, ${tk.surfaceHover} 0%, transparent 100%)`,
+                border: `1px solid ${tk.border}`,
+                boxShadow: `0 4px 20px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05)`
+              }}
+            >
+              <motion.div
+                className="absolute inset-0 rounded-full z-0 opacity-20"
+                style={{ background: `radial-gradient(circle at 50% 50%, ${tk.textPrimary} 0%, transparent 70%)` }}
+                animate={{ opacity: [0.1, 0.3, 0.1], scale: [0.9, 1.1, 0.9] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.button
+                onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
+                className="text-lg font-black relative z-10 tracking-[0.15em] uppercase cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ color: tk.textPrimary }}
+                title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
+                animate={{
+                  textShadow: [
+                    `0 0 10px rgba(255,255,255,0.1)`,
+                    `0 0 20px rgba(255,255,255,0.3)`,
+                    `0 0 10px rgba(255,255,255,0.1)`
+                  ]
                 }}
-             >
-               <motion.div 
-                  className="absolute inset-0 rounded-full z-0 opacity-20"
-                  style={{ background: `radial-gradient(circle at 50% 50%, ${tk.textPrimary} 0%, transparent 70%)` }}
-                  animate={{ opacity: [0.1, 0.3, 0.1], scale: [0.9, 1.1, 0.9] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-               />
-               <motion.button 
-                  onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
-                  className="text-lg font-black relative z-10 tracking-[0.15em] uppercase cursor-pointer hover:opacity-80 transition-opacity"
-                  style={{ color: tk.textPrimary }}
-                  title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
-                  animate={{ 
-                     textShadow: [
-                       `0 0 10px rgba(255,255,255,0.1)`, 
-                       `0 0 20px rgba(255,255,255,0.3)`, 
-                       `0 0 10px rgba(255,255,255,0.1)`
-                     ] 
-                  }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-               >
-                  {currency.symbol}
-               </motion.button>
-               {/* Decision Engine Badge — inline next to symbol */}
-               {decisionLabel && (() => {
-                 const ds = decisionStyle(decisionLabel);
-                 return (
-                   <motion.button
-                     onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
-                     className="relative z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity"
-                     initial={{ opacity: 0, x: -8, scale: 0.8 }}
-                     animate={{ opacity: 1, x: 0, scale: 1 }}
-                     transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-                     style={{
-                       color: ds.color,
-                       background: ds.bg,
-                       border: `1px solid ${ds.border}`,
-                       boxShadow: ds.glow,
-                     }}
-                     title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
-                   >
-                     <Zap className="w-2.5 h-2.5" />
-                     {isRTL ? decisionLabelAr[decisionLabel] || decisionLabel : decisionLabel}
-                   </motion.button>
-                 );
-               })()}
-               {!decisionLabel && (
-                 <div className="flex flex-col gap-1 items-center relative z-10">
-                   <motion.div className="w-1.5 h-1.5 rounded-full bg-emerald-500" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }} />
-                   <motion.div className="w-1 h-1 rounded-full bg-emerald-500/50" animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} />
-                 </div>
-               )}
-             </motion.div>
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {currency.symbol}
+              </motion.button>
+              {/* Decision Engine Badge — inline next to symbol */}
+              {decisionLabel && (() => {
+                const ds = decisionStyle(decisionLabel);
+                return (
+                  <motion.button
+                    onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
+                    className="relative z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity"
+                    initial={{ opacity: 0, x: -8, scale: 0.8 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+                    style={{
+                      color: ds.color,
+                      background: ds.bg,
+                      border: `1px solid ${ds.border}`,
+                      boxShadow: ds.glow,
+                    }}
+                    title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
+                  >
+                    <Zap className="w-2.5 h-2.5" />
+                    {isRTL ? decisionLabelAr[decisionLabel] || decisionLabel : decisionLabel}
+                  </motion.button>
+                );
+              })()}
+              {!decisionLabel && (
+                <div className="flex flex-col gap-1 items-center relative z-10">
+                  <motion.div className="w-1.5 h-1.5 rounded-full bg-emerald-500" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }} />
+                  <motion.div className="w-1 h-1 rounded-full bg-emerald-500/50" animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.8, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} />
+                </div>
+              )}
+            </motion.div>
           </div>
 
           <div className="flex items-center gap-2 relative z-10 w-1/3 justify-end">
@@ -1381,7 +1381,7 @@ export function IndicatorChart({
                   <ListOrdered className="w-4 h-4" />
                 </button>
               )}
-              
+
               {[
                 { icon: Table, active: showTable && !showDirections, onClick: () => { setShowTable(true); setShowDirections(false); }, title: "Table" },
                 { icon: BarChart3, active: !showTable && !showDirections, onClick: () => { setShowTable(false); setShowDirections(false); }, title: "Chart" },
@@ -1412,7 +1412,7 @@ export function IndicatorChart({
                     border: timeframe === tf ? `1px solid ${indicator.color} 30` : "1px solid transparent",
                     color: timeframe === tf ? indicator.color : "#64748b",
                   }}>
-                  {tf >= 1440 ? `1${isRTL ? 'ي' : 'D'}` : tf >= 60 ? `${tf/60}${isRTL ? 'س' : 'H'}` : `${tf}${isRTL ? 'د' : 'M'}`}
+                  {tf >= 1440 ? `1${isRTL ? 'ي' : 'D'}` : tf >= 60 ? `${tf / 60}${isRTL ? 'س' : 'H'}` : `${tf}${isRTL ? 'د' : 'M'}`}
                 </button>
               ))}
             </div>
@@ -1539,25 +1539,25 @@ export function IndicatorChart({
                       const totalProfit = directionsData.rows.reduce((sum: number, r: any) => sum + (r.profit || 0), 0);
                       const isTotalPositive = totalProfit >= 0;
                       return (
-                      <div className={(isRTL ? "mr-2 pr-2 border-r" : "ml-2 pl-2 border-l") + " flex items-center gap-3"} style={{ borderColor: tk.border }}>
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ background: 'rgba(16,185,129,0.1)' }}>
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[11px] font-black text-emerald-500 uppercase tracking-wider">
-                            BUY: {directionsData.rows.filter((r: any) => r.isBuy).length}
-                          </span>
+                        <div className={(isRTL ? "mr-2 pr-2 border-r" : "ml-2 pl-2 border-l") + " flex items-center gap-3"} style={{ borderColor: tk.border }}>
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ background: 'rgba(16,185,129,0.1)' }}>
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[11px] font-black text-emerald-500 uppercase tracking-wider">
+                              BUY: {directionsData.rows.filter((r: any) => r.isBuy).length}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                            <span className="text-[11px] font-black text-red-500 uppercase tracking-wider">
+                              SELL: {directionsData.rows.filter((r: any) => !r.isBuy).length}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md" style={{ background: isTotalPositive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${isTotalPositive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
+                            <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: isTotalPositive ? '#10b981' : '#ef4444' }}>
+                              {isRTL ? 'الربح:' : 'Profit:'} {isTotalPositive ? '+' : ''}{totalProfit.toFixed(decimals)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ background: 'rgba(239,68,68,0.1)' }}>
-                          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                          <span className="text-[11px] font-black text-red-500 uppercase tracking-wider">
-                            SELL: {directionsData.rows.filter((r: any) => !r.isBuy).length}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md" style={{ background: isTotalPositive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${isTotalPositive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
-                          <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: isTotalPositive ? '#10b981' : '#ef4444' }}>
-                            {isRTL ? 'الربح:' : 'Profit:'} {isTotalPositive ? '+' : ''}{totalProfit.toFixed(decimals)}
-                          </span>
-                        </div>
-                      </div>
                       );
                     })()}
                   </div>
@@ -1573,7 +1573,7 @@ export function IndicatorChart({
                         const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                         return executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
                       });
-                      
+
                       const isAllAutoActive = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
                         const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
                         return autoTrades?.some(at => at.comment === chartComment) || executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
@@ -1731,16 +1731,16 @@ export function IndicatorChart({
                                         const isAutoActive = autoTrades?.some(at => at.comment === chartComment);
                                         const isAutoTrading = dirExecuting.has(-row.windowSize); // negative windowSize for auto loading state
                                         const isAutoBlocked = isAutoActive || isBlocked;
-                                        
+
                                         return (
                                           <button
                                             disabled={isAutoTrading || isAutoBlocked || !autoTradeSubscribe || !currency}
                                             onClick={async (e) => {
                                               e.stopPropagation();
                                               if (!autoTradeSubscribe || !currency || isAutoBlocked) return;
-                                              
+
                                               setDirExecuting(prev => new Set(prev).add(-row.windowSize));
-                                              
+
                                               const lot = dirLotSizes[row.windowSize] ?? 0.01;
                                               await autoTradeSubscribe([{
                                                 symbol: currency.symbol,
@@ -1751,7 +1751,7 @@ export function IndicatorChart({
                                                 lot_size: lot,
                                                 comment: chartComment
                                               }]);
-                                              
+
                                               setDirExecuting(prev => { const n = new Set(prev); n.delete(-row.windowSize); return n; });
                                             }}
                                             className="inline-flex items-center justify-center min-w-[60px] gap-1 px-2 py-1 rounded-lg text-[10px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
@@ -1899,8 +1899,8 @@ export function IndicatorChart({
                     {indicator.id === "phase" && (
                       <button onClick={() => { setShowDirections(!showDirections); setShowTable(false); }}
                         className={`w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
-                        style={{ 
-                          background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)", 
+                        style={{
+                          background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)",
                           color: showDirections ? "#10b981" : "#0ea5e9",
                           border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
                           boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
@@ -1946,7 +1946,7 @@ export function IndicatorChart({
                           border: timeframe === tf ? `1px solid ${indicator.color} 30` : "1px solid transparent",
                           color: timeframe === tf ? indicator.color : "#64748b",
                         }}>
-                        {tf >= 1440 ? `1${isRTL ? 'ي' : 'D'}` : tf >= 60 ? `${tf/60}${isRTL ? 'س' : 'H'}` : `${tf}${isRTL ? 'د' : 'M'}`}
+                        {tf >= 1440 ? `1${isRTL ? 'ي' : 'D'}` : tf >= 60 ? `${tf / 60}${isRTL ? 'س' : 'H'}` : `${tf}${isRTL ? 'د' : 'M'}`}
                       </button>
                     ))}
                   </div>
@@ -2189,54 +2189,54 @@ export function IndicatorChart({
                                       {row.profit.toFixed(decimals)}
                                     </td>
                                     <>
-                                        <td className="p-3" style={{ borderLeft: '2px solid rgba(245,158,11,0.2)' }}>
-                                          <input
-                                            type="number" step="0.01" min="0.01" max="100"
-                                            value={dirLotSizes[row.windowSize] ?? 0.01}
-                                            onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="w-16 text-center text-[12px] font-black font-mono py-1.5 px-1 rounded-lg outline-none mx-auto block"
-                                            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
-                                          />
-                                        </td>
-                                        <td className="p-3 text-center whitespace-nowrap">
-                                          {(() => {
-                                            const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
-                                            const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
-                                            const alreadyExecuted = executedComments.has(chartComment);
-                                            const isBlocked = hasPos || alreadyExecuted;
+                                      <td className="p-3" style={{ borderLeft: '2px solid rgba(245,158,11,0.2)' }}>
+                                        <input
+                                          type="number" step="0.01" min="0.01" max="100"
+                                          value={dirLotSizes[row.windowSize] ?? 0.01}
+                                          onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="w-16 text-center text-[12px] font-black font-mono py-1.5 px-1 rounded-lg outline-none mx-auto block"
+                                          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
+                                        />
+                                      </td>
+                                      <td className="p-3 text-center whitespace-nowrap">
+                                        {(() => {
+                                          const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                          const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
+                                          const alreadyExecuted = executedComments.has(chartComment);
+                                          const isBlocked = hasPos || alreadyExecuted;
 
-                                            return (
-                                              <div className="flex items-center justify-center gap-2 whitespace-nowrap min-w-fit">
-                                                {/* Execute Button */}
-                                                <button
-                                                  disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
-                                                  title={isBlocked ? '✅ صفقة منفذة بالفعل' : undefined}
-                                                  onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    if (isBlocked || !executeTradeFromChart || !currency) return;
-                                                    const lot = dirLotSizes[row.windowSize] ?? 0.01;
-                                                    setDirExecuting(prev => new Set(prev).add(row.windowSize));
-                                                    try {
-                                                      await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
-                                                      setExecutedComments(prev => new Set(prev).add(chartComment));
-                                                      setTimeout(() => setExecutedComments(prev => { const n = new Set(prev); n.delete(chartComment); return n; }), 3000);
-                                                    } catch (err) { console.error(err); }
-                                                    setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
-                                                  }}
-                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                                  style={{
-                                                    color: (isBlocked || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
-                                                    background: (isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                                    border: `1px solid ${(isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                                                  }}
-                                                >
-                                                  {dirExecuting.has(row.windowSize) ? '...' : isBlocked ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
-                                                </button>
-                                              </div>
-                                            );
-                                          })()}\r
-                                        </td>\r
+                                          return (
+                                            <div className="flex items-center justify-center gap-2 whitespace-nowrap min-w-fit">
+                                              {/* Execute Button */}
+                                              <button
+                                                disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                                title={isBlocked ? '✅ صفقة منفذة بالفعل' : undefined}
+                                                onClick={async (e) => {
+                                                  e.stopPropagation();
+                                                  if (isBlocked || !executeTradeFromChart || !currency) return;
+                                                  const lot = dirLotSizes[row.windowSize] ?? 0.01;
+                                                  setDirExecuting(prev => new Set(prev).add(row.windowSize));
+                                                  try {
+                                                    await executeTradeFromChart(currency.symbol, row.isBuy ? 'BUY' : 'SELL', lot, row.entry, undefined, chartComment);
+                                                    setExecutedComments(prev => new Set(prev).add(chartComment));
+                                                    setTimeout(() => setExecutedComments(prev => { const n = new Set(prev); n.delete(chartComment); return n; }), 3000);
+                                                  } catch (err) { console.error(err); }
+                                                  setDirExecuting(prev => { const n = new Set(prev); n.delete(row.windowSize); return n; });
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wider cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                                style={{
+                                                  color: (isBlocked || dirExecuting.has(row.windowSize)) ? '#64748b' : row.isBuy ? '#34d399' : '#f87171',
+                                                  background: (isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.03)' : row.isBuy ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                                  border: `1px solid ${(isBlocked || dirExecuting.has(row.windowSize)) ? 'rgba(255,255,255,0.06)' : row.isBuy ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                                }}
+                                              >
+                                                {dirExecuting.has(row.windowSize) ? '...' : isBlocked ? '✅' : row.isBuy ? '▶ BUY' : '▶ SELL'}
+                                              </button>
+                                            </div>
+                                          );
+                                        })()}\r
+                                      </td>\r
                                     </>
                                   </tr>
                                 );
@@ -2316,11 +2316,11 @@ export function IndicatorChart({
                 <p className="text-sm md:text-base leading-relaxed" style={{ color: tk.textMuted }}>
                   {indicator.id === 'phase' ? t('chartInfoPhase')
                     : indicator.id === 'displacement' ? t('chartInfoDisplacement')
-                    : indicator.id === 'reference' ? t('chartInfoReference')
-                    : indicator.id === 'oscillation' ? t('chartInfoOscillation')
-                    : indicator.id === 'direction' ? t('chartInfoDirection')
-                    : indicator.id === 'envelop' ? t('chartInfoEnvelope')
-                    : t('chartInfoPhase')}
+                      : indicator.id === 'reference' ? t('chartInfoReference')
+                        : indicator.id === 'oscillation' ? t('chartInfoOscillation')
+                          : indicator.id === 'direction' ? t('chartInfoDirection')
+                            : indicator.id === 'envelop' ? t('chartInfoEnvelope')
+                              : t('chartInfoPhase')}
                 </p>
               </div>
               <div className="px-6 py-4 flex justify-end" style={{ borderTop: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}`, background: tk.isDark ? 'rgba(0,0,0,0.2)' : tk.surfaceHover }}>
