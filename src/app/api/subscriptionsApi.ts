@@ -1,58 +1,8 @@
-const API_BASE = "https://phase-x-qc8dy.ondigitalocean.app/api/v1/subscriptions";
+import { APIAddon, APIPlan, CheckoutPreviewPayload, CheckoutPreviewResponse, CheckoutSubmitPayload } from "./types";
 
-/* ─── Types ─── */
-export interface PlanIndicator {
-  id: number;
-  code: string;
-  name: string;
-}
+const API_BASE = import.meta.env.API_URL;
 
-export interface APIPlan {
-  id: number;
-  name: string;
-  description: string;
-  price_monthly: string;
-  price_annual_monthly: string;
-  price_annual_total: string;
-  save_amount: string;
-  save_amount_total: string;
-  save_percentage: string;
-  is_popular: boolean;
-  features: string[];
-  limitations: string[];
-  indicators: PlanIndicator[];
-}
 
-export interface APIAddon {
-  id: number;
-  code: string;
-  name: string;
-  description: string;
-  base_price_monthly: string;
-  base_price_annual_monthly: string;
-  is_active: boolean;
-}
-
-export interface CheckoutPreviewPayload {
-  plan_id: number;
-  billing_cycle: "monthly" | "annual";
-  addon_ids?: number[];
-}
-
-export interface CheckoutPreviewResponse {
-  plan_name: string;
-  period: number;
-  plan_price: string;
-  addons_price: string;
-  total: string;
-  [key: string]: any;
-}
-
-export interface CheckoutSubmitPayload {
-  plan_id: number;
-  billing_cycle: "monthly" | "annual";
-  addon_ids?: number[];
-}
 
 /* ─── Helper ─── */
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -171,4 +121,3 @@ export async function getMySubscription(accessToken: string): Promise<Subscripti
   });
   return handleResponse<SubscriptionMeResponse>(res);
 }
-
