@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { LandingPage } from "./components/LandingPage";
+import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./components/LoginPage";
 import { RegisterPage } from "./components/RegisterPage";
 import { ResetPasswordPage } from "./components/ResetPasswordPage";

@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type Language = "ar" | "en" | "ru" | "tr" | "fr" | "es";
+export type Language = "ar" | "en" | "ru" | "tr" | "fr" | "es";
 
-interface LanguageContextType {
+export interface LanguageContextType {
   language: Language;
   toggleLanguage: () => void;
   setLanguageKey: (lang: Language) => void;
