@@ -900,7 +900,7 @@ export function TradingDashboard({
           <div className="flex items-center gap-2">
             {/* Structure Dynamics Link */}
             <motion.button
-              onClick={onOpenDynamics}
+              onClick={() => onOpenDynamics()}
               whileHover={{
                 scale: 1.04,
                 boxShadow: tk.isDark ? "0 4px 15px rgba(99,102,241,0.15)" : "0 4px 15px rgba(79,70,229,0.2)",
