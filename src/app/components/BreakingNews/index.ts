@@ -1,5 +1,3 @@
-export type { FFCalendarEvent } from "./types";
-export { BreakingNews } from "./BreakingNews";
-export { BreakingNewsModal } from "./BreakingNewsModal/BreakingNewsModal";
-export type { BreakingNewsModalProps } from "./BreakingNewsModal/BreakingNewsModal";
-export { translateTitle } from "./translateTitle";
+/** Re-exports the public API from the sibling wrapper `BreakingNews.tsx` (resolves `/BreakingNews/index` / HMR to a real module). */
+export { BreakingNews, BreakingNewsModal, translateTitle } from "../BreakingNews";
+export type { BreakingNewsModalProps, FFCalendarEvent } from "../BreakingNews";

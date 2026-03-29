@@ -1,8 +1,6 @@
 import { APICountry, APIError, APIUser, AuthResponse, RegisterPayload } from "./types";
 
-const API_BASE = import.meta.env.API_URL;
-
-
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
 /* ─── Helper ─── */
 async function handleResponse<T>(res: Response): Promise<T> {
   const data = await res.json();

@@ -29,13 +29,30 @@ import {
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { registerUser, resendVerification, getMe, loginUser, getCountries } from "../api/authApi";
-import type { APICountry } from "../api/authApi";
 import { getPlans, getAddons, checkoutSubmit, checkoutPreview } from "../api/subscriptionsApi";
-import type { APIPlan, APIAddon } from "../api/subscriptionsApi";
+import type { APIAddon, APIPlan, APICountry, PlanIndicator } from "../api/types";
+import type { LucideIcon } from "lucide-react";
 
 interface RegisterPageProps {
   onRegister: () => void;
   onBackToLogin: () => void;
+}
+
+interface RegisterSubscriptionPlanRow {
+  id: string;
+  apiId: number;
+  name: string;
+  priceMonthly: number;
+  priceAnnualMonthly: number;
+  priceAnnualTotal: number;
+  savePercentage: number;
+  color: string;
+  icon: LucideIcon;
+  popular: boolean;
+  charts: string[];
+  features: string[];
+  limitations: string[];
+  description: string;
 }
 
 export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
@@ -106,7 +123,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
   }));
 
   // Plan color/icon mapping
-  const planColorMap: Record<string, { color: string; icon: any }> = {
+  const planColorMap: Record<string, { color: string; icon: LucideIcon }> = {
     "core": { color: "#3b82f6", icon: Zap },
     "trader": { color: accent, icon: Star },
     "professional": { color: "#a855f7", icon: Crown },
@@ -122,7 +139,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
     return "core";
   };
 
-  const subscriptionTypes = apiPlans.map(plan => {
+  const subscriptionTypes: RegisterSubscriptionPlanRow[] = apiPlans.map(plan => {
     const key = getPlanKey(plan.name);
     const mapping = planColorMap[key] || { color: "#3b82f6", icon: Zap };
     return {
@@ -136,7 +153,7 @@ export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
       color: mapping.color,
       icon: mapping.icon,
       popular: plan.is_popular,
-      charts: plan.indicators.map(ind => ind.name),
+      charts: plan.indicators.map((ind: PlanIndicator) => ind.name),
       features: plan.features,
       limitations: plan.limitations,
       description: plan.description,
