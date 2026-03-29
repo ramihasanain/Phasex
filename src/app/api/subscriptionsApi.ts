@@ -1,5 +1,7 @@
 import { APIAddon, APIPlan, CheckoutPreviewPayload, CheckoutPreviewResponse, CheckoutSubmitPayload } from "./types";
 
+export type { APIAddon, APIPlan };
+
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 
@@ -17,7 +19,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 export async function getPlans(accessToken?: string): Promise<APIPlan[]> {
   const headers: Record<string, string> = {};
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-  const res = await fetch(`${API_BASE}/plans/`, { headers });
+  const res = await fetch(`${API_BASE}/subscriptions/plans/`, { headers });
   return handleResponse<APIPlan[]>(res);
 }
 
@@ -25,13 +27,13 @@ export async function getPlans(accessToken?: string): Promise<APIPlan[]> {
 export async function getAddons(accessToken?: string): Promise<APIAddon[]> {
   const headers: Record<string, string> = {};
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-  const res = await fetch(`${API_BASE}/addons/`, { headers });
+  const res = await fetch(`${API_BASE}/subscriptions/addons/`, { headers });
   return handleResponse<APIAddon[]>(res);
 }
 
 /* ─── Checkout Preview ─── */
 export async function checkoutPreview(accessToken: string, payload: CheckoutPreviewPayload): Promise<CheckoutPreviewResponse> {
-  const res = await fetch(`${API_BASE}/checkout/preview/`, {
+  const res = await fetch(`${API_BASE}/subscriptions/checkout/preview/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,7 +46,7 @@ export async function checkoutPreview(accessToken: string, payload: CheckoutPrev
 
 /* ─── Checkout Submit ─── */
 export async function checkoutSubmit(accessToken: string, payload: CheckoutSubmitPayload): Promise<any> {
-  const res = await fetch(`${API_BASE}/checkout/submit/`, {
+  const res = await fetch(`${API_BASE}/subscriptions/checkout/submit/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,7 +65,7 @@ export interface UpgradePayload {
 }
 
 export async function upgradeSubscription(accessToken: string, payload: UpgradePayload): Promise<any> {
-  const res = await fetch(`${API_BASE}/upgrade/`, {
+  const res = await fetch(`${API_BASE}/subscriptions/upgrade/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -82,7 +84,7 @@ export interface DowngradePayload {
 }
 
 export async function downgradeRequest(accessToken: string, payload: DowngradePayload): Promise<any> {
-  const res = await fetch(`${API_BASE}/downgrade-request/`, {
+  const res = await fetch(`${API_BASE}/subscriptions/downgrade-request/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -116,7 +118,7 @@ export interface SubscriptionMeResponse {
 }
 
 export async function getMySubscription(accessToken: string): Promise<SubscriptionMeResponse> {
-  const res = await fetch(`${API_BASE}/me/`, {
+  const res = await fetch(`${API_BASE}/subscriptions/me/`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return handleResponse<SubscriptionMeResponse>(res);

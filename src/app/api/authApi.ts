@@ -13,7 +13,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 /* ─── Register ─── */
 export async function registerUser(payload: RegisterPayload): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}/register/`, {
+  const res = await fetch(`${API_BASE}/accounts/register/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -25,7 +25,7 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
 
 /* ─── Resend Verification ─── */
 export async function resendVerification(email: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/resend-verification/`, {
+  const res = await fetch(`${API_BASE}/accounts/resend-verification/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -35,7 +35,7 @@ export async function resendVerification(email: string): Promise<any> {
 
 /* ─── Login ─── */
 export async function loginUser(email: string, password: string): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}/login/`, {
+  const res = await fetch(`${API_BASE}/accounts/login/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -45,7 +45,7 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
 
 /* ─── Get Me (check if email verified) ─── */
 export async function getMe(accessToken: string): Promise<APIUser> {
-  const res = await fetch(`${API_BASE}/me/`, {
+  const res = await fetch(`${API_BASE}/accounts/me/`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return handleResponse<APIUser>(res);
@@ -53,7 +53,7 @@ export async function getMe(accessToken: string): Promise<APIUser> {
 
 /* ─── Get Countries ─── */
 export async function getCountries(): Promise<APICountry[]> {
-  const res = await fetch(`${API_BASE}/countries/`);
+  const res = await fetch(`${API_BASE}/accounts/countries/`);
   const data = await res.json();
   if (!res.ok) throw new Error((data as any).detail || `API error: ${res.status}`);
   return (data as any).countries || data;
@@ -61,7 +61,7 @@ export async function getCountries(): Promise<APICountry[]> {
 
 /* ─── Password Reset Request ─── */
 export async function requestPasswordReset(email: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/password-reset/`, {
+  const res = await fetch(`${API_BASE}/accounts/password-reset/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -71,7 +71,7 @@ export async function requestPasswordReset(email: string): Promise<any> {
 
 /* ─── Password Reset Confirm ─── */
 export async function confirmPasswordReset(uid: string, token: string, new_password: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/password-reset/confirm/`, {
+  const res = await fetch(`${API_BASE}/accounts/password-reset/confirm/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ uid, token, new_password }),
