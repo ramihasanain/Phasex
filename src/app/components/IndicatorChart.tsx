@@ -10,10 +10,10 @@ import { useOscillationStateAPI } from "../hooks/useOscillationStateAPI";
 import { useDisplacementStateAPI } from "../hooks/useDisplacementStateAPI";
 import { useReferenceStateAPI } from "../hooks/useReferenceStateAPI";
 import { useEnvelopStateAPI } from "../hooks/useEnvelopStateAPI";
-import { TZCandlestickChart } from "./TZCandlestickChart";
+import { TZCandlestickChart } from "./TZCandlestickChart.tsx";
 import { DrawingToolbar, DrawingTool } from "./DrawingToolbar";
 import { DrawingCanvas } from "./DrawingCanvas";
-import type { PhaseCandle, PhaseStateDataMap } from "./TradingDashboard";
+import type { PhaseCandle, PhaseStateDataMap } from "./TradingDashboard/types";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 
 /* ═══════════ Decision Engine Hook — mirrors PhaseXDynamicsPage scoring exactly ═══════════ */

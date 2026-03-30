@@ -1,0 +1,91 @@
+import {
+    Gauge,
+    Move,
+    Target,
+    Activity,
+    Navigation,
+    Layers,
+    Lock,
+} from "lucide-react";
+import type { Indicator } from "../IndicatorChart";
+
+export const indicators: Indicator[] = [
+    {
+        id: "phase",
+        name: "حالة المرحلة",
+        nameEn: "PHASE STATE",
+        type: "tz",
+        color: "#a78bfa",
+        icon: "Gauge",
+    },
+    {
+        id: "displacement",
+        name: "حالة الإزاحة",
+        nameEn: "DISPLACEMENT STATE",
+        type: "tz",
+        color: "#60a5fa",
+        icon: "Move",
+    },
+    {
+        id: "reference",
+        name: "حالة المرجع",
+        nameEn: "REFERENCE STATE",
+        type: "tz",
+        color: "#34d399",
+        icon: "Target",
+    },
+    {
+        id: "oscillation",
+        name: "حالة التذبذب",
+        nameEn: "OSCILLATION STATE",
+        type: "tz",
+        color: "#fbbf24",
+        icon: "Activity",
+    },
+    {
+        id: "direction",
+        name: "حالة الاتجاه",
+        nameEn: "DIRECTION STATE",
+        type: "tz",
+        color: "#f87171",
+        icon: "Navigation",
+    },
+    {
+        id: "envelop",
+        name: "حالة الغلاف",
+        nameEn: "ENVELOP STATE",
+        type: "tz",
+        color: "#f472b6",
+        icon: "Layers",
+    },
+    {
+        id: "momentum",
+        name: "حالة الزخم",
+        nameEn: "MOMENTUM STATE",
+        type: "tz",
+        color: "#fb923c",
+        icon: "Gauge",
+        locked: true,
+        lockType: "coming_soon",
+    },
+    {
+        id: "volatility",
+        name: "حالة التقلب",
+        nameEn: "VOLATILITY STATE",
+        type: "tz",
+        color: "#38bdf8",
+        icon: "Activity",
+        locked: true,
+        lockType: "upgrade",
+    },
+];
+
+export const indicatorIcons: Record<string, typeof Gauge> = {
+    Gauge,
+    Move,
+    Target,
+    Activity,
+    Navigation,
+    Layers,
+    Lock,
+};

@@ -4,7 +4,7 @@
  * account_id is obtained during connect (MetaAPI provisioning) and persisted in localStorage.
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import type { TradeErrorInfo } from '../components/TradeErrorPopup';
+import type { TradeErrorInfo } from "../components/TradeErrorPopup/types";
 import { playTradeExecuted, playTradeFailed, playPositionClosed, playConnected } from "../utils/tradeSounds";
 const MT5_API_BASE = "https://seashell-app-cq4ql.ondigitalocean.app/api/mt5";
 /* ─── Types ─── */
