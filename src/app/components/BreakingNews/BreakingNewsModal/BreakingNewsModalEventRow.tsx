@@ -1,5 +1,5 @@
 import { AlertTriangle, Tag } from "lucide-react";
-import type { NewsEvent } from "../../phase-x/types";
+import type { NewsEvent } from "../../PhaseX/types";
 import { translateTitle } from "../translateTitle";
 
 interface BreakingNewsModalEventRowProps {
@@ -19,7 +19,6 @@ interface BreakingNewsModalEventRowProps {
 
 export function BreakingNewsModalEventRow({
   event,
-  idx,
   isRTL,
   impactColorStr,
   impactBgStr,

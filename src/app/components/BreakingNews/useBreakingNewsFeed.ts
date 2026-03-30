@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { extractTagsFromText } from "../phase-x/UIComponents";
-import type { NewsEvent } from "../phase-x/types";
+import { extractTagsFromText } from "../PhaseX/UIComponents";
+import type { NewsEvent } from "../PhaseX/types";
 import { INITIAL_PROVIDERS } from "./initialProviders";
 import type { FFCalendarEvent } from "./types";
 

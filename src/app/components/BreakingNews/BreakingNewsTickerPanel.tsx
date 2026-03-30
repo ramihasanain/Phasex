@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
-import type { NewsEvent } from "../phase-x/types";
+import type { NewsEvent } from "../PhaseX/types";
 import { translateTitle } from "./translateTitle";
 
 interface BreakingNewsTickerPanelProps {

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
-import type { NewsEvent } from "../phase-x/types";
+import type { NewsEvent } from "../PhaseX/types";
 import { BreakingNewsModalEventList } from "./BreakingNewsModal/BreakingNewsModalEventList";
 import { BreakingNewsModalHeader } from "./BreakingNewsModal/BreakingNewsModalHeader";
 import { BreakingNewsModalToolbar } from "./BreakingNewsModal/BreakingNewsModalToolbar";

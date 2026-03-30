@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { TextQuote } from "lucide-react";
-import type { NewsEvent } from "../../phase-x/types";
+import type { NewsEvent } from "../../PhaseX/types";
 import { BreakingNewsModalEventRow } from "./BreakingNewsModalEventRow";
 
 interface BreakingNewsModalEventListProps {

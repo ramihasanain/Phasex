@@ -10,12 +10,12 @@ import { UserProfile } from "./UserProfile";
 import { SubscriptionPanel } from "./SubscriptionPanel";
 import { useLivePrices } from "../hooks/useLivePrices";
 import { useThemeTokens } from "../hooks/useThemeTokens";
-import type { VCRow } from "./phase-x/types";
+import type { VCRow } from "./PhaseX/types";
 import { SciFiClock } from "./SciFiClock";
 import { BreakingNews } from "./BreakingNews";
-import { PhaseXBotIcon } from "./phase-x/PhaseXBotIcon";
-import { Panel, ScanLine, SignalCell, SupercarGauge } from "./phase-x/UIComponents";
-import { getAIMarketInsightText } from "./phase-x/aiMarketInsightLogic";
+import { PhaseXBotIcon } from "./PhaseX/PhaseXBotIcon";
+import { Panel, ScanLine, SignalCell, SupercarGauge } from "./PhaseX/UIComponents";
+import { getAIMarketInsightText } from "./PhaseX/aiMarketInsightLogic";
 
 interface PhaseXDynamicsPageProps {
     onBack: () => void;
@@ -23,11 +23,11 @@ interface PhaseXDynamicsPageProps {
     initialTab?: string;
 }
 
-import type { MarketCategory, AnalysisTab, Signal, TrendLabel, SymbolData } from "./phase-x/types";
+import type { MarketCategory, AnalysisTab, Signal, TrendLabel, SymbolData } from "./PhaseX/types";
 
-import { symbolsData } from "./phase-x/symbolsData";
-import { marketCategories, symbolIcons } from "./phase-x/marketCategories";
-import { SpeedStreaks, EnergyWaves, RacingParticles, LEDBorderPulse, HeatHaze } from "./phase-x/CinematicEffects";
+import { symbolsData } from "./PhaseX/symbolsData";
+import { marketCategories, symbolIcons } from "./PhaseX/marketCategories";
+import { SpeedStreaks, EnergyWaves, RacingParticles, LEDBorderPulse, HeatHaze } from "./PhaseX/CinematicEffects";
 
 
 
@@ -97,7 +97,7 @@ import {
     trendFr,
     trendEs,
     i18n
-} from "./phase-x/constants";
+} from "./PhaseX/constants";
 
 function getComponentDataFromJson(tab: AnalysisTab, symbol: string, sources: any[]): VCRow[] | null {
     const jsonKey = symbolToJsonKey[symbol];
