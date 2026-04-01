@@ -87,35 +87,37 @@ export function LoginPage({ onLogin, onRegister, onBackToHome }: LoginPageProps)
         >
             <LoginPageBackdrop accent={accent} accentG={accentG} particles={particles} streaks={streaks} />
 
-            <motion.button
-                type="button"
-                onClick={onBackToHome}
-                title={t("home")}
-                aria-label={t("home")}
-                initial={{ opacity: 0, x: isRTL ? 12 : -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="absolute top-6 start-6 z-50 flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer backdrop-blur-md transition-colors"
-                style={{
-                    background: "rgba(14,20,33,0.7)",
-                    border: `1px solid ${accentG}0.3)`,
-                    color: "#fff",
-                }}
-            >
-                {isRTL ? <ArrowRight className="w-5 h-5" strokeWidth={2.5} /> : <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />}
-            </motion.button>
+            <div className="absolute top-6 start-6 z-50 flex items-center gap-4">
+                <motion.button
+                    type="button"
+                    onClick={onBackToHome}
+                    title={t("home")}
+                    aria-label={t("home")}
+                    initial={{ opacity: 0, x: isRTL ? 12 : -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl cursor-pointer backdrop-blur-md transition-colors"
+                    style={{
+                        background: "rgba(14,20,33,0.7)",
+                        border: `1px solid ${accentG}0.3)`,
+                        color: "#fff",
+                    }}
+                >
+                    {isRTL ? <ArrowRight className="w-5 h-5" strokeWidth={2.5} /> : <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />}
+                </motion.button>
 
-            <LoginPageLanguageMenu
-                accent={accent}
-                accentG={accentG}
-                language={language}
-                langDropdownOpen={langDropdownOpen}
-                setLangDropdownOpen={setLangDropdownOpen}
-                setLanguageKey={setLanguageFromMenu}
-                languageOptions={LOGIN_LANGUAGE_OPTIONS}
-                currentLangObj={currentLangObj}
-            />
+                <LoginPageLanguageMenu
+                    accent={accent}
+                    accentG={accentG}
+                    language={language}
+                    langDropdownOpen={langDropdownOpen}
+                    setLangDropdownOpen={setLangDropdownOpen}
+                    setLanguageKey={setLanguageFromMenu}
+                    languageOptions={LOGIN_LANGUAGE_OPTIONS}
+                    currentLangObj={currentLangObj}
+                />
+            </div>
 
             <LoginPageAuthCard accent={accent} accentG={accentG} t={t}>
                 <LoginPageLoginForm

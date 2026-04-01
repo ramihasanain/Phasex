@@ -20,17 +20,15 @@ export function TradingSignalsTableShell(props: TradingSignalsTableProps) {
 
     return (
         <>
-            <div className="flex justify-center w-full mt-3 flex-shrink-0">
+            <div className="flex justify-center w-full mt-3 flex-shrink-0 px-1 sm:px-2 md:px-3">
                 <div
-                    className="rounded-2xl overflow-hidden relative"
+                    className="rounded-2xl overflow-visible relative w-full max-w-[1400px] sm:w-[98%] md:w-[96%]"
                     style={{
                         background: tk.isDark
                             ? "linear-gradient(135deg, #080c15 0%, #0d1225 50%, #0a0f1a 100%)"
                             : `linear-gradient(135deg, ${tk.surface} 0%, ${tk.surfaceElevated} 50%, ${tk.surface} 100%)`,
                         border: `1px solid ${tk.accentGlow08}`,
                         boxShadow: `0 0 40px ${tk.accentGlow08}`,
-                        width: "96%",
-                        maxWidth: "1400px",
                     }}
                 >
                     <div

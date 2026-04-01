@@ -69,9 +69,9 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                 e.currentTarget.style.background = rowBg;
             }}
         >
-            <td className="p-2.5 px-4">
+            <td className="p-2.5 max-[800px]:p-1.5 max-[800px]:px-2 px-4">
                 <span
-                    className="text-xs font-black font-mono px-2.5 py-1 rounded-lg"
+                    className="text-xs max-[800px]:text-[10px] font-black font-mono px-2 py-0.5 max-[800px]:px-1.5 max-[800px]:py-0.5 sm:px-2.5 sm:py-1 rounded-lg"
                     style={{
                         background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06))",
                         color: "#a5b4fc",
@@ -82,9 +82,9 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                     {tf}
                 </span>
             </td>
-            <td className="p-2.5 text-center">
+            <td className="p-2.5 max-[800px]:p-1.5 text-center">
                 <span
-                    className="text-xs font-black px-3 py-1 rounded-lg"
+                    className="text-xs max-[800px]:text-[10px] font-black px-2 py-0.5 max-[800px]:px-1.5 sm:px-3 sm:py-1 rounded-lg"
                     style={{
                         color: isBuy ? tk.positive : isSell ? tk.negative : tk.textDim,
                         background: isBuy ? tk.positiveBg : isSell ? tk.negativeBg : "transparent",
@@ -95,20 +95,20 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                     {entry.net_signal || "—"}
                 </span>
             </td>
-            <td className="p-2.5 text-xs font-mono font-medium" style={{ color: tk.textSecondary }}>{entry.time}</td>
-            <td className="p-2.5 text-sm font-black font-mono text-right tabular-nums" style={{ color: tk.textBright }}>{fmt(entry.close)}</td>
-            <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.stop_loss ? tk.negative : tk.textDim }}>
+            <td className="p-2.5 max-[800px]:p-1.5 text-xs max-[800px]:text-[10px] font-mono font-medium" style={{ color: tk.textSecondary }}>{entry.time}</td>
+            <td className="p-2.5 max-[800px]:p-1.5 text-sm max-[800px]:text-[10px] font-black font-mono text-right tabular-nums" style={{ color: tk.textBright }}>{fmt(entry.close)}</td>
+            <td className="p-2.5 max-[800px]:p-1.5 text-xs max-[800px]:text-[10px] font-bold font-mono text-right tabular-nums" style={{ color: entry.stop_loss ? tk.negative : tk.textDim }}>
                 {entry.stop_loss ? fmt(entry.stop_loss) : "—"}
             </td>
-            <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums" style={{ color: entry.take_profit ? tk.positive : tk.textDim }}>
+            <td className="p-2.5 max-[800px]:p-1.5 text-xs max-[800px]:text-[10px] font-bold font-mono text-right tabular-nums" style={{ color: entry.take_profit ? tk.positive : tk.textDim }}>
                 {entry.take_profit ? fmt(entry.take_profit) : "—"}
             </td>
-            <td className="p-2.5 text-xs font-bold font-mono text-right tabular-nums">
+            <td className="p-2.5 max-[800px]:p-1.5 text-xs max-[800px]:text-[10px] font-bold font-mono text-right tabular-nums">
                 <PriceCell price={mPrice} isLive={!!liveMatch} fmt={fmt} />
             </td>
-            <td className="p-2.5 text-right">
+            <td className="p-2.5 max-[800px]:p-1.5 text-right">
                 <span
-                    className="text-xs font-black font-mono tabular-nums px-2.5 py-1 rounded-lg"
+                    className="text-xs max-[800px]:text-[10px] font-black font-mono tabular-nums px-2 py-0.5 max-[800px]:px-1.5 sm:px-2.5 sm:py-1 rounded-lg"
                     style={{
                         color: profitPos ? tk.positive : tk.negative,
                         background: profitPos ? tk.positiveBg : tk.negativeBg,
@@ -143,7 +143,7 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
 
                 return (
                     <>
-                        <td className="p-2.5 text-center" style={{ borderLeft: "2px solid rgba(245,158,11,0.2)" }}>
+                        <td className="p-2.5 max-[800px]:p-1.5 text-center" style={{ borderLeft: "2px solid rgba(245,158,11,0.2)" }}>
                             <input
                                 type="number"
                                 step="0.01"
@@ -156,7 +156,7 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                                         [rowKey]: Math.max(0.01, parseFloat(e.target.value) || 0.01),
                                     }))
                                 }
-                                className="w-16 text-center text-[11px] font-bold font-mono py-1 px-1 rounded-lg outline-none"
+                                className="w-14 max-[800px]:w-11 sm:w-16 text-center text-[10px] max-[800px]:text-[9px] sm:text-[11px] font-bold font-mono py-0.5 px-0.5 sm:py-1 sm:px-1 rounded-lg outline-none"
                                 style={{
                                     background: "rgba(245,158,11,0.08)",
                                     border: "1px solid rgba(245,158,11,0.25)",
@@ -165,7 +165,7 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                                 onClick={(e) => e.stopPropagation()}
                             />
                         </td>
-                        <td className="p-2.5 text-center">
+                        <td className="p-2.5 max-[800px]:p-1.5 text-center">
                             <motion.button
                                 type="button"
                                 whileHover={{ scale: 1.1 }}
@@ -176,7 +176,7 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                                     e.stopPropagation();
                                     handleExecuteTrade(asset, tf, entry);
                                 }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer"
+                                className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 max-[800px]:text-[9px] sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] font-black cursor-pointer"
                                 style={{
                                     color: disableExec ? tk.textDim : isBuy ? "#10b981" : "#ef4444",
                                     background: disableExec ? tk.surfaceHover : isBuy ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
@@ -198,8 +198,8 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                                 {isExecuting ? "..." : hasPos ? "DONE" : isAuto ? "AUTO" : isBuy ? "BUY" : "SELL"}
                             </motion.button>
                         </td>
-                        <td className="p-2.5 text-center" style={{ minWidth: 100 }}>
-                            <div className="flex flex-col items-center gap-1">
+                        <td className="p-2.5 max-[800px]:p-1.5 text-center min-w-0 sm:min-w-[100px]">
+                            <div className="flex flex-col items-center gap-0.5 sm:gap-1">
                                 <motion.button
                                     type="button"
                                     whileHover={isAuto || hasPos || isExecuting ? {} : { scale: 1.05 }}
@@ -248,7 +248,7 @@ export function TradingSignalsSignalTfRow({ m, asset, tf, entry }: Props) {
                                             });
                                         }
                                     }}
-                                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black cursor-pointer shadow-sm relative overflow-hidden"
+                                    className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md sm:rounded-lg text-[9px] max-[800px]:text-[8px] sm:text-[10px] font-black cursor-pointer shadow-sm relative overflow-hidden"
                                     style={{
                                         color: isExecuting || hasPos || isAuto ? tk.textDim : "#a855f7",
                                         background: isExecuting || hasPos || isAuto ? tk.surfaceHover : "transparent",

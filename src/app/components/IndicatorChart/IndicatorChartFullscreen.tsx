@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Activity, Clock, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, Table, BarChart3, X, ListOrdered, Edit3, Minimize2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -8,6 +9,11 @@ import { PhaseTimeframeSelector, CandleLimitSelector, AnimatedStat } from "./ind
 import { IndicatorChartDirections } from "./IndicatorChartDirections";
 import { NavBtn } from "./IndicatorChartPanel";
 import type { IndicatorChartCtx } from "./useIndicatorChart";
+
+function isTradeTimeLockedNow() {
+    const d = new Date();
+    return d.getMinutes() % 5 < 2;
+}
 
 export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
     const {
@@ -30,9 +36,23 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
         handleClearDrawings, handleMagnetToggle, handleLockToggle, handleVisibilityToggle,
         showDrawingTools, setShowDrawingTools, handleCloseDrawingTools,
         decimals, isPositive, isAnyEmpty,
+        directionsData, applyGlobalDirLot, globalDirLot, setGlobalDirLot,
+        dirLotSizes, setDirLotSizes, dirExecuting, setDirExecuting,
+        executedComments, setExecutedComments,
+        handleExecuteAll, isExecutingAll,
+        executeTradeFromChart, mt5Positions,
+        mt5Connected,
     } = ctx;
 
     if (!currency || !indicator || !isExpanded) return null;
+
+    const mt5TradeLocked = !mt5Connected;
+    const [timeTradeLocked, setTimeTradeLocked] = useState(() => isTradeTimeLockedNow());
+    useEffect(() => {
+        const id = setInterval(() => setTimeTradeLocked(isTradeTimeLockedNow()), 1000);
+        return () => clearInterval(id);
+    }, []);
+    const tradeLocked = mt5TradeLocked || timeTradeLocked;
 
     const gridColor = tk.chartGrid;
     const textColor = tk.chartText;
@@ -444,9 +464,9 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                         <div className="flex flex-wrap items-center gap-3">
                           <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${tk.border}` }}>
                             <span className="text-[12px] font-bold text-slate-400 whitespace-nowrap">{isRTL ? "تعيين لوت لجميع الشموع:" : "Set Lots for All:"}</span>
-                            <button onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">-</button>
-                            <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-14 text-center text-sm font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
-                            <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
+                            <button type="button" disabled={tradeLocked} onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">-</button>
+                            <input type="number" step="0.01" min="0.01" value={globalDirLot} disabled={tradeLocked} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-14 text-center text-sm font-black font-mono bg-transparent outline-none disabled:opacity-40" style={{ color: '#fbbf24' }} />
+                            <button type="button" disabled={tradeLocked} onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-6 h-6 flex items-center justify-center rounded text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                           </div>
                           {(() => {
                             const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
@@ -455,7 +475,7 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                             });
 
                             return (
-                              <button onClick={handleExecuteAll} disabled={isExecutingAll || isAllExecuted || !executeTradeFromChart || !currency} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: `1px solid rgba(16,185,129,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#6ee7b7"; e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#34d399"; e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}>
+                              <button type="button" onClick={handleExecuteAll} disabled={isExecutingAll || isAllExecuted || !executeTradeFromChart || !currency || tradeLocked} className="px-4 py-2 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: `1px solid rgba(16,185,129,0.3)` }} onMouseEnter={(e) => { e.currentTarget.style.color = "#6ee7b7"; e.currentTarget.style.background = "rgba(16,185,129,0.25)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#34d399"; e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}>
                                 {isExecutingAll ? (
                                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full" />
                                 ) : (
@@ -544,9 +564,10 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                                         <input
                                           type="number" step="0.01" min="0.01" max="100"
                                           value={dirLotSizes[row.windowSize] ?? 0.01}
+                                          disabled={tradeLocked}
                                           onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                           onClick={(e) => e.stopPropagation()}
-                                          className="w-16 text-center text-[12px] font-black font-mono py-1.5 px-1 rounded-lg outline-none mx-auto block"
+                                          className="w-16 text-center text-[12px] font-black font-mono py-1.5 px-1 rounded-lg outline-none mx-auto block disabled:opacity-40"
                                           style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
                                         />
                                       </td>
@@ -561,7 +582,8 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                                             <div className="flex items-center justify-center gap-2 whitespace-nowrap min-w-fit">
                                               {/* Execute Button */}
                                               <button
-                                                disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                                type="button"
+                                                disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency || tradeLocked}
                                                 title={isBlocked ? '✅ صفقة منفذة بالفعل' : undefined}
                                                 onClick={async (e) => {
                                                   e.stopPropagation();
@@ -586,8 +608,8 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                                               </button>
                                             </div>
                                           );
-                                        })()}\r
-                                      </td>\r
+                                        })()}
+                                      </td>
                                     </>
                                   </tr>
                                 );

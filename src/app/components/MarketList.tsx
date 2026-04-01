@@ -16,6 +16,7 @@ export function MarketList({
     onSelectAsset,
     isCollapsed,
     onToggleCollapse,
+    layoutOverlay,
     markets,
     marketsLoading,
     selectedMarket,
@@ -59,7 +60,7 @@ export function MarketList({
 
     return (
         <div
-            className="h-full rounded-2xl flex flex-col overflow-hidden relative"
+            className={`h-full rounded-2xl flex flex-col overflow-hidden relative ${layoutOverlay ? "shadow-2xl ring-1 ring-white/10" : ""}`}
             style={{
                 background: d
                     ? "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, rgba(6,10,16,0.95) 60%)"

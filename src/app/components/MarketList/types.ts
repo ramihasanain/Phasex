@@ -17,6 +17,8 @@ export interface MarketListProps {
     onSelectAsset: (asset: Asset) => void;
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
+    /** When true, list is shown in a fixed overlay (narrow layout); stronger elevation on the panel. */
+    layoutOverlay?: boolean;
     markets: MarketInfo[];
     marketsLoading: boolean;
     selectedMarket: MarketInfo | null;

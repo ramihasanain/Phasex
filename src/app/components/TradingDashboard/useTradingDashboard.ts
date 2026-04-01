@@ -17,6 +17,9 @@ import type { Indicator } from "../IndicatorChart";
 import { indicators } from "./indicatorsConfig";
 import { generateChartData } from "./chartGenerators";
 
+/** Viewport width at or below this uses a collapsed-by-default market list and an overlay when expanded. */
+export const MARKET_LIST_NARROW_MAX_PX = 800;
+
 export function useTradingDashboard(
     onLogout: () => void,
     onOpenDynamics: () => void,
@@ -70,7 +73,24 @@ export function useTradingDashboard(
     const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
     const [isNewsOpen, setIsNewsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(false);
+    const [isMarketListNarrow, setIsMarketListNarrow] = useState(() =>
+        typeof window !== "undefined" ? window.innerWidth <= MARKET_LIST_NARROW_MAX_PX : false
+    );
+    const [isMarketListCollapsed, setIsMarketListCollapsed] = useState(() =>
+        typeof window !== "undefined" ? window.innerWidth <= MARKET_LIST_NARROW_MAX_PX : false
+    );
+
+    useEffect(() => {
+        const mq = window.matchMedia(`(max-width: ${MARKET_LIST_NARROW_MAX_PX}px)`);
+        const sync = () => {
+            const narrow = mq.matches;
+            setIsMarketListNarrow(narrow);
+            if (narrow) setIsMarketListCollapsed(true);
+        };
+        sync();
+        mq.addEventListener("change", sync);
+        return () => mq.removeEventListener("change", sync);
+    }, []);
     const [timeframe, setTimeframe] = useState<number>(15);
     const [mtfEnabled, setMtfEnabled] = useState(false);
     const [isMT5PanelOpen, setIsMT5PanelOpen] = useState(true);
@@ -281,7 +301,8 @@ export function useTradingDashboard(
         selectedAsset, setSelectedAsset, selectedIndicator, setSelectedIndicator,
         chartData, setChartData, liveChartData, setLiveChartData,
         isSubscriptionOpen, setIsSubscriptionOpen, isNewsOpen, setIsNewsOpen,
-        isProfileOpen, setIsProfileOpen, isMarketListCollapsed, setIsMarketListCollapsed,
+        isProfileOpen, setIsProfileOpen,
+        isMarketListNarrow, isMarketListCollapsed, setIsMarketListCollapsed,
         timeframe, setTimeframe, mtfEnabled, setMtfEnabled,
         isMT5PanelOpen, setIsMT5PanelOpen, isMT5LoginOpen, setIsMT5LoginOpen,
         isMT5SubscribeOpen, setIsMT5SubscribeOpen, mt5SubscribeTermsAccepted, setMt5SubscribeTermsAccepted,

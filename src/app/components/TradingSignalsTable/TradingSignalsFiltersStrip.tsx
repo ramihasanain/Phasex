@@ -48,7 +48,7 @@ export function TradingSignalsFiltersStrip({
     return (
         <>
             <div
-                className="px-5 py-4 mt-3 flex flex-wrap items-center gap-2.5 rounded-t-lg mx-0"
+                className="px-3 sm:px-5 py-4 mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-3 rounded-t-lg mx-0 overflow-visible max-[800px]:flex-col max-[800px]:items-stretch max-[800px]:gap-4"
                 style={{
                     borderTop: "2px solid rgba(99,102,241,0.25)",
                     background:
@@ -56,7 +56,7 @@ export function TradingSignalsFiltersStrip({
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
                 }}
             >
-                <div className="relative flex-shrink-0" style={{ width: 180 }}>
+                <div className="relative flex-shrink-0 w-full max-w-[180px] max-[800px]:max-w-none">
                     <Search
                         className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
                         style={{ color: "#475569" }}
@@ -83,13 +83,14 @@ export function TradingSignalsFiltersStrip({
                     )}
                 </div>
 
-                <div className="w-px h-6" style={{ background: "rgba(99,102,241,0.1)" }} />
+                <div className="w-px h-6 shrink-0 max-[800px]:hidden self-center" style={{ background: "rgba(99,102,241,0.1)" }} />
 
-                <div className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1 w-full min-[801px]:w-auto">
                     {MARKET_FILTERS.map((f) => {
                         const active = marketFilter === f.key;
                         return (
                             <motion.button
+                                type="button"
                                 key={f.key}
                                 onClick={() => {
                                     setMarketFilter(f.key);
@@ -118,6 +119,7 @@ export function TradingSignalsFiltersStrip({
                         const active = actionFilter === f.key;
                         return (
                             <motion.button
+                                type="button"
                                 key={f.key}
                                 onClick={() => setActionFilter(f.key)}
                                 whileTap={{ scale: 0.95 }}
@@ -135,10 +137,11 @@ export function TradingSignalsFiltersStrip({
                     })}
                 </div>
 
-                <div className="w-px h-6" style={{ background: "rgba(99,102,241,0.1)" }} />
+                <div className="w-px h-6 shrink-0 max-[800px]:hidden self-center" style={{ background: "rgba(99,102,241,0.1)" }} />
 
-                <div className="relative">
+                <div className="relative w-full min-[801px]:w-auto overflow-visible">
                     <motion.button
+                        type="button"
                         onClick={() => setShowAssetDropdown(!showAssetDropdown)}
                         whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer"
@@ -159,7 +162,7 @@ export function TradingSignalsFiltersStrip({
 
                     {showAssetDropdown && (
                         <div
-                            className="absolute top-full left-0 mt-1 z-50 rounded-xl overflow-hidden shadow-2xl"
+                            className="absolute top-full left-0 max-[800px]:left-0 max-[800px]:right-0 mt-1 z-50 rounded-xl shadow-2xl overflow-x-visible"
                             style={{
                                 background: "#0d1225",
                                 border: "1px solid rgba(99,102,241,0.15)",
@@ -167,7 +170,7 @@ export function TradingSignalsFiltersStrip({
                                 maxHeight: 320,
                             }}
                         >
-                            <div className="overflow-y-auto" style={{ maxHeight: 320 }}>
+                            <div className="overflow-y-auto overflow-x-visible rounded-xl" style={{ maxHeight: 320 }}>
                                 <button
                                     onClick={() => {
                                         setAssetFilter("ALL");
@@ -215,10 +218,11 @@ export function TradingSignalsFiltersStrip({
                     )}
                 </div>
 
-                <div className="w-px h-6" style={{ background: "rgba(99,102,241,0.1)" }} />
+                <div className="w-px h-6 shrink-0 max-[800px]:hidden self-center" style={{ background: "rgba(99,102,241,0.1)" }} />
 
-                <div className="flex items-center gap-1 flex-wrap">
+                <div className="flex flex-wrap items-center gap-1 gap-y-2 w-full min-[801px]:flex-1 min-[801px]:min-w-0">
                     <motion.button
+                        type="button"
                         onClick={() => setTfFilter("ALL")}
                         whileTap={{ scale: 0.95 }}
                         className="px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-all"
@@ -244,6 +248,7 @@ export function TradingSignalsFiltersStrip({
                         const active = tfFilter === tf;
                         return (
                             <motion.button
+                                type="button"
                                 key={tf}
                                 onClick={() => setTfFilter(tf)}
                                 whileTap={{ scale: 0.95 }}
@@ -261,7 +266,7 @@ export function TradingSignalsFiltersStrip({
                     })}
                 </div>
 
-                <span className="text-[10px] font-mono ml-auto" style={{ color: "#475569" }}>
+                <span className="text-[10px] font-mono ml-auto max-[800px]:ml-0 max-[800px]:w-full max-[800px]:text-center min-[801px]:shrink-0 pt-1 min-[801px]:pt-0" style={{ color: "#475569" }}>
                     {filteredAssets.length}/{allAssetNames.length}
                 </span>
             </div>

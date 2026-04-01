@@ -104,12 +104,17 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                 transition={{ duration: 2.2, repeat: Infinity, ease: "linear", delay: 1.5 }}
             />
 
-            <div className="flex items-center relative z-20" style={{
-                background: `linear-gradient(135deg, rgba(8,12,20,0.75) 0%, rgba(10,16,26,0.7) 40%, rgba(8,12,20,0.6) 100%)`,
-                borderRadius: "16px",
-            }}>
+            <div
+                className="flex flex-col min-[1200px]:flex-row min-[1200px]:items-stretch gap-4 min-[1200px]:gap-0 relative z-20 w-full"
+                style={{
+                    background: `linear-gradient(135deg, rgba(8,12,20,0.75) 0%, rgba(10,16,26,0.7) 40%, rgba(8,12,20,0.6) 100%)`,
+                    borderRadius: "16px",
+                }}
+            >
                 {/* ════  AI FLOATING BOT  ════ */}
-                <div className={`absolute top-[45%] -translate-y-1/2 ${isRTL ? "right-8" : "left-8"} z-50 flex flex-col items-center gap-1.5`}>
+                <div
+                    className={`relative z-50 flex flex-col items-center justify-center gap-1.5 py-2 shrink-0 min-[1200px]:absolute min-[1200px]:top-[45%] min-[1200px]:-translate-y-1/2 ${isRTL ? "min-[1200px]:right-8" : "min-[1200px]:left-8"}`}
+                >
                     {/* Outer attention ring */}
                     <div className="relative">
                         <motion.div className="absolute inset-0 rounded-full"
@@ -183,7 +188,7 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                                 <X size={28} />
                             </button>
 
-                            <div className="px-14 py-8 relative z-10 flex gap-8 items-center h-full">
+                            <div className="px-6 sm:px-10 lg:px-14 py-6 sm:py-8 relative z-10 flex flex-col sm:flex-row gap-6 sm:gap-8 items-center h-full">
                                 <div className="w-24 h-24 rounded-full flex-shrink-0 flex items-center justify-center relative bg-black/40 border border-white/10"
                                     style={{ boxShadow: `0 0 30px ${accentG}0.3)` }}>
                                     <motion.div className="absolute inset-0 rounded-full"
@@ -216,8 +221,10 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                     )}
                 </AnimatePresence>
 
-                <div className="flex-1 px-8 py-1">
-                    <div className="text-[13px] text-gray-600 tracking-[0.25em] uppercase mt-3 mb-1 font-semibold flex items-center gap-3">
+                <div
+                    className={`flex-1 w-full min-w-0 px-4 sm:px-6 min-[1200px]:px-8 py-2 min-[1200px]:py-1 ${isRTL ? "min-[1200px]:pe-36" : "min-[1200px]:ps-36"}`}
+                >
+                    <div className="text-[11px] sm:text-[13px] text-gray-600 tracking-[0.2em] sm:tracking-[0.25em] uppercase mt-2 sm:mt-3 mb-1 font-semibold flex items-center gap-3 justify-center min-[1200px]:justify-start">
                         <motion.div className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: accent }}
                             animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8], boxShadow: [`0 0 4px ${accent}`, `0 0 12px ${accent}`, `0 0 4px ${accent}`] }}
@@ -229,7 +236,7 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                         </motion.span>
                     </div>
 
-                    <motion.h2 className="text-[48px] font-black tracking-tight mb-8 leading-none z-10 relative"
+                    <motion.h2 className="text-[clamp(1.75rem,6vw,3rem)] min-[1200px]:text-[48px] font-black tracking-tight mb-6 min-[1200px]:mb-8 leading-none z-10 relative text-center min-[1200px]:text-start"
                         style={{ color: accent, fontStyle: "italic" }}
                         animate={{
                             textShadow: [
@@ -244,7 +251,7 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                     </motion.h2>
 
                     {/* ═══ Top Cluster: Clocks + Currency Badge ═══ */}
-                    <div className="mt-4 flex justify-center items-center gap-8 mb-6 w-full relative z-30" style={{ paddingLeft: '150px' }}>
+                    <div className="mt-4 flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 min-[1200px]:gap-8 mb-6 w-full relative z-30">
                         {/* LEFT CLOCK: Last Update */}
                         <SciFiClock
                             isLive={true}
@@ -333,7 +340,7 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                     </div>
 
                     {/* ═══ Pyramid Row 1 — Phase, Volatility, Risk ═══ */}
-                    <div className="flex items-center justify-center gap-3 text-[15px] flex-wrap" style={{ paddingLeft: '150px' }}>
+                    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[13px] sm:text-[15px] w-full">
                         {[
                             { k: t.phase, va: tv(data.phase), c: data.phase === "Directional" ? "#00e676" : data.phase === "Developing" ? "#ffc400" : "#ff1744" },
                             { k: t.volatility, va: tv(data.volatility), c: data.volatility === "Elevated" ? "#ff1744" : data.volatility === "Moderate" ? "#ffc400" : "#00e676" },
@@ -358,7 +365,7 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                     </div>
 
                     {/* ═══ Pyramid Layout: Row 2 — Trend, Momentum, Bias, Reversal ═══ */}
-                    <div className="mt-1 flex items-center justify-center gap-3 text-[15px] flex-wrap" style={{ paddingLeft: '150px' }}>
+                    <div className="mt-1 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[13px] sm:text-[15px] w-full">
                         {[
                             { k: t.trend, v: data.dynamics.primaryTrend },
                             { k: t.momentum, v: data.dynamics.momentumState },
@@ -387,10 +394,10 @@ export function PhaseXDynamicsBanner({ ctx }: { ctx: PhaseXCtx }) {
                     </div>
                 </div>
 
-                <div className="flex-shrink-0 pr-6 relative">
-                    <div className="flex items-center gap-4">
+                <div className="flex justify-center min-[1200px]:justify-end w-full min-[1200px]:w-auto shrink-0 px-2 pb-3 min-[1200px]:px-0 min-[1200px]:pb-0 min-[1200px]:pr-6 relative">
+                    <div className="flex flex-col min-[480px]:flex-row items-center gap-4">
                         {/* Score & Confidence Numbers */}
-                        <div className="flex flex-col gap-3 items-end">
+                        <div className="flex flex-col gap-3 items-center min-[1200px]:items-end">
                             <motion.div className="text-center px-4 py-2.5 rounded-xl relative overflow-hidden"
                                 style={{ background: `${confColorG}0.08)`, border: `1px solid ${confColorG}0.2)` }}
                                 initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>

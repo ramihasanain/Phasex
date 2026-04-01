@@ -59,8 +59,8 @@ export function PhaseXDynamicsContent({ ctx }: { ctx: PhaseXCtx }) {
                     <DynamicLayerTable symbol={selectedSymbol} isRTL={isRTL} sources={sources} />
                 ) : (
                     <div className="grid grid-cols-12 gap-4">
-                        {/* Main Table — 9 cols */}
-                        <div className="col-span-9">
+                        {/* Main Table */}
+                        <div className="col-span-12 xl:col-span-9">
                             <AnalysisTable
                                 tab={selectedTab}
                                 symbol={selectedSymbol}
@@ -68,8 +68,8 @@ export function PhaseXDynamicsContent({ ctx }: { ctx: PhaseXCtx }) {
                                 sources={sources}
                             />
                         </div>
-                        {/* Sidebar — 3 cols */}
-                        <div className="col-span-3 space-y-4">
+                        {/* Sidebar */}
+                        <div className="col-span-12 xl:col-span-3 space-y-4">
                             {/* Layer Summary Panel */}
                             <Panel accent={`${accentG}0.05)`}>
                                 <div className="p-5">

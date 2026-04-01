@@ -9,6 +9,18 @@ import { marketCategories, symbolIcons } from "../PhaseX/marketCategories";
 import { symbolToJsonKey, trendAr, trendRu, trendTr, trendFr, trendEs, i18n } from "../PhaseX/constants";
 import { getDynamicLayerData, getTrendColor } from "./phaseXDynamicsHelpers";
 
+/** Shown instead of decision labels when viewport ≤850px */
+const DECISION_COMPACT_MARK: Record<string, string> = {
+    ALL: "◎",
+    "STRONG BUY": "⏫",
+    BUY: "▲",
+    "WEAK BUY": "△",
+    "NO TRADE": "○",
+    "WEAK SELL": "▽",
+    SELL: "▼",
+    "STRONG SELL": "⏬",
+};
+
 const PriceCell = ({ price, isLive, fmt }: { price: number; isLive: boolean; fmt: (v: number) => string }) => {
     const prevPriceRef = useRef(price);
     const [flashStyle, setFlashStyle] = useState<React.CSSProperties>({});
@@ -176,21 +188,32 @@ export function TradingDecisionEngineTable({
                 {/* Local Filters for Decision Engine */}
                 <div className="grid grid-cols-1 gap-4 mb-2">
                     {/* Market Filter */}
-                    <div className="p-3 rounded-xl flex items-center gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                        <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{lang === "ar" ? "السوق:" : lang === "ru" ? "РЫНОК:" : lang === "tr" ? "PİYASA:" : "MARKET:"}</span>
+                    <div className="p-3 rounded-xl flex items-center justify-center sm:justify-start gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1 max-[850px]:sr-only">{lang === "ar" ? "السوق:" : lang === "ru" ? "РЫНОК:" : lang === "tr" ? "PİYASA:" : "MARKET:"}</span>
                         {marketCategories.map(c => (
-                            <button key={c.name} onClick={() => onCategoryChange(c.name)}
-                                className={`px-3 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all
-                                ${category === c.name ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-transparent text-gray-400 hover:bg-white/5"}`}>
-                                <span className="text-sm">{c.icon}</span>
-                                <span>{lang === "ar" ? c.nameAr : lang === "ru" ? t[c.name.toLowerCase() as keyof typeof t] : lang === "tr" ? t[c.name.toLowerCase() as keyof typeof t] : c.name}</span>
+                            <button
+                                key={c.name}
+                                type="button"
+                                onClick={() => onCategoryChange(c.name)}
+                                title={
+                                    lang === "ar"
+                                        ? c.nameAr
+                                        : lang === "ru" || lang === "tr"
+                                          ? String(t[c.name.toLowerCase() as keyof typeof t] ?? c.name)
+                                          : c.name
+                                }
+                                className={`rounded-lg text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all px-3 py-1.5 max-[850px]:p-0 max-[850px]:w-11 max-[850px]:h-11 max-[850px]:min-w-[44px] max-[850px]:min-h-[44px]
+                                ${category === c.name ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" : "bg-transparent text-gray-400 hover:bg-white/5"}`}
+                            >
+                                <span className="text-sm max-[850px]:text-lg leading-none flex items-center justify-center">{c.icon}</span>
+                                <span className="max-[850px]:sr-only">{lang === "ar" ? c.nameAr : lang === "ru" ? t[c.name.toLowerCase() as keyof typeof t] : lang === "tr" ? t[c.name.toLowerCase() as keyof typeof t] : c.name}</span>
                             </button>
                         ))}
                     </div>
                     {/* Decision Filter */}
                     <div className="p-3 rounded-xl flex items-center justify-between gap-2 flex-wrap" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1">{globalT("decision")}:</span>
+                        <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap w-full">
+                            <span className="text-[11px] font-black tracking-widest text-gray-500 mx-1 max-[850px]:sr-only">{globalT("decision")}:</span>
                             {["ALL", "STRONG BUY", "BUY", "WEAK BUY", "NO TRADE", "WEAK SELL", "SELL", "STRONG SELL"].map(df => {
                                 let styleCls = "bg-transparent text-gray-400 hover:bg-white/5";
                                 if (decisionFilter === df) {
@@ -218,10 +241,16 @@ export function TradingDecisionEngineTable({
                                 const count = df === "ALL" ? rows.length : rows.filter(r => r.decision === df).length;
 
                                 return (
-                                    <button key={df} onClick={() => setDecisionFilter(df as any)}
-                                        className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-1.5 ${styleCls} ${count === 0 ? "opacity-50" : ""}`}>
-                                        <span>{getDecLabel(df)}</span>
-                                        <span className="bg-black/20 px-1.5 py-0.5 rounded text-[10px] ml-1">{count}</span>
+                                    <button
+                                        key={df}
+                                        type="button"
+                                        title={`${getDecLabel(df)} (${count})`}
+                                        onClick={() => setDecisionFilter(df as any)}
+                                        className={`rounded-lg text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 px-3 py-1.5 max-[850px]:flex-col max-[850px]:gap-0.5 max-[850px]:px-1 max-[850px]:py-1.5 max-[850px]:min-w-[44px] max-[850px]:min-h-[48px] ${styleCls} ${count === 0 ? "opacity-50" : ""}`}
+                                    >
+                                        <span className="max-[850px]:sr-only">{getDecLabel(df)}</span>
+                                        <span className="hidden max-[850px]:inline text-lg leading-none" aria-hidden>{DECISION_COMPACT_MARK[df] ?? "•"}</span>
+                                        <span className="bg-black/20 px-1.5 py-0.5 rounded text-[10px] ml-1 max-[850px]:ml-0 max-[850px]:px-1 max-[850px]:py-0 max-[850px]:text-[9px]">{count}</span>
                                     </button>
                                 );
                             })}

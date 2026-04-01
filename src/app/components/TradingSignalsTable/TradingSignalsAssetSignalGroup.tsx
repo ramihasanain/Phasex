@@ -58,11 +58,11 @@ export function TradingSignalsAssetSignalGroup({ m, asset, actionFilter, tfFilte
                     e.currentTarget.style.background = "linear-gradient(90deg, rgba(99,102,241,0.06) 0%, rgba(99,102,241,0.01) 100%)";
                 }}
             >
-                <td colSpan={mt5Connected ? 11 : 8} className="p-3 px-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <span className="text-xl leading-none">{icon}</span>
-                            <span className="text-sm font-black tracking-wide" style={{ color: tk.textPrimary, letterSpacing: "0.05em" }}>{asset}</span>
+                <td colSpan={mt5Connected ? 11 : 8} className="p-3 px-4 max-[800px]:p-2 max-[800px]:px-2">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                        <div className="flex items-center gap-2 max-[800px]:gap-1.5 sm:gap-3 min-w-0">
+                            <span className="text-lg max-[800px]:text-base leading-none shrink-0">{icon}</span>
+                            <span className="text-sm max-[800px]:text-xs font-black tracking-wide truncate" style={{ color: tk.textPrimary, letterSpacing: "0.05em" }}>{asset}</span>
                             {mt5Connected &&
                                 (editingSymbol === asset ? (
                                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()} role="presentation">

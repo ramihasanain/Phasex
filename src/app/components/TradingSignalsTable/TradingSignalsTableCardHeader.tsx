@@ -30,9 +30,9 @@ export function TradingSignalsTableCardHeader({
     mt5Connected: boolean;
 }) {
     return (
-        <div style={{ borderBottom: "1px solid rgba(99,102,241,0.06)" }}>
-            <div className="px-6 pt-4 pb-2 flex items-center justify-between">
-                <div className="flex items-center gap-4">
+        <div className="overflow-visible" style={{ borderBottom: "1px solid rgba(99,102,241,0.06)" }}>
+            <div className="px-4 sm:px-6 pt-4 pb-2 flex flex-col gap-4 max-[800px]:items-stretch min-[801px]:flex-row min-[801px]:items-center min-[801px]:justify-between overflow-visible">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 min-w-0">
                     <motion.div
                         animate={{ rotate: [0, 5, -5, 0] }}
                         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -44,9 +44,9 @@ export function TradingSignalsTableCardHeader({
                     >
                         <Rocket className="w-5 h-5 text-white" />
                     </motion.div>
-                    <div>
+                    <div className="min-w-0">
                         <h3
-                            className="text-lg font-black tracking-wider flex items-center gap-1"
+                            className="text-base sm:text-lg font-black tracking-wider flex flex-wrap items-center gap-1 gap-y-1"
                             style={{ color: tk.textPrimary, letterSpacing: "0.05em" }}
                         >
                             PHASE{" "}
@@ -69,9 +69,9 @@ export function TradingSignalsTableCardHeader({
                         </h3>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 max-[800px]:w-full max-[800px]:justify-center min-[801px]:justify-end overflow-visible">
                     <div
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg shrink-0"
                         style={{
                             background: "rgba(99,102,241,0.05)",
                             border: "1px solid rgba(99,102,241,0.08)",
@@ -141,8 +141,8 @@ export function TradingSignalsTableCardHeader({
                 </div>
             </div>
 
-            <div className="px-6 pb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+            <div className="px-4 sm:px-6 pb-3 flex flex-col gap-4 max-[800px]:items-stretch min-[801px]:flex-row min-[801px]:items-center min-[801px]:justify-between overflow-visible">
+                <div className="flex flex-wrap items-center gap-2 min-w-0 justify-center min-[801px]:justify-start">
                     <SciFiClock
                         label={t("lastUpdateStr")}
                         timeMs={lastSystemUpdate}
@@ -159,8 +159,9 @@ export function TradingSignalsTableCardHeader({
                     />
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 justify-center min-[801px]:justify-end overflow-visible">
                     <motion.button
+                        type="button"
                         onClick={expandAll}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -175,6 +176,7 @@ export function TradingSignalsTableCardHeader({
                         <Maximize2 className="w-3.5 h-3.5" />
                     </motion.button>
                     <motion.button
+                        type="button"
                         onClick={collapseAll}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}

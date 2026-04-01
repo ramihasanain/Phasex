@@ -1,10 +1,10 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
     ArrowLeft,
     ChevronDown,
+    Menu,
     RefreshCw,
-    Zap,
-    X,
     RadioTower,
     User,
     LogOut,
@@ -12,9 +12,11 @@ import {
     WifiOff,
     CreditCard,
     PowerOff,
+    X,
 } from "lucide-react";
 
 import type { PhaseXCtx } from "./usePhaseXDynamicsPage";
+import { PhaseXDynamicsHeaderMobileDrawer } from "./PhaseXDynamicsHeaderMobileDrawer";
 
 export function PhaseXDynamicsHeader({ ctx }: { ctx: PhaseXCtx }) {
     const {
@@ -44,41 +46,45 @@ export function PhaseXDynamicsHeader({ ctx }: { ctx: PhaseXCtx }) {
         currentLangObj,
         language,
         setLanguageKey,
-        globalT,
     } = ctx;
+
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
         <header
-            className="relative z-30 border-b"
+            className="sticky top-0 z-30 border-b backdrop-blur-xl"
             style={{
                 background: "rgba(6,10,16,0.88)",
                 backdropFilter: "blur(30px) saturate(200%)",
                 borderColor: "rgba(255,255,255,0.04)",
             }}
         >
-            <div className="max-w-[1700px] mx-auto px-5 py-2.5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <div className="max-w-[1700px] mx-auto px-4 sm:px-5">
+                <div className="flex items-center justify-between h-14 lg:h-auto lg:min-h-[52px] lg:py-2.5 gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <button
+                        type="button"
                         onClick={onBack}
-                        className="p-2 rounded-xl hover:bg-white/5 transition-all group"
+                        className="p-2 rounded-xl hover:bg-white/5 transition-all group shrink-0"
+                        aria-label="Back"
                     >
                         <ArrowLeft className="w-4 h-4 text-gray-600 group-hover:text-gray-300" />
                     </button>
                     <motion.span
                         animate={{ rotate: [0, 8, -8, 0] }}
                         transition={{ duration: 4, repeat: Infinity }}
-                        className="text-xl font-black"
+                        className="text-lg sm:text-xl font-black shrink-0"
                         style={{ color: accent }}
                     >
                         »
                     </motion.span>
-                    <span className="text-[16px] font-bold tracking-wide">
+                    <span className="text-[13px] sm:text-[15px] lg:text-[16px] font-bold tracking-wide truncate">
                         <span style={{ color: accent }}>PHASE X</span>
-                        <span className="text-gray-700 mx-1.5">—</span>
-                        <span className="text-gray-500 font-medium">{t.title}</span>
+                        <span className="text-gray-700 mx-1 sm:mx-1.5">—</span>
+                        <span className="text-gray-500 font-medium hidden sm:inline">{t.title}</span>
                     </span>
                 </div>
-                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                <div className="hidden lg:flex items-center gap-1.5 flex-wrap justify-end shrink-0">
                     <div className="flex items-center gap-1.5">
                         {/* MT5 Connection Button */}
                         <motion.button
@@ -292,12 +298,12 @@ export function PhaseXDynamicsHeader({ ctx }: { ctx: PhaseXCtx }) {
                                 )}
                             </AnimatePresence>
                         </div>
-
-                        <div className="w-px h-5 bg-white/10" />
                     </div>
 
-                    {/* NEWS Button */}
+                        <div className="w-px h-5 bg-white/10" />
+
                     <motion.button
+                        type="button"
                         onClick={() => setIsNewsOpen(!isNewsOpen)}
                         whileHover={{ scale: 1.04 }}
                         whileTap={{ scale: 0.96 }}
@@ -318,6 +324,18 @@ export function PhaseXDynamicsHeader({ ctx }: { ctx: PhaseXCtx }) {
                                 : "NEWS"}
                     </motion.button>
                 </div>
+
+                    <motion.button
+                        type="button"
+                        onClick={() => setMobileMenuOpen((o) => !o)}
+                        className="lg:hidden w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 shrink-0 cursor-pointer"
+                        aria-expanded={mobileMenuOpen}
+                        aria-label="Menu"
+                    >
+                        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </motion.button>
+                </div>
+                <PhaseXDynamicsHeaderMobileDrawer ctx={ctx} open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
             </div>
         </header>
     );

@@ -26,7 +26,7 @@ export function LoginPageLanguageMenu({
     currentLangObj,
 }: LoginPageLanguageMenuProps) {
     return (
-        <div className="absolute top-6 right-6 z-50">
+        <div className="relative z-50">
             <div className="relative">
                 <motion.button
                     type="button"
@@ -48,7 +48,7 @@ export function LoginPageLanguageMenu({
 
                 {langDropdownOpen ? (
                     <div
-                        className="absolute right-0 mt-2 w-40 rounded-xl overflow-hidden backdrop-blur-xl"
+                        className="absolute end-0 mt-2 w-40 rounded-xl overflow-hidden backdrop-blur-xl"
                         style={{
                             background: "rgba(14,20,33,0.9)",
                             border: `1px solid ${accentG}0.2)`,
@@ -63,7 +63,7 @@ export function LoginPageLanguageMenu({
                                     setLanguageKey(lang.code);
                                     setLangDropdownOpen(false);
                                 }}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors cursor-pointer"
+                                className="w-full flex items-center gap-3 px-4 py-3 text-start hover:bg-white/5 transition-colors cursor-pointer"
                                 style={{
                                     background: language === lang.code ? "rgba(255,255,255,0.05)" : "transparent",
                                     color: language === lang.code ? accent : "#e2e8f0",

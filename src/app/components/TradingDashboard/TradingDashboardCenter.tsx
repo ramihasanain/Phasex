@@ -31,7 +31,7 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
     } = ctx;
 
     return (
-        <div className="flex-1 flex flex-col gap-3 min-w-0 px-0 ml-3">
+        <div className="flex-1 flex flex-col gap-3 min-w-0 px-0 md:ml-3 max-md:mx-0">
           <div
             className="rounded-2xl overflow-hidden mb-1 flex-shrink-0 relative"
             style={{
@@ -56,35 +56,37 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
             )}
             {/* Left Arrow */}
             <button
+              type="button"
               onClick={() =>
                 ribbonRef.current?.scrollBy({ left: -200, behavior: "smooth" })
               }
-              className="absolute left-0 top-0 bottom-0 z-20 flex items-center justify-center w-7 cursor-pointer"
+              className="absolute left-0 top-0 bottom-0 z-20 flex items-center justify-center w-6 md:w-7 cursor-pointer"
               style={{
                 background: tk.isDark
                   ? "linear-gradient(90deg, rgba(6,10,16,0.9) 60%, transparent 100%)"
                   : `linear-gradient(90deg, ${tk.surface} 60%, transparent 100%)`,
               }}
             >
-              <ChevronLeft className="w-4 h-4" style={{ color: tk.info }} />
+              <ChevronLeft className="w-3.5 h-3.5 md:w-4 md:h-4" style={{ color: tk.info }} />
             </button>
             {/* Right Arrow */}
             <button
+              type="button"
               onClick={() =>
                 ribbonRef.current?.scrollBy({ left: 200, behavior: "smooth" })
               }
-              className="absolute right-0 top-0 bottom-0 z-20 flex items-center justify-center w-7 cursor-pointer"
+              className="absolute right-0 top-0 bottom-0 z-20 flex items-center justify-center w-6 md:w-7 cursor-pointer"
               style={{
                 background: tk.isDark
                   ? "linear-gradient(270deg, rgba(6,10,16,0.9) 60%, transparent 100%)"
                   : `linear-gradient(270deg, ${tk.surface} 60%, transparent 100%)`,
               }}
             >
-              <ChevronRight className="w-4 h-4" style={{ color: tk.info }} />
+              <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4" style={{ color: tk.info }} />
             </button>
             <div
               ref={ribbonRef}
-              className="flex items-center p-1 gap-1 overflow-x-auto hide-scrollbar mx-7 relative z-10"
+              className="flex items-center p-0.5 gap-0.5 md:p-1 md:gap-1 overflow-x-auto hide-scrollbar mx-6 md:mx-7 relative z-10"
               style={{ scrollBehavior: "smooth" }}
             >
               {indicators.map((ind) => {
@@ -96,10 +98,11 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
                 return (
                   <motion.button
                     key={ind.id}
+                    type="button"
                     onClick={() => pickIndicator(ind)}
                     whileHover={{ y: -1 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex-shrink-0 flex flex-row items-center justify-center gap-2 py-2 px-3 rounded-xl cursor-pointer transition-all relative"
+                    className="flex-shrink-0 flex flex-row items-center justify-center gap-1.5 py-1.5 px-2 min-w-[88px] sm:min-w-[100px] md:min-w-[118px] xl:min-w-[140px] md:gap-2 md:py-2 md:px-3 rounded-lg md:rounded-xl cursor-pointer transition-all relative"
                     style={{
                       background: active
                         ? isLocked
@@ -111,12 +114,11 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
                         active && !isLocked && tk.isDark
                           ? `0 2px 12px ${activeColor}1a`
                           : "none",
-                      minWidth: "140px",
                       opacity: isLocked ? 0.55 : 1,
                     }}
                   >
                     <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 relative"
+                      className="w-6 h-6 md:w-7 md:h-7 rounded-md md:rounded-lg flex items-center justify-center flex-shrink-0 relative"
                       style={{
                         background: active
                           ? isLocked
@@ -128,19 +130,19 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
                     >
                       {isLocked ? (
                         <Lock
-                          className="w-3.5 h-3.5"
+                          className="w-3 h-3 md:w-3.5 md:h-3.5"
                           style={{ color: tk.textMuted }}
                         />
                       ) : (
                         <Icon
-                          className="w-4 h-4"
+                          className="w-3.5 h-3.5 md:w-4 md:h-4"
                           style={{ color: active ? activeColor : tk.textMuted }}
                           strokeWidth={active ? 2.5 : 2}
                         />
                       )}
                     </div>
                     <span
-                      className="text-[11px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis transition-colors"
+                      className="text-[9px] md:text-[10px] xl:text-[11px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis transition-colors max-w-[5.5rem] sm:max-w-[6.5rem] md:max-w-none"
                       style={{
                         color: active
                           ? isLocked
@@ -153,7 +155,7 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
                     </span>
                     {isLocked && (
                       <Lock
-                        className="w-3.5 h-3.5 flex-shrink-0"
+                        className="w-3 h-3 md:w-3.5 md:h-3.5 flex-shrink-0"
                         style={{ color: tk.textDim }}
                       />
                     )}
@@ -165,7 +167,7 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
 
           {/* Chart */}
           <div
-            className="flex-shrink-0 relative"
+            className="flex-shrink-0 relative px-0.5 sm:px-1 md:px-0"
             style={{ minHeight: "420px", height: "calc(100vh - 280px)" }}
           >
             {/* Lock Overlay */}
@@ -270,7 +272,7 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
           </div>
 
           {/* ═══ SIGNALS TABLE (Centered and Resized) ═══ */}
-          <div className="flex justify-center w-full">
+          <div className="flex justify-center w-full px-0 sm:px-1">
             <div className="w-full max-w-[1400px]">
               <TradingSignalsTable
                 mt5Connected={mt5Connected}

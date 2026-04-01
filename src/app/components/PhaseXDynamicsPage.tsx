@@ -17,7 +17,7 @@ export function PhaseXDynamicsPage({ onBack, initialSymbol, initialTab }: PhaseX
 
     return (
         <div
-            className="min-h-screen text-gray-300 overflow-hidden"
+            className="min-h-screen text-gray-300 overflow-x-hidden"
             dir={isRTL ? "rtl" : "ltr"}
             style={{ background: "#060a10", fontFamily: "'Inter', system-ui, sans-serif" }}
         >

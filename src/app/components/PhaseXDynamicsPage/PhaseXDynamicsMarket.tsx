@@ -31,29 +31,36 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
             {selectedTab !== "Decision Engine" && (
                 <div className="mb-3">
                     <motion.button onClick={() => setFilterOpen(!filterOpen)}
-                        className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-xl cursor-pointer transition-all"
+                        className="flex items-center justify-center gap-2 sm:gap-3 mb-3 px-3 sm:px-4 py-2.5 rounded-xl cursor-pointer transition-all max-[850px]:min-h-[44px]"
                         style={{
                             background: filterOpen ? `${accentG}0.08)` : "rgba(255,255,255,0.03)",
                             border: filterOpen ? `1px solid ${accentG}0.2)` : "1px solid rgba(255,255,255,0.06)",
                         }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}>
-                        <Activity className="w-4 h-4" style={{ color: filterOpen ? accent : "#6b7280" }} />
-                        <span className="text-[12px] tracking-[0.15em] uppercase font-bold" style={{ color: filterOpen ? accent : "#6b7280" }}>{t.marketFilter}</span>
-                        <motion.div animate={{ rotate: filterOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                        <Activity className="w-4 h-4 shrink-0" style={{ color: filterOpen ? accent : "#6b7280" }} />
+                        <span className="text-[12px] tracking-[0.15em] uppercase font-bold max-[850px]:sr-only" style={{ color: filterOpen ? accent : "#6b7280" }}>{t.marketFilter}</span>
+                        <motion.div animate={{ rotate: filterOpen ? 180 : 0 }} transition={{ duration: 0.3 }} className="max-[850px]:hidden">
                             <ChevronDown className="w-4 h-4" style={{ color: filterOpen ? accent : "#6b7280" }} />
                         </motion.div>
                     </motion.button>
                     <AnimatePresence>
                         {filterOpen && (
-                            <motion.div className="flex items-center gap-2"
+                            <motion.div className="flex flex-wrap items-center justify-center sm:justify-start gap-2"
                                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.3 }}>
                                 {marketCategories.map(cat => {
                                     const isActive = selectedCategory === cat.name;
                                     return (
                                         <motion.button key={cat.name} onClick={() => handleCategoryChange(cat.name)}
-                                            className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all overflow-hidden"
+                                            title={
+                                                lang === "ar"
+                                                    ? cat.nameAr
+                                                    : lang === "ru" || lang === "tr"
+                                                      ? String(t[cat.name.toLowerCase() as keyof typeof t] ?? cat.name)
+                                                      : cat.name
+                                            }
+                                            className="relative flex items-center justify-center gap-2.5 px-5 py-2.5 max-[850px]:px-0 max-[850px]:py-0 max-[850px]:w-11 max-[850px]:h-11 max-[850px]:min-w-[44px] max-[850px]:min-h-[44px] rounded-xl transition-all overflow-hidden"
                                             style={{
                                                 background: isActive
                                                     ? `linear-gradient(135deg, ${accentG}0.15) 0%, ${accentG}0.05) 100%)`
@@ -78,10 +85,10 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
                                                         transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
                                                 </>
                                             )}
-                                            <motion.span className="text-lg relative z-10"
+                                            <motion.span className="text-lg max-[850px]:text-xl relative z-10 leading-none flex items-center justify-center"
                                                 animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
                                                 transition={{ duration: 2, repeat: Infinity }}>{cat.icon}</motion.span>
-                                            <div className="relative z-10">
+                                            <div className="relative z-10 max-[850px]:sr-only">
                                                 <div className="text-[12px] font-bold" style={{ color: isActive ? accent : "#6b7280" }}>{lang === "ar" ? cat.nameAr : lang === "ru" ? t[cat.name.toLowerCase() as keyof typeof t] : lang === "tr" ? t[cat.name.toLowerCase() as keyof typeof t] : cat.name}</div>
                                             </div>
                                             {isActive && (
@@ -103,7 +110,7 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
             <AnimatePresence mode="wait">
                 {filterOpen && selectedTab !== "Decision Engine" && (
                     <motion.div key={selectedCategory}
-                        className="mb-4 flex items-center gap-2 flex-wrap"
+                        className="mb-4 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 flex-wrap"
                         initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.35 }}>
                         {(() => {
@@ -138,7 +145,8 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
                                 const symColor = symBullish ? "#00e676" : "#ff1744";
                                 return (
                                     <motion.button key={sym} onClick={() => { setSelectedSymbol(sym); setFilterOpen(false); }}
-                                        className="relative flex items-center gap-3 px-5 py-3 rounded-xl overflow-hidden"
+                                        title={lang === "ar" ? info.labelAr : info.label}
+                                        className="relative flex items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 min-w-0 max-w-[9.5rem] sm:max-w-[11rem] md:max-w-none px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-lg sm:rounded-xl overflow-hidden"
                                         style={{
                                             background: isActive
                                                 ? `linear-gradient(135deg, ${symBullish ? "rgba(0,230,118," : "rgba(255,23,68,"}0.12) 0%, rgba(10,16,26,0.9) 100%)`
@@ -158,19 +166,19 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
                                                 animate={{ x: ["-100%", "200%"] }}
                                                 transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} />
                                         )}
-                                        <motion.span className="text-2xl relative z-10"
+                                        <motion.span className="text-base sm:text-lg md:text-xl lg:text-2xl shrink-0 relative z-10 leading-none flex items-center justify-center"
                                             animate={isActive ? { scale: [1, 1.15, 1] } : {}}
                                             transition={{ duration: 1.5, repeat: Infinity }}>
                                             {info.icon}
                                         </motion.span>
-                                        <div className="relative z-10">
-                                            <div className="text-[12px] font-bold" style={{ color: isActive ? "#fff" : "#9ca3af" }}>
+                                        <div className="relative z-10 min-w-0 flex-1 text-start">
+                                            <div className="text-[9px] sm:text-[10px] md:text-[11px] font-bold leading-tight truncate" style={{ color: isActive ? "#fff" : "#9ca3af" }}>
                                                 {lang === "ar" ? info.labelAr : info.label}
                                             </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-[10px] font-mono" style={{ color: "#6b7280" }}>{sym}</span>
+                                            <div className="flex items-center gap-1 min-w-0">
+                                                <span className="text-[8px] sm:text-[9px] font-mono truncate shrink" style={{ color: "#6b7280" }}>{sym}</span>
                                                 {symData && (
-                                                    <motion.span className="text-[10px] font-black" style={{ color: symColor }}
+                                                    <motion.span className="text-[8px] sm:text-[9px] font-black shrink-0 tabular-nums" style={{ color: symColor }}
                                                         animate={isActive ? { textShadow: [`0 0 4px ${symColor}40`, `0 0 10px ${symColor}60`, `0 0 4px ${symColor}40`] } : {}}
                                                         transition={{ duration: 2, repeat: Infinity }}>
                                                         {symData.globalScore > 0 ? "+" : ""}{symData.globalScore.toFixed(2)}
@@ -179,7 +187,7 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
                                             </div>
                                         </div>
                                         {info.flag && (
-                                            <span className="text-sm relative z-10 opacity-60">{info.flag}</span>
+                                            <span className="text-[10px] sm:text-xs shrink-0 relative z-10 opacity-60">{info.flag}</span>
                                         )}
                                         {isActive && (
                                             <motion.div className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full z-20"
@@ -198,12 +206,13 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
 
             <div className="mb-4">
                 <div className="h-px w-full mb-3" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.04) 70%, transparent 95%)" }} />
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
                     {analysisTabs.map(tab => {
                         const isActive = selectedTab === tab;
                         return (
                             <motion.button key={tab} onClick={() => setSelectedTab(tab)}
-                                className="relative px-4 py-2.5 text-[11px] font-bold tracking-wider rounded-xl transition-all flex items-center gap-2 overflow-hidden"
+                                title={tvTab(tab)}
+                                className="relative px-4 py-2.5 max-[850px]:px-0 max-[850px]:py-0 max-[850px]:w-11 max-[850px]:h-11 max-[850px]:min-w-[44px] max-[850px]:min-h-[44px] text-[11px] font-bold tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 overflow-hidden"
                                 style={{
                                     color: isActive ? accent : "#4b5563",
                                     background: isActive ? `${accent}12` : "rgba(255,255,255,0.01)",
@@ -218,12 +227,12 @@ export function PhaseXDynamicsMarket({ ctx }: { ctx: PhaseXCtx }) {
                                         animate={{ x: ["-100%", "200%"] }}
                                         transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} />
                                 )}
-                                <motion.span className="text-sm relative z-10"
+                                <motion.span className="text-sm max-[850px]:text-base relative z-10 leading-none flex items-center justify-center"
                                     animate={isActive ? { rotate: [0, 12, -12, 0], scale: [1, 1.2, 1] } : {}}
                                     transition={{ duration: 2, repeat: Infinity }}>
                                     {analysisTabIcons[tab]}
                                 </motion.span>
-                                <span className="relative z-10">{tvTab(tab)}</span>
+                                <span className="relative z-10 max-[850px]:sr-only">{tvTab(tab)}</span>
                                 {isActive && (
                                     <motion.div layoutId="tabGlow" className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full"
                                         style={{ background: `linear-gradient(90deg, transparent, ${accent}, ${accent}, transparent)` }}

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { TrendingUp, TrendingDown, Activity, Clock, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, Table, BarChart3, Maximize2, ListOrdered, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -6,6 +7,11 @@ import { PhaseTimeframeSelector, CandleLimitSelector, AnimatedStat } from "./ind
 import { decisionStyle, decisionLabelAr } from "./decisionEngine";
 import { IndicatorChartDirections } from "./IndicatorChartDirections";
 import type { IndicatorChartCtx } from "./useIndicatorChart";
+
+function isTradeTimeLockedNow() {
+    const d = new Date();
+    return d.getMinutes() % 5 < 2;
+}
 
 export function NavBtn({ onClick, disabled, children, title }: { onClick: () => void; disabled?: boolean; children: React.ReactNode; title?: string }) {
     return (
@@ -36,9 +42,28 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
         viewWindow, startIndex, isDragging, chartRef,
         zoomIn, zoomOut, panLeft, panRight, goStart, goEnd,
         onDown, onMove, onUp, decimals, isPositive,
+        directionsData, applyGlobalDirLot, globalDirLot, setGlobalDirLot,
+        dirLotSizes, setDirLotSizes, dirExecuting, setDirExecuting,
+        executedComments, setExecutedComments,
+        handleExecuteAll, isExecutingAll, handleAutoAll, isAutoExecutingAll,
+        executeTradeFromChart, mt5Positions, autoTrades, autoTradeSubscribe,
+        mt5Connected,
     } = ctx;
 
     if (!currency || !indicator) return null;
+
+    const mt5TradeLocked = !mt5Connected;
+    const [timeTradeLocked, setTimeTradeLocked] = useState(() => isTradeTimeLockedNow());
+    useEffect(() => {
+        const id = setInterval(() => setTimeTradeLocked(isTradeTimeLockedNow()), 1000);
+        return () => clearInterval(id);
+    }, []);
+    const tradeLocked = mt5TradeLocked || timeTradeLocked;
+    const tradeLockedTitle = mt5TradeLocked
+        ? (isRTL ? "يتطلب اتصال MT5" : "MT5 connection required")
+        : timeTradeLocked
+          ? (isRTL ? "مغلق مؤقتاً (أول دقيقتين من كل 5 دقائق)" : "Temporarily locked (first 2 minutes of each 5-minute block)")
+          : undefined;
 
     const gridColor = tk.chartGrid;
     const textColor = tk.chartText;
@@ -190,33 +215,44 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
         {/* Grid bg — dark only */}
         {tk.isDark && <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundImage: 'linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />}
 
-        {/* ─── Header ─── */}
-        <div className="px-4 py-3 flex items-center justify-between relative z-10" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}` }}>
-          <div className="flex items-center gap-3 relative z-10 w-1/3">
-            <motion.div className="w-8 h-8 rounded-xl flex items-center justify-center"
+        {/* ─── Header — row ≥801px; stacked flex-col ≤800px ─── */}
+        <div className="px-2.5 py-2 max-[1000px]:px-2 max-[1000px]:py-1.5 lg:px-4 lg:py-3 flex flex-col gap-3 max-[800px]:gap-3 min-[801px]:flex-row min-[801px]:items-center min-[801px]:justify-between min-[801px]:gap-0 relative z-10 min-w-0 overflow-visible" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}` }}>
+          <div className="flex items-center gap-2 max-[1000px]:gap-1.5 lg:gap-3 relative z-10 w-full min-[801px]:w-1/3 min-w-0 max-[800px]:order-1">
+            <motion.div className="w-7 h-7 max-[1000px]:w-6 max-[1000px]:h-6 lg:w-8 lg:h-8 rounded-lg lg:rounded-xl flex items-center justify-center shrink-0"
               style={{ background: tk.infoBg, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.15)' : 'rgba(79,70,229,0.15)'}` }}
               animate={tk.isDark ? { boxShadow: ['0 0 0 rgba(99,102,241,0)', '0 0 15px rgba(99,102,241,0.1)', '0 0 0 rgba(99,102,241,0)'] } : {}}
               transition={{ duration: 3, repeat: Infinity }}>
-              <Activity className="w-4 h-4" style={{ color: tk.info }} />
+              <Activity className="w-3.5 h-3.5 max-[1000px]:w-3 max-[1000px]:h-3 lg:w-4 lg:h-4" style={{ color: tk.info }} />
             </motion.div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[12px] font-black tracking-[0.15em] uppercase" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="text-[10px] max-[1000px]:text-[9px] lg:text-[12px] font-black tracking-[0.12em] lg:tracking-[0.15em] uppercase truncate" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</span>
               <button
+                type="button"
                 onClick={() => setShowChartInfo(true)}
-                className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-all flex-shrink-0"
+                className="w-4 h-4 max-[1000px]:w-3.5 max-[1000px]:h-3.5 lg:w-5 lg:h-5 rounded-full flex items-center justify-center cursor-pointer transition-all flex-shrink-0"
                 style={{ background: tk.infoBg, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.15)'}`, color: tk.info }}
                 title={isRTL ? 'معلومات المؤشر' : 'Indicator Info'}
               >
-                <Info className="w-3 h-3" />
+                <Info className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
               </button>
-              {renderTradeButtons && renderTradeButtons()}
+              {renderTradeButtons && (
+                <span
+                  className={tradeLocked ? "inline-flex pointer-events-none opacity-40 select-none" : "inline-flex"}
+                  title={tradeLockedTitle}
+                  aria-disabled={tradeLocked}
+                >
+                  {renderTradeButtons()}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Centered Animated Symbol + Decision Badge (Absolute) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-auto" style={{ marginLeft: decisionLabel ? '-10px' : 0 }}>
+          {/* Symbol + decision — centered in row layout; static stacked row ≤800px */}
+          <div
+            className={`relative z-10 flex w-full justify-center pointer-events-auto max-w-none max-[800px]:order-2 min-[801px]:absolute min-[801px]:left-1/2 min-[801px]:top-1/2 min-[801px]:z-0 min-[801px]:w-auto min-[801px]:max-w-[48%] xl:max-w-none min-[801px]:-translate-y-1/2 ${decisionLabel ? "min-[801px]:-translate-x-[calc(50%+10px)]" : "min-[801px]:-translate-x-1/2"}`}
+          >
             <motion.div
-              className="flex items-center justify-center gap-2.5 px-5 py-1.5 rounded-full"
+              className="flex items-center justify-center gap-1.5 px-3 py-1 max-[1000px]:gap-1 max-[1000px]:px-2.5 max-[1000px]:py-0.5 lg:gap-2.5 lg:px-5 lg:py-1.5 rounded-full min-w-0 flex-wrap max-[800px]:max-w-full"
               initial={{ opacity: 0, scale: 0.8, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               key={currency.symbol + (decisionLabel || '')}
@@ -233,8 +269,9 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
               <motion.button
+                type="button"
                 onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
-                className="text-lg font-black relative z-10 tracking-[0.15em] uppercase cursor-pointer hover:opacity-80 transition-opacity"
+                className="text-sm max-[1000px]:text-xs lg:text-lg font-black relative z-10 tracking-[0.1em] lg:tracking-[0.15em] uppercase cursor-pointer hover:opacity-80 transition-opacity truncate max-w-[5rem] sm:max-w-[6rem] max-[800px]:max-w-none lg:max-w-none"
                 style={{ color: tk.textPrimary }}
                 title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
                 animate={{
@@ -253,8 +290,9 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                 const ds = decisionStyle(decisionLabel);
                 return (
                   <motion.button
+                    type="button"
                     onClick={() => onOpenDynamics && onOpenDynamics(currency.symbol, "Decision Engine")}
-                    className="relative z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity"
+                    className="relative z-10 inline-flex items-center gap-0.5 px-2 py-0.5 max-[1000px]:text-[8px] max-[1000px]:px-1.5 lg:gap-1 lg:px-2.5 lg:text-[9px] rounded-full font-black tracking-[0.08em] lg:tracking-[0.1em] uppercase whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity shrink-0"
                     initial={{ opacity: 0, x: -8, scale: 0.8 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
@@ -266,7 +304,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                     }}
                     title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
                   >
-                    <Zap className="w-2.5 h-2.5" />
+                    <Zap className="w-2 h-2 lg:w-2.5 lg:h-2.5 shrink-0" />
                     {isRTL ? decisionLabelAr[decisionLabel] || decisionLabel : decisionLabel}
                   </motion.button>
                 );
@@ -280,28 +318,28 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
             </motion.div>
           </div>
 
-          <div className="flex items-center gap-2 relative z-10 w-1/3 justify-end">
+          <div className="flex items-center gap-1 max-[1000px]:gap-0.5 lg:gap-2 relative z-10 w-full min-[801px]:w-1/3 justify-center min-[801px]:justify-end flex-wrap min-w-0 shrink-0 max-[800px]:order-3">
             {/* Price */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl" style={{ background: tk.surfaceHover, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}` }}>
-              <span className="text-[13px] font-bold tabular-nums" style={{ color: tk.textPrimary }}>{currency.price.toFixed(decimals)}</span>
-              <span className="text-[11px] font-bold flex items-center gap-0.5"
+            <div className="flex items-center gap-1 px-2 py-0.5 max-[1000px]:px-1.5 lg:gap-2 lg:px-3 lg:py-1 rounded-lg lg:rounded-xl min-w-0" style={{ background: tk.surfaceHover, border: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.08)' : tk.border}` }}>
+              <span className="text-[11px] max-[1000px]:text-[10px] lg:text-[13px] font-bold tabular-nums truncate" style={{ color: tk.textPrimary }}>{currency.price.toFixed(decimals)}</span>
+              <span className="text-[10px] max-[1000px]:text-[9px] lg:text-[11px] font-bold flex items-center gap-0.5 shrink-0"
                 style={{ color: isPositive ? "#22c55e" : "#ef4444" }}>
-                {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {isPositive ? <TrendingUp className="w-2.5 h-2.5 lg:w-3 lg:h-3" /> : <TrendingDown className="w-2.5 h-2.5 lg:w-3 lg:h-3" />}
                 {isPositive ? "+" : ""}{currency.changePercent.toFixed(2)}%
               </span>
             </div>
             {/* View Buttons */}
-            <div className="flex items-center gap-1 ml-1">
+            <div className="flex items-center gap-0.5 lg:gap-1 ms-0.5 lg:ms-1">
               {indicator.id === "phase" && (
-                <button onClick={() => { setShowDirections(true); setShowTable(false); }} title="Phase X State Candles Directions"
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all ${!showDirections ? "animate-pulse" : ""}`}
+                <button type="button" onClick={() => { setShowDirections(true); setShowTable(false); }} title="Phase X State Candles Directions"
+                  className={`w-7 h-7 max-[1000px]:w-6 max-[1000px]:h-6 lg:w-8 lg:h-8 rounded-md lg:rounded-lg flex items-center justify-center cursor-pointer transition-all shrink-0 ${!showDirections ? "animate-pulse" : ""}`}
                   style={{
                     background: showDirections ? "rgba(16,185,129,0.2)" : "rgba(14, 165, 233, 0.15)",
                     color: showDirections ? "#10b981" : "#0ea5e9",
                     border: `1px solid ${showDirections ? "rgba(16,185,129,0.4)" : "rgba(14, 165, 233, 0.4)"}`,
                     boxShadow: showDirections ? "0 0 10px rgba(16,185,129,0.2)" : "0 0 15px rgba(14, 165, 233, 0.3)"
                   }}>
-                  <ListOrdered className="w-4 h-4" />
+                  <ListOrdered className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </button>
               )}
 
@@ -310,9 +348,9 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                 { icon: BarChart3, active: !showTable && !showDirections, onClick: () => { setShowTable(false); setShowDirections(false); }, title: "Chart" },
                 { icon: Maximize2, active: false, onClick: () => setIsExpanded(true), title: isRTL ? "تكبير" : "Fullscreen" },
               ].map(({ icon: Ic, active, onClick, title }) => (
-                <button key={title} onClick={onClick} title={title} className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-all"
+                <button key={title} type="button" onClick={onClick} title={title} className="w-6 h-6 max-[1000px]:w-[1.35rem] max-[1000px]:h-[1.35rem] lg:w-7 lg:h-7 rounded-md flex items-center justify-center cursor-pointer transition-all shrink-0"
                   style={{ background: active ? "rgba(255,255,255,0.06)" : "transparent", color: active ? "#e2e8f0" : "#475569" }}>
-                  <Ic className="w-3.5 h-3.5" />
+                  <Ic className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
                 </button>
               ))}
             </div>
@@ -487,9 +525,9 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 md:gap-1.5 px-1.5 py-1 rounded-lg" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)', border: `1px solid ${tk.border}` }}>
                       <span className="text-[9px] md:text-[10px] font-bold text-slate-500 whitespace-nowrap">{isRTL ? "لوت الجميع:" : "All Lots:"}</span>
-                      <button onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">-</button>
-                      <input type="number" step="0.01" min="0.01" value={globalDirLot} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-10 md:w-12 text-center text-[10px] md:text-[11px] font-black font-mono bg-transparent outline-none" style={{ color: '#fbbf24' }} />
-                      <button onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer">+</button>
+                      <button type="button" disabled={tradeLocked} onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">-</button>
+                      <input type="number" step="0.01" min="0.01" value={globalDirLot} disabled={tradeLocked} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-10 md:w-12 text-center text-[10px] md:text-[11px] font-black font-mono bg-transparent outline-none disabled:opacity-40" style={{ color: '#fbbf24' }} />
+                      <button type="button" disabled={tradeLocked} onClick={(e) => { e.stopPropagation(); const newVal = Number((globalDirLot + 0.01).toFixed(2)); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                     </div>
                     {(() => {
                       const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
@@ -504,7 +542,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
 
                       return (
                         <>
-                          <button onClick={handleExecuteAll} disabled={isExecutingAll || isAllExecuted || !executeTradeFromChart || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
+                          <button type="button" onClick={handleExecuteAll} disabled={isExecutingAll || isAllExecuted || !executeTradeFromChart || !currency || tradeLocked} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: tk.isDark ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.1)", color: tk.isDark ? "#34d399" : "#059669", border: `1px solid ${tk.isDark ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.3)"}` }}>
                             {isExecutingAll ? (
                               <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full" />
                             ) : (
@@ -513,7 +551,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                             {isRTL ? "تنفيذ الكل" : "Execute All"}
                           </button>
                           <div className="flex flex-col items-center gap-1">
-                            <button onClick={handleAutoAll} disabled={isAutoExecutingAll || isAllAutoActive || !autoTradeSubscribe || !currency} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#a78bfa" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.2)"}` }}>
+                            <button type="button" onClick={handleAutoAll} disabled={isAutoExecutingAll || isAllAutoActive || !autoTradeSubscribe || !currency || tradeLocked} className="px-3 py-1.5 flex items-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: tk.isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)", color: tk.isDark ? "#a78bfa" : "#8b5cf6", border: `1px solid ${tk.isDark ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.2)"}` }}>
                               {isAutoExecutingAll ? (
                                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full" />
                               ) : (
@@ -608,9 +646,10 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                                 <input
                                   type="number" step="0.01" min="0.01" max="100"
                                   value={dirLotSizes[row.windowSize] ?? 0.01}
+                                  disabled={tradeLocked}
                                   onChange={(e) => setDirLotSizes(prev => ({ ...prev, [row.windowSize]: Math.max(0.01, parseFloat(e.target.value) || 0.01) }))}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="w-14 text-center text-[11px] font-black font-mono py-1 px-1 rounded-lg outline-none mx-auto block"
+                                  className="w-14 text-center text-[11px] font-black font-mono py-1 px-1 rounded-lg outline-none mx-auto block disabled:opacity-40"
                                   style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}
                                 />
                               </td>
@@ -625,7 +664,8 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                                     <div className="flex items-center justify-center gap-1.5">
                                       {/* Execute Button */}
                                       <button
-                                        disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency}
+                                        type="button"
+                                        disabled={isBlocked || dirExecuting.has(row.windowSize) || !executeTradeFromChart || !currency || tradeLocked}
                                         title={isBlocked ? '✅ صفقة منفذة بالفعل' : undefined}
                                         onClick={async (e) => {
                                           e.stopPropagation();
@@ -657,7 +697,8 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
 
                                         return (
                                           <button
-                                            disabled={isAutoTrading || isAutoBlocked || !autoTradeSubscribe || !currency}
+                                            type="button"
+                                            disabled={isAutoTrading || isAutoBlocked || !autoTradeSubscribe || !currency || tradeLocked}
                                             onClick={async (e) => {
                                               e.stopPropagation();
                                               if (!autoTradeSubscribe || !currency || isAutoBlocked) return;

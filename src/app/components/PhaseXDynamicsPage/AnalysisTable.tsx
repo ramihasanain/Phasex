@@ -45,28 +45,31 @@ export function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTa
     const tableRef = useRef<HTMLDivElement>(null);
     return (
         <Panel accent={accentGlow}>
-            <div className="p-4">
-                {/* Table Header */}
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <motion.span className="text-lg" animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity }}>
+            <div className="min-w-0 px-3 sm:px-5 lg:px-8 py-4 sm:py-5 lg:py-6">
+                {/* Table toolbar — keep title, LIVE, and row count visible on narrow viewports */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3 sm:gap-y-2 mb-3 min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                        <motion.span className="text-base sm:text-lg shrink-0 flex items-center justify-center" animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 3, repeat: Infinity }}>
                             {analysisTabIcons[tab]}
                         </motion.span>
-                        <span className="text-[14px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">
+                        <span
+                            className="text-[10px] sm:text-[11px] md:text-[13px] lg:text-[14px] font-black tracking-wide sm:tracking-wider uppercase min-w-0 leading-tight"
+                            style={{ color: tk.textPrimary }}
+                            dir="auto">
                             {tvTab(tab)}
                         </span>
                         {(displayRows.length > 0) && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1.5" style={{ background: "rgba(0,229,160,0.1)", color: "#00e5a0", border: "1px solid rgba(0,229,160,0.2)" }}>
-                                <motion.div className="w-1.5 h-1.5 rounded-full bg-[#00e5a0]"
+                            <span
+                                className="text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full uppercase flex items-center gap-1 sm:gap-1.5 shrink-0"
+                                style={{ background: "rgba(0,229,160,0.1)", color: "#00e5a0", border: "1px solid rgba(0,229,160,0.2)" }}>
+                                <motion.div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#00e5a0]"
                                     animate={{ opacity: [0.3, 1, 0.3], boxShadow: ["0 0 0 rgba(0,229,160,0)", "0 0 8px rgba(0,229,160,0.8)", "0 0 0 rgba(0,229,160,0)"] }}
                                     transition={{ duration: 1.5, repeat: Infinity }} />
                                 LIVE
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center gap-3">
-
-
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0 justify-start sm:justify-end">
                         <div className="flex gap-1">
                             {[0, 1, 2].map(i => (
                                 <motion.div key={i} className="w-1.5 h-1.5 rounded-full"
@@ -75,30 +78,30 @@ export function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTa
                                     transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.25 }} />
                             ))}
                         </div>
-                        <span className="text-[11px] font-mono text-gray-600">
+                        <span className="text-[9px] sm:text-[11px] font-mono tabular-nums" style={{ color: tk.textMuted }}>
                             {displayRows.length} rows × {displayTfCols.length} tf
                         </span>
                     </div>
                 </div>
                 {/* Scrollable Table */}
-                <div ref={tableRef} className="rounded-xl" style={{ border: `1px solid ${borderC}` }}>
-                    <table className="w-full border-collapse">
+                <div ref={tableRef} className="overflow-x-auto overflow-y-visible w-full min-w-0 rounded-xl custom-scrollbar max-[800px]:[&_th]:text-[8px] max-[800px]:[&_td]:text-[9px] max-[800px]:[&_th]:py-1 max-[800px]:[&_th]:px-1 max-[800px]:[&_td]:py-0.5 max-[800px]:[&_td]:px-1" style={{ border: `1px solid ${borderC}`, WebkitOverflowScrolling: "touch" }}>
+                    <table className="w-full min-w-max border-collapse" dir={isRTL ? "rtl" : "ltr"}>
                         <thead className="sticky top-0 z-10">
                             <tr style={{ background: tableBg }}>
-                                <th className="text-left text-[11px] font-bold py-2 px-3 border-r border-b sticky left-0 z-20"
+                                <th className="text-start text-[10px] sm:text-[11px] font-bold py-2 px-2 sm:px-3 border-r border-b sticky start-0 z-20"
                                     style={{ background: tableBg, borderColor: borderC, minWidth: "78px", color: tk.textMuted }}>
                                     {data.paramLabel}
                                 </th>
                                 {displayTfCols.map(tf => (
-                                    <th key={tf} className="text-center text-[10px] font-bold py-2 px-1 border-r border-b tracking-wider"
-                                        style={{ borderColor: borderC, minWidth: "52px", color: tk.textDim }}>
+                                    <th key={tf} className="text-center text-[9px] sm:text-[10px] font-bold py-2 px-0.5 sm:px-1 border-r border-b tracking-wider whitespace-nowrap"
+                                        style={{ borderColor: borderC, minWidth: "48px", color: tk.textDim }}>
                                         {tf}
                                     </th>
                                 ))}
-                                <th className="text-center text-[10px] font-bold py-2 px-2 border-r border-b tracking-wider"
-                                    style={{ borderColor: borderC, minWidth: "55px", color: d ? '#fbbf24' : '#d97706' }}>{t.total}</th>
-                                <th className="text-center text-[10px] font-bold py-2 px-2 border-b tracking-wider"
-                                    style={{ borderColor: borderC, minWidth: "110px", color: d ? '#22d3ee' : '#0891b2' }}>{t.classification}</th>
+                                <th className="text-center text-[9px] sm:text-[10px] font-bold py-2 px-1.5 sm:px-2 border-r border-b tracking-wider whitespace-nowrap"
+                                    style={{ borderColor: borderC, minWidth: "52px", color: d ? '#fbbf24' : '#d97706' }}>{t.total}</th>
+                                <th className="text-center text-[9px] sm:text-[10px] font-bold py-2 px-1.5 sm:px-2 border-b tracking-wider max-w-[7.5rem] sm:max-w-none whitespace-normal sm:whitespace-nowrap leading-tight"
+                                    style={{ borderColor: borderC, minWidth: "76px", color: d ? '#22d3ee' : '#0891b2' }}>{t.classification}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -114,7 +117,7 @@ export function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTa
                                         scale: 1.005,
                                         x: 3,
                                     }}>
-                                    <td className="text-[11px] font-semibold py-[5px] px-3 border-r border-b sticky left-0"
+                                    <td className="text-[10px] sm:text-[11px] font-semibold py-[5px] px-2 sm:px-3 border-r border-b sticky start-0"
                                         style={{ background: tableBg, borderColor: cellBorderC, color: tk.textMuted }}>
                                         {row.param}
                                     </td>
@@ -133,7 +136,7 @@ export function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTa
                             ))}
                             {/* Total Row */}
                             <tr style={{ background: d ? 'rgba(255,200,0,0.04)' : 'rgba(217,119,6,0.03)' }}>
-                                <td className="text-[11px] font-black py-2 px-3 border-r border-b sticky left-0"
+                                <td className="text-[10px] sm:text-[11px] font-black py-2 px-2 sm:px-3 border-r border-b sticky start-0"
                                     style={{ background: tableBg, borderColor: borderC, color: d ? '#fbbf24' : '#d97706' }}>
                                     {t.total}
                                 </td>
@@ -154,7 +157,7 @@ export function AnalysisTable({ tab, symbol, isRTL, sources }: { tab: AnalysisTa
                             </tr>
                             {/* Classification Row */}
                             <tr style={{ background: d ? 'rgba(0,200,255,0.03)' : 'rgba(8,145,178,0.03)' }}>
-                                <td className="text-[10px] font-bold py-2 px-3 border-r sticky left-0"
+                                <td className="text-[9px] sm:text-[10px] font-bold py-2 px-2 sm:px-3 border-r sticky start-0"
                                     style={{ background: tableBg, borderColor: borderC, color: d ? '#22d3ee' : '#0891b2' }}>
                                     {t.classification}
                                 </td>

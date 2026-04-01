@@ -76,15 +76,16 @@ export function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; 
             {/* ═══ Summary Cards Above Tables ═══ */}
             <div className="grid grid-cols-12 gap-4">
                 {/* ALL Summary Card */}
-                <div className="col-span-8">
+                <div className="col-span-12 lg:col-span-8">
                     <Panel accent={`${accentG}0.06)`}>
                         <div className="p-5">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2.5">
-                                    <motion.span className="text-xl" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
-                                    <span className="text-[16px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">{globalT("allTxt")}</span>
+                            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                                <div className="flex items-center justify-center sm:justify-start gap-2.5 min-w-0">
+                                    <span className="text-xl leading-none hidden max-[850px]:flex items-center justify-center shrink-0" aria-hidden>📊</span>
+                                    <motion.span className="text-xl max-[850px]:hidden inline-block" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
+                                    <span className="text-[16px] font-black tracking-wider uppercase max-[850px]:sr-only" style={{ color: tk.textPrimary }} dir="auto">{globalT("allTxt")}</span>
                                 </div>
-                                <span className="text-[10px] tracking-widest uppercase" style={{ color: tk.textDim }}>{globalT("classificationSummary")}</span>
+                                <span className="text-[10px] tracking-widest uppercase max-[850px]:sr-only" style={{ color: tk.textDim }}>{globalT("classificationSummary")}</span>
                             </div>
                             <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${accentG}0.1)` }}>
                                 <table className="w-full border-collapse">
@@ -123,7 +124,7 @@ export function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; 
                     </Panel>
                 </div>
                 {/* Confidence + Global Score Card */}
-                <div className="col-span-4 space-y-4">
+                <div className="col-span-12 lg:col-span-4 space-y-4">
                     <Panel accent={`${accentG}0.08)`}>
                         <div className="p-5 text-center">
                             <div className="text-[10px] text-gray-600 tracking-[0.25em] uppercase font-semibold mb-1">{globalT("globalScore")}</div>
@@ -148,9 +149,10 @@ export function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; 
 
                     <Panel accent={`${accentG}0.04)`}>
                 <div className="p-5">
-                    <div className="flex items-center gap-2.5 mb-4">
-                        <motion.span className="text-xl" animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 3, repeat: Infinity }}> </motion.span>
-                        <span className="text-[15px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">
+                    <div className="flex items-center justify-center sm:justify-start gap-2.5 mb-4">
+                        <span className="text-xl leading-none hidden max-[850px]:flex items-center justify-center shrink-0" aria-hidden>📑</span>
+                        <motion.span className="text-xl max-[850px]:hidden inline-block" animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 3, repeat: Infinity }}> </motion.span>
+                        <span className="text-[15px] font-black tracking-wider uppercase max-[850px]:sr-only" style={{ color: tk.textPrimary }} dir="auto">
                             {globalT("indicatorsByTeam")}
                         </span>
                     </div>
@@ -209,9 +211,10 @@ export function DynamicLayerTable({ symbol, isRTL, sources }: { symbol: string; 
 
                     <Panel accent={`${accentG}0.04)`}>
                 <div className="p-5">
-                    <div className="flex items-center gap-2.5 mb-4">
-                        <motion.span className="text-xl" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
-                        <span className="text-[15px] font-black tracking-wider uppercase" style={{ color: tk.textPrimary }} dir="auto">
+                    <div className="flex items-center justify-center sm:justify-start gap-2.5 mb-4">
+                        <span className="text-xl leading-none hidden max-[850px]:flex items-center justify-center shrink-0" aria-hidden>📈</span>
+                        <motion.span className="text-xl max-[850px]:hidden inline-block" animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2, repeat: Infinity }}> </motion.span>
+                        <span className="text-[15px] font-black tracking-wider uppercase max-[850px]:sr-only" style={{ color: tk.textPrimary }} dir="auto">
                             {globalT("teamsByIndicator")}
                         </span>
                     </div>
