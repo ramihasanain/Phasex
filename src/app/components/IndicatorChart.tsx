@@ -954,7 +954,7 @@ export function IndicatorChart({
 
     for (const row of directionsData.rows) {
       if (dirExecuting.has(row.windowSize)) continue;
-      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+      const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
       const alreadyExecuted = executedComments.has(chartComment);
       if (hasPos || alreadyExecuted) continue;
@@ -1032,7 +1032,7 @@ export function IndicatorChart({
     for (const row of directionsData.rows) {
       if (dirExecuting.has(-row.windowSize)) continue;
 
-      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+      const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
       const isAutoActive = autoTrades?.some(at => at.comment === chartComment);
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
 
@@ -1570,12 +1570,12 @@ export function IndicatorChart({
                     </div>
                     {(() => {
                       const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
-                        const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                        const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                         return executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
                       });
 
                       const isAllAutoActive = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
-                        const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                        const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                         return autoTrades?.some(at => at.comment === chartComment) || executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
                       });
 
@@ -1693,7 +1693,7 @@ export function IndicatorChart({
                               </td>
                               <td className="p-2 text-center">
                                 {(() => {
-                                  const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                  const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                   const alreadyExecuted = executedComments.has(chartComment);
                                   const isBlocked = hasPos || alreadyExecuted;
@@ -2099,7 +2099,7 @@ export function IndicatorChart({
                           </div>
                           {(() => {
                             const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
-                              const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                              const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                               return executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
                             });
 
@@ -2201,7 +2201,7 @@ export function IndicatorChart({
                                       </td>
                                       <td className="p-3 text-center whitespace-nowrap">
                                         {(() => {
-                                          const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                          const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                                           const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                           const alreadyExecuted = executedComments.has(chartComment);
                                           const isBlocked = hasPos || alreadyExecuted;
