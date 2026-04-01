@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 export interface RegisterPageProps {
   onRegister: () => void;
   onBackToLogin: () => void;
+  onBackToHome: () => void;
 }
 
 export interface RegisterSubscriptionPlanRow {

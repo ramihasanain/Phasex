@@ -88,7 +88,7 @@ export function LandingHero({ t, onGetStarted }: LandingHeroProps) {
             animate={{ textShadow: [`0 0 30px ${accentG}0.2)`, `0 0 60px ${accentG}0.35)`, `0 0 30px ${accentG}0.2)`] }}
             transition={{ duration: 3, repeat: Infinity }}
           >
-            <span style={{ color: accent }}>PHASE X AI</span>
+            <span style={{ color: accent }}>PHASE <span style={{ color: "#ff0000" }}>X</span> AI</span>
           </motion.h1>
 
           <h2 className="text-xl md:text-4xl mb-8 text-gray-500 font-light">{t("theMarketRewritten")}</h2>

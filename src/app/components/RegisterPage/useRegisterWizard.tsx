@@ -19,7 +19,7 @@ import type { RegisterPageProps } from "./types";
 import { LANGUAGE_OPTIONS } from "./registerLanguageOptions";
 import { mapPlansToRows } from "./registerPlanUtils";
 
-export function useRegisterWizard({ onRegister, onBackToLogin }: RegisterPageProps) {
+export function useRegisterWizard({ onRegister, onBackToLogin }: Pick<RegisterPageProps, "onRegister" | "onBackToLogin">) {
   const { language, t, setLanguageKey } = useLanguage();
   const { loginWithApi, submitReceipt, applyReferralCode, accessToken, setEmailVerified } = useAuth();
   const isRTL = language === "ar";

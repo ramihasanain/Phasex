@@ -26,7 +26,7 @@ export function BreakingNewsModalEventList({
 }: BreakingNewsModalEventListProps) {
   if (filteredEvents.length === 0) {
     return (
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+      <div className="p-4 space-y-3">
         <div className="text-center py-10 text-gray-500 flex flex-col items-center gap-3">
           <TextQuote className="w-10 h-10 opacity-20" />
           <p>{noNewsLabel}</p>
@@ -36,7 +36,7 @@ export function BreakingNewsModalEventList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+    <div className="p-4 space-y-3 pb-6">
       {filteredEvents.slice(0, visibleCount).map((event, idx) => {
         let impactColorStr = "text-gray-400";
         let impactBgStr = "bg-gray-500/10 border-gray-500/20";

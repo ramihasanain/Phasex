@@ -28,6 +28,7 @@ function LoginRoute() {
     <LoginPage
       onLogin={() => navigate("/dashboard")}
       onRegister={() => navigate("/register")}
+      onBackToHome={() => navigate("/")}
     />
   );
 }
@@ -40,6 +41,7 @@ function RegisterRoute() {
     <RegisterPage
       onRegister={() => navigate("/dashboard", { state: { fromRegister: true } })}
       onBackToLogin={() => navigate("/login")}
+      onBackToHome={() => navigate("/")}
     />
   );
 }

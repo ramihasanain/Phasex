@@ -34,7 +34,7 @@ export function SubscriptionPanelPlanCard({
         >
             {isCurrentPlan ? (
                 <div
-                    className="absolute top-0 left-5 px-3 py-1 rounded-b-xl text-[9px] uppercase tracking-widest font-black text-white shadow-lg"
+                    className="absolute top-0 right-5 px-3 py-1 rounded-b-xl text-[9px] uppercase tracking-widest font-black text-white shadow-lg"
                     style={{ backgroundColor: "#22c55e" }}
                 >
                     {t("currentPlan")}
@@ -50,17 +50,17 @@ export function SubscriptionPanelPlanCard({
                 </div>
             ) : null}
 
-            {(isSelected || isCurrentPlan) && (
+            {isSelected && !isCurrentPlan ? (
                 <div
                     className="absolute top-5 right-5 rounded-full p-0.5 z-20"
                     style={{
-                        color: isCurrentPlan ? "#22c55e" : plan.iconColor,
-                        background: isCurrentPlan ? "#22c55e20" : `${plan.iconColor}20`,
+                        color: plan.iconColor,
+                        background: `${plan.iconColor}20`,
                     }}
                 >
                     <Check size={16} strokeWidth={4} />
                 </div>
-            )}
+            ) : null}
 
             <div className="mb-3 mt-2">
                 <h4 className="text-base font-black text-white mb-0.5">{plan.name}</h4>

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { motion } from "motion/react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage, type Language } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useThemeTokens } from "../hooks/useThemeTokens";
@@ -15,7 +16,7 @@ import { useLoginAmbient } from "./LoginPage/useLoginAmbient";
 import type { LoginPageProps } from "./LoginPage/types";
 
 export type { LoginPageProps } from "./LoginPage/types";
-export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
+export function LoginPage({ onLogin, onRegister, onBackToHome }: LoginPageProps) {
     const { t, language, setLanguageKey } = useLanguage();
     const setLanguageFromMenu = useCallback(
         (code: string) => setLanguageKey(code as Language),
@@ -85,6 +86,25 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
             style={{ background: tk.isDark ? "#060a10" : "#dcdfe5", fontFamily: "'Inter', system-ui, sans-serif" }}
         >
             <LoginPageBackdrop accent={accent} accentG={accentG} particles={particles} streaks={streaks} />
+
+            <motion.button
+                type="button"
+                onClick={onBackToHome}
+                title={t("home")}
+                aria-label={t("home")}
+                initial={{ opacity: 0, x: isRTL ? 12 : -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="absolute top-6 start-6 z-50 flex items-center justify-center w-11 h-11 rounded-xl cursor-pointer backdrop-blur-md transition-colors"
+                style={{
+                    background: "rgba(14,20,33,0.7)",
+                    border: `1px solid ${accentG}0.3)`,
+                    color: "#fff",
+                }}
+            >
+                {isRTL ? <ArrowRight className="w-5 h-5" strokeWidth={2.5} /> : <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />}
+            </motion.button>
 
             <LoginPageLanguageMenu
                 accent={accent}

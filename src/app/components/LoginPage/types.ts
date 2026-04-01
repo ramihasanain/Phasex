@@ -1,6 +1,7 @@
 export interface LoginPageProps {
     onLogin: () => void;
     onRegister: () => void;
+    onBackToHome: () => void;
 }
 
 export interface LoginLanguageOption {

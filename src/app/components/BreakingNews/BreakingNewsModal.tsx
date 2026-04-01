@@ -72,6 +72,20 @@ export function BreakingNewsModal({
         setVisibleCount(20);
     }, [providerFilter, searchQuery]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const html = document.documentElement;
+        const body = document.body;
+        const prevHtml = html.style.overflow;
+        const prevBody = body.style.overflow;
+        html.style.overflow = "hidden";
+        body.style.overflow = "hidden";
+        return () => {
+            html.style.overflow = prevHtml;
+            body.style.overflow = prevBody;
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     return (
@@ -80,14 +94,17 @@ export function BreakingNewsModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-hidden"
+                onClick={onClose}
+                role="presentation"
             >
                 <motion.div
                     initial={{ scale: 0.95, y: 20 }}
                     animate={{ scale: 1, y: 0 }}
                     exit={{ scale: 0.95, y: 20 }}
-                    className="relative w-full max-w-5xl max-h-[85vh] flex flex-col bg-[#0b101a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                    className="relative w-full max-w-5xl max-h-[85vh] flex flex-col bg-[#0b101a] border border-white/10 rounded-2xl shadow-2xl overflow-y-auto overflow-x-hidden custom-scrollbar cursor-default"
                     dir={isRTL ? "rtl" : "ltr"}
+                    onClick={(e) => e.stopPropagation()}
                 >
                     <BreakingNewsModalHeader title={t("advancedNewsCenter")} subtitle={t("smartDetection")} onClose={onClose} />
 
