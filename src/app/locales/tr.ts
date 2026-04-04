@@ -312,6 +312,7 @@ export const tr = {
     subscriptionTitle: "PHASEX Abonelik Planları",
     subscriptionSubtitle: "Yapısal analiz seviyenize uygun planı seçin",
     currentPlan: "Mevcut Plan",
+    planDowngradeDisabled: "Aboneliğiniz aktifken daha düşük planlar seçilemez. Yükseltmek için daha yüksek bir plan seçin.",
     planActive: "Aktif",
     planPending: "Doğrulama bekleniyor",
     planNone: "Aktif plan yok",

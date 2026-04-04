@@ -320,6 +320,7 @@ export const ar = {
     subscriptionTitle: "خطط اشتراك PHASEX",
     subscriptionSubtitle: "اختر الخطة التي تناسب مستواك في التحليل البنيوي",
     currentPlan: "الخطة الحالية",
+    planDowngradeDisabled: "لا يمكن اختيار خطط أدنى أثناء نشاط اشتراكك. اختر خطة أعلى للترقية.",
     planActive: "نشط",
     planPending: "قيد التحقق",
     planNone: "لا توجد خطة نشطة",

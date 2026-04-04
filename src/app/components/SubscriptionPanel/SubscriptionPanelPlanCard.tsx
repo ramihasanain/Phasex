@@ -6,6 +6,7 @@ export function SubscriptionPanelPlanCard({
     plan,
     isSelected,
     isCurrentPlan,
+    downgradeBlocked,
     billingCycle,
     t,
     getPrice,
@@ -14,17 +15,25 @@ export function SubscriptionPanelPlanCard({
     plan: SubscriptionPlanRow;
     isSelected: boolean;
     isCurrentPlan: boolean;
+    downgradeBlocked?: boolean;
     billingCycle: "monthly" | "yearly";
     t: (key: string) => string;
     getPrice: (n: number) => number;
     setSelectedPlan: (id: string) => void;
 }) {
+    const blocked = !!downgradeBlocked;
+    const canSelect = !isCurrentPlan && !blocked;
+
     return (
         <motion.div
-            onClick={() => !isCurrentPlan && setSelectedPlan(plan.id)}
-            whileHover={{ y: isCurrentPlan ? 0 : -5 }}
+            role="button"
+            tabIndex={canSelect ? 0 : -1}
+            aria-disabled={!canSelect}
+            title={blocked ? t("planDowngradeDisabled") : undefined}
+            onClick={() => canSelect && setSelectedPlan(plan.id)}
+            whileHover={{ y: canSelect ? -5 : 0 }}
             className={`relative rounded-[24px] p-5 flex flex-col transition-all duration-300 ${
-                isSelected ? "shadow-2xl" : isCurrentPlan ? "opacity-80" : "cursor-pointer hover:bg-[#151a26]"
+                isSelected ? "shadow-2xl" : isCurrentPlan ? "opacity-80" : blocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-[#151a26]"
             }`}
             style={{
                 backgroundColor: isSelected || isCurrentPlan ? `${plan.iconColor}08` : "#10141d",

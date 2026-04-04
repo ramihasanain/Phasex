@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { SubscriptionPanelConfirmChangeStep } from "./SubscriptionPanel/SubscriptionPanelConfirmChangeStep";
 import { SubscriptionPanelPaymentStep } from "./SubscriptionPanel/SubscriptionPanelPaymentStep";
 import { SubscriptionPanelPendingStep } from "./SubscriptionPanel/SubscriptionPanelPendingStep";
@@ -10,6 +11,18 @@ export type { SubscriptionPanelProps } from "./SubscriptionPanel/types";
 
 export function SubscriptionPanel(props: SubscriptionPanelProps) {
     const p = useSubscriptionPanel(props);
+
+    useEffect(() => {
+        if (!props.isOpen) return;
+        const prevHtml = document.documentElement.style.overflow;
+        const prevBody = document.body.style.overflow;
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.documentElement.style.overflow = prevHtml;
+            document.body.style.overflow = prevBody;
+        };
+    }, [props.isOpen]);
 
     if (!props.isOpen) return null;
 

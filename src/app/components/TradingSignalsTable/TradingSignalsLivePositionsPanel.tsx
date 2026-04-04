@@ -95,7 +95,7 @@ export function TradingSignalsLivePositionsPanel({ m }: Props) {
             {showPositions && (
                 <div>
                     {mt5Account && (
-                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 px-4 pt-3 pb-2 border-b border-emerald-500/10">
+                        <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 px-4 pt-3 pb-2 border-b border-emerald-500/10">
                             {[
                                 { label: "Balance", value: `$${(mt5Account.balance || 0).toLocaleString()}`, color: "#10b981" },
                                 { label: "Equity", value: `$${(mt5Account.equity || 0).toLocaleString()}`, color: "#6366f1" },

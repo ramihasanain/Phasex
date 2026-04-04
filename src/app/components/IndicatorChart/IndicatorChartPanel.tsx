@@ -10,7 +10,7 @@ import type { IndicatorChartCtx } from "./useIndicatorChart";
 
 function isTradeTimeLockedNow() {
     const d = new Date();
-    return d.getMinutes() % 5 < 2;
+    return d.getMinutes() % 5 === 0;
 }
 
 export function NavBtn({ onClick, disabled, children, title }: { onClick: () => void; disabled?: boolean; children: React.ReactNode; title?: string }) {
@@ -62,7 +62,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
     const tradeLockedTitle = mt5TradeLocked
         ? (isRTL ? "يتطلب اتصال MT5" : "MT5 connection required")
         : timeTradeLocked
-          ? (isRTL ? "مغلق مؤقتاً (أول دقيقتين من كل 5 دقائق)" : "Temporarily locked (first 2 minutes of each 5-minute block)")
+          ? (isRTL ? "مغلق مؤقتاً (أول دقيقة من كل 5 دقائق)" : "Temporarily locked (first minute of each 5-minute block)")
           : undefined;
 
     const gridColor = tk.chartGrid;
@@ -501,10 +501,10 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
               <motion.div key="directions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
                 className="absolute inset-0 z-40 flex flex-col rounded-lg min-h-0 overflow-hidden"
                 style={{ background: tk.isDark ? 'rgba(15,23,42,0.95)' : tk.surface, backdropFilter: 'blur(12px)', border: `1px solid ${tk.border}` }}>
-                {/* Custom Header for Directions Table — stack on narrow viewports so controls stay visible ≤800px */}
-                <div className="px-2 py-2 max-[800px]:max-h-[45vh] max-[800px]:overflow-y-auto sm:px-4 sm:py-3 flex flex-col gap-3 max-[800px]:gap-2 min-[801px]:flex-row min-[801px]:items-center min-[801px]:justify-between min-[801px]:gap-3 shrink-0" style={{ background: tk.isDark ? 'rgba(15,23,42,0.6)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
-                  <div className="flex flex-col gap-2 min-[801px]:flex-row min-[801px]:flex-wrap min-[801px]:items-center min-[801px]:gap-2 md:gap-4 min-w-0">
-                    <span className="text-sm sm:text-base md:text-lg font-bold tracking-wide min-[801px]:tracking-widest leading-tight" style={{ color: tk.textPrimary }}>
+                {/* Custom Header for Directions Table — flex-col & full-width title below 1000px */}
+                <div className="px-2 py-2 max-[999px]:max-h-[45vh] max-[999px]:overflow-y-auto sm:px-4 sm:py-3 flex flex-col gap-3 max-[999px]:gap-2 min-[1000px]:flex-row min-[1000px]:items-center min-[1000px]:justify-between min-[1000px]:gap-3 shrink-0" style={{ background: tk.isDark ? 'rgba(15,23,42,0.6)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
+                  <div className="flex flex-col gap-2 w-full min-w-0 min-[1000px]:flex-row min-[1000px]:flex-wrap min-[1000px]:items-center min-[1000px]:gap-2 md:gap-4">
+                    <span className="w-full text-sm sm:text-base md:text-lg font-bold tracking-wide min-[1000px]:w-auto min-[1000px]:tracking-widest leading-tight" style={{ color: tk.textPrimary }}>
                       Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                     </span>
                     {directionsData && directionsData.rows && directionsData.rows.length > 0 && (() => {
@@ -533,8 +533,8 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                       );
                     })()}
                   </div>
-                  <div className="flex flex-col gap-2 w-full min-[801px]:w-auto min-[801px]:flex-row min-[801px]:flex-wrap min-[801px]:items-center min-[801px]:justify-end min-[801px]:gap-2 shrink-0">
-                    <div className="flex items-center gap-1 md:gap-1.5 px-1.5 py-1 rounded-lg w-full min-[801px]:w-auto justify-between min-[801px]:justify-start" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)', border: `1px solid ${tk.border}` }}>
+                  <div className="flex flex-col gap-2 w-full min-[1000px]:w-auto min-[1000px]:flex-row min-[1000px]:flex-wrap min-[1000px]:items-center min-[1000px]:justify-end min-[1000px]:gap-2 shrink-0">
+                    <div className="flex items-center gap-1 md:gap-1.5 px-1.5 py-1 rounded-lg w-full min-[1000px]:w-auto justify-between min-[1000px]:justify-start" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)', border: `1px solid ${tk.border}` }}>
                       <span className="text-[9px] md:text-[10px] font-bold text-slate-500 whitespace-nowrap">{isRTL ? "لوت الجميع:" : "All Lots:"}</span>
                       <button type="button" disabled={tradeLocked} onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">-</button>
                       <input type="number" step="0.01" min="0.01" value={globalDirLot} disabled={tradeLocked} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-10 md:w-12 text-center text-[10px] md:text-[11px] font-black font-mono bg-transparent outline-none disabled:opacity-40" style={{ color: '#fbbf24' }} />
@@ -542,12 +542,12 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                     </div>
                     {(() => {
                       const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
-                        const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                        const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                         return executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
                       });
 
                       const isAllAutoActive = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
-                        const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                        const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                         return autoTrades?.some(at => at.comment === chartComment) || executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
                       });
 
@@ -574,7 +574,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                         </>
                       );
                     })()}
-                    <button type="button" onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center justify-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer w-full min-[801px]:w-auto shrink-0" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
+                    <button type="button" onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center justify-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer w-full min-[1000px]:w-auto shrink-0" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
                       <BarChart3 className="w-3.5 h-3.5" />
                       {isRTL ? "العودة للشارت" : "Back to Chart"}
                     </button>
@@ -666,7 +666,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                               </td>
                               <td className="p-2 text-center">
                                 {(() => {
-                                  const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                  const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                                   const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                   const alreadyExecuted = executedComments.has(chartComment);
                                   const isBlocked = hasPos || alreadyExecuted;

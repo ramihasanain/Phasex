@@ -310,6 +310,7 @@ export const ru = {
     subscriptionTitle: "Планы подписки PHASEX",
     subscriptionSubtitle: "Выберите план, соответствующий вашему уровню структурного анализа",
     currentPlan: "Текущий план",
+    planDowngradeDisabled: "Нельзя выбрать план ниже текущего при активной подписке. Выберите более высокий план для апгрейда.",
     planActive: "Активен",
     planPending: "Ожидание проверки",
     planNone: "Нет активного плана",

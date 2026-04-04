@@ -13,7 +13,7 @@ import type { IndicatorChartCtx } from "./useIndicatorChart";
 
 function isTradeTimeLockedNow() {
     const d = new Date();
-    return d.getMinutes() % 5 < 2;
+    return d.getMinutes() % 5 === 0;
 }
 
 export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
@@ -519,7 +519,7 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                           </div>
                           {(() => {
                             const isAllExecuted = directionsData && directionsData.rows.length > 0 && directionsData.rows.every((row: any) => {
-                              const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                              const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                               return executedComments.has(chartComment) || mt5Positions?.some((p: any) => p.comment === chartComment);
                             });
 
@@ -622,7 +622,7 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                                       </td>
                                       <td className="p-3 text-center whitespace-nowrap">
                                         {(() => {
-                                          const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? 'BUY' : 'SELL'}`.slice(0, 31);
+                                          const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);
                                           const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
                                           const alreadyExecuted = executedComments.has(chartComment);
                                           const isBlocked = hasPos || alreadyExecuted;

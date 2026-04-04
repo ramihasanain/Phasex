@@ -317,7 +317,7 @@ export function useIndicatorChart(props: IndicatorChartProps) {
     const tradeWindowSizes: number[] = [];
     for (const row of directionsData.rows) {
       if (dirExecuting.has(row.windowSize)) continue;
-      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? "BUY" : "SELL"}`.slice(0, 31);
+      const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);;
       const hasPos = mt5Positions?.some((p: any) => p.comment === chartComment) || false;
       if (hasPos || executedComments.has(chartComment)) continue;
       trades.push({ symbol: currency.symbol, action: row.isBuy ? "BUY" : "SELL", volume: dirLotSizes[row.windowSize] ?? 0.01, comment: chartComment });
@@ -352,7 +352,7 @@ export function useIndicatorChart(props: IndicatorChartProps) {
     const tradeWindowSizes: number[] = [];
     for (const row of directionsData.rows) {
       if (dirExecuting.has(-row.windowSize)) continue;
-      const chartComment = `PX-Chart-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}-${row.isBuy ? "BUY" : "SELL"}`.slice(0, 31);
+      const chartComment = `PXV2-${currency.symbol}-${mainTF}-${subTF}-W${row.windowSize}`.replace(/\s/g, '').slice(0, 31);;
       if (autoTrades?.some((at) => at.comment === chartComment)) continue;
       trades.push({ symbol: currency.symbol, main_tf: mainTF, sub_tf: subTF, window_size: row.windowSize, direction: row.isBuy ? "BUY" : "SELL", lot_size: dirLotSizes[row.windowSize] ?? 0.01, comment: chartComment });
       tradeWindowSizes.push(-row.windowSize);

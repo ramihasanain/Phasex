@@ -320,6 +320,7 @@ export const es = {
     subscriptionTitle: "Planes de suscripción PHASEX",
     subscriptionSubtitle: "Elige el plan que se adapta a tu nivel de análisis estructural",
     currentPlan: "Plan Actual",
+    planDowngradeDisabled: "No puedes elegir planes inferiores con la suscripción activa. Elige un plan superior para mejorar.",
     planActive: "Activo",
     planPending: "Verificación pendiente",
     planNone: "Sin plan activo",

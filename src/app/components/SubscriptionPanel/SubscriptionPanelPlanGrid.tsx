@@ -1,4 +1,5 @@
 import { SubscriptionPanelPlanCard } from "./SubscriptionPanelPlanCard";
+import { SUBSCRIPTION_PLAN_TIERS } from "./subscriptionPanelConstants";
 import type { SubscriptionPanelViewModel } from "./useSubscriptionPanel";
 
 export function SubscriptionPanelPlanGrid({ p }: { p: SubscriptionPanelViewModel }) {
@@ -12,7 +13,10 @@ export function SubscriptionPanelPlanGrid({ p }: { p: SubscriptionPanelViewModel
         billingCycle,
         setBillingCycle,
         getPrice,
+        hasActiveSub,
     } = p;
+
+    const currentTier = SUBSCRIPTION_PLAN_TIERS[subscriptionPlan] ?? 0;
 
     return (
         <>
@@ -55,12 +59,15 @@ export function SubscriptionPanelPlanGrid({ p }: { p: SubscriptionPanelViewModel
                 {subscriptionPlans.map((plan) => {
                     const isSelected = selectedPlan === plan.id;
                     const isCurrentPlan = subscriptionPlan === plan.id && subscriptionStatus === "active";
+                    const planTier = SUBSCRIPTION_PLAN_TIERS[plan.id] ?? 0;
+                    const downgradeBlocked = hasActiveSub && planTier < currentTier;
                     return (
                         <SubscriptionPanelPlanCard
                             key={plan.id}
                             plan={plan}
                             isSelected={isSelected}
                             isCurrentPlan={isCurrentPlan}
+                            downgradeBlocked={downgradeBlocked}
                             billingCycle={billingCycle}
                             t={t}
                             getPrice={getPrice}

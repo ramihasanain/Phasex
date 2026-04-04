@@ -25,10 +25,18 @@ const translations = {
   es,
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+/** Used when no provider is mounted (should not happen in production). Stops crashes during Vite HMR when the context module reloads and briefly desyncs from the tree. */
+const defaultLanguageContext: LanguageContextType = {
+  language: "en",
+  toggleLanguage: () => {},
+  setLanguageKey: () => {},
+  t: (key: string) => (en as Record<string, string>)[key] || key,
+};
+
+const LanguageContext = createContext<LanguageContextType>(defaultLanguageContext);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("ar");
+  const [language, setLanguage] = useState<Language>("en");
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("language") as Language;
@@ -63,9 +71,5 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
-  }
-  return context;
+  return useContext(LanguageContext);
 }
