@@ -167,8 +167,7 @@ export function TradingDashboardCenter({ ctx }: { ctx: TradingDashboardCtx }) {
 
           {/* Chart */}
           <div
-            className="flex-shrink-0 relative px-0.5 sm:px-1 md:px-0"
-            style={{ minHeight: "420px", height: "calc(100vh - 280px)" }}
+            className="flex-shrink-0 relative px-0.5 sm:px-1 md:px-0 md:h-[calc(100vh-280px)] min-h-[420px]"
           >
             {/* Lock Overlay */}
             <TradingDashboardLockOverlay ctx={ctx} />

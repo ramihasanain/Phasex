@@ -358,16 +358,24 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
         </div>
 
         {/* ─── Timeframe + Navigation Bar ─── */}
-        <div className="px-4 py-2 flex items-center justify-between relative z-10" style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.06)' : tk.border}` }}>
+        <div
+          className="px-4 py-2 flex flex-col gap-3 max-[1099px]:items-stretch min-[1100px]:flex-row min-[1100px]:items-center min-[1100px]:justify-between min-[1100px]:gap-0 relative z-10 min-w-0"
+          style={{ borderBottom: `1px solid ${tk.isDark ? 'rgba(99,102,241,0.06)' : tk.border}` }}
+        >
           {/* Timeframes */}
           {indicator.id === "phase" ? (
-            <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={handleMainTFChange} onSubTFChange={handleSubTFChange} color={indicator.color} isRTL={isRTL} compact />
+            <div className="min-w-0 w-full max-[1099px]:order-1 min-[1100px]:order-none min-[1100px]:w-auto min-[1100px]:shrink">
+              <PhaseTimeframeSelector mainTF={mainTF} subTF={subTF} onMainTFChange={handleMainTFChange} onSubTFChange={handleSubTFChange} color={indicator.color} isRTL={isRTL} compact />
+            </div>
           ) : (
-            <div className="flex items-center gap-0.5 overflow-x-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+            <div
+              className="flex flex-wrap items-center gap-0.5 min-w-0 w-full max-[1099px]:order-1 min-[1100px]:order-none min-[1100px]:flex-nowrap min-[1100px]:overflow-x-auto min-[1100px]:w-auto min-[1100px]:min-w-0 min-[1100px]:flex-1"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
               <Clock className="w-3.5 h-3.5 mr-1 flex-shrink-0" style={{ color: "#475569" }} />
               {(indicator.id !== "phase" ? [5, 10, 15, 30, 60, 120, 240, 360, 480, 720, 1440] : [5, 15, 30, 60]).map((tf) => (
-                <button key={tf} onClick={() => onTimeframeChange(tf)}
-                  className="px-1.5 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-all flex-shrink-0"
+                <button key={tf} type="button" onClick={() => onTimeframeChange(tf)}
+                  className="px-1.5 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-all shrink-0"
                   style={{
                     background: timeframe === tf ? `${indicator.color} 15` : "transparent",
                     border: timeframe === tf ? `1px solid ${indicator.color} 30` : "1px solid transparent",
@@ -380,7 +388,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
           )}
 
           {/* Navigation + Zoom Controls */}
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1 min-w-0 w-full max-[1099px]:order-2 max-[1099px]:justify-start min-[1100px]:order-none min-[1100px]:w-auto min-[1100px]:justify-end min-[1100px]:flex-nowrap min-[1100px]:shrink-0">
             {/* Custom Candle Limit Filter */}
             <CandleLimitSelector
               value={candleLimit}

@@ -78,10 +78,10 @@ export function PhaseTimeframeSelector({
   const subs = phaseMainTFs[mainTF] || [];
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2 max-[1099px]:flex-wrap max-[1099px]:gap-x-2 max-[1099px]:gap-y-2 min-[1100px]:flex-nowrap">
       <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#475569" }} />
 
-      <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+      <div className="flex min-w-0 items-center gap-0.5 p-0.5 rounded-lg max-[1099px]:max-w-full max-[1099px]:flex-wrap" style={{ background: "rgba(255,255,255,0.02)" }}>
         {mainTFKeys.map((tf) => {
           const active = mainTF === tf;
           return (
@@ -102,9 +102,9 @@ export function PhaseTimeframeSelector({
         })}
       </div>
 
-      <div className="w-px h-5" style={{ background: "rgba(255,255,255,0.08)" }} />
+      <div className="h-5 w-px max-[1099px]:hidden" style={{ background: "rgba(255,255,255,0.08)" }} />
 
-      <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+      <div className="flex min-w-0 items-center gap-0.5 p-0.5 rounded-lg max-[1099px]:max-w-full max-[1099px]:flex-wrap" style={{ background: "rgba(255,255,255,0.02)" }}>
         <AnimatePresence mode="popLayout">
           {subs.map((tf) => {
             const active = subTF === tf;
@@ -132,7 +132,7 @@ export function PhaseTimeframeSelector({
       </div>
 
       <span
-        className={`${compact ? "text-[9px]" : "text-[10px]"} font - mono px - 2 py - 0.5 rounded`}
+        className={`${compact ? "text-[9px]" : "text-[10px]"} font - mono px - 2 py - 0.5 rounded max-[1099px]:w-full max-[1099px]:text-center min-[1100px]:w-auto`}
         style={{ color: "#64748b", background: "rgba(255,255,255,0.02)" }}
       >
         {mainTF} → {subTF}
