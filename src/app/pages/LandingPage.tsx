@@ -24,7 +24,8 @@ import { useLandingSpaceParticles } from "../components/LandingPage/useLandingSp
 
 interface LandingPageProps {
   onGetStarted: () => void;
-  onOpenDynamics: () => void;
+  /** Optional symbol/tab forwarded to Phase X Dynamics (e.g. from deep links later). */
+  onOpenDynamics: (symbol?: string, tab?: string) => void;
 }
 
 export function LandingPage({ onGetStarted, onOpenDynamics }: LandingPageProps) {

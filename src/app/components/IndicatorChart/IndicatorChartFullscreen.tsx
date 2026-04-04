@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { Activity, Clock, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, Table, BarChart3, X, ListOrdered, Edit3, Minimize2 } from "lucide-react";
+import { Activity, Clock, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, Table, BarChart3, X, ListOrdered, Edit3, Minimize2, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { TZCandlestickChart } from "../TZCandlestickChart.tsx";
 import { DrawingToolbar } from "../DrawingToolbar";
@@ -8,6 +8,7 @@ import { DrawingCanvas } from "../DrawingCanvas";
 import { PhaseTimeframeSelector, CandleLimitSelector, AnimatedStat } from "./indicatorChartTypesAndControls";
 import { IndicatorChartDirections } from "./IndicatorChartDirections";
 import { NavBtn } from "./IndicatorChartPanel";
+import { decisionStyle, decisionLabelAr } from "./decisionEngine";
 import type { IndicatorChartCtx } from "./useIndicatorChart";
 
 function isTradeTimeLockedNow() {
@@ -17,7 +18,7 @@ function isTradeTimeLockedNow() {
 
 export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
     const {
-        currency, indicator, tk, isRTL, t,
+        currency, indicator, tk, isRTL, t, decisionLabel, onOpenDynamics,
         isExpanded, setIsExpanded, showTable, setShowTable,
         showDirections, setShowDirections,
         showInfoPopup, setShowInfoPopup,
@@ -215,9 +216,41 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                     style={{ background: `${indicator.color} 15`, border: `1px solid ${indicator.color} 20` }}>
                     <Activity className="w-5 h-5" style={{ color: indicator.color }} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="text-lg font-bold" style={{ color: tk.textPrimary }}>{isRTL ? indicator.name : indicator.nameEn}</h2>
-                    <p className="text-xs" style={{ color: tk.textMuted }}>{isRTL ? currency.name : currency.nameEn} • {currency.symbol}</p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <span className="text-xs truncate" style={{ color: tk.textMuted }}>{isRTL ? currency.name : currency.nameEn}</span>
+                      <span className="text-xs" style={{ color: tk.textMuted }}>•</span>
+                      <motion.button
+                        type="button"
+                        onClick={() => onOpenDynamics?.(currency.symbol, "Decision Engine")}
+                        className="text-xs font-black uppercase tracking-wide cursor-pointer hover:opacity-80 transition-opacity truncate"
+                        style={{ color: tk.textPrimary }}
+                        title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
+                      >
+                        {currency.symbol}
+                      </motion.button>
+                      {decisionLabel && (() => {
+                        const ds = decisionStyle(decisionLabel);
+                        return (
+                          <motion.button
+                            type="button"
+                            onClick={() => onOpenDynamics?.(currency.symbol, "Decision Engine")}
+                            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wide uppercase whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+                            style={{
+                              color: ds.color,
+                              background: ds.bg,
+                              border: `1px solid ${ds.border}`,
+                              boxShadow: ds.glow,
+                            }}
+                            title={isRTL ? "فتح جدول ديسيشن إنجن" : "Open Decision Engine Table"}
+                          >
+                            <Zap className="w-2.5 h-2.5 shrink-0" />
+                            {isRTL ? decisionLabelAr[decisionLabel] || decisionLabel : decisionLabel}
+                          </motion.button>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

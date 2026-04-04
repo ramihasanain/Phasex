@@ -15,7 +15,9 @@ function LandingRoute() {
   return (
     <LandingPage
       onGetStarted={() => navigate("/login")}
-      onOpenDynamics={() => navigate("/phasex-dynamics", { state: { from: "landing" } })}
+      onOpenDynamics={(symbol?: string, tab?: string) =>
+        navigate("/phasex-dynamics", { state: { from: "landing", symbol, tab } })
+      }
     />
   );
 }

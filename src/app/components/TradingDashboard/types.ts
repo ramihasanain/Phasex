@@ -1,6 +1,6 @@
 export interface TradingDashboardProps {
     onLogout: () => void;
-    onOpenDynamics: () => void;
+    onOpenDynamics: (symbol?: string, tab?: string) => void;
 }
 
 export interface PhaseCandle {

@@ -104,7 +104,8 @@ export function TradingDashboardHeader({ ctx }: { ctx: TradingDashboardCtx }) {
           <div className="hidden md:flex items-center gap-1 xl:gap-2 flex-wrap justify-end min-w-0">
             {/* Structure Dynamics Link */}
             <motion.button
-              onClick={onOpenDynamics}
+              type="button"
+              onClick={() => onOpenDynamics()}
               whileHover={{
                 scale: 1.04,
                 boxShadow: tk.isDark ? "0 4px 15px rgba(99,102,241,0.15)" : "0 4px 15px rgba(79,70,229,0.2)",

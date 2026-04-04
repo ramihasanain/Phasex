@@ -22,7 +22,7 @@ export const MARKET_LIST_NARROW_MAX_PX = 800;
 
 export function useTradingDashboard(
     onLogout: () => void,
-    onOpenDynamics: () => void,
+    onOpenDynamics: (symbol?: string, tab?: string) => void,
 ) {
     const [chartLayout, setChartLayout] = useState<"single" | "split" | "quad">("single");
     const { theme, setTheme } = useTheme();

@@ -43,7 +43,7 @@ export interface IndicatorChartProps {
   autoTradeWorker?: any;
   autoTradeSubscribe?: (trades: Array<{ symbol: string; main_tf: string; sub_tf: string; window_size: number; direction: string; lot_size: number; sl?: number; comment: string }>) => Promise<{ subscribed: any[]; errors: any[] }>;
   autoTradeUnsubscribe?: (comments: string[]) => Promise<void>;
-  onOpenDynamics?: (symbol: string, tab: string) => void;
+  onOpenDynamics?: (symbol?: string, tab?: string) => void;
 }
 
 export const phaseMainTFs: Record<string, string[]> = {
