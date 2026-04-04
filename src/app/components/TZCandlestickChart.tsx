@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useThemeTokens } from "../hooks/useThemeTokens";
 import { TZCandlestickCandles } from "./TZCandlestickChart/TZCandlestickCandles";
 import { TZCandlestickDefs } from "./TZCandlestickChart/TZCandlestickDefs";
@@ -12,7 +12,15 @@ export type { TZCandlestickChartProps } from "./TZCandlestickChart/types";
 
 export const TZCandlestickChart = React.memo(function TZCandlestickChart(props: TZCandlestickChartProps) {
     const tk = useThemeTokens();
-    const m = useTZCandlestickChartModel({ ...props, tk });
+    const [hideXAxisLabels, setHideXAxisLabels] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia("(max-width: 799px)");
+        const sync = () => setHideXAxisLabels(mq.matches);
+        sync();
+        mq.addEventListener("change", sync);
+        return () => mq.removeEventListener("change", sync);
+    }, []);
+    const m = useTZCandlestickChartModel({ ...props, tk, hideXAxisLabels });
 
     return (
         <div ref={m.containerRef} className="w-full h-full relative" style={{ direction: "ltr" }}>

@@ -11,8 +11,9 @@ export function useTZCandlestickChartModel({
     livePrice,
     priceOffset = 0,
     showRightPadding = false,
+    hideXAxisLabels = false,
     tk,
-}: TZCandlestickChartProps & { tk: ThemeTokens }) {
+}: TZCandlestickChartProps & { tk: ThemeTokens; hideXAxisLabels?: boolean }) {
     const svgRef = useRef<SVGSVGElement>(null);
     const [tooltip, setTooltip] = useState<{ x: number; y: number; data: CandlestickRow } | null>(null);
     const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
@@ -163,6 +164,7 @@ export function useTZCandlestickChartModel({
         containerRef,
         tooltip,
         hoveredIndex,
+        hideXAxisLabels,
         margin,
         chartHeight,
         chartWidth,

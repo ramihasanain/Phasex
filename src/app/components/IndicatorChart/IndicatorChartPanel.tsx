@@ -346,13 +346,16 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
               {[
                 { icon: Table, active: showTable && !showDirections, onClick: () => { setShowTable(true); setShowDirections(false); }, title: "Table" },
                 { icon: BarChart3, active: !showTable && !showDirections, onClick: () => { setShowTable(false); setShowDirections(false); }, title: "Chart" },
-                { icon: Maximize2, active: false, onClick: () => setIsExpanded(true), title: isRTL ? "تكبير" : "Fullscreen" },
               ].map(({ icon: Ic, active, onClick, title }) => (
                 <button key={title} type="button" onClick={onClick} title={title} className="w-6 h-6 max-[1000px]:w-[1.35rem] max-[1000px]:h-[1.35rem] lg:w-7 lg:h-7 rounded-md flex items-center justify-center cursor-pointer transition-all shrink-0"
                   style={{ background: active ? "rgba(255,255,255,0.06)" : "transparent", color: active ? "#e2e8f0" : "#475569" }}>
                   <Ic className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
                 </button>
               ))}
+              <button type="button" onClick={() => setIsExpanded(true)} title={isRTL ? "تكبير" : "Fullscreen"} className="hidden min-[801px]:flex w-6 h-6 max-[1000px]:w-[1.35rem] max-[1000px]:h-[1.35rem] lg:w-7 lg:h-7 rounded-md items-center justify-center cursor-pointer transition-all shrink-0"
+                style={{ background: "transparent", color: "#475569" }}>
+                <Maximize2 className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
+              </button>
             </div>
           </div>
         </div>
@@ -421,7 +424,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
         </div>
 
         {/* ─── Chart Area (NO drawing tools in small view) ─── */}
-        <div ref={chartRef} className="flex-1 relative min-h-0"
+        <div ref={chartRef} className="flex-1 relative min-h-0 max-[800px]:min-h-[min(52dvh,440px)]"
           onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
           onDoubleClick={() => setYOffset(0)}
           style={{ cursor: isDragging ? "grabbing" : "crosshair" }}>
@@ -496,12 +499,12 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
 
             {showDirections && (
               <motion.div key="directions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute inset-0 z-40 overflow-hidden flex flex-col rounded-lg"
+                className="absolute inset-0 z-40 flex flex-col rounded-lg min-h-0 overflow-hidden"
                 style={{ background: tk.isDark ? 'rgba(15,23,42,0.95)' : tk.surface, backdropFilter: 'blur(12px)', border: `1px solid ${tk.border}` }}>
-                {/* Custom Header for Directions Table */}
-                <div className="px-4 py-3 flex items-center justify-between" style={{ background: tk.isDark ? 'rgba(15,23,42,0.6)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
-                  <div className="flex flex-wrap items-center gap-2 md:gap-4">
-                    <span className="text-lg font-bold tracking-widest" style={{ color: tk.textPrimary }}>
+                {/* Custom Header for Directions Table — stack on narrow viewports so controls stay visible ≤800px */}
+                <div className="px-2 py-2 max-[800px]:max-h-[45vh] max-[800px]:overflow-y-auto sm:px-4 sm:py-3 flex flex-col gap-3 max-[800px]:gap-2 min-[801px]:flex-row min-[801px]:items-center min-[801px]:justify-between min-[801px]:gap-3 shrink-0" style={{ background: tk.isDark ? 'rgba(15,23,42,0.6)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
+                  <div className="flex flex-col gap-2 min-[801px]:flex-row min-[801px]:flex-wrap min-[801px]:items-center min-[801px]:gap-2 md:gap-4 min-w-0">
+                    <span className="text-sm sm:text-base md:text-lg font-bold tracking-wide min-[801px]:tracking-widest leading-tight" style={{ color: tk.textPrimary }}>
                       Phase <span className="text-red-500 font-black">X</span> State Candles Directions
                     </span>
                     {directionsData && directionsData.rows && directionsData.rows.length > 0 && (() => {
@@ -530,8 +533,8 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                       );
                     })()}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 md:gap-1.5 px-1.5 py-1 rounded-lg" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)', border: `1px solid ${tk.border}` }}>
+                  <div className="flex flex-col gap-2 w-full min-[801px]:w-auto min-[801px]:flex-row min-[801px]:flex-wrap min-[801px]:items-center min-[801px]:justify-end min-[801px]:gap-2 shrink-0">
+                    <div className="flex items-center gap-1 md:gap-1.5 px-1.5 py-1 rounded-lg w-full min-[801px]:w-auto justify-between min-[801px]:justify-start" style={{ background: tk.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)', border: `1px solid ${tk.border}` }}>
                       <span className="text-[9px] md:text-[10px] font-bold text-slate-500 whitespace-nowrap">{isRTL ? "لوت الجميع:" : "All Lots:"}</span>
                       <button type="button" disabled={tradeLocked} onClick={(e) => { e.stopPropagation(); const newVal = Math.max(0.01, Number((globalDirLot - 0.01).toFixed(2))); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded text-[10px] md:text-sm font-bold bg-slate-700/50 hover:bg-slate-700 text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">-</button>
                       <input type="number" step="0.01" min="0.01" value={globalDirLot} disabled={tradeLocked} onChange={(e) => { const newVal = Math.max(0.01, parseFloat(e.target.value) || 0.01); setGlobalDirLot(newVal); applyGlobalDirLot(newVal); }} className="w-10 md:w-12 text-center text-[10px] md:text-[11px] font-black font-mono bg-transparent outline-none disabled:opacity-40" style={{ color: '#fbbf24' }} />
@@ -571,7 +574,7 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                         </>
                       );
                     })()}
-                    <button onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center gap-2 mb-4 rounded-lg text-xs font-bold transition-colors cursor-pointer" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
+                    <button type="button" onClick={() => setShowDirections(false)} className="px-3 py-1.5 flex items-center justify-center gap-2 rounded-lg text-xs font-bold transition-colors cursor-pointer w-full min-[801px]:w-auto shrink-0" style={{ background: tk.buttonGhost, color: tk.buttonGhostText, border: `1px solid ${tk.buttonGhostBorder}` }}>
                       <BarChart3 className="w-3.5 h-3.5" />
                       {isRTL ? "العودة للشارت" : "Back to Chart"}
                     </button>
@@ -579,8 +582,8 @@ export function IndicatorChartPanel({ ctx }: { ctx: IndicatorChartCtx }) {
                 </div>
 
                 {/* Table Data */}
-                <div className="flex-1 overflow-auto">
-                  <table className="w-full text-center border-collapse">
+                <div className="flex-1 min-h-0 overflow-auto overscroll-contain">
+                  <table className="w-full text-center border-collapse min-w-[640px] max-[800px]:text-[11px]">
                     <thead className="sticky top-0 z-20 backdrop-blur-md" style={{ background: tk.isDark ? 'rgba(15,23,42,0.85)' : tk.surfaceElevated, borderBottom: `1px solid ${tk.border}` }}>
                       <tr>
                         {["Close Price", "High Price", "Low Price", "Candles", "Entry", "Direction", "Profit", "Lot", "Execute"].map((head, idx) => (

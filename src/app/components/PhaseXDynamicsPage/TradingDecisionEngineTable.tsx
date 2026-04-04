@@ -184,7 +184,7 @@ export function TradingDecisionEngineTable({
 
     return (
         <div className="flex justify-center w-full">
-            <div className="w-full max-w-[1400px] space-y-4">
+            <div className="w-full overflow-x-auto space-y-4">
                 {/* Local Filters for Decision Engine */}
                 <div className="grid grid-cols-1 gap-4 mb-2">
                     {/* Market Filter */}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Activity, Clock, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SkipBack, SkipForward, Info, Table, BarChart3, X, ListOrdered, Edit3, Minimize2, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -54,6 +54,21 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
         return () => clearInterval(id);
     }, []);
     const tradeLocked = mt5TradeLocked || timeTradeLocked;
+
+    const [fsChartHeight, setFsChartHeight] = useState(320);
+    useLayoutEffect(() => {
+        if (!isExpanded) return;
+        const el = fullscreenChartRef.current;
+        if (!el) return;
+        const update = () => {
+            const h = el.getBoundingClientRect().height;
+            setFsChartHeight(Math.max(160, Math.floor(h - 12)));
+        };
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [isExpanded, showTable, showDirections, showDrawingTools]);
 
     const gridColor = tk.chartGrid;
     const textColor = tk.chartText;
@@ -202,10 +217,11 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
       <AnimatePresence>
         {isExpanded && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: tk.isDark ? "rgba(0,0,0,0.85)" : "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}
+            className="fixed inset-0 z-50 overflow-y-auto overscroll-y-contain"
+            style={{ background: tk.isDark ? "rgba(0,0,0,0.85)" : "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}
             onClick={() => setIsExpanded(false)}>
             <motion.div initial={{ scale: 0.98 }} animate={{ scale: 1 }} exit={{ scale: 0.98 }}
-              className="w-screen h-screen overflow-hidden flex flex-col"
+              className="w-screen min-h-[100dvh] flex flex-col max-[800px]:pt-[calc(3rem+env(safe-area-inset-top,0px))] min-[801px]:pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] box-border"
               style={{ background: tk.bg }}
               onClick={(e) => e.stopPropagation()} dir={isRTL ? "rtl" : "ltr"}>
 
@@ -446,8 +462,8 @@ export function IndicatorChartFullscreen({ ctx }: { ctx: IndicatorChartCtx }) {
                       </table>
                     </div>
                   ) : !showDirections ? (
-                    <div className="absolute inset-0 z-0">
-                      {renderChart(window.innerHeight - 140)}
+                    <div className="absolute inset-0 z-0 min-h-0 flex flex-col">
+                      {renderChart(fsChartHeight)}
                     </div>
                   ) : null}
 

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import { Activity } from "lucide-react";
 import { useIndicatorChart } from "./IndicatorChart/useIndicatorChart";
@@ -10,7 +11,19 @@ export type { Indicator, IndicatorChartProps } from "./IndicatorChart/indicatorC
 
 export function IndicatorChart(props: IndicatorChartProps) {
     const ctx = useIndicatorChart(props);
-    const { currency, indicator, isRTL, tk, t } = ctx;
+    const { currency, indicator, isRTL, tk, t, isExpanded } = ctx;
+
+    useEffect(() => {
+        if (!isExpanded) return;
+        const prevHtml = document.documentElement.style.overflow;
+        const prevBody = document.body.style.overflow;
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.documentElement.style.overflow = prevHtml;
+            document.body.style.overflow = prevBody;
+        };
+    }, [isExpanded]);
 
     if (!currency || !indicator) {
         return (
